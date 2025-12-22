@@ -1,0 +1,147 @@
+import { motion } from "framer-motion";
+import { User, Bell, ArrowRight, Upload, Wallet, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import MobileLayout from "@/components/layout/MobileLayout";
+
+const envelopes = [
+  { name: "Charity", amount: 400.00, icon: "💝" },
+  { name: "Moneybox", amount: 650.00, icon: "💰" },
+  { name: "Savings", amount: 320.00, icon: "🏦" },
+];
+
+const transactions = [
+  { name: "Recipient name", type: "Transfer type", amount: -300.00, date: "Today, 3 Aug" },
+];
+
+const Dashboard = () => {
+  return (
+    <MobileLayout>
+      <div className="px-6 pt-12">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10 flex items-center justify-between"
+        >
+          <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
+            <User className="h-5 w-5 text-foreground" />
+          </button>
+          <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
+            <Bell className="h-5 w-5 text-foreground" />
+          </button>
+        </motion.div>
+
+        {/* Balance */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <p className="mb-1 text-sm text-muted-foreground">Medi8 Balance</p>
+          <h1 className="text-5xl font-bold tracking-tight text-foreground">
+            £ 1,546.00
+          </h1>
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8 flex gap-3"
+        >
+          <Button className="flex-1" size="lg">
+            <Upload className="mr-2 h-5 w-5 rotate-180" />
+            Top-up
+          </Button>
+          <Button className="flex-1" size="lg">
+            Send
+          </Button>
+        </motion.div>
+
+        {/* Envelopes Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6 rounded-3xl bg-card p-5"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Envelopes</h2>
+            <button className="flex items-center gap-1 text-sm text-muted-foreground">
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {envelopes.map((envelope, index) => (
+              <motion.div
+                key={envelope.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+                className="flex min-w-[140px] flex-col gap-2 rounded-2xl border border-border bg-background p-4"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-lg">
+                  <Wallet className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="font-medium text-foreground">{envelope.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  £ {envelope.amount.toFixed(2)}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Activity Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <button className="flex items-center gap-2 text-lg font-semibold text-foreground">
+              All Activity
+              <ChevronDown className="h-5 w-5" />
+            </button>
+            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-border">
+              <Upload className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+
+          {/* Transactions */}
+          <div className="space-y-4">
+            {transactions.map((tx, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + index * 0.1 }}
+              >
+                <p className="mb-3 text-sm text-muted-foreground">{tx.date}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{tx.name}</p>
+                      <p className="text-sm text-muted-foreground">{tx.type}</p>
+                    </div>
+                  </div>
+                  <p className="font-semibold text-foreground">
+                    {tx.amount < 0 ? "–" : "+"} {Math.abs(tx.amount).toFixed(2)}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </MobileLayout>
+  );
+};
+
+export default Dashboard;
