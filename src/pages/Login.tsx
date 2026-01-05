@@ -25,7 +25,7 @@ const Login = () => {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background px-6">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -50,63 +50,63 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         onSubmit={handleLogin}
-        className="flex flex-col gap-4"
+        className="flex flex-1 flex-col"
       >
-        {/* Email Input */}
-        <div className="relative">
-          <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="email"
-            placeholder="Email or username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground"
-          />
+        <div className="flex flex-col gap-4">
+          {/* Email Input */}
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="email"
+              placeholder="Email or username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground"
+            />
+          </div>
+
+          {/* Password Input */}
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground"
+            />
+          </div>
+
+          {/* Forgot Password */}
+          <button
+            type="button"
+            onClick={() => navigate("/forgot-password")}
+            className="self-start text-sm font-semibold text-foreground"
+          >
+            Forgot password?
+          </button>
         </div>
 
-        {/* Password Input */}
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground"
-          />
-        </div>
-
-        {/* Forgot Password */}
-        <button
-          type="button"
-          onClick={() => navigate("/forgot-password")}
-          className="self-start text-sm font-semibold text-foreground"
-        >
-          Forgot password?
-        </button>
-
-        {/* Spacer */}
+        {/* Spacer to push button to bottom */}
         <div className="flex-1" />
 
-        {/* Login Button - Fixed at bottom */}
-        <div className="fixed bottom-0 left-0 right-0 bg-background p-6">
-          <div className="mx-auto max-w-md">
-            <Button
-              type="submit"
-              className="mb-4 w-full"
-              size="lg"
-              disabled={isLoading}
-            >
-              {isLoading ? "Logging in..." : "Log In"}
-            </Button>
+        {/* Login Button & Terms */}
+        <div className="pb-8 pt-6">
+          <Button
+            type="submit"
+            className="mb-4 w-full"
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Log In"}
+          </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
-              By proceeding, you accept to our{" "}
-              <button className="font-semibold text-foreground">Privacy Policy</button>
-              {" "}and{" "}
-              <button className="font-semibold text-foreground">Terms of Services</button>.
-            </p>
-          </div>
+          <p className="text-center text-sm text-muted-foreground">
+            By proceeding, you accept to our{" "}
+            <button type="button" className="font-semibold text-foreground">Privacy Policy</button>
+            {" "}and{" "}
+            <button type="button" className="font-semibold text-foreground">Terms of Services</button>.
+          </p>
         </div>
       </motion.form>
     </div>
