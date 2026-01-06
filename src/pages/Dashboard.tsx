@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Bell, ArrowRight, Upload, Wallet, ChevronDown } from "lucide-react";
+import { User, Bell, ArrowRight, Upload, Wallet, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "@/components/layout/MobileLayout";
@@ -101,6 +101,18 @@ const Dashboard = () => {
                 </p>
               </motion.button>
             ))}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.7 }}
+              onClick={() => navigate("/envelope/new")}
+              className="flex min-w-[140px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-background p-4"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                <Plus className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">New</p>
+            </motion.button>
           </div>
         </motion.div>
 
@@ -125,11 +137,13 @@ const Dashboard = () => {
           {/* Transactions */}
           <div className="space-y-4">
             {transactions.map((tx, index) => (
-              <motion.div
+              <motion.button
                 key={index}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 + index * 0.1 }}
+                onClick={() => navigate(`/transaction?type=${tx.amount < 0 ? 'sending' : 'receiving'}`)}
+                className="w-full text-left"
               >
                 <p className="mb-3 text-sm text-muted-foreground">{tx.date}</p>
                 <div className="flex items-center justify-between">
@@ -146,7 +160,7 @@ const Dashboard = () => {
                     {tx.amount < 0 ? "–" : "+"} {Math.abs(tx.amount).toFixed(2)}
                   </p>
                 </div>
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         </motion.div>

@@ -193,29 +193,35 @@ const EnvelopeDetails = () => {
         <h2 className="mb-4 text-lg font-semibold text-foreground">Reoccurring payments</h2>
         
         <div className="space-y-4">
-          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
+          <button 
+            onClick={() => navigate("/recurring-payment?type=receiving")}
+            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
               <ArrowDownLeft className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div>
+            <div className="text-left">
               <p className="font-medium text-foreground">
                 Receiving from <span className="font-semibold">my Medi8 account</span>
               </p>
               <p className="text-sm text-muted-foreground">£ 50.00 Monthly on 1</p>
             </div>
-          </div>
+          </button>
 
-          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
+          <button 
+            onClick={() => navigate("/recurring-payment?type=sending")}
+            className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
               <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div>
+            <div className="text-left">
               <p className="font-medium text-foreground">
                 Sending to <span className="font-semibold">[Account Name]</span>
               </p>
               <p className="text-sm text-muted-foreground">£ 50.00 Weekly on Monday</p>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 

@@ -15,6 +15,9 @@ import TopUp from "./pages/TopUp";
 import EnvelopeDetails from "./pages/EnvelopeDetails";
 import Tools from "./pages/Tools";
 import Rewards from "./pages/Rewards";
+import NewEnvelope from "./pages/NewEnvelope";
+import EditRecurringPayment from "./pages/EditRecurringPayment";
+import TransactionDetails from "./pages/TransactionDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +39,9 @@ const App = () => (
             <Route path="/send" element={<SendMoney />} />
             <Route path="/topup" element={<TopUp />} />
             <Route path="/envelope/:name" element={<EnvelopeDetails />} />
+            <Route path="/envelope/new" element={<NewEnvelope />} />
+            <Route path="/recurring-payment" element={<EditRecurringPayment />} />
+            <Route path="/transaction" element={<TransactionDetails />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/rewards" element={<Rewards />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
