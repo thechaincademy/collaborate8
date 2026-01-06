@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { User, Bell, ArrowRight, Upload, Wallet, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import MobileLayout from "@/components/layout/MobileLayout";
+import ActivityFilterSheet from "@/components/dashboard/ActivityFilterSheet";
+import AboutEnvelopesSheet from "@/components/dashboard/AboutEnvelopesSheet";
 
 const envelopes = [
   { name: "Charity", amount: 400.00, icon: "💝" },
@@ -14,6 +18,8 @@ const transactions = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [activityFilter, setActivityFilter] = useState("all");
   return (
     <MobileLayout>
       <div className="px-6 pt-12">
@@ -51,11 +57,11 @@ const Dashboard = () => {
           transition={{ delay: 0.2 }}
           className="mb-8 flex gap-3"
         >
-          <Button className="flex-1" size="lg">
+          <Button className="flex-1" size="lg" onClick={() => navigate("/topup")}>
             <Upload className="mr-2 h-5 w-5 rotate-180" />
             Top-up
           </Button>
-          <Button className="flex-1" size="lg">
+          <Button className="flex-1" size="lg" onClick={() => navigate("/send")}>
             Send
           </Button>
         </motion.div>
@@ -69,19 +75,22 @@ const Dashboard = () => {
         >
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Envelopes</h2>
-            <button className="flex items-center gap-1 text-sm text-muted-foreground">
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            <AboutEnvelopesSheet>
+              <button className="flex items-center gap-1 text-sm text-muted-foreground">
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </AboutEnvelopesSheet>
           </div>
 
           <div className="flex gap-3 overflow-x-auto pb-2">
             {envelopes.map((envelope, index) => (
-              <motion.div
+              <motion.button
                 key={envelope.name}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4 + index * 0.1 }}
-                className="flex min-w-[140px] flex-col gap-2 rounded-2xl border border-border bg-background p-4"
+                onClick={() => navigate(`/envelope/${envelope.name.toLowerCase()}`)}
+                className="flex min-w-[140px] flex-col gap-2 rounded-2xl border border-border bg-background p-4 text-left"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-lg">
                   <Wallet className="h-5 w-5 text-muted-foreground" />
@@ -90,7 +99,7 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground">
                   £ {envelope.amount.toFixed(2)}
                 </p>
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         </motion.div>
@@ -102,10 +111,12 @@ const Dashboard = () => {
           transition={{ delay: 0.5 }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <button className="flex items-center gap-2 text-lg font-semibold text-foreground">
-              All Activity
-              <ChevronDown className="h-5 w-5" />
-            </button>
+            <ActivityFilterSheet filter={activityFilter} onFilterChange={setActivityFilter}>
+              <button className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                All Activity
+                <ChevronDown className="h-5 w-5" />
+              </button>
+            </ActivityFilterSheet>
             <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-border">
               <Upload className="h-4 w-4 text-muted-foreground" />
             </button>

@@ -10,6 +10,9 @@ import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
+import SendMoney from "./pages/SendMoney";
+import TopUp from "./pages/TopUp";
+import EnvelopeDetails from "./pages/EnvelopeDetails";
 import Tools from "./pages/Tools";
 import Rewards from "./pages/Rewards";
 import NotFound from "./pages/NotFound";
@@ -30,6 +33,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/send" element={<SendMoney />} />
+            <Route path="/topup" element={<TopUp />} />
+            <Route path="/envelope/:name" element={<EnvelopeDetails />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/rewards" element={<Rewards />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
