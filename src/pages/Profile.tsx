@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, Phone, CreditCard, Shield, ChevronRight } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, CreditCard, Shield, ChevronRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Profile = () => {
@@ -13,6 +13,12 @@ const Profile = () => {
         { icon: User, label: "Full Name", value: "Sarah Johnson" },
         { icon: Mail, label: "Email", value: "sarah@example.com" },
         { icon: Phone, label: "Phone", value: "+44 7700 900000" },
+      ]
+    },
+    {
+      title: "Co-Parent",
+      items: [
+        { icon: Users, label: "Co-Parent Email", value: "john@example.com" },
       ]
     },
     {
