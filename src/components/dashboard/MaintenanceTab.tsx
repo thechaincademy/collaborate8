@@ -54,7 +54,11 @@ const MaintenanceTab = () => {
         <Button className="h-auto flex-col gap-2 py-4" variant="outline">
           <span className="font-medium">Payment History</span>
         </Button>
-        <Button className="h-auto flex-col gap-2 py-4" variant="outline">
+        <Button 
+          className="h-auto flex-col gap-2 py-4" 
+          variant="outline"
+          onClick={() => navigate("/edit-payment")}
+        >
           <span className="font-medium">Edit Arrangement</span>
         </Button>
       </motion.div>
