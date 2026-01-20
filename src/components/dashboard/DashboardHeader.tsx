@@ -15,6 +15,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface Notification {
   id: string;
@@ -58,10 +60,13 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("Logged out successfully");
     navigate("/");
   };
 

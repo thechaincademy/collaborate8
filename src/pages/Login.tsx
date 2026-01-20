@@ -5,23 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!email || !password) {
+      toast.error("Please enter email and password");
+      return;
+    }
 
-    // Simulate login - replace with actual auth
-    setTimeout(() => {
-      setIsLoading(false);
+    setIsLoading(true);
+    const { error } = await signIn(email, password);
+    setIsLoading(false);
+
+    if (error) {
+      toast.error(error.message || "Failed to log in");
+    } else {
       toast.success("Welcome back!");
       navigate("/dashboard");
-    }, 1000);
+    }
   };
 
   return (
@@ -58,7 +68,7 @@ const Login = () => {
             <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="email"
-              placeholder="Email or username"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground"
