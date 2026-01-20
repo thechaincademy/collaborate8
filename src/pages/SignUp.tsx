@@ -336,10 +336,6 @@ const SignUp = () => {
         </button>
       </div>
 
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        A small transaction fee applies per payment.
-      </p>
-
       <div className="flex-1" />
 
       <div className="pb-8 pt-6">
