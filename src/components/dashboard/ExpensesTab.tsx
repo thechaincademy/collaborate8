@@ -1,35 +1,67 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Plus, Receipt, Upload, Check, X, ArrowLeft } from "lucide-react";
+import { User, Bell, Plus, Receipt, Upload, Check, ArrowLeft, Image, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useExpenses } from "@/hooks/useExpenses";
+import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
 
 type ExpenseView = "list" | "request" | "success";
 
-const expenses = [
-  { 
-    name: "School uniform", 
-    from: "Co-parent",
-    amount: 85.00, 
-    date: "15 Jan 2024",
-    status: "pending"
-  },
-  { 
-    name: "Medical appointment", 
-    from: "You",
-    amount: 45.00, 
-    date: "10 Jan 2024",
-    status: "paid"
-  },
-];
-
 const ExpensesTab = () => {
+  const { user } = useAuth();
+  const { expenses, loading, createExpense } = useExpenses();
   const [view, setView] = useState<ExpenseView>("list");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = () => {
-    setView("success");
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setReceiptFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setReceiptPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveReceipt = () => {
+    setReceiptFile(null);
+    setReceiptPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!amount || !description) return;
+    
+    setIsSubmitting(true);
+    const { error } = await createExpense(
+      description,
+      parseFloat(amount),
+      receiptFile || undefined
+    );
+    setIsSubmitting(false);
+
+    if (!error) {
+      setView("success");
+    }
+  };
+
+  const resetForm = () => {
+    setView("list");
+    setAmount("");
+    setDescription("");
+    setReceiptFile(null);
+    setReceiptPreview(null);
   };
 
   const renderList = () => (
@@ -60,10 +92,16 @@ const ExpensesTab = () => {
           onClick={() => setView("request")} 
           className="w-full" 
           size="lg"
+          disabled={!user}
         >
           <Plus className="mr-2 h-5 w-5" />
           Request an Expense
         </Button>
+        {!user && (
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            Please log in to request expenses
+          </p>
+        )}
       </motion.div>
 
       {/* Expenses List */}
@@ -74,37 +112,49 @@ const ExpensesTab = () => {
       >
         <h3 className="mb-4 text-lg font-semibold text-foreground">Recent Expenses</h3>
         
-        <div className="space-y-3">
-          {expenses.map((expense, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-              className="flex items-center justify-between rounded-2xl bg-card p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                  <Receipt className="h-5 w-5 text-muted-foreground" />
+        {loading ? (
+          <div className="py-8 text-center text-muted-foreground">Loading...</div>
+        ) : expenses.length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground">
+            No expenses yet. Create your first expense request!
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {expenses.map((expense, index) => (
+              <motion.div
+                key={expense.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                className="flex items-center justify-between rounded-2xl bg-card p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                    {expense.receipt_url ? (
+                      <Image className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <Receipt className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{expense.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      You • {format(new Date(expense.created_at), "dd MMM yyyy")}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">{expense.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {expense.from} • {expense.date}
+                <div className="text-right">
+                  <p className="font-semibold text-foreground">£{expense.amount.toFixed(2)}</p>
+                  <p className={`text-xs capitalize ${
+                    expense.status === "paid" ? "text-muted-foreground" : "text-foreground"
+                  }`}>
+                    {expense.status}
                   </p>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-foreground">£{expense.amount.toFixed(2)}</p>
-                <p className={`text-xs ${
-                  expense.status === "paid" ? "text-muted-foreground" : "text-foreground"
-                }`}>
-                  {expense.status === "paid" ? "Paid" : "Pending"}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </>
   );
@@ -155,15 +205,45 @@ const ExpensesTab = () => {
         </div>
 
         {/* Receipt Upload */}
-        <button className="flex w-full items-center gap-4 rounded-2xl bg-card p-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-            <Upload className="h-6 w-6 text-muted-foreground" />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        
+        {receiptPreview ? (
+          <div className="relative rounded-2xl bg-card p-4">
+            <button
+              onClick={handleRemoveReceipt}
+              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80"
+            >
+              <X className="h-4 w-4 text-foreground" />
+            </button>
+            <img
+              src={receiptPreview}
+              alt="Receipt preview"
+              className="max-h-48 w-full rounded-xl object-contain"
+            />
+            <p className="mt-2 text-center text-sm text-muted-foreground">
+              {receiptFile?.name}
+            </p>
           </div>
-          <div className="text-left">
-            <p className="font-medium text-foreground">Attach receipt</p>
-            <p className="text-sm text-muted-foreground">Take a photo or upload</p>
-          </div>
-        </button>
+        ) : (
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex w-full items-center gap-4 rounded-2xl bg-card p-4"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+              <Upload className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="text-left">
+              <p className="font-medium text-foreground">Attach receipt</p>
+              <p className="text-sm text-muted-foreground">Take a photo or upload</p>
+            </div>
+          </button>
+        )}
       </motion.div>
 
       <div className="flex-1" />
@@ -178,9 +258,9 @@ const ExpensesTab = () => {
           onClick={handleSubmit} 
           className="w-full" 
           size="lg"
-          disabled={!amount || !description}
+          disabled={!amount || !description || isSubmitting}
         >
-          Send Request
+          {isSubmitting ? "Sending..." : "Send Request"}
         </Button>
       </motion.div>
     </>
@@ -204,11 +284,7 @@ const ExpensesTab = () => {
       </p>
 
       <Button 
-        onClick={() => {
-          setView("list");
-          setAmount("");
-          setDescription("");
-        }} 
+        onClick={resetForm} 
         className="w-full" 
         size="lg"
       >

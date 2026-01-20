@@ -1,25 +1,31 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, User, Check } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
-type SignUpStep = "name" | "email" | "coparent" | "subscription" | "verify";
+type SignUpStep = "name" | "email" | "password" | "coparent" | "subscription" | "verify";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [step, setStep] = useState<SignUpStep>("name");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form states
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [coparentEmail, setCoparentEmail] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly" | null>(null);
 
   const isNameValid = firstName.length > 0 && lastName.length > 0;
   const isEmailValid = email.length > 0 && email.includes("@");
+  const isPasswordValid = password.length >= 6;
   const isCoparentValid = coparentEmail.length === 0 || coparentEmail.includes("@");
   const isSubscriptionValid = selectedPlan !== null;
 
@@ -31,8 +37,11 @@ const SignUp = () => {
       case "email":
         setStep("name");
         break;
-      case "coparent":
+      case "password":
         setStep("email");
+        break;
+      case "coparent":
+        setStep("password");
         break;
       case "subscription":
         setStep("coparent");
@@ -47,10 +56,23 @@ const SignUp = () => {
     switch (step) {
       case "name": return 0;
       case "email": return 1;
-      case "coparent": return 2;
-      case "subscription": return 3;
-      case "verify": return 4;
+      case "password": return 2;
+      case "coparent": return 3;
+      case "subscription": return 4;
+      case "verify": return 5;
       default: return 0;
+    }
+  };
+
+  const handleSignUp = async () => {
+    setIsLoading(true);
+    const { error } = await signUp(email, password);
+    setIsLoading(false);
+
+    if (error) {
+      toast.error(error.message || "Failed to create account");
+    } else {
+      setStep("verify");
     }
   };
 
@@ -58,7 +80,7 @@ const SignUp = () => {
     const currentStep = getStepIndex();
     return (
       <div className="flex items-center gap-2">
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors ${
@@ -152,10 +174,50 @@ const SignUp = () => {
 
       <div className="pb-8 pt-6">
         <Button
-          onClick={() => setStep("coparent")}
+          onClick={() => setStep("password")}
           className="w-full"
           size="lg"
           disabled={!isEmailValid}
+        >
+          Continue
+        </Button>
+      </div>
+    </motion.div>
+  );
+
+  const renderPassword = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-1 flex-col"
+    >
+      <h1 className="mb-2 text-3xl font-bold text-foreground">
+        Create a password
+      </h1>
+      <p className="mb-8 text-muted-foreground">
+        Choose a secure password with at least 6 characters.
+      </p>
+
+      <div className="relative">
+        <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground"
+        />
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="pb-8 pt-6">
+        <Button
+          onClick={() => setStep("coparent")}
+          className="w-full"
+          size="lg"
+          disabled={!isPasswordValid}
         >
           Continue
         </Button>
@@ -282,12 +344,12 @@ const SignUp = () => {
 
       <div className="pb-8 pt-6">
         <Button
-          onClick={() => setStep("verify")}
+          onClick={handleSignUp}
           className="w-full"
           size="lg"
-          disabled={!isSubscriptionValid}
+          disabled={!isSubscriptionValid || isLoading}
         >
-          Continue
+          {isLoading ? "Creating account..." : "Create Account"}
         </Button>
       </div>
     </motion.div>
@@ -301,37 +363,38 @@ const SignUp = () => {
       className="flex flex-1 flex-col items-center justify-center text-center"
     >
       <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-        <Mail className="h-10 w-10 text-primary" />
+        <Check className="h-10 w-10 text-primary" />
       </div>
 
       <h1 className="mb-2 text-3xl font-bold text-foreground">
-        Verify your email
+        Account created!
       </h1>
       <p className="mb-2 text-muted-foreground">
-        We've sent a verification link to
+        Your account has been set up for
       </p>
       <p className="mb-8 font-semibold text-foreground">{email}</p>
 
       <p className="text-sm text-muted-foreground">
-        Click the link in your email to verify your account and get started.
+        You can now log in and start managing your expenses and arrangements.
       </p>
 
       <div className="flex-1" />
 
       <div className="w-full pb-8 pt-6">
         <Button
-          onClick={() => navigate("/post-signup")}
+          onClick={() => navigate("/dashboard")}
           className="mb-3 w-full"
           size="lg"
         >
-          I've verified my email
+          Go to Dashboard
         </Button>
         <Button
+          onClick={() => navigate("/post-signup")}
           variant="ghost"
           className="w-full text-muted-foreground"
           size="lg"
         >
-          Resend email
+          Complete onboarding
         </Button>
       </div>
     </motion.div>
@@ -360,6 +423,7 @@ const SignUp = () => {
         <AnimatePresence mode="wait">
           {step === "name" && renderName()}
           {step === "email" && renderEmail()}
+          {step === "password" && renderPassword()}
           {step === "coparent" && renderCoparent()}
           {step === "subscription" && renderSubscription()}
           {step === "verify" && renderVerify()}

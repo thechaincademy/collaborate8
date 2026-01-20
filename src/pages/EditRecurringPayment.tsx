@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -7,8 +7,11 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useRecurringPayments } from "@/hooks/useRecurringPayments";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
-const repeatOptions = ["Daily", "Weekly", "Monthly"];
+const repeatOptions = ["Daily", "Weekly", "Monthly"] as const;
 const days = Array.from({ length: 30 }, (_, i) => i + 1);
 const weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
@@ -16,11 +19,32 @@ const EditRecurringPayment = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isReceiving = searchParams.get("type") === "receiving";
+  const { user } = useAuth();
+  const { getActivePayment, createOrUpdatePayment, cancelPayment, loading } = useRecurringPayments();
   
   const [amount, setAmount] = useState("50.00");
-  const [repeat, setRepeat] = useState("Monthly");
+  const [repeat, setRepeat] = useState<"Daily" | "Weekly" | "Monthly">("Monthly");
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedWeekday, setSelectedWeekday] = useState("Mo");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load existing payment data
+  useEffect(() => {
+    const activePayment = getActivePayment();
+    if (activePayment) {
+      setAmount(activePayment.amount.toFixed(2));
+      setRepeat(
+        activePayment.frequency.charAt(0).toUpperCase() + 
+        activePayment.frequency.slice(1) as "Daily" | "Weekly" | "Monthly"
+      );
+      if (activePayment.day_of_month) {
+        setSelectedDay(activePayment.day_of_month);
+      }
+      if (activePayment.day_of_week) {
+        setSelectedWeekday(activePayment.day_of_week);
+      }
+    }
+  }, [loading]);
 
   const handleKeyPress = (digit: string) => {
     if (digit === "delete") {
@@ -50,8 +74,34 @@ const EditRecurringPayment = () => {
     return `Monthly on ${selectedDay}`;
   };
 
-  const handleSave = () => {
-    navigate(-1);
+  const handleSave = async () => {
+    if (!user) {
+      toast.error("Please log in to save arrangements");
+      return;
+    }
+
+    setIsSaving(true);
+    const { error } = await createOrUpdatePayment(
+      parseFloat(amount),
+      repeat.toLowerCase() as "daily" | "weekly" | "monthly",
+      repeat === "Monthly" ? selectedDay : undefined,
+      repeat === "Weekly" ? selectedWeekday : undefined
+    );
+    setIsSaving(false);
+
+    if (!error) {
+      navigate(-1);
+    }
+  };
+
+  const handleCancel = async () => {
+    const activePayment = getActivePayment();
+    if (activePayment) {
+      setIsSaving(true);
+      await cancelPayment(activePayment.id);
+      setIsSaving(false);
+      navigate(-1);
+    }
   };
 
   return (
@@ -61,8 +111,12 @@ const EditRecurringPayment = () => {
           <button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-6 w-6 text-foreground" />
           </button>
-          <button onClick={handleSave} className="font-medium text-foreground">
-            Save
+          <button 
+            onClick={handleSave} 
+            className="font-medium text-foreground disabled:opacity-50"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save"}
           </button>
         </div>
 
@@ -145,7 +199,13 @@ const EditRecurringPayment = () => {
       </div>
 
       <div className="mt-auto px-6 pb-12">
-        <Button variant="outline" className="w-full" size="lg">
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          size="lg"
+          onClick={handleCancel}
+          disabled={isSaving}
+        >
           Cancel This Payment
         </Button>
       </div>
