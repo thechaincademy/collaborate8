@@ -3,26 +3,58 @@ import { Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "./DashboardHeader";
+import { useRecurringPayments } from "@/hooks/useRecurringPayments";
+import { format, addDays, addWeeks, addMonths, setDate, nextDay } from "date-fns";
 
-const transactions = [
-  { 
-    name: "Monthly maintenance", 
-    status: "completed", 
-    amount: 320.00, 
-    date: "1 Jan 2024",
-    type: "outgoing"
-  },
-  { 
-    name: "Monthly maintenance", 
-    status: "pending", 
-    amount: 320.00, 
-    date: "1 Feb 2024",
-    type: "outgoing"
-  },
-];
+const getNextPaymentDate = (
+  frequency: string,
+  dayOfMonth?: number | null,
+  dayOfWeek?: string | null
+): Date => {
+  const today = new Date();
+  
+  if (frequency === "daily") {
+    return addDays(today, 1);
+  }
+  
+  if (frequency === "weekly" && dayOfWeek) {
+    const dayMap: Record<string, 0 | 1 | 2 | 3 | 4 | 5 | 6> = {
+      Su: 0, Mo: 1, Tu: 2, We: 3, Th: 4, Fr: 5, Sa: 6
+    };
+    const targetDay = dayMap[dayOfWeek] ?? 1;
+    return nextDay(today, targetDay);
+  }
+  
+  if (frequency === "monthly" && dayOfMonth) {
+    let nextDate = setDate(today, dayOfMonth);
+    if (nextDate <= today) {
+      nextDate = addMonths(nextDate, 1);
+    }
+    return nextDate;
+  }
+  
+  return addMonths(today, 1);
+};
 
 const MaintenanceTab = () => {
   const navigate = useNavigate();
+  const { getActivePayment, loading } = useRecurringPayments();
+  
+  const activePayment = getActivePayment();
+  const amount = activePayment?.amount ?? 0;
+  const nextPaymentDate = activePayment 
+    ? getNextPaymentDate(activePayment.frequency, activePayment.day_of_month, activePayment.day_of_week)
+    : new Date();
+
+  const transactions = activePayment ? [
+    { 
+      name: `${activePayment.frequency.charAt(0).toUpperCase() + activePayment.frequency.slice(1)} maintenance`, 
+      status: "pending", 
+      amount: activePayment.amount, 
+      date: format(nextPaymentDate, "d MMM yyyy"),
+      type: "outgoing"
+    },
+  ] : [];
 
   return (
     <div className="px-6 pt-12">
@@ -37,10 +69,16 @@ const MaintenanceTab = () => {
         className="mb-6 rounded-3xl bg-card p-6"
       >
         <p className="mb-1 text-sm text-muted-foreground">Next payment</p>
-        <h2 className="mb-4 text-4xl font-bold text-foreground">£320.00</h2>
+        <h2 className="mb-4 text-4xl font-bold text-foreground">
+          {loading ? "Loading..." : `£${amount.toFixed(2)}`}
+        </h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span>Due 1st February 2024</span>
+          <span>
+            {activePayment 
+              ? `Due ${format(nextPaymentDate, "do MMMM yyyy")}`
+              : "No arrangement set"}
+          </span>
         </div>
       </motion.div>
 
