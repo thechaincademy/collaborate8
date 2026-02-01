@@ -46,18 +46,22 @@ const EditRecurringPayment = () => {
     }
   }, [loading]);
 
-  const handleKeyPress = (digit: string) => {
-    if (digit === "delete") {
+  const handleKeyPress = (key: string) => {
+    if (key === "delete") {
       setAmount(prev => {
         const newVal = prev.replace(".", "").slice(0, -1) || "0";
         const num = parseInt(newVal, 10);
         return (num / 100).toFixed(2);
       });
+    } else if (key === ".") {
+      // Already has decimal in our format, ignore
+      return;
     } else {
       setAmount(prev => {
         const current = prev.replace(".", "");
-        const newVal = current + digit;
+        const newVal = current + key;
         const num = parseInt(newVal, 10);
+        if (num > 9999999) return prev; // Limit max amount
         return (num / 100).toFixed(2);
       });
     }
@@ -122,12 +126,32 @@ const EditRecurringPayment = () => {
 
         <h1 className="mb-8 text-2xl font-bold text-foreground">Reoccurring payment</h1>
 
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-background p-4">
-          <div>
-            <p className="font-semibold text-foreground">Medi8 Account</p>
-            <p className="text-sm text-muted-foreground">£ 1,546.00</p>
+        <div className="mb-4 rounded-2xl border border-border bg-background p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="font-semibold text-foreground">Medi8 Account</p>
+              <p className="text-sm text-muted-foreground">£ 1,546.00</p>
+            </div>
           </div>
-          <p className="text-lg font-semibold text-foreground">£ {amount}</p>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-1">Payment Amount</p>
+            <p className="text-4xl font-bold text-foreground">£ {amount}</p>
+          </div>
+        </div>
+
+        {/* Amount Keypad */}
+        <div className="mb-4 grid grid-cols-3 gap-2">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "delete"].map((key, i) => (
+            <button
+              key={i}
+              onClick={() => key && handleKeyPress(key)}
+              className={`flex h-12 items-center justify-center rounded-xl text-lg font-medium ${
+                key === "" ? "" : "bg-muted text-foreground active:bg-muted/70"
+              }`}
+            >
+              {key === "delete" ? "⌫" : key}
+            </button>
+          ))}
         </div>
 
         <Drawer>
@@ -210,30 +234,6 @@ const EditRecurringPayment = () => {
         </Button>
       </div>
 
-      {repeat === "Monthly" && (
-        <div className="fixed bottom-32 left-0 right-0 px-6">
-          <div className="grid grid-cols-3 gap-2">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "delete"].map((key, i) => (
-              <button
-                key={i}
-                onClick={() => key && handleKeyPress(key)}
-                className={`flex h-14 items-center justify-center rounded-xl text-xl font-medium ${
-                  key === "" ? "" : "bg-muted text-foreground active:bg-muted/70"
-                }`}
-              >
-                {key === "delete" ? "⌫" : key}
-                {["2", "3", "4", "5", "6", "7", "8", "9"].includes(key) && (
-                  <span className="ml-1 text-xs text-muted-foreground">
-                    {key === "2" ? "ABC" : key === "3" ? "DEF" : key === "4" ? "GHI" :
-                     key === "5" ? "JKL" : key === "6" ? "MNO" : key === "7" ? "PQRS" :
-                     key === "8" ? "TUV" : "WXYZ"}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
