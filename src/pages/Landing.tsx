@@ -82,14 +82,14 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5 rounded-b-2xl" style={{ background: 'linear-gradient(135deg, hsl(200 30% 96%), hsl(180 20% 94%))' }}>
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
-            <span className="text-sm font-bold text-background">M8</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
+            <span className="text-sm font-bold text-white">C8</span>
           </div>
-          <span className="text-lg font-bold text-foreground">medi8</span>
+          <span className="text-lg font-bold text-foreground">collabor8</span>
         </div>
-        <Button variant="default" size="sm" onClick={scrollToWaitlist}>
+        <Button variant="default" size="sm" onClick={scrollToWaitlist} style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
           Join the Waiting List
         </Button>
       </nav>
