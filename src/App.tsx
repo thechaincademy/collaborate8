@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import Landing from "./pages/Landing";
 import Splash from "./pages/Splash";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
@@ -27,7 +28,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Splash />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/splash" element={<Splash />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
