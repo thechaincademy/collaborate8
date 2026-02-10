@@ -24,8 +24,8 @@ const CookieConsent = () => {
   const handleDecline = () => {
     localStorage.setItem("medi8-cookie-consent", "declined");
     // Disable Hotjar if user declines
-    if (window.hj) {
-      window.hj("optOut");
+    if ((window as any).hj) {
+      (window as any).hj("optOut");
     }
     setVisible(false);
   };
