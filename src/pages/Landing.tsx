@@ -110,7 +110,7 @@ const Landing = () => {
             <span className="text-muted-foreground">made simple.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-            medi8 helps separated parents manage child maintenance payments, split expenses fairly, and keep everything transparent — without the stress.
+            Helping separated parents handle payments and expenses with clarity.
           </p>
           <div className="mt-8">
             <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
