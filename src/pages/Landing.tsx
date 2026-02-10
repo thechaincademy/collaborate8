@@ -95,7 +95,7 @@ const Landing = () => {
       </nav>
 
       {/* Hero */}
-      <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 text-center md:pt-24">
+      <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 text-center md:pt-24 rounded-3xl mt-4 mx-6" style={{ background: 'linear-gradient(180deg, hsl(200 20% 95%) 0%, hsl(0 0% 96%) 100%)' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
