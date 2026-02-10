@@ -228,9 +228,9 @@ const Landing = () => {
                 Your finances, at your fingertips
               </h2>
               <p className="mb-6 text-muted-foreground">
-                Track every payment, log every expense, and keep a complete record — all from your phone. medi8 gives you the clarity and control you need.
+                Manage payments with ease. Get rewarded along the way. Collabor8 gives families the clarity they need to stay on track.
               </p>
-              <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
+              <Button size="lg" onClick={scrollToWaitlist} className="gap-2" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
                 Get Early Access <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
