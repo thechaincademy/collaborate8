@@ -36,6 +36,15 @@ const Landing = () => {
 
   const handleWaitlistSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Honeypot check - bots fill hidden fields
+    if (honeypot) return;
+
+    // Timing check - bots submit too fast (under 2 seconds)
+    if (Date.now() - formLoadedAt.current < 2000) {
+      toast.error("Please wait a moment before submitting.");
+      return;
+    }
+
     if (!email || !email.includes("@")) {
       toast.error("Please enter a valid email address");
       return;
