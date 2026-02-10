@@ -230,7 +230,7 @@ const Landing = () => {
               <p className="mb-6 text-muted-foreground">
                 Manage payments with ease. Get rewarded along the way. Collabor8 gives families the clarity they need to stay on track.
               </p>
-              <Button size="lg" onClick={scrollToWaitlist} className="gap-2" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
+              <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
                 Get Early Access <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
