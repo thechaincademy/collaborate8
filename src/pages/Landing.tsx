@@ -95,44 +95,29 @@ const Landing = () => {
       </nav>
 
       {/* Hero */}
-      <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 md:pt-24">
-        <div className="grid items-center gap-12 md:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground">
-              <Shield className="h-4 w-4" />
-              Launching Soon
-            </div>
-            <h1 className="text-4xl font-bold leading-tight text-foreground md:text-5xl md:leading-tight">
-              Co-parenting finances,{" "}
-              <span className="text-muted-foreground">made simple.</span>
-            </h1>
-            <p className="mt-6 text-lg text-muted-foreground">
-              medi8 helps separated parents manage child maintenance payments, split expenses fairly, and keep everything transparent — without the stress.
-            </p>
-            <div className="mt-8">
-              <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
-                Join the Waiting List <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="relative"
-          >
-            <img
-              src={heroFamily}
-              alt="Happy family co-parenting together"
-              className="w-full rounded-3xl object-cover shadow-elevated"
-            />
-          </motion.div>
-        </div>
+      <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 text-center md:pt-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground">
+            <Shield className="h-4 w-4" />
+            Launching Soon
+          </div>
+          <h1 className="mx-auto max-w-3xl text-4xl font-bold leading-tight text-foreground md:text-5xl md:leading-tight">
+            Co-parenting finances,{" "}
+            <span className="text-muted-foreground">made simple.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
+            medi8 helps separated parents manage child maintenance payments, split expenses fairly, and keep everything transparent — without the stress.
+          </p>
+          <div className="mt-8">
+            <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
+              Join the Waiting List <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
