@@ -214,45 +214,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-14 text-center"
-          >
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-              How it works
-            </h2>
-          </motion.div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            {[
-              { step: "1", title: "Set up your arrangement", desc: "Enter your payment amount, frequency, and schedule in seconds." },
-              { step: "2", title: "Track & manage", desc: "Monitor payments, log shared expenses, and keep receipts organised." },
-              { step: "3", title: "Stay aligned", desc: "Both parents see the same information — no more disputes or confusion." },
-            ].map((item, i) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="text-center"
-              >
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-lg font-bold text-background">
-                  {item.step}
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Finance phone image + CTA */}
       <section className="border-t border-border bg-card py-20">
         <div className="mx-auto max-w-5xl px-6">
