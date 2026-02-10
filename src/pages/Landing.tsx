@@ -24,9 +24,11 @@ import appScreenshot3 from "@/assets/app-screenshot-3.png";
 const Landing = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
   const waitlistRef = useRef<HTMLDivElement>(null);
+  const formLoadedAt = useRef(Date.now());
 
   const scrollToWaitlist = () => {
     waitlistRef.current?.scrollIntoView({ behavior: "smooth" });
