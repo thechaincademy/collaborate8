@@ -277,6 +277,17 @@ const Landing = () => {
             </p>
             {!isSignedUp ? (
               <form onSubmit={handleWaitlistSignup} className="mx-auto mt-8 flex max-w-md gap-3">
+                {/* Honeypot - hidden from real users, bots will fill it */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  className="absolute opacity-0 pointer-events-none h-0 w-0"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
                 <Input
                   type="email"
                   placeholder="Enter your email"
