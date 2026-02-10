@@ -142,7 +142,7 @@ const Landing = () => {
               See it in action
             </h2>
             <p className="mt-3 text-muted-foreground">
-              A clean, simple interface designed for stress-free co-parenting.
+              Handle payments and expenses, in a few simple clicks
             </p>
           </motion.div>
 
