@@ -75,7 +75,7 @@ const Landing = () => {
     {
       icon: Gift,
       title: "Rewards",
-      description: "Earn rewards for consistent, on-time payments and positive co-parenting behaviour.",
+      description: "Earn rewards for consistent, on time payments.",
     },
   ];
 
