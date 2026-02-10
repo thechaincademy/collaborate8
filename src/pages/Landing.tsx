@@ -230,7 +230,7 @@ const Landing = () => {
               <p className="mb-6 text-muted-foreground">
                 Manage payments with ease. Get rewarded along the way. Collabor8 gives families the clarity they need to stay on track.
               </p>
-              <Button size="lg" onClick={scrollToWaitlist} className="gap-2" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
+              <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
                 Get Early Access <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -304,8 +304,8 @@ const Landing = () => {
         <div className="mx-auto max-w-5xl px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
-                <span className="text-xs font-bold text-white">C8</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
+                <span className="text-xs font-bold text-background">C8</span>
               </div>
               <span className="text-sm font-semibold text-foreground">collabor8</span>
             </div>
