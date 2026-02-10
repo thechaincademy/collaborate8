@@ -75,21 +75,21 @@ const Landing = () => {
     {
       icon: Gift,
       title: "Rewards",
-      description: "Earn rewards for consistent, on-time payments and positive co-parenting behaviour.",
+      description: "Earn rewards for consistent, on time payments.",
     },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5 rounded-b-2xl" style={{ background: 'linear-gradient(135deg, hsl(200 30% 96%), hsl(180 20% 94%))' }}>
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
-            <span className="text-sm font-bold text-background">M8</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
+            <span className="text-sm font-bold text-white">C8</span>
           </div>
-          <span className="text-lg font-bold text-foreground">medi8</span>
+          <span className="text-lg font-bold text-foreground">collabor8</span>
         </div>
-        <Button variant="default" size="sm" onClick={scrollToWaitlist}>
+        <Button variant="default" size="sm" onClick={scrollToWaitlist} style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
           Join the Waiting List
         </Button>
       </nav>
@@ -110,7 +110,7 @@ const Landing = () => {
             <span className="text-muted-foreground">made simple.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-            medi8 helps separated parents manage child maintenance payments, split expenses fairly, and keep everything transparent — without the stress.
+            Helping separated parents handle payments and expenses with clarity.
           </p>
           <div className="mt-8">
             <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
@@ -142,7 +142,7 @@ const Landing = () => {
               See it in action
             </h2>
             <p className="mt-3 text-muted-foreground">
-              A clean, simple interface designed for stress-free co-parenting.
+              Handle payments and expenses, in a few simple clicks
             </p>
           </motion.div>
 
@@ -150,7 +150,7 @@ const Landing = () => {
             {[
               { src: appScreenshot1, alt: "Payment tracking screen", label: "Track Payments" },
               { src: appScreenshot2, alt: "Expense management screen", label: "Manage Expenses" },
-              { src: appScreenshot3, alt: "Co-parent messaging screen", label: "Stay Connected" },
+              { src: appScreenshot3, alt: "Rewards screen", label: "Claim Rewards" },
             ].map((screenshot, i) => (
               <motion.div
                 key={screenshot.label}
@@ -214,45 +214,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-14 text-center"
-          >
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-              How it works
-            </h2>
-          </motion.div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            {[
-              { step: "1", title: "Set up your arrangement", desc: "Enter your payment amount, frequency, and schedule in seconds." },
-              { step: "2", title: "Track & manage", desc: "Monitor payments, log shared expenses, and keep receipts organised." },
-              { step: "3", title: "Stay aligned", desc: "Both parents see the same information — no more disputes or confusion." },
-            ].map((item, i) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="text-center"
-              >
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-foreground text-lg font-bold text-background">
-                  {item.step}
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Finance phone image + CTA */}
       <section className="border-t border-border bg-card py-20">
         <div className="mx-auto max-w-5xl px-6">
@@ -267,9 +228,9 @@ const Landing = () => {
                 Your finances, at your fingertips
               </h2>
               <p className="mb-6 text-muted-foreground">
-                Track every payment, log every expense, and keep a complete record — all from your phone. medi8 gives you the clarity and control you need.
+                Manage payments with ease. Get rewarded along the way. Collabor8 gives families the clarity they need to stay on track.
               </p>
-              <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
+              <Button size="lg" onClick={scrollToWaitlist} className="gap-2" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
                 Get Early Access <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -343,15 +304,15 @@ const Landing = () => {
         <div className="mx-auto max-w-5xl px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
-                <span className="text-xs font-bold text-background">M8</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
+                <span className="text-xs font-bold text-white">C8</span>
               </div>
-              <span className="text-sm font-semibold text-foreground">medi8</span>
+              <span className="text-sm font-semibold text-foreground">collabor8</span>
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
               <Link to="/cookies" className="hover:text-foreground">Cookie Policy</Link>
-              <span>© 2025 medi8</span>
+              <span>© 2025 collabor8</span>
             </div>
           </div>
         </div>
