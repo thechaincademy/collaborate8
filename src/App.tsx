@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import CookieConsent from "@/components/CookieConsent";
 import Landing from "./pages/Landing";
 import Splash from "./pages/Splash";
 import SignUp from "./pages/SignUp";
@@ -15,6 +16,8 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import EditRecurringPayment from "./pages/EditRecurringPayment";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,8 +41,11 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/edit-payment" element={<EditRecurringPayment />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/cookies" element={<CookiePolicy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <CookieConsent />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
