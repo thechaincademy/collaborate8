@@ -16,9 +16,7 @@ import {
   CheckCircle2,
   ChevronDown
 } from "lucide-react";
-import heroFamily from "@/assets/hero-family.jpg";
 import financePhone from "@/assets/finance-phone.jpg";
-import coparentingFinance from "@/assets/coparenting-finance.jpg";
 import appScreenshot1 from "@/assets/app-screenshot-1.png";
 import appScreenshot2 from "@/assets/app-screenshot-2.png";
 import appScreenshot3 from "@/assets/app-screenshot-3.png";
