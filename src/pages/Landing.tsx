@@ -24,9 +24,11 @@ import appScreenshot3 from "@/assets/app-screenshot-3.png";
 const Landing = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
   const waitlistRef = useRef<HTMLDivElement>(null);
+  const formLoadedAt = useRef(Date.now());
 
   const scrollToWaitlist = () => {
     waitlistRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,6 +36,15 @@ const Landing = () => {
 
   const handleWaitlistSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Honeypot check - bots fill hidden fields
+    if (honeypot) return;
+
+    // Timing check - bots submit too fast (under 2 seconds)
+    if (Date.now() - formLoadedAt.current < 2000) {
+      toast.error("Please wait a moment before submitting.");
+      return;
+    }
+
     if (!email || !email.includes("@")) {
       toast.error("Please enter a valid email address");
       return;
@@ -266,6 +277,17 @@ const Landing = () => {
             </p>
             {!isSignedUp ? (
               <form onSubmit={handleWaitlistSignup} className="mx-auto mt-8 flex max-w-md gap-3">
+                {/* Honeypot - hidden from real users, bots will fill it */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  className="absolute opacity-0 pointer-events-none h-0 w-0"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
                 <Input
                   type="email"
                   placeholder="Enter your email"
