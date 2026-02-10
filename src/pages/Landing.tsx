@@ -304,8 +304,8 @@ const Landing = () => {
         <div className="mx-auto max-w-5xl px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ backgroundColor: 'hsl(200 25% 45%)' }}>
-                <span className="text-xs font-bold text-white">C8</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
+                <span className="text-xs font-bold text-background">C8</span>
               </div>
               <span className="text-sm font-semibold text-foreground">collabor8</span>
             </div>
