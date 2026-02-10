@@ -214,40 +214,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Lifestyle photo section */}
-      <section className="border-t border-border bg-card py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="grid items-center gap-10 md:grid-cols-2">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <img
-                src={coparentingFinance}
-                alt="Parents reviewing finances together"
-                className="w-full rounded-3xl object-cover shadow-elevated"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="mb-4 text-3xl font-bold text-foreground">
-                Built for real families
-              </h2>
-              <p className="mb-4 text-muted-foreground">
-                Whether you're the paying or receiving parent, medi8 keeps both sides informed and accountable. No more awkward conversations about money.
-              </p>
-              <p className="text-muted-foreground">
-                Set up your arrangement once, and let the app handle reminders, tracking, and record-keeping — so you can focus on what matters most.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* How it works */}
       <section className="py-20">
         <div className="mx-auto max-w-5xl px-6">
