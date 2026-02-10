@@ -61,7 +61,6 @@ const Landing = () => {
       icon: CreditCard,
       title: "Payment Tracking",
       description: "Set up and track recurring child maintenance payments with automatic reminders.",
-      image: financePhone,
     },
     {
       icon: Calculator,
