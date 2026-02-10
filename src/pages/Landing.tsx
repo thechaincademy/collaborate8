@@ -150,7 +150,7 @@ const Landing = () => {
             {[
               { src: appScreenshot1, alt: "Payment tracking screen", label: "Track Payments" },
               { src: appScreenshot2, alt: "Expense management screen", label: "Manage Expenses" },
-              { src: appScreenshot3, alt: "Co-parent messaging screen", label: "Stay Connected" },
+              { src: appScreenshot3, alt: "Rewards screen", label: "Claim Rewards" },
             ].map((screenshot, i) => (
               <motion.div
                 key={screenshot.label}
