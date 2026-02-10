@@ -392,14 +392,20 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
-              <span className="text-xs font-bold text-background">M8</span>
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
+                <span className="text-xs font-bold text-background">M8</span>
+              </div>
+              <span className="text-sm font-semibold text-foreground">medi8</span>
             </div>
-            <span className="text-sm font-semibold text-foreground">medi8</span>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
+              <Link to="/cookies" className="hover:text-foreground">Cookie Policy</Link>
+              <span>© 2025 medi8</span>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">© 2025 medi8. All rights reserved.</p>
         </div>
       </footer>
     </div>
