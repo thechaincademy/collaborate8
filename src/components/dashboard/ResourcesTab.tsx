@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { User, Bell, BookOpen, Scale, Heart, FileText, ChevronRight } from "lucide-react";
 
 const resources = [
@@ -6,7 +7,8 @@ const resources = [
     icon: Scale,
     title: "Understanding Child Maintenance",
     description: "Learn about your rights and responsibilities",
-    category: "Legal"
+    category: "Legal",
+    link: "/resources/child-maintenance-guide"
   },
   {
     icon: FileText,
@@ -36,6 +38,7 @@ const quickLinks = [
 ];
 
 const ResourcesTab = () => {
+  const navigate = useNavigate();
   return (
     <div className="px-6 pt-12">
       {/* Header */}
@@ -76,6 +79,7 @@ const ResourcesTab = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 + index * 0.1 }}
+            onClick={() => resource.link && navigate(resource.link)}
             className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
