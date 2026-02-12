@@ -33,7 +33,7 @@ export const useRecurringPayments = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching payments:", error);
+      toast.error("Failed to load payments");
       toast.error("Failed to load payments");
     } else {
       setPayments((data as RecurringPayment[]) || []);
@@ -77,7 +77,6 @@ export const useRecurringPayments = () => {
         .single();
 
       if (error) {
-        console.error("Error updating payment:", error);
         toast.error("Failed to update arrangement");
         return { error };
       }
@@ -102,7 +101,6 @@ export const useRecurringPayments = () => {
         .single();
 
       if (error) {
-        console.error("Error creating payment:", error);
         toast.error("Failed to create arrangement");
         return { error };
       }
@@ -120,7 +118,6 @@ export const useRecurringPayments = () => {
       .eq("id", paymentId);
 
     if (error) {
-      console.error("Error canceling payment:", error);
       toast.error("Failed to cancel arrangement");
       return { error };
     }
