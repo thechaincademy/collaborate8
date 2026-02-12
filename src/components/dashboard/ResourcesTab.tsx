@@ -20,7 +20,8 @@ const resources = [
     icon: Heart,
     title: "Managing Co-parenting Finances",
     description: "Tips for healthy financial communication",
-    category: "Wellbeing"
+    category: "Wellbeing",
+    link: "/resources/financial-coparenting-tips"
   },
   {
     icon: BookOpen,
