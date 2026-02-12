@@ -32,7 +32,7 @@ export const useExpenses = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching expenses:", error);
+      toast.error("Failed to load expenses");
       toast.error("Failed to load expenses");
     } else {
       setExpenses((data as ExpenseRequest[]) || []);
@@ -66,16 +66,12 @@ export const useExpenses = () => {
         .upload(fileName, receiptFile);
 
       if (uploadError) {
-        console.error("Upload error:", uploadError);
         toast.error("Failed to upload receipt");
         return { error: uploadError };
       }
 
-      const { data: urlData } = supabase.storage
-        .from("receipts")
-        .getPublicUrl(fileName);
-
-      receiptUrl = urlData.publicUrl;
+      // Store the file path - we'll create signed URLs when needed
+      receiptUrl = fileName;
     }
 
     const { data, error } = await supabase
@@ -90,7 +86,6 @@ export const useExpenses = () => {
       .single();
 
     if (error) {
-      console.error("Error creating expense:", error);
       toast.error("Failed to create expense");
       return { error };
     }

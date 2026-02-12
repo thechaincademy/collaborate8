@@ -24,9 +24,10 @@ const SignUp = () => {
   const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly" | null>(null);
 
   const isNameValid = firstName.length > 0 && lastName.length > 0;
-  const isEmailValid = email.length > 0 && email.includes("@");
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmailValid = email.length > 0 && emailRegex.test(email);
   const isPasswordValid = password.length >= 6;
-  const isCoparentValid = coparentEmail.length === 0 || coparentEmail.includes("@");
+  const isCoparentValid = coparentEmail.length === 0 || emailRegex.test(coparentEmail);
   const isSubscriptionValid = selectedPlan !== null;
 
   const handleBack = () => {
