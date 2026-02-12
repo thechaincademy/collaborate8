@@ -19,6 +19,7 @@ import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
+import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/cookies" element={<CookiePolicy />} />
               <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
+              <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieConsent />
