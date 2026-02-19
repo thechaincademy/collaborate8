@@ -14,7 +14,11 @@ import {
   MessageSquare,
   Gift,
   CheckCircle2,
-  ChevronDown
+  ChevronDown,
+  Trophy,
+  Star,
+  BookOpen,
+  Infinity
 } from "lucide-react";
 import financePhone from "@/assets/finance-phone.jpg";
 import appScreenshot1 from "@/assets/app-screenshot-1.png";
@@ -87,7 +91,7 @@ const Landing = () => {
     {
       icon: Gift,
       title: "Rewards",
-      description: "Earn rewards for consistent, on time payments.",
+      description: "Earn rewards and points for consistent payments. Unlock milestones, climb leaderboards, and save hundreds of pounds a year.",
     },
   ];
 
@@ -226,6 +230,75 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Subscription Value Section */}
+      <section className="border-t border-border py-20" style={{ background: 'linear-gradient(180deg, hsl(25 70% 88%) 0%, hsl(30 50% 93%) 100%)' }}>
+        <div className="mx-auto max-w-5xl px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-14 text-center"
+          >
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+              Your subscription, packed with value
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Everything you need to stay on top of co-parenting finances — and then some.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            {[
+              {
+                icon: Infinity,
+                title: "Unlimited expenses & payments",
+                description: "Track every payment and expense with no limits. Log as many as you need, whenever you need.",
+              },
+              {
+                icon: BookOpen,
+                title: "Micro-courses & budgeting tools",
+                description: "Access co-parenting mini-courses and downloadable budgeting templates to keep your finances healthy.",
+              },
+              {
+                icon: Trophy,
+                title: "Hundreds of pounds in rewards",
+                description: "Earn rewards and points for consistent payments — far exceeding the cost of your subscription.",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-2xl border border-border bg-card p-6 text-center"
+              >
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
+                  <item.icon className="h-6 w-6 text-background" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-foreground">{item.title}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-10 text-center"
+          >
+            <p className="mb-6 font-medium text-foreground">
+              <Star className="mr-1 inline h-4 w-4" />
+              Stay consistent, earn points, and watch your rewards grow.
+            </p>
+            <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
+              Join the Waiting List <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Finance phone image + CTA */}
       <section className="border-t border-border bg-card py-20">
         <div className="mx-auto max-w-5xl px-6">
@@ -302,17 +375,14 @@ const Landing = () => {
                 </Button>
               </form>
             ) : (
-              <div className="mt-8 space-y-4">
+              <div className="mt-8 space-y-3">
                 <div className="flex items-center justify-center gap-2 text-foreground">
                   <CheckCircle2 className="h-5 w-5" />
                   <span className="font-semibold">You're on the waitlist!</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Want to explore the app now? Try our interactive prototype.
+                  We'll be in touch soon!
                 </p>
-                <Button onClick={() => navigate("/splash")} size="lg" className="gap-2">
-                  Try the Prototype <ArrowRight className="h-4 w-4" />
-                </Button>
               </div>
             )}
             <p className="mt-4 text-xs text-muted-foreground">
