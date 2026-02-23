@@ -40,6 +40,7 @@ dayOfWeek?: string | null)
 const MaintenanceTab = () => {
   const navigate = useNavigate();
   const { getActivePayment, loading } = useRecurringPayments();
+  const { isViewing, loading: profileLoading } = useProfile();
 
   const activePayment = getActivePayment();
   const amount = activePayment?.amount ?? 0;
