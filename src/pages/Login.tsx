@@ -93,6 +93,14 @@ const Login = () => {
             {" "}and{" "}
             <button type="button" className="font-semibold text-foreground">Terms of Services</button>.
           </p>
+
+          <button
+            type="button"
+            onClick={() => navigate("/signup/invited")}
+            className="mt-4 w-full text-center text-sm font-semibold text-foreground"
+          >
+            Have an invite code? Sign up here →
+          </button>
         </div>
       </motion.form>
     </div>;

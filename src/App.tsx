@@ -20,6 +20,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
+import SignUpInvited from "./pages/SignUpInvited";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/splash" element={<Splash />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/signup/invited" element={<SignUpInvited />} />
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/post-signup" element={<PostSignupOnboarding />} />

@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Check, Clock } from "lucide-react";
+import { Check, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "./DashboardHeader";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
+import { useProfile } from "@/hooks/useProfile";
 import { format, addDays, addWeeks, addMonths, setDate, nextDay } from "date-fns";
 
 const getNextPaymentDate = (
@@ -39,6 +40,7 @@ dayOfWeek?: string | null)
 const MaintenanceTab = () => {
   const navigate = useNavigate();
   const { getActivePayment, loading } = useRecurringPayments();
+  const { isViewing, loading: profileLoading } = useProfile();
 
   const activePayment = getActivePayment();
   const amount = activePayment?.amount ?? 0;
@@ -92,14 +94,27 @@ const MaintenanceTab = () => {
         <Button className="h-auto flex-col gap-2 py-4" variant="outline">
           <span className="font-medium">Payment History</span>
         </Button>
-        <Button
-          className="h-auto flex-col gap-2 py-4"
-          variant="outline"
-          onClick={() => navigate("/edit-payment")}>
-
-          <span className="font-medium">View / Edit Arrangement</span>
-        </Button>
+        {!isViewing && (
+          <Button
+            className="h-auto flex-col gap-2 py-4"
+            variant="outline"
+            onClick={() => navigate("/edit-payment")}>
+            <span className="font-medium">View / Edit Arrangement</span>
+          </Button>
+        )}
       </motion.div>
+
+      {/* Viewing parent info */}
+      {isViewing && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-6 flex items-center gap-3 rounded-2xl bg-card p-4">
+          <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Your co-parent manages this arrangement</p>
+        </motion.div>
+      )}
 
       {/* Payment History */}
       <motion.div

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ChevronDown, Check } from "lucide-react";
+import { ArrowLeft, ChevronDown, Check, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/drawer";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
 const repeatOptions = ["Daily", "Weekly", "Monthly"] as const;
@@ -20,6 +21,7 @@ const EditRecurringPayment = () => {
   const [searchParams] = useSearchParams();
   const isReceiving = searchParams.get("type") === "receiving";
   const { user } = useAuth();
+  const { isViewing, loading: profileLoading } = useProfile();
   const { getActivePayment, createOrUpdatePayment, cancelPayment, loading } = useRecurringPayments();
   
   const [amount, setAmount] = useState("50.00");
@@ -54,14 +56,13 @@ const EditRecurringPayment = () => {
         return (num / 100).toFixed(2);
       });
     } else if (key === ".") {
-      // Already has decimal in our format, ignore
       return;
     } else {
       setAmount(prev => {
         const current = prev.replace(".", "");
         const newVal = current + key;
         const num = parseInt(newVal, 10);
-        if (num > 9999999) return prev; // Limit max amount
+        if (num > 9999999) return prev;
         return (num / 100).toFixed(2);
       });
     }
@@ -107,6 +108,39 @@ const EditRecurringPayment = () => {
       navigate(-1);
     }
   };
+
+  // Show permission denied for viewing parents
+  if (!profileLoading && isViewing) {
+    return (
+      <div className="flex min-h-screen flex-col bg-card">
+        <div className="px-6 pt-12">
+          <div className="mb-8">
+            <button onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-6 w-6 text-foreground" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <ShieldAlert className="h-10 w-10 text-muted-foreground" />
+          </div>
+
+          <h1 className="mb-4 text-2xl font-bold text-foreground">
+            You don't have permission to edit this arrangement
+          </h1>
+
+          <p className="mb-8 max-w-sm text-muted-foreground">
+            If you'd like to change the maintenance arrangement, you would need to seek legal advice or apply to the court for a variation of the existing order.
+          </p>
+
+          <Button onClick={() => navigate(-1)} variant="outline" size="lg" className="w-full max-w-xs">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-card">
@@ -233,7 +267,6 @@ const EditRecurringPayment = () => {
           Cancel This Payment
         </Button>
       </div>
-
     </div>
   );
 };
