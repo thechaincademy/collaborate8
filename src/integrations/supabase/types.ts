@@ -47,6 +47,82 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          created_at: string
+          id: string
+          invite_code: string
+          invitee_email: string | null
+          inviter_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_code: string
+          invitee_email?: string | null
+          inviter_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          invitee_email?: string | null
+          inviter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          coparent_id: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          invite_code: string | null
+          last_name: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          coparent_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          id: string
+          invite_code?: string | null
+          last_name?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          coparent_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          invite_code?: string | null
+          last_name?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_coparent_id_fkey"
+            columns: ["coparent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_payments: {
         Row: {
           amount: number
@@ -106,7 +182,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_coparent_id: { Args: { _user_id: string }; Returns: string }
+      get_user_role: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
