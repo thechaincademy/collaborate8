@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Check, Clock } from "lucide-react";
+import { Check, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "./DashboardHeader";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
+import { useProfile } from "@/hooks/useProfile";
 import { format, addDays, addWeeks, addMonths, setDate, nextDay } from "date-fns";
 
 const getNextPaymentDate = (
