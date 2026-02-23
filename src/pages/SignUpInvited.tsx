@@ -215,6 +215,7 @@ const SignUpInvited = () => {
           <Input type="password" placeholder="Password (min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)}
             className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
         </div>
+        <p className="text-xs text-muted-foreground">Use a unique password with letters, numbers & symbols to avoid rejection.</p>
       </div>
 
       <div className="flex-1" />
