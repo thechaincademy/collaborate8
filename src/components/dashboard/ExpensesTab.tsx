@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Plus, Receipt, Upload, Check, ArrowLeft, Image, X, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Receipt, Upload, Check, ArrowLeft, Image, X, CheckCircle, XCircle } from "lucide-react";
+import DashboardHeader from "./DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useExpenses } from "@/hooks/useExpenses";
