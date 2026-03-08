@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Plus, Receipt, Upload, Check, ArrowLeft, Image, X, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Receipt, Upload, Check, ArrowLeft, Image, X, CheckCircle, XCircle } from "lucide-react";
+import DashboardHeader from "./DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useExpenses } from "@/hooks/useExpenses";
@@ -99,19 +100,7 @@ const ExpensesTab = () => {
 
   const renderList = () => (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10 flex items-center justify-between"
-      >
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <User className="h-5 w-5 text-foreground" />
-        </button>
-        <h1 className="text-lg font-semibold text-foreground">Expenses</h1>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <Bell className="h-5 w-5 text-foreground" />
-        </button>
-      </motion.div>
+      <DashboardHeader title="Expenses" />
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6">
         <Button onClick={() => setView("request")} className="w-full" size="lg" disabled={!user}>

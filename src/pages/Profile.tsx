@@ -56,6 +56,8 @@ const Profile = () => {
           value: connection
             ? `${connection.institution_name} ${connection.account_number_masked || ""}`
             : "Not connected",
+          action: !connection ? () => navigate("/post-signup?step=bank") : undefined,
+          actionLabel: !connection ? "Link" : undefined,
         },
         {
           icon: CreditCard,
@@ -132,6 +134,16 @@ const Profile = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">{item.value}</span>
+                    {"action" in item && item.action && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={item.action}
+                        className="ml-2 h-7 text-xs"
+                      >
+                        {("actionLabel" in item && item.actionLabel) || "Go"}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

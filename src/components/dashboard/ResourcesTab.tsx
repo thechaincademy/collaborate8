@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { User, Bell, BookOpen, Scale, Heart, FileText, ChevronRight } from "lucide-react";
+import { BookOpen, Scale, Heart, FileText, ChevronRight } from "lucide-react";
+import DashboardHeader from "./DashboardHeader";
 
 const resources = [
   {
@@ -42,20 +43,7 @@ const ResourcesTab = () => {
   const navigate = useNavigate();
   return (
     <div className="px-6 pt-12">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10 flex items-center justify-between"
-      >
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <User className="h-5 w-5 text-foreground" />
-        </button>
-        <h1 className="text-lg font-semibold text-foreground">Resources</h1>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <Bell className="h-5 w-5 text-foreground" />
-        </button>
-      </motion.div>
+      <DashboardHeader title="Resources" />
 
       {/* Intro */}
       <motion.div
