@@ -1,90 +1,117 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ChevronDown, Wallet, User, MessageSquare, Image, Mic } from "lucide-react";
+import { ArrowLeft, ChevronDown, User, MessageSquare, Loader2, Check, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { useNavigate } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
+import { useBanking } from "@/hooks/useBanking";
+import { usePayments } from "@/hooks/usePayments";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const envelopes = [
-  { name: "Charity", amount: 400.00 },
-  { name: "Moneybox", amount: 650.00 },
-  { name: "Savings", amount: 320.00 },
-];
-
-const contacts = [
-  { name: "Hanna Mango", account: "Account number" },
-  { name: "Davis Levin", account: "Account number" },
-];
-
-type Step = "recipient" | "amount" | "success";
+type Step = "amount" | "confirm" | "redirect" | "success";
 
 const SendMoney = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const fromEnvelope = searchParams.get("envelope");
-  
-  const [step, setStep] = useState<Step>("recipient");
-  const [iban, setIban] = useState("");
+  const { profile } = useProfile();
+  const { connection, fetchConnection } = useBanking();
+  const { initiatePayment, loading: paymentLoading } = usePayments();
+
+  const [step, setStep] = useState<Step>("amount");
   const [amount, setAmount] = useState("0.00");
   const [comment, setComment] = useState("");
-  const [selectedRecipient, setSelectedRecipient] = useState<{ name: string; iban: string } | null>(null);
+  const [coparentProfile, setCoparentProfile] = useState<any>(null);
+  const [coparentBank, setCoparentBank] = useState<any>(null);
 
-  const handleSelectRecipient = (contact: typeof contacts[0]) => {
-    setSelectedRecipient({ name: contact.name, iban: "IBAN 123123123123123" });
-    setStep("amount");
-  };
+  useEffect(() => {
+    fetchConnection();
+    fetchCoparentDetails();
+  }, [profile?.coparent_id]);
 
-  const handleIbanSubmit = () => {
-    if (iban.length > 5) {
-      setSelectedRecipient({ name: "Bank Transfer", iban: `IBAN ${iban}` });
-      setStep("amount");
-    }
-  };
+  const fetchCoparentDetails = async () => {
+    if (!profile?.coparent_id) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", profile.coparent_id)
+      .single();
+    if (data) setCoparentProfile(data);
 
-  const handleSend = () => {
-    setStep("success");
+    // Get co-parent's bank details (masked)
+    const { data: bank } = await supabase
+      .from("bank_connections")
+      .select("institution_name, account_number_masked, account_id, sort_code")
+      .eq("user_id", profile.coparent_id)
+      .eq("consent_status", "active")
+      .limit(1)
+      .single();
+    if (bank) setCoparentBank(bank);
   };
 
   const handleKeyPress = (digit: string) => {
     if (digit === "delete") {
-      setAmount(prev => {
+      setAmount((prev) => {
         const newVal = prev.replace(".", "").slice(0, -1) || "0";
-        const num = parseInt(newVal, 10);
-        return (num / 100).toFixed(2);
+        return (parseInt(newVal, 10) / 100).toFixed(2);
       });
     } else {
-      setAmount(prev => {
+      setAmount((prev) => {
         const current = prev.replace(".", "");
         const newVal = current + digit;
         const num = parseInt(newVal, 10);
+        if (num > 9999999) return prev;
         return (num / 100).toFixed(2);
       });
     }
   };
+
+  const handleSend = async () => {
+    if (!connection) {
+      toast.error("Please connect your bank account first");
+      return;
+    }
+    if (!coparentProfile || !coparentBank) {
+      toast.error("Co-parent has not connected their bank yet");
+      return;
+    }
+
+    setStep("redirect");
+
+    const result = await initiatePayment({
+      institutionId: connection.institution_id,
+      amount: parseFloat(amount),
+      payeeName: [coparentProfile.first_name, coparentProfile.last_name].filter(Boolean).join(" ") || "Co-parent",
+      payeeAccountNumber: coparentBank.account_id || "",
+      payeeSortCode: coparentBank.sort_code || "",
+      payeeId: profile?.coparent_id || "",
+      type: "single",
+      reference: comment || "Collabor8 Payment",
+    });
+
+    if (result?.authorisationUrl) {
+      window.location.href = result.authorisationUrl;
+    } else {
+      setStep("success");
+    }
+  };
+
+  const coparentName = coparentProfile
+    ? [coparentProfile.first_name, coparentProfile.last_name].filter(Boolean).join(" ")
+    : "Co-parent";
 
   if (step === "success") {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <div className="flex flex-1 items-center justify-center">
           <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-card">
-            <Image className="h-16 w-16 text-muted-foreground" />
+            <Check className="h-16 w-16 text-foreground" />
           </div>
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="px-6 pb-12"
-        >
-          <h1 className="mb-3 text-3xl font-bold text-foreground">
-            Money has been sent!
-          </h1>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="px-6 pb-12">
+          <h1 className="mb-3 text-3xl font-bold text-foreground">Payment submitted!</h1>
           <p className="mb-8 text-muted-foreground">
-            Ac ut vitae a amet donec etiam lorem at neque. Risus morbi nec facilisis elementum congue.
+            Your payment of £{amount} to {coparentName} has been initiated via Open Banking.
           </p>
           <Button className="w-full" size="lg" onClick={() => navigate("/dashboard")}>
             Done
@@ -94,141 +121,89 @@ const SendMoney = () => {
     );
   }
 
-  if (step === "amount") {
+  if (step === "redirect") {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <div className="px-6 pt-12">
-          <button onClick={() => setStep("recipient")} className="mb-8">
-            <ArrowLeft className="h-6 w-6 text-foreground" />
-          </button>
-
-          <Drawer>
-            <DrawerTrigger asChild>
-              <button className="mb-12 flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4">
-                <div className="text-left">
-                  <p className="font-semibold text-foreground">Bank Transfer</p>
-                  <p className="text-sm text-muted-foreground">To: {selectedRecipient?.iban}</p>
-                </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground" />
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="px-6 pb-8">
-              <div className="mb-6 mt-4">
-                <h2 className="text-xl font-bold text-foreground">Select recipient</h2>
-              </div>
-              {contacts.map((contact) => (
-                <button
-                  key={contact.name}
-                  onClick={() => handleSelectRecipient(contact)}
-                  className="flex w-full items-center gap-3 border-b border-border py-4"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <User className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium text-foreground">{contact.name}</p>
-                    <p className="text-sm text-muted-foreground">{contact.account}</p>
-                  </div>
-                </button>
-              ))}
-            </DrawerContent>
-          </Drawer>
-
-          <div className="mb-8 text-center">
-            <p className="text-4xl font-light text-muted-foreground">£ {amount}</p>
-          </div>
-        </div>
-
-        <div className="mt-auto px-6">
-          <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-            <MessageSquare className="h-5 w-5 text-muted-foreground" />
-            <Input
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Add comment..."
-              className="border-0 bg-transparent p-0 focus-visible:ring-0"
-            />
-          </div>
-
-          <Button className="mb-6 w-full" size="lg" onClick={handleSend}>
-            Send
-          </Button>
-
-          <div className="grid grid-cols-3 gap-2 pb-8">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "delete"].map((key, i) => (
-              <button
-                key={i}
-                onClick={() => key && handleKeyPress(key)}
-                className={`flex h-14 items-center justify-center rounded-xl text-xl font-medium ${
-                  key === "" ? "" : "bg-card text-foreground active:bg-muted"
-                }`}
-              >
-                {key === "delete" ? "⌫" : key}
-                {["2", "3", "4", "5", "6", "7", "8", "9"].includes(key) && (
-                  <span className="ml-1 text-xs text-muted-foreground">
-                    {key === "2" ? "ABC" : key === "3" ? "DEF" : key === "4" ? "GHI" :
-                     key === "5" ? "JKL" : key === "6" ? "MNO" : key === "7" ? "PQRS" :
-                     key === "8" ? "TUV" : "WXYZ"}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
+        <Loader2 className="mb-4 h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-muted-foreground">Redirecting to your bank...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
+    <div className="flex min-h-screen flex-col bg-background">
       <div className="px-6 pt-12">
         <button onClick={() => navigate(-1)} className="mb-8">
           <ArrowLeft className="h-6 w-6 text-foreground" />
         </button>
 
-        <h1 className="mb-6 text-2xl font-bold text-foreground">Send money</h1>
-
-        <Input
-          value={iban}
-          onChange={(e) => setIban(e.target.value)}
-          placeholder="Enter Recipient IBAN"
-          className="mb-8"
-          onKeyDown={(e) => e.key === "Enter" && handleIbanSubmit()}
-        />
-
-        <h2 className="mb-4 text-sm font-semibold text-foreground">Your Envelopes</h2>
-        <div className="mb-8 flex gap-3 overflow-x-auto pb-2">
-          {envelopes.map((envelope) => (
-            <button
-              key={envelope.name}
-              className="flex min-w-[140px] items-center gap-3 rounded-2xl border border-border bg-background p-4"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-                <Wallet className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-foreground">{envelope.name}</p>
-                <p className="text-sm text-muted-foreground">£ {envelope.amount.toFixed(2)}</p>
-              </div>
-            </button>
-          ))}
+        {/* Recipient info */}
+        <div className="mb-8 flex items-center gap-4 rounded-2xl bg-card p-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <User className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">To: {coparentName}</p>
+            <p className="text-sm text-muted-foreground">
+              {coparentBank ? `${coparentBank.institution_name} ${coparentBank.account_number_masked}` : "Bank not connected"}
+            </p>
+          </div>
         </div>
 
-        <h2 className="mb-4 text-sm font-semibold text-foreground">Contact book</h2>
-        <div className="space-y-0">
-          {contacts.map((contact) => (
+        {/* From account */}
+        <div className="mb-8 flex items-center gap-4 rounded-2xl bg-card p-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Building2 className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">From: Your bank</p>
+            <p className="text-sm text-muted-foreground">
+              {connection ? `${connection.institution_name} ${connection.account_number_masked || ""}` : "Not connected"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-8 text-center">
+          <p className="text-4xl font-light text-foreground">£ {amount}</p>
+        </div>
+      </div>
+
+      <div className="mt-auto px-6">
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <MessageSquare className="h-5 w-5 text-muted-foreground" />
+          <Input
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Add reference..."
+            className="border-0 bg-transparent p-0 focus-visible:ring-0"
+          />
+        </div>
+
+        <Button
+          className="mb-6 w-full"
+          size="lg"
+          onClick={handleSend}
+          disabled={parseFloat(amount) <= 0 || paymentLoading || !connection || !coparentBank}
+        >
+          {paymentLoading ? "Processing..." : "Send via Open Banking"}
+        </Button>
+
+        {!connection && (
+          <p className="mb-4 text-center text-sm text-destructive">
+            Connect your bank account in Profile to send payments
+          </p>
+        )}
+
+        <div className="grid grid-cols-3 gap-2 pb-8">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "delete"].map((key, i) => (
             <button
-              key={contact.name}
-              onClick={() => handleSelectRecipient(contact)}
-              className="flex w-full items-center gap-3 border-b border-border py-4"
+              key={i}
+              onClick={() => key && handleKeyPress(key)}
+              className={`flex h-14 items-center justify-center rounded-xl text-xl font-medium ${
+                key === "" ? "" : "bg-card text-foreground active:bg-muted"
+              }`}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                <User className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-foreground">{contact.name}</p>
-                <p className="text-sm text-muted-foreground">{contact.account}</p>
-              </div>
+              {key === "delete" ? "⌫" : key}
             </button>
           ))}
         </div>
