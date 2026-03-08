@@ -14,6 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_events: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_connections: {
+        Row: {
+          account_id: string | null
+          account_name: string | null
+          account_number_masked: string | null
+          account_type: string | null
+          consent_status: string
+          consent_token: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          institution_id: string
+          institution_name: string
+          sort_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          account_name?: string | null
+          account_number_masked?: string | null
+          account_type?: string | null
+          consent_status?: string
+          consent_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          institution_id: string
+          institution_name: string
+          sort_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          account_name?: string | null
+          account_number_masked?: string | null
+          account_type?: string | null
+          consent_status?: string
+          consent_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          institution_id?: string
+          institution_name?: string
+          sort_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_requests: {
         Row: {
           amount: number
@@ -78,6 +175,89 @@ export type Database = {
             columns: ["inviter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          error_message: string | null
+          id: string
+          idempotency_key: string
+          payee_id: string
+          payer_id: string
+          provider_consent_token: string | null
+          provider_payment_id: string | null
+          related_arrangement_id: string | null
+          related_expense_id: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key: string
+          payee_id: string
+          payer_id: string
+          provider_consent_token?: string | null
+          provider_payment_id?: string | null
+          related_arrangement_id?: string | null
+          related_expense_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string
+          payee_id?: string
+          payer_id?: string
+          provider_consent_token?: string | null
+          provider_payment_id?: string | null
+          related_arrangement_id?: string | null
+          related_expense_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_payee_id_fkey"
+            columns: ["payee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payer_id_fkey"
+            columns: ["payer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_related_arrangement_id_fkey"
+            columns: ["related_arrangement_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_related_expense_id_fkey"
+            columns: ["related_expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense_requests"
             referencedColumns: ["id"]
           },
         ]
