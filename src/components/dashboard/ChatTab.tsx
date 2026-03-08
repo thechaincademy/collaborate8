@@ -37,23 +37,7 @@ const ChatTab = () => {
 
   return (
     <div className="flex h-[calc(100vh-6rem)] flex-col px-6 pt-12">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6 flex items-center justify-between"
-      >
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <User className="h-5 w-5 text-foreground" />
-        </button>
-        <div className="text-center">
-          <h1 className="text-lg font-semibold text-foreground">Chat</h1>
-          <p className="text-xs text-muted-foreground">Discuss finances with your co-parent</p>
-        </div>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <Bell className="h-5 w-5 text-foreground" />
-        </button>
-      </motion.div>
+      <DashboardHeader title="Chat" />
 
       {/* Chat Messages */}
       <div className="flex-1 space-y-4 overflow-y-auto pb-4">

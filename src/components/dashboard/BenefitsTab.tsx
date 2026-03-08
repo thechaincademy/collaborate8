@@ -31,20 +31,7 @@ const benefits = [
 const BenefitsTab = () => {
   return (
     <div className="px-6 pt-12">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10 flex items-center justify-between"
-      >
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <User className="h-5 w-5 text-foreground" />
-        </button>
-        <h1 className="text-lg font-semibold text-foreground">Benefits</h1>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card">
-          <Bell className="h-5 w-5 text-foreground" />
-        </button>
-      </motion.div>
+      <DashboardHeader title="Benefits" />
 
       {/* Intro */}
       <motion.div
