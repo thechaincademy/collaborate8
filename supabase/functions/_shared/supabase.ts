@@ -21,8 +21,12 @@ export async function getUserFromRequest(req: Request) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) throw new Error("Missing authorization header");
 
-  const url = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
+  const url = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+  if (!url || !anonKey) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+  }
 
   const supabase = createClient(url, anonKey, {
     global: { headers: { Authorization: authHeader } },
