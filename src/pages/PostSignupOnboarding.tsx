@@ -1,44 +1,76 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Building2, Check, Calculator, PoundSterling } from "lucide-react";
+import { ArrowLeft, Building2, Check, Calculator, PoundSterling, Search, Loader2 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { useBanking } from "@/hooks/useBanking";
 
-type OnboardingStep = 
-  | "connect-bank" 
-  | "payment-amount" 
-  | "payment-frequency" 
+type OnboardingStep =
+  | "connect-bank"
+  | "select-institution"
+  | "bank-redirect"
+  | "payment-amount"
+  | "payment-frequency"
   | "complete"
   | "waiting-coparent";
 
 const PostSignupOnboarding = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { profile, loading: profileLoading, isViewing } = useProfile();
+  const { getInstitutions, linkBank, exchangeConsent, loading: bankLoading } = useBanking();
+
   const [step, setStep] = useState<OnboardingStep>("connect-bank");
   const [paymentAmount, setPaymentAmount] = useState("");
   const [useCalculator, setUseCalculator] = useState(false);
   const [frequency, setFrequency] = useState<"monthly" | "weekly">("monthly");
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedInstitution, setSelectedInstitution] = useState<any>(null);
+
+  // Check for bank callback
+  useEffect(() => {
+    const consent = searchParams.get("consent");
+    const institutionId = searchParams.get("institution");
+    if (consent && institutionId) {
+      exchangeConsent(consent, institutionId).then(() => {
+        if (isViewing) {
+          setStep("waiting-coparent");
+        } else {
+          setStep("payment-amount");
+        }
+      });
+    }
+  }, [searchParams]);
 
   const handleBack = () => {
     switch (step) {
-      case "connect-bank":
-        navigate(-1);
-        break;
-      case "payment-amount":
-        setStep("connect-bank");
-        break;
-      case "payment-frequency":
-        setStep("payment-amount");
-        break;
-      case "complete":
-      case "waiting-coparent":
-        break;
+      case "connect-bank": navigate(-1); break;
+      case "select-institution": setStep("connect-bank"); break;
+      case "payment-amount": setStep("connect-bank"); break;
+      case "payment-frequency": setStep("payment-amount"); break;
+      default: break;
     }
   };
 
-  const handleBankConnected = () => {
+  const handleConnectBank = async () => {
+    setStep("select-institution");
+    const banks = await getInstitutions();
+    setInstitutions(banks);
+  };
+
+  const handleSelectInstitution = async (institution: any) => {
+    setSelectedInstitution(institution);
+    const result = await linkBank(institution.id);
+    if (result?.authorisationUrl) {
+      // Redirect user to bank's authorisation page
+      window.location.href = result.authorisationUrl;
+    }
+  };
+
+  const handleSkipBank = () => {
     if (isViewing) {
       setStep("waiting-coparent");
     } else {
@@ -46,31 +78,81 @@ const PostSignupOnboarding = () => {
     }
   };
 
-  const handleAmountSubmit = () => {
-    setStep("payment-frequency");
-  };
+  const handleAmountSubmit = () => setStep("payment-frequency");
+  const handleFrequencySubmit = () => setStep("complete");
+  const handleFinish = () => navigate("/dashboard");
 
-  const handleFrequencySubmit = () => {
-    setStep("complete");
-  };
-
-  const handleFinish = () => {
-    navigate("/dashboard");
-  };
+  const filteredInstitutions = institutions.filter((inst: any) =>
+    inst.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const renderConnectBank = () => (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
       <h1 className="mb-2 text-3xl font-bold text-foreground">Connect your bank</h1>
-      <p className="mb-8 text-muted-foreground">Securely link your bank account for seamless payments.</p>
+      <p className="mb-8 text-muted-foreground">Securely link your bank account via Open Banking for seamless payments.</p>
       <div className="mb-6 rounded-2xl bg-card p-6">
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
           <Building2 className="h-6 w-6 text-foreground" />
         </div>
         <h3 className="mb-2 font-semibold text-foreground">Bank-grade security</h3>
-        <p className="text-sm text-muted-foreground">Your financial data is encrypted and secure. We use Open Banking to connect safely.</p>
+        <p className="text-sm text-muted-foreground">Your financial data is encrypted and secure. We use Open Banking (Yapily) to connect safely. We never store your login credentials.</p>
       </div>
       <div className="flex-1" />
-      <Button onClick={handleBankConnected} className="w-full" size="lg">Connect Bank Account</Button>
+      <div className="space-y-3 pb-8">
+        <Button onClick={handleConnectBank} className="w-full" size="lg" disabled={bankLoading}>
+          {bankLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</> : "Connect Bank Account"}
+        </Button>
+        <Button onClick={handleSkipBank} variant="ghost" className="w-full text-muted-foreground" size="lg">
+          Skip for now
+        </Button>
+      </div>
+    </motion.div>
+  );
+
+  const renderSelectInstitution = () => (
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+      <h1 className="mb-2 text-3xl font-bold text-foreground">Select your bank</h1>
+      <p className="mb-6 text-muted-foreground">Choose your bank to securely connect.</p>
+
+      <div className="relative mb-4">
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search banks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-12 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground"
+        />
+      </div>
+
+      <div className="flex-1 space-y-2 overflow-y-auto">
+        {bankLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredInstitutions.length === 0 ? (
+          <p className="py-8 text-center text-muted-foreground">No banks found</p>
+        ) : (
+          filteredInstitutions.slice(0, 20).map((inst: any) => (
+            <button
+              key={inst.id}
+              onClick={() => handleSelectInstitution(inst)}
+              className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left transition-colors hover:bg-accent"
+            >
+              {inst.media?.[0]?.source ? (
+                <img src={inst.media[0].source} alt={inst.name} className="h-10 w-10 rounded-xl object-contain" />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                  <Building2 className="h-5 w-5 text-muted-foreground" />
+                </div>
+              )}
+              <div>
+                <p className="font-medium text-foreground">{inst.name}</p>
+                <p className="text-xs text-muted-foreground">{inst.countries?.[0]?.countryCode2 || "UK"}</p>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
     </motion.div>
   );
 
@@ -141,7 +223,7 @@ const PostSignupOnboarding = () => {
         <Check className="h-10 w-10 text-foreground" />
       </div>
       <h1 className="mb-2 text-3xl font-bold text-foreground">You're all set!</h1>
-      <p className="mb-8 text-muted-foreground">Your maintenance arrangement is ready. Payments will be processed automatically.</p>
+      <p className="mb-8 text-muted-foreground">Your maintenance arrangement is ready. Payments will be processed via Open Banking.</p>
       <Button onClick={handleFinish} className="w-full" size="lg">Go to Dashboard</Button>
     </motion.div>
   );
@@ -159,7 +241,7 @@ const PostSignupOnboarding = () => {
     </motion.div>
   );
 
-  const showBackButton = step !== "complete" && step !== "waiting-coparent";
+  const showBackButton = !["complete", "waiting-coparent", "bank-redirect"].includes(step);
 
   if (profileLoading) {
     return (
@@ -181,6 +263,7 @@ const PostSignupOnboarding = () => {
       <div className={`flex flex-1 flex-col pb-8 ${!showBackButton ? "pt-12" : ""}`}>
         <AnimatePresence mode="wait">
           {step === "connect-bank" && renderConnectBank()}
+          {step === "select-institution" && renderSelectInstitution()}
           {step === "payment-amount" && renderPaymentAmount()}
           {step === "payment-frequency" && renderPaymentFrequency()}
           {step === "complete" && renderComplete()}
