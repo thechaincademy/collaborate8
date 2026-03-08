@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Bell, Send } from "lucide-react";
+import { Send } from "lucide-react";
+import DashboardHeader from "./DashboardHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 

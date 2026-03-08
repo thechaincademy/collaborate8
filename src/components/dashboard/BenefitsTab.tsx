@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { User, Bell, Ticket, Gift, Percent, Star } from "lucide-react";
+import { Ticket, Gift, Percent, Star } from "lucide-react";
+import DashboardHeader from "./DashboardHeader";
 
 const benefits = [
   {

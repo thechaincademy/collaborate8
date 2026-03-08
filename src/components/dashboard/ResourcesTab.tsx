@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { User, Bell, BookOpen, Scale, Heart, FileText, ChevronRight } from "lucide-react";
+import { BookOpen, Scale, Heart, FileText, ChevronRight } from "lucide-react";
+import DashboardHeader from "./DashboardHeader";
 
 const resources = [
   {
