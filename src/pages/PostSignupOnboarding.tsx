@@ -63,9 +63,9 @@ const PostSignupOnboarding = () => {
 
   const handleSelectInstitution = async (institution: any) => {
     setSelectedInstitution(institution);
-    const result = await linkBank(institution.id);
+    const callbackUrl = `${window.location.origin}/post-signup?institution=${institution.id}`;
+    const result = await linkBank(institution.id, callbackUrl);
     if (result?.authorisationUrl) {
-      // Redirect user to bank's authorisation page
       window.location.href = result.authorisationUrl;
     }
   };

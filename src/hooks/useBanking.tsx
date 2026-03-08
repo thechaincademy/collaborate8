@@ -53,19 +53,19 @@ export const useBanking = () => {
     }
   };
 
-  const linkBank = async (institutionId: string) => {
+  const linkBank = async (institutionId: string, callbackUrl?: string) => {
     if (!user) {
       toast.error("Please log in first");
       return null;
     }
     setLoading(true);
     try {
-      const callbackUrl = `${window.location.origin}/dashboard?bank-callback=true`;
+      const finalCallbackUrl = callbackUrl || `${window.location.origin}/dashboard?bank-callback=true&institution=${institutionId}`;
       const { data, error } = await supabase.functions.invoke("yapily-banking", {
         body: {
           action: "create-authorisation",
           institutionId,
-          callbackUrl,
+          callbackUrl: finalCallbackUrl,
         },
       });
       if (error) throw error;
