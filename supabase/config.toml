@@ -1,1 +1,4 @@
 project_id = "eycpkzbjylzzynkfggis"
+
+[functions.yapily-webhook]
+verify_jwt = false
