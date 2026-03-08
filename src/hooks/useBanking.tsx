@@ -65,7 +65,7 @@ export const useBanking = () => {
         body: {
           action: "create-authorisation",
           institutionId,
-          callbackUrl,
+          callbackUrl: finalCallbackUrl,
         },
       });
       if (error) throw error;
