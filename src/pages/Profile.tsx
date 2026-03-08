@@ -56,6 +56,8 @@ const Profile = () => {
           value: connection
             ? `${connection.institution_name} ${connection.account_number_masked || ""}`
             : "Not connected",
+          action: !connection ? () => navigate("/post-signup?step=bank") : undefined,
+          actionLabel: !connection ? "Link" : undefined,
         },
         {
           icon: CreditCard,
