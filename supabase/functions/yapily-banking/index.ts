@@ -17,12 +17,29 @@ serve(async (req) => {
 
     if (action === "get-institutions") {
       const institutions = await connector.getInstitutions();
+      console.log(`Fetched ${institutions.length} institutions from Yapily`);
+      if (institutions.length > 0) {
+        console.log("Sample institution keys:", JSON.stringify(Object.keys(institutions[0])));
+        console.log("Sample features:", JSON.stringify(institutions[0].features?.slice(0, 3)));
+        console.log("Sample countries:", JSON.stringify(institutions[0].countries));
+      }
       // Filter for UK institutions that support accounts
-      const filtered = institutions.filter((inst: any) =>
-        inst.countries?.some((c: any) => c.countryCode2 === "GB") &&
-        inst.features?.some((f: any) => f === "ACCOUNTS" || f === "ACCOUNT_TRANSACTIONS")
+      const filtered = institutions.filter((inst: any) => {
+        const isUK = inst.countries?.some((c: any) => 
+          c.countryCode2 === "GB" || c === "GB"
+        );
+        const hasAccounts = inst.features?.some((f: any) => 
+          f === "ACCOUNTS" || f === "ACCOUNT_TRANSACTIONS" ||
+          f?.type === "ACCOUNTS" || f?.type === "ACCOUNT_TRANSACTIONS"
+        );
+        return isUK && hasAccounts;
+      });
+      console.log(`Filtered to ${filtered.length} UK institutions with account support`);
+      // If filter is too aggressive, return all UK ones
+      const result = filtered.length > 0 ? filtered : institutions.filter((inst: any) =>
+        inst.countries?.some((c: any) => c.countryCode2 === "GB" || c === "GB")
       );
-      return new Response(JSON.stringify({ institutions: filtered }), {
+      return new Response(JSON.stringify({ institutions: result }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
