@@ -134,6 +134,16 @@ const Profile = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">{item.value}</span>
+                    {"action" in item && item.action && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={item.action}
+                        className="ml-2 h-7 text-xs"
+                      >
+                        {("actionLabel" in item && item.actionLabel) || "Go"}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
