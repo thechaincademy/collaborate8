@@ -91,7 +91,7 @@ const SignUp = () => {
           })
           .eq("id", user.id);
 
-        // Create invitation
+      // Create invitation
         await supabase
           .from("invitations")
           .insert({
@@ -101,6 +101,17 @@ const SignUp = () => {
           });
 
         setGeneratedCode(code);
+
+        // Send invite email if co-parent email was provided
+        if (coparentEmail) {
+          await supabase.functions.invoke("send-invite-email", {
+            body: {
+              recipientEmail: coparentEmail,
+              inviteCode: code,
+              senderName: `${firstName} ${lastName}`,
+            },
+          });
+        }
       }
 
       setIsLoading(false);
