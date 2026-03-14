@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, Phone, CreditCard, Shield, ChevronRight, Users, Building2 } from "lucide-react";
+import { ArrowLeft, User, Mail, CreditCard, Shield, Users, Building2, Check, AlertTriangle, Construction } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useBanking } from "@/hooks/useBanking";
+import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -13,9 +14,16 @@ const Profile = () => {
   const { profile, loading } = useProfile();
   const { connection, fetchConnection } = useBanking();
   const { signOut } = useAuth();
+  const { cards, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
+  const { checkAccountStatus, startOnboarding, loading: connectLoading } = useStripeConnect();
+  const [connectStatus, setConnectStatus] = useState<string>("not_created");
 
   useEffect(() => {
     fetchConnection();
+    fetchCards();
+    checkAccountStatus().then((s) => {
+      if (s) setConnectStatus(s.status);
+    });
   }, []);
 
   if (loading) {
@@ -28,6 +36,18 @@ const Profile = () => {
 
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "User";
   const email = user?.email || "";
+  const isManaging = profile?.role === "managing";
+  const isViewing = profile?.role === "viewing";
+
+  const handleSetupCard = async () => {
+    const result = await setupCard();
+    if (result?.url) window.open(result.url, "_blank");
+  };
+
+  const handleConnectOnboarding = async () => {
+    const result = await startOnboarding();
+    if (result?.url) window.open(result.url, "_blank");
+  };
 
   const profileSections = [
     {
@@ -47,29 +67,69 @@ const Profile = () => {
         },
       ],
     },
+    // Payment Card section (for payer / managing parent)
+    ...(isManaging
+      ? [
+          {
+            title: "Payment Card",
+            items: cards.length > 0
+              ? cards.map((c) => ({
+                  icon: CreditCard,
+                  label: `${c.brand.charAt(0).toUpperCase() + c.brand.slice(1)}`,
+                  value: `****${c.last4} (${c.expMonth}/${c.expYear})`,
+                }))
+              : [
+                  {
+                    icon: CreditCard,
+                    label: "Card",
+                    value: "Not added",
+                    action: handleSetupCard,
+                    actionLabel: "Add Card",
+                  },
+                ],
+          },
+        ]
+      : []),
+    // Payout Account section (for receiver / viewing parent)
+    ...(isViewing
+      ? [
+          {
+            title: "Payout Account",
+            items: [
+              {
+                icon: CreditCard,
+                label: "Stripe Connect",
+                value:
+                  connectStatus === "complete"
+                    ? "Active"
+                    : connectStatus === "pending"
+                      ? "Pending"
+                      : "Not set up",
+                action: connectStatus !== "complete" ? handleConnectOnboarding : undefined,
+                actionLabel: connectStatus !== "complete" ? "Set Up" : undefined,
+              },
+            ],
+          },
+        ]
+      : []),
+    // Open Banking (Coming Soon)
     {
-      title: "Bank Account",
+      title: "Open Banking",
       items: [
         {
           icon: Building2,
-          label: "Linked Bank",
+          label: "Bank Account",
           value: connection
             ? `${connection.institution_name} ${connection.account_number_masked || ""}`
             : "Not connected",
-          action: !connection ? () => navigate("/post-signup?step=bank") : undefined,
-          actionLabel: !connection ? "Link" : undefined,
-        },
-        {
-          icon: CreditCard,
-          label: "Status",
-          value: connection?.consent_status === "active" ? "Active" : "Not linked",
+          comingSoon: true,
         },
       ],
     },
     {
       title: "Account",
       items: [
-        { icon: Shield, label: "Role", value: profile?.role === "managing" ? "Managing Parent" : "Viewing Parent" },
+        { icon: Shield, label: "Role", value: isManaging ? "Managing Parent" : "Viewing Parent" },
       ],
     },
   ];
@@ -106,7 +166,7 @@ const Profile = () => {
         <h2 className="text-xl font-semibold text-foreground">{fullName}</h2>
         <p className="text-muted-foreground">{email}</p>
         <p className="mt-1 text-xs text-muted-foreground capitalize">
-          {profile?.role === "managing" ? "Managing Parent" : "Viewing Parent"}
+          {isManaging ? "Managing Parent" : "Viewing Parent"}
         </p>
       </motion.div>
 
@@ -119,14 +179,21 @@ const Profile = () => {
             transition={{ delay: 0.2 + sectionIndex * 0.1 }}
             className="mb-6"
           >
-            <h3 className="mb-3 text-sm font-medium text-muted-foreground">{section.title}</h3>
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              {section.title}
+              {section.items.some((i: any) => i.comingSoon) && (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  Coming Soon
+                </span>
+              )}
+            </h3>
             <div className="overflow-hidden rounded-2xl bg-card">
-              {section.items.map((item, index) => (
+              {section.items.map((item: any, index: number) => (
                 <div
-                  key={item.label}
+                  key={item.label + index}
                   className={`flex w-full items-center justify-between p-4 ${
                     index !== section.items.length - 1 ? "border-b border-border" : ""
-                  }`}
+                  } ${item.comingSoon ? "opacity-50" : ""}`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="h-5 w-5 text-muted-foreground" />
@@ -134,14 +201,15 @@ const Profile = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">{item.value}</span>
-                    {"action" in item && item.action && (
+                    {item.action && !item.comingSoon && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={item.action}
                         className="ml-2 h-7 text-xs"
+                        disabled={stripeLoading || connectLoading}
                       >
-                        {("actionLabel" in item && item.actionLabel) || "Go"}
+                        {item.actionLabel || "Go"}
                       </Button>
                     )}
                   </div>

@@ -13,6 +13,12 @@ export interface RecurringPayment {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  provider?: string;
+  provider_subscription_id?: string | null;
+  provider_price_id?: string | null;
+  provider_customer_id?: string | null;
+  next_due_date?: string | null;
+  receiver_id?: string | null;
 }
 
 export const useRecurringPayments = () => {
