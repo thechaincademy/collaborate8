@@ -2,3 +2,12 @@ project_id = "eycpkzbjylzzynkfggis"
 
 [functions.yapily-webhook]
 verify_jwt = false
+
+[functions.stripe-connect]
+verify_jwt = false
+
+[functions.stripe-subscriptions]
+verify_jwt = false
+
+[functions.stripe-webhooks]
+verify_jwt = false
