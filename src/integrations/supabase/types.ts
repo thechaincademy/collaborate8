@@ -111,6 +111,53 @@ export type Database = {
           },
         ]
       }
+      connected_accounts: {
+        Row: {
+          capabilities: Json | null
+          charges_enabled: boolean | null
+          created_at: string
+          id: string
+          onboarding_status: string
+          payouts_enabled: boolean | null
+          provider: string
+          provider_account_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          capabilities?: Json | null
+          charges_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          onboarding_status?: string
+          payouts_enabled?: boolean | null
+          provider?: string
+          provider_account_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          capabilities?: Json | null
+          charges_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          onboarding_status?: string
+          payouts_enabled?: boolean | null
+          provider?: string
+          provider_account_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connected_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_requests: {
         Row: {
           amount: number
@@ -184,13 +231,19 @@ export type Database = {
           amount: number
           created_at: string
           currency: string
+          dispute_status: string | null
           error_message: string | null
           id: string
           idempotency_key: string
           payee_id: string
           payer_id: string
+          payout_delay_until: string | null
+          provider: string | null
+          provider_charge_id: string | null
           provider_consent_token: string | null
           provider_payment_id: string | null
+          provider_payout_id: string | null
+          provider_transfer_id: string | null
           related_arrangement_id: string | null
           related_expense_id: string | null
           status: string
@@ -201,13 +254,19 @@ export type Database = {
           amount: number
           created_at?: string
           currency?: string
+          dispute_status?: string | null
           error_message?: string | null
           id?: string
           idempotency_key: string
           payee_id: string
           payer_id: string
+          payout_delay_until?: string | null
+          provider?: string | null
+          provider_charge_id?: string | null
           provider_consent_token?: string | null
           provider_payment_id?: string | null
+          provider_payout_id?: string | null
+          provider_transfer_id?: string | null
           related_arrangement_id?: string | null
           related_expense_id?: string | null
           status?: string
@@ -218,13 +277,19 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          dispute_status?: string | null
           error_message?: string | null
           id?: string
           idempotency_key?: string
           payee_id?: string
           payer_id?: string
+          payout_delay_until?: string | null
+          provider?: string | null
+          provider_charge_id?: string | null
           provider_consent_token?: string | null
           provider_payment_id?: string | null
+          provider_payout_id?: string | null
+          provider_transfer_id?: string | null
           related_arrangement_id?: string | null
           related_expense_id?: string | null
           status?: string
@@ -312,6 +377,12 @@ export type Database = {
           frequency: string
           id: string
           is_active: boolean
+          next_due_date: string | null
+          provider: string | null
+          provider_customer_id: string | null
+          provider_price_id: string | null
+          provider_subscription_id: string | null
+          receiver_id: string | null
           updated_at: string
           user_id: string
         }
@@ -323,6 +394,12 @@ export type Database = {
           frequency: string
           id?: string
           is_active?: boolean
+          next_due_date?: string | null
+          provider?: string | null
+          provider_customer_id?: string | null
+          provider_price_id?: string | null
+          provider_subscription_id?: string | null
+          receiver_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -334,10 +411,24 @@ export type Database = {
           frequency?: string
           id?: string
           is_active?: boolean
+          next_due_date?: string | null
+          provider?: string | null
+          provider_customer_id?: string | null
+          provider_price_id?: string | null
+          provider_subscription_id?: string | null
+          receiver_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "recurring_payments_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       waitlist: {
         Row: {
