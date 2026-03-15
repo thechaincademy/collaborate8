@@ -153,7 +153,11 @@ const MaintenanceTab = () => {
           transition={{ delay: 0.2 }}
           className="mb-6 space-y-3"
         >
-          {cards.length === 0 ? (
+          {isContentLoading ? (
+            <div className="rounded-2xl bg-card p-4 text-sm text-muted-foreground">
+              Loading payment setup...
+            </div>
+          ) : cards.length === 0 ? (
             <Button
               onClick={handleSetupCard}
               className="w-full gap-2"

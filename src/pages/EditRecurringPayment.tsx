@@ -168,13 +168,15 @@ const EditRecurringPayment = () => {
               <div>
                 <p className="font-medium text-foreground">Payment Method</p>
                 <p className="text-sm text-muted-foreground">
-                  {cards.length > 0
-                    ? `${cards[0].brand.charAt(0).toUpperCase() + cards[0].brand.slice(1)} ****${cards[0].last4}`
-                    : "No card on file"}
+                  {cardsLoading
+                    ? "Loading saved card..."
+                    : cards.length > 0
+                      ? `${cards[0].brand.charAt(0).toUpperCase() + cards[0].brand.slice(1)} ****${cards[0].last4}`
+                      : "No card on file"}
                 </p>
               </div>
             </div>
-            {cards.length === 0 && (
+            {!cardsLoading && cards.length === 0 && (
               <Button size="sm" variant="outline" onClick={handleSetupCard} disabled={stripeLoading}>
                 Add Card
               </Button>
