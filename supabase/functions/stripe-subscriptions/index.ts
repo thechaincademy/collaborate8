@@ -212,7 +212,7 @@ serve(async (req) => {
         metadata: { subscriptionId: subscription.subscriptionId, amount, currency },
       });
 
-      return new Response(JSON.stringify({ subscription, priceId }), {
+      return new Response(JSON.stringify({ subscription, priceId, arrangementId: arrangement.id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
