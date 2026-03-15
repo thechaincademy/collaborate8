@@ -81,6 +81,7 @@ serve(async (req) => {
     // ── Create subscription ──
     if (action === "create-subscription") {
       const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      const normalizedInterval = normalizeInterval(interval);
 
       if (!amount || !receiverId) {
         return new Response(JSON.stringify({ error: "Missing amount or receiverId" }), {
@@ -89,7 +90,7 @@ serve(async (req) => {
         });
       }
 
-      logStep("Creating subscription", { amount, currency, interval, receiverId });
+      logStep("Creating subscription", { amount, currency, interval, normalizedInterval, receiverId });
 
       // Get payer's Stripe customer
       const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
@@ -117,7 +118,7 @@ serve(async (req) => {
       const priceId = await pricingProvider.createPrice({
         amount: amountInPence,
         currency,
-        interval: interval as "day" | "week" | "month" | "year",
+        interval: normalizedInterval,
         productId: MAINTENANCE_PRODUCT_ID,
         metadata: { payer_id: user.id, receiver_id: receiverId },
       });
