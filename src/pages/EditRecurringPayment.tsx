@@ -76,7 +76,7 @@ const EditRecurringPayment = () => {
     }
 
     setIsSaving(true);
-    const interval = repeat.toLowerCase() as "week" | "month";
+    const interval = repeat === "Monthly" ? "month" : "week";
 
     const result = await createSubscription({
       amount: parseFloat(amount),

@@ -174,7 +174,7 @@ serve(async (req) => {
           user_id: user.id,
           receiver_id: receiverId,
           amount,
-          frequency: interval,
+          frequency: normalizedInterval,
           provider: "stripe",
           provider_subscription_id: subscription.subscriptionId,
           provider_price_id: priceId,
