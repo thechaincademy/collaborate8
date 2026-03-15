@@ -26,12 +26,6 @@ serve(async (req) => {
 
     // ── Create connected account for receiver ──
     if (action === "create-account") {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
       // Check if already exists
       const { data: existing } = await supabase
         .from("connected_accounts")
@@ -43,8 +37,34 @@ serve(async (req) => {
       let accountId: string;
 
       if (existing) {
-        accountId = existing.provider_account_id;
-        logStep("Existing connected account found", { accountId });
+        const existingAccount = await payoutProvider.getAccount(existing.provider_account_id);
+        const shouldReplacePendingBusinessAccount =
+          !existingAccount.details_submitted && existingAccount.business_type !== "individual";
+
+        if (shouldReplacePendingBusinessAccount) {
+          accountId = await payoutProvider.createConnectedAccount(
+            user.email!,
+            { collabor8_user_id: user.id }
+          );
+
+          await supabase
+            .from("connected_accounts")
+            .update({
+              provider_account_id: accountId,
+              onboarding_status: "pending",
+              payouts_enabled: false,
+              charges_enabled: false,
+            })
+            .eq("id", existing.id);
+
+          logStep("Replaced pending business account with individual account", {
+            previousAccountId: existing.provider_account_id,
+            accountId,
+          });
+        } else {
+          accountId = existing.provider_account_id;
+          logStep("Existing connected account found", { accountId });
+        }
       } else {
         accountId = await payoutProvider.createConnectedAccount(
           user.email!,
@@ -68,7 +88,7 @@ serve(async (req) => {
         `${origin}/profile?stripe-return=true`
       );
 
-      logStep("Onboarding link created");
+      logStep("Onboarding link created", { accountId });
 
       return new Response(JSON.stringify({ url: onboardingUrl, accountId }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
