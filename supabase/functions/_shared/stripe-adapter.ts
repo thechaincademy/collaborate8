@@ -15,6 +15,17 @@ function getStripe(): Stripe {
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 }
 
+function toIsoFromUnixTimestamp(
+  primary?: number | null,
+  fallback?: number | null,
+): string {
+  const unixSeconds = [primary, fallback, Math.floor(Date.now() / 1000)].find(
+    (value): value is number => typeof value === "number" && Number.isFinite(value),
+  );
+
+  return new Date(unixSeconds * 1000).toISOString();
+}
+
 // ─── Payment Method Provider ────────────────────────────────
 export class StripePaymentMethodProvider implements PaymentMethodProvider {
   async getOrCreateCustomer(userId: string, email: string): Promise<string> {
@@ -112,11 +123,13 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
   }
 
   private mapSubscription(sub: Stripe.Subscription): RecurringAgreement {
+    const periodEnd = toIsoFromUnixTimestamp(sub.current_period_end, sub.billing_cycle_anchor);
+
     return {
       subscriptionId: sub.id,
       status: sub.status,
-      currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
-      nextPaymentDate: new Date(sub.current_period_end * 1000).toISOString(),
+      currentPeriodEnd: periodEnd,
+      nextPaymentDate: periodEnd,
     };
   }
 }

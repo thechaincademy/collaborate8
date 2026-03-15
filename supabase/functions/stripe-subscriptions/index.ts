@@ -18,6 +18,26 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-SUBSCRIPTIONS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
+const normalizeInterval = (interval?: string): "day" | "week" | "month" | "year" => {
+  switch ((interval || "month").toLowerCase()) {
+    case "daily":
+    case "day":
+      return "day";
+    case "weekly":
+    case "week":
+      return "week";
+    case "monthly":
+    case "month":
+      return "month";
+    case "yearly":
+    case "annual":
+    case "year":
+      return "year";
+    default:
+      return "month";
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -61,6 +81,7 @@ serve(async (req) => {
     // ── Create subscription ──
     if (action === "create-subscription") {
       const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      const normalizedInterval = normalizeInterval(interval);
 
       if (!amount || !receiverId) {
         return new Response(JSON.stringify({ error: "Missing amount or receiverId" }), {
@@ -69,7 +90,7 @@ serve(async (req) => {
         });
       }
 
-      logStep("Creating subscription", { amount, currency, interval, receiverId });
+      logStep("Creating subscription", { amount, currency, interval, normalizedInterval, receiverId });
 
       // Get payer's Stripe customer
       const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
@@ -97,7 +118,7 @@ serve(async (req) => {
       const priceId = await pricingProvider.createPrice({
         amount: amountInPence,
         currency,
-        interval: interval as "day" | "week" | "month" | "year",
+        interval: normalizedInterval,
         productId: MAINTENANCE_PRODUCT_ID,
         metadata: { payer_id: user.id, receiver_id: receiverId },
       });
@@ -132,7 +153,7 @@ serve(async (req) => {
           user_id: user.id,
           receiver_id: receiverId,
           amount,
-          frequency: interval,
+          frequency: normalizedInterval,
           provider: "stripe",
           provider_subscription_id: subscription.subscriptionId,
           provider_price_id: priceId,
@@ -153,7 +174,7 @@ serve(async (req) => {
           user_id: user.id,
           receiver_id: receiverId,
           amount,
-          frequency: interval,
+          frequency: normalizedInterval,
           provider: "stripe",
           provider_subscription_id: subscription.subscriptionId,
           provider_price_id: priceId,
