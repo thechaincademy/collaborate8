@@ -16,33 +16,49 @@ const MaintenanceTab = () => {
   const { getActivePayment, loading } = useRecurringPayments();
   const { isViewing, isManaging, profile, loading: profileLoading } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
-  const { cards, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
+  const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus } = useStripeConnect();
   const [connectStatus, setConnectStatus] = useState<string>("not_created");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
+  const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(false);
 
   useEffect(() => {
     fetchPayments();
     fetchCards();
-    if (isViewing) {
-      checkAccountStatus().then((s) => {
-        if (s) setConnectStatus(s.status);
-      });
-      // Fetch co-parent's arrangement for receiver view
-      if (profile?.coparent_id) {
-        supabase
-          .from("recurring_payments")
-          .select("*")
-          .eq("user_id", profile.coparent_id)
-          .eq("is_active", true)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-          .then(({ data }) => {
-            if (data) setCoparentArrangement(data);
-          });
-      }
+
+    if (!isViewing) {
+      setCoparentArrangement(null);
+      setCoparentArrangementLoading(false);
+      return;
     }
+
+    checkAccountStatus().then((s) => {
+      if (s) setConnectStatus(s.status);
+    });
+
+    if (!profile?.coparent_id) {
+      setCoparentArrangement(null);
+      setCoparentArrangementLoading(false);
+      return;
+    }
+
+    setCoparentArrangementLoading(true);
+
+    supabase
+      .from("recurring_payments")
+      .select("*")
+      .eq("user_id", profile.coparent_id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setCoparentArrangement(data ?? null);
+        setCoparentArrangementLoading(false);
+      }, () => {
+        setCoparentArrangement(null);
+        setCoparentArrangementLoading(false);
+      });
   }, [profile?.id, profile?.coparent_id]);
 
   const activePayment = getActivePayment();
@@ -55,6 +71,7 @@ const MaintenanceTab = () => {
     : null;
   const isStripe = displayArrangement?.provider === "stripe";
   const subscriptionStatus = isStripe ? "active" : displayArrangement?.is_active ? "active" : "inactive";
+  const isContentLoading = loading || profileLoading || cardsLoading || coparentArrangementLoading;
 
   const handleSetupCard = async () => {
     const result = await setupCard();
@@ -84,7 +101,9 @@ const MaintenanceTab = () => {
     canceled: { text: "Cancelled", className: "text-muted-foreground" },
   };
 
-  const currentStatus = statusLabel[subscriptionStatus as keyof typeof statusLabel] || statusLabel.inactive;
+  const currentStatus = isContentLoading
+    ? { text: "Loading...", className: "text-muted-foreground" }
+    : statusLabel[subscriptionStatus as keyof typeof statusLabel] || statusLabel.inactive;
 
   return (
     <div className="px-6 pt-12">
@@ -106,16 +125,18 @@ const MaintenanceTab = () => {
           </span>
         </div>
         <h2 className="mb-4 text-4xl font-bold text-foreground">
-          {loading || profileLoading ? "Loading..." : `£${amount.toFixed(2)}`}
+          {isContentLoading ? "Loading..." : `£${amount.toFixed(2)}`}
         </h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
           <span>
             {nextDueDate
               ? `Due ${format(nextDueDate, "do MMMM yyyy")}`
-              : displayArrangement
-                ? "Processing..."
-                : "No arrangement set"}
+              : isContentLoading
+                ? "Loading payment details..."
+                : displayArrangement
+                  ? "Processing..."
+                  : "No arrangement set"}
           </span>
         </div>
         {isStripe && (
@@ -134,7 +155,11 @@ const MaintenanceTab = () => {
           transition={{ delay: 0.2 }}
           className="mb-6 space-y-3"
         >
-          {cards.length === 0 ? (
+          {isContentLoading ? (
+            <div className="rounded-2xl bg-card p-4 text-sm text-muted-foreground">
+              Loading payment setup...
+            </div>
+          ) : cards.length === 0 ? (
             <Button
               onClick={handleSetupCard}
               className="w-full gap-2"

@@ -67,6 +67,7 @@ export const useStripeConnect = () => {
 export const useStripePayments = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [cardsLoading, setCardsLoading] = useState(true);
   const [cards, setCards] = useState<CardInfo[]>([]);
 
   /** Redirect to Stripe Checkout to add a card */
@@ -89,15 +90,23 @@ export const useStripePayments = () => {
 
   /** List saved cards */
   const fetchCards = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setCards([]);
+      setCardsLoading(false);
+      return;
+    }
+
+    setCardsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-subscriptions", {
         body: { action: "list-cards" },
       });
       if (error) throw error;
-      if (data?.cards) setCards(data.cards);
+      setCards(data?.cards ?? []);
     } catch {
-      // silent
+      setCards([]);
+    } finally {
+      setCardsLoading(false);
     }
   }, [user]);
 
@@ -161,6 +170,7 @@ export const useStripePayments = () => {
 
   return {
     loading,
+    cardsLoading,
     cards,
     setupCard,
     fetchCards,
