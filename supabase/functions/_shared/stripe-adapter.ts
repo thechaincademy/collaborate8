@@ -123,11 +123,13 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
   }
 
   private mapSubscription(sub: Stripe.Subscription): RecurringAgreement {
+    const periodEnd = toIsoFromUnixTimestamp(sub.current_period_end, sub.billing_cycle_anchor);
+
     return {
       subscriptionId: sub.id,
       status: sub.status,
-      currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
-      nextPaymentDate: new Date(sub.current_period_end * 1000).toISOString(),
+      currentPeriodEnd: periodEnd,
+      nextPaymentDate: periodEnd,
     };
   }
 }
