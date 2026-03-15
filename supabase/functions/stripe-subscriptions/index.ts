@@ -18,6 +18,26 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-SUBSCRIPTIONS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
+const normalizeInterval = (interval?: string): "day" | "week" | "month" | "year" => {
+  switch ((interval || "month").toLowerCase()) {
+    case "daily":
+    case "day":
+      return "day";
+    case "weekly":
+    case "week":
+      return "week";
+    case "monthly":
+    case "month":
+      return "month";
+    case "yearly":
+    case "annual":
+    case "year":
+      return "year";
+    default:
+      return "month";
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
