@@ -38,6 +38,21 @@ const normalizeInterval = (interval?: string): "day" | "week" | "month" | "year"
   }
 };
 
+const toDbFrequency = (
+  interval: "day" | "week" | "month" | "year",
+): "daily" | "weekly" | "monthly" | null => {
+  switch (interval) {
+    case "day":
+      return "daily";
+    case "week":
+      return "weekly";
+    case "month":
+      return "monthly";
+    default:
+      return null;
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -82,6 +97,7 @@ serve(async (req) => {
     if (action === "create-subscription") {
       const { amount, currency = "gbp", interval = "month", receiverId } = body;
       const normalizedInterval = normalizeInterval(interval);
+      const dbFrequency = toDbFrequency(normalizedInterval);
 
       if (!amount || !receiverId) {
         return new Response(JSON.stringify({ error: "Missing amount or receiverId" }), {
@@ -90,7 +106,14 @@ serve(async (req) => {
         });
       }
 
-      logStep("Creating subscription", { amount, currency, interval, normalizedInterval, receiverId });
+      if (!dbFrequency) {
+        return new Response(JSON.stringify({ error: "Unsupported interval for recurring payments" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      logStep("Creating subscription", { amount, currency, interval, normalizedInterval, dbFrequency, receiverId });
 
       // Get payer's Stripe customer
       const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
@@ -146,42 +169,39 @@ serve(async (req) => {
       const subscription = await recurringProvider.createSubscription(subParams);
       logStep("Subscription created", { subscriptionId: subscription.subscriptionId });
 
+      // Deactivate prior Stripe arrangements for this payer
+      const { error: deactivateErr } = await supabase
+        .from("recurring_payments")
+        .update({ is_active: false })
+        .eq("user_id", user.id)
+        .eq("provider", "stripe")
+        .eq("is_active", true);
+
+      if (deactivateErr) {
+        logStep("Failed to deactivate prior Stripe arrangements", { error: deactivateErr.message });
+      }
+
       // Save arrangement in our DB
       const { data: arrangement, error: arrErr } = await supabase
         .from("recurring_payments")
-        .upsert({
+        .insert({
           user_id: user.id,
           receiver_id: receiverId,
           amount,
-          frequency: normalizedInterval,
+          frequency: dbFrequency,
           provider: "stripe",
           provider_subscription_id: subscription.subscriptionId,
           provider_price_id: priceId,
           provider_customer_id: customerId,
           next_due_date: subscription.nextPaymentDate,
           is_active: true,
-        }, {
-          onConflict: "user_id",
-          ignoreDuplicates: false,
         })
         .select()
         .single();
 
       if (arrErr) {
-        logStep("DB upsert failed, inserting fresh", { error: arrErr.message });
-        // Try plain insert
-        await supabase.from("recurring_payments").insert({
-          user_id: user.id,
-          receiver_id: receiverId,
-          amount,
-          frequency: normalizedInterval,
-          provider: "stripe",
-          provider_subscription_id: subscription.subscriptionId,
-          provider_price_id: priceId,
-          provider_customer_id: customerId,
-          next_due_date: subscription.nextPaymentDate,
-          is_active: true,
-        });
+        logStep("Recurring arrangement insert failed", { error: arrErr.message });
+        throw new Error(`Failed to save recurring arrangement: ${arrErr.message}`);
       }
 
       // Audit
@@ -192,7 +212,7 @@ serve(async (req) => {
         metadata: { subscriptionId: subscription.subscriptionId, amount, currency },
       });
 
-      return new Response(JSON.stringify({ subscription, priceId }), {
+      return new Response(JSON.stringify({ subscription, priceId, arrangementId: arrangement.id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
