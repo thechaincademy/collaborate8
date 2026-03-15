@@ -76,16 +76,26 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
     transferData?: { destinationAccountId: string };
   }): Promise<RecurringAgreement> {
     const stripe = getStripe();
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: params.customerId,
+      type: "card",
+      limit: 1,
+    });
+
     const subParams: Stripe.SubscriptionCreateParams = {
       customer: params.customerId,
       items: [{ price: params.priceId }],
       metadata: params.metadata || {},
-      payment_behavior: "default_incomplete",
+      payment_behavior: "allow_incomplete",
       payment_settings: {
         save_default_payment_method: "on_subscription",
       },
       expand: ["latest_invoice.payment_intent"],
     };
+
+    if (paymentMethods.data[0]?.id) {
+      subParams.default_payment_method = paymentMethods.data[0].id;
+    }
 
     // For Connect: use transfer_data on subscription to auto-transfer on each invoice
     if (params.transferData) {

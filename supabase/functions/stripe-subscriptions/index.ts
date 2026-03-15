@@ -38,6 +38,21 @@ const normalizeInterval = (interval?: string): "day" | "week" | "month" | "year"
   }
 };
 
+const toDbFrequency = (
+  interval: "day" | "week" | "month" | "year",
+): "daily" | "weekly" | "monthly" | null => {
+  switch (interval) {
+    case "day":
+      return "daily";
+    case "week":
+      return "weekly";
+    case "month":
+      return "monthly";
+    default:
+      return null;
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
