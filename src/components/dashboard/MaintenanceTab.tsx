@@ -16,33 +16,47 @@ const MaintenanceTab = () => {
   const { getActivePayment, loading } = useRecurringPayments();
   const { isViewing, isManaging, profile, loading: profileLoading } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
-  const { cards, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
+  const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus } = useStripeConnect();
   const [connectStatus, setConnectStatus] = useState<string>("not_created");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
+  const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(false);
 
   useEffect(() => {
     fetchPayments();
     fetchCards();
-    if (isViewing) {
-      checkAccountStatus().then((s) => {
-        if (s) setConnectStatus(s.status);
-      });
-      // Fetch co-parent's arrangement for receiver view
-      if (profile?.coparent_id) {
-        supabase
-          .from("recurring_payments")
-          .select("*")
-          .eq("user_id", profile.coparent_id)
-          .eq("is_active", true)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-          .then(({ data }) => {
-            if (data) setCoparentArrangement(data);
-          });
-      }
+
+    if (!isViewing) {
+      setCoparentArrangement(null);
+      setCoparentArrangementLoading(false);
+      return;
     }
+
+    checkAccountStatus().then((s) => {
+      if (s) setConnectStatus(s.status);
+    });
+
+    if (!profile?.coparent_id) {
+      setCoparentArrangement(null);
+      setCoparentArrangementLoading(false);
+      return;
+    }
+
+    setCoparentArrangementLoading(true);
+    supabase
+      .from("recurring_payments")
+      .select("*")
+      .eq("user_id", profile.coparent_id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setCoparentArrangement(data ?? null);
+      })
+      .finally(() => {
+        setCoparentArrangementLoading(false);
+      });
   }, [profile?.id, profile?.coparent_id]);
 
   const activePayment = getActivePayment();
@@ -55,6 +69,7 @@ const MaintenanceTab = () => {
     : null;
   const isStripe = displayArrangement?.provider === "stripe";
   const subscriptionStatus = isStripe ? "active" : displayArrangement?.is_active ? "active" : "inactive";
+  const isContentLoading = loading || profileLoading || cardsLoading || coparentArrangementLoading;
 
   const handleSetupCard = async () => {
     const result = await setupCard();
