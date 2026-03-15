@@ -140,6 +140,7 @@ export class StripePayoutProvider implements PayoutProvider {
     const stripe = getStripe();
     const account = await stripe.accounts.create({
       type: "express",
+      business_type: "individual",
       email,
       country: "GB",
       capabilities: {
@@ -171,6 +172,11 @@ export class StripePayoutProvider implements PayoutProvider {
       payoutsEnabled: account.payouts_enabled || false,
       chargesEnabled: account.charges_enabled || false,
     };
+  }
+
+  async getAccount(accountId: string): Promise<Stripe.Account> {
+    const stripe = getStripe();
+    return await stripe.accounts.retrieve(accountId);
   }
 
   async createTransfer(params: {
