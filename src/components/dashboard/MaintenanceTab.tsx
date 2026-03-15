@@ -123,16 +123,18 @@ const MaintenanceTab = () => {
           </span>
         </div>
         <h2 className="mb-4 text-4xl font-bold text-foreground">
-          {loading || profileLoading ? "Loading..." : `£${amount.toFixed(2)}`}
+          {isContentLoading ? "Loading..." : `£${amount.toFixed(2)}`}
         </h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
           <span>
             {nextDueDate
               ? `Due ${format(nextDueDate, "do MMMM yyyy")}`
-              : displayArrangement
-                ? "Processing..."
-                : "No arrangement set"}
+              : isContentLoading
+                ? "Loading payment details..."
+                : displayArrangement
+                  ? "Processing..."
+                  : "No arrangement set"}
           </span>
         </div>
         {isStripe && (
