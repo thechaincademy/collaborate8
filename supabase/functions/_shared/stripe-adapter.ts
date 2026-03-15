@@ -15,6 +15,17 @@ function getStripe(): Stripe {
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 }
 
+function toIsoFromUnixTimestamp(
+  primary?: number | null,
+  fallback?: number | null,
+): string {
+  const unixSeconds = [primary, fallback, Math.floor(Date.now() / 1000)].find(
+    (value): value is number => typeof value === "number" && Number.isFinite(value),
+  );
+
+  return new Date(unixSeconds * 1000).toISOString();
+}
+
 // ─── Payment Method Provider ────────────────────────────────
 export class StripePaymentMethodProvider implements PaymentMethodProvider {
   async getOrCreateCustomer(userId: string, email: string): Promise<string> {
