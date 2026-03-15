@@ -43,6 +43,7 @@ const MaintenanceTab = () => {
     }
 
     setCoparentArrangementLoading(true);
+
     supabase
       .from("recurring_payments")
       .select("*")
@@ -53,8 +54,9 @@ const MaintenanceTab = () => {
       .maybeSingle()
       .then(({ data }) => {
         setCoparentArrangement(data ?? null);
-      })
-      .finally(() => {
+        setCoparentArrangementLoading(false);
+      }, () => {
+        setCoparentArrangement(null);
         setCoparentArrangementLoading(false);
       });
   }, [profile?.id, profile?.coparent_id]);
