@@ -99,7 +99,9 @@ const MaintenanceTab = () => {
     canceled: { text: "Cancelled", className: "text-muted-foreground" },
   };
 
-  const currentStatus = statusLabel[subscriptionStatus as keyof typeof statusLabel] || statusLabel.inactive;
+  const currentStatus = isContentLoading
+    ? { text: "Loading...", className: "text-muted-foreground" }
+    : statusLabel[subscriptionStatus as keyof typeof statusLabel] || statusLabel.inactive;
 
   return (
     <div className="px-6 pt-12">
