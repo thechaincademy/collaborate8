@@ -127,7 +127,7 @@ serve(async (req) => {
         });
       }
 
-      // Get receiver's connected account
+      // Get receiver's connected account — REQUIRED for transfers
       const { data: connectedAccount } = await supabase
         .from("connected_accounts")
         .select("*")
@@ -135,6 +135,16 @@ serve(async (req) => {
         .eq("provider", "stripe")
         .eq("onboarding_status", "complete")
         .maybeSingle();
+
+      if (!connectedAccount) {
+        return new Response(JSON.stringify({
+          error: "The receiving co-parent has not completed their payment setup. They need to complete Stripe Connect onboarding before you can set up recurring payments.",
+          code: "RECEIVER_NOT_ONBOARDED",
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       // Create a dynamic price for the custom amount
       const amountInPence = Math.round(amount * 100);
