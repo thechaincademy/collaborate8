@@ -158,7 +158,7 @@ serve(async (req) => {
 
       logStep("Dynamic price created", { priceId, amountInPence });
 
-      // Create subscription with optional transfer to connected account
+      // Create subscription with transfer to connected account (always set since we validated above)
       const subParams: any = {
         customerId,
         priceId,
@@ -167,14 +167,12 @@ serve(async (req) => {
           collabor8_receiver_id: receiverId,
           collabor8_type: "maintenance",
         },
+        transferData: {
+          destinationAccountId: connectedAccount.provider_account_id,
+        },
       };
 
-      if (connectedAccount) {
-        subParams.transferData = {
-          destinationAccountId: connectedAccount.provider_account_id,
-        };
-        logStep("Transfer data set", { destinationAccountId: connectedAccount.provider_account_id });
-      }
+      logStep("Transfer data set", { destinationAccountId: connectedAccount.provider_account_id });
 
       const subscription = await recurringProvider.createSubscription(subParams);
       logStep("Subscription created", { subscriptionId: subscription.subscriptionId });
