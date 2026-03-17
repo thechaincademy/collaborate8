@@ -272,6 +272,134 @@ serve(async (req) => {
       });
     }
 
+    // ── Recreate subscription (fix missing transfer_data) ──
+    if (action === "recreate-subscription") {
+      const { arrangementId } = body;
+      if (!arrangementId) {
+        return new Response(JSON.stringify({ error: "Missing arrangementId" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Get the existing arrangement
+      const { data: arrangement } = await supabase
+        .from("recurring_payments")
+        .select("*")
+        .eq("id", arrangementId)
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (!arrangement) {
+        return new Response(JSON.stringify({ error: "Active arrangement not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!arrangement.receiver_id) {
+        return new Response(JSON.stringify({ error: "No receiver set on arrangement" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Check receiver has connected account
+      const { data: receiverAccount } = await supabase
+        .from("connected_accounts")
+        .select("*")
+        .eq("user_id", arrangement.receiver_id)
+        .eq("provider", "stripe")
+        .eq("onboarding_status", "complete")
+        .maybeSingle();
+
+      if (!receiverAccount) {
+        return new Response(JSON.stringify({
+          error: "Receiver has not completed Stripe Connect onboarding",
+          code: "RECEIVER_NOT_ONBOARDED",
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Cancel old subscription in Stripe
+      if (arrangement.provider_subscription_id) {
+        try {
+          await recurringProvider.cancelSubscription(arrangement.provider_subscription_id);
+          logStep("Old subscription cancelled", { subscriptionId: arrangement.provider_subscription_id });
+        } catch (e) {
+          logStep("Warning: failed to cancel old subscription", { error: String(e) });
+        }
+      }
+
+      // Create new price + subscription with transfer_data
+      const amountInPence = Math.round(arrangement.amount * 100);
+      const normalizedInterval = normalizeInterval(arrangement.frequency);
+
+      const priceId = await pricingProvider.createPrice({
+        amount: amountInPence,
+        currency: "gbp",
+        interval: normalizedInterval,
+        productId: MAINTENANCE_PRODUCT_ID,
+        metadata: { payer_id: user.id, receiver_id: arrangement.receiver_id },
+      });
+
+      const customerId = arrangement.provider_customer_id ||
+        await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
+
+      const subscription = await recurringProvider.createSubscription({
+        customerId,
+        priceId,
+        metadata: {
+          collabor8_payer_id: user.id,
+          collabor8_receiver_id: arrangement.receiver_id,
+          collabor8_type: "maintenance",
+        },
+        transferData: {
+          destinationAccountId: receiverAccount.provider_account_id,
+        },
+      });
+
+      logStep("Recreated subscription with transfer_data", {
+        subscriptionId: subscription.subscriptionId,
+        destination: receiverAccount.provider_account_id,
+      });
+
+      // Update arrangement record
+      await supabase
+        .from("recurring_payments")
+        .update({
+          provider_subscription_id: subscription.subscriptionId,
+          provider_price_id: priceId,
+          provider_customer_id: customerId,
+          next_due_date: subscription.nextPaymentDate,
+        })
+        .eq("id", arrangement.id);
+
+      // Audit
+      await supabase.from("audit_events").insert({
+        user_id: user.id,
+        event_type: "subscription_recreated",
+        entity_type: "recurring_payment",
+        metadata: {
+          oldSubscriptionId: arrangement.provider_subscription_id,
+          newSubscriptionId: subscription.subscriptionId,
+          destination: receiverAccount.provider_account_id,
+        },
+      });
+
+      return new Response(JSON.stringify({
+        success: true,
+        subscription,
+        priceId,
+        arrangementId: arrangement.id,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
