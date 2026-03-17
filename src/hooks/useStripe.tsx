@@ -168,6 +168,25 @@ export const useStripePayments = () => {
     }
   };
 
+  /** Recreate a subscription with transfer_data (fix missing transfers) */
+  const recreateSubscription = async (arrangementId: string) => {
+    if (!user) return null;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-subscriptions", {
+        body: { action: "recreate-subscription", arrangementId },
+      });
+      if (error) throw error;
+      toast.success("Subscription recreated with correct transfer setup!");
+      return data;
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to recreate subscription");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     cardsLoading,
@@ -177,5 +196,6 @@ export const useStripePayments = () => {
     createSubscription,
     cancelSubscription,
     getSubscriptionStatus,
+    recreateSubscription,
   };
 };
