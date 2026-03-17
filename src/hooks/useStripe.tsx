@@ -196,5 +196,6 @@ export const useStripePayments = () => {
     createSubscription,
     cancelSubscription,
     getSubscriptionStatus,
+    recreateSubscription,
   };
 };
