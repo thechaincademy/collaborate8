@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw } from "lucide-react";
+import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "./DashboardHeader";
