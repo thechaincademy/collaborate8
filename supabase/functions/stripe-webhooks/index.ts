@@ -196,19 +196,25 @@ serve(async (req) => {
       // ── Account updated (Connect) ──
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
+        const capabilitiesActive = (account.charges_enabled || false) || (account.payouts_enabled || false);
+        const newStatus = account.details_submitted && capabilitiesActive ? "complete" :
+                          account.details_submitted ? "pending_capabilities" : "pending";
 
         await supabase
           .from("connected_accounts")
           .update({
-            onboarding_status: account.details_submitted ? "complete" : "pending",
+            onboarding_status: newStatus,
             payouts_enabled: account.payouts_enabled || false,
             charges_enabled: account.charges_enabled || false,
           })
           .eq("provider_account_id", account.id);
 
-        logStep("Connected account updated", {
+        logStep("Connected account updated via webhook", {
           accountId: account.id,
           detailsSubmitted: account.details_submitted,
+          chargesEnabled: account.charges_enabled,
+          payoutsEnabled: account.payouts_enabled,
+          newStatus,
         });
 
         break;
