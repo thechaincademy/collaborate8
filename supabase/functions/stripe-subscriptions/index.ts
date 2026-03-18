@@ -5,6 +5,7 @@ import {
   StripePaymentMethodProvider,
   StripeRecurringProvider,
   StripeDynamicPricing,
+  StripePayoutProvider,
 } from "../_shared/stripe-adapter.ts";
 
 const paymentMethodProvider = new StripePaymentMethodProvider();
