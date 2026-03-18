@@ -11,6 +11,7 @@ import {
 const paymentMethodProvider = new StripePaymentMethodProvider();
 const recurringProvider = new StripeRecurringProvider();
 const pricingProvider = new StripeDynamicPricing();
+const payoutProvider = new StripePayoutProvider();
 
 // Collabor8 maintenance product ID
 const MAINTENANCE_PRODUCT_ID = "prod_U9HZcihClGUNVA";
