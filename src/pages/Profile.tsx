@@ -153,7 +153,7 @@ const Profile = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 flex items-center gap-4"
         >
-          <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center">
+          <button onClick={() => { if (window.history.length > 2) { navigate(-1); } else { navigate("/dashboard"); } }} className="flex h-10 w-10 items-center justify-center">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-xl font-semibold text-foreground">Profile</h1>
