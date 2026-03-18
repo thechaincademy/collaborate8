@@ -253,49 +253,60 @@ const MaintenanceTab = () => {
           {paymentHistory.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">No payments yet</p>
           ) : (
-            paymentHistory.map((tx, index) => (
-              <motion.div
-                key={tx.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.05 }}
-                className="flex w-full items-center justify-between rounded-2xl bg-card p-4"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    {tx.status === "completed" ? (
-                      <Check className="h-5 w-5 text-emerald-500" />
-                    ) : tx.status === "failed" || tx.status === "disputed" ? (
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-muted-foreground" />
-                    )}
+            paymentHistory.map((tx, index) => {
+              const isIncoming = tx.payee_id === profile?.id;
+              const directionIcon = isIncoming ? (
+                <ArrowDownLeft className="h-4 w-4 text-emerald-500" />
+              ) : (
+                <ArrowUpRight className="h-4 w-4 text-destructive" />
+              );
+
+              return (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + index * 0.05 }}
+                  className="flex w-full items-center justify-between rounded-2xl bg-card p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      {tx.status === "completed" ? (
+                        directionIcon
+                      ) : tx.status === "failed" || tx.status === "disputed" ? (
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {isIncoming ? "Payment received" : "Payment sent"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(tx.created_at), "d MMM yyyy")}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">Maintenance payment</p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(tx.created_at), "d MMM yyyy")}
+                  <div className="text-right">
+                    <p className={`font-semibold ${isIncoming ? "text-emerald-500" : "text-foreground"}`}>
+                      {isIncoming ? "+" : "-"}£{tx.amount.toFixed(2)}
+                    </p>
+                    <p className={`text-xs ${
+                      tx.status === "completed" ? "text-emerald-500" :
+                      tx.status === "failed" ? "text-destructive" :
+                      tx.status === "disputed" ? "text-destructive" :
+                      "text-muted-foreground"
+                    }`}>
+                      {tx.status === "completed" ? "Completed" :
+                       tx.status === "failed" ? "Failed" :
+                       tx.status === "disputed" ? "Disputed" :
+                       "Pending"}
                     </p>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-foreground">
-                    {isViewing ? "+" : "-"}£{tx.amount.toFixed(2)}
-                  </p>
-                  <p className={`text-xs ${
-                    tx.status === "completed" ? "text-emerald-500" :
-                    tx.status === "failed" ? "text-destructive" :
-                    tx.status === "disputed" ? "text-destructive" :
-                    "text-muted-foreground"
-                  }`}>
-                    {tx.status === "completed" ? "Completed" :
-                     tx.status === "failed" ? "Failed" :
-                     tx.status === "disputed" ? "Disputed" :
-                     "Pending"}
-                  </p>
-                </div>
-              </motion.div>
-            ))
+                </motion.div>
+              );
+            })
           )}
         </div>
       </motion.div>

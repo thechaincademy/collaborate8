@@ -6,6 +6,24 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOKS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
+/** Extract subscription ID from invoice - handles both old and new Stripe API formats */
+function extractSubscriptionId(invoice: any): string | null {
+  // New API (2025+): parent.subscription_details.subscription
+  if (invoice.parent?.subscription_details?.subscription) {
+    return invoice.parent.subscription_details.subscription;
+  }
+  // Legacy: top-level subscription field
+  if (invoice.subscription) {
+    return invoice.subscription as string;
+  }
+  return null;
+}
+
+/** Extract charge ID from invoice - handles both old and new API formats */
+function extractChargeId(invoice: any): string | null {
+  return (invoice.charge as string) || null;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200 });
@@ -22,7 +40,7 @@ serve(async (req) => {
   try {
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
-    
+
     // Try both webhook secrets: platform (invoices, subscriptions) and connected accounts
     const platformSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_PLATFORM");
     const connectSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
@@ -30,7 +48,6 @@ serve(async (req) => {
     let event: Stripe.Event;
 
     if (sig && (platformSecret || connectSecret)) {
-      // Try platform secret first, then connect secret
       let verified = false;
       for (const secret of [platformSecret, connectSecret].filter(Boolean)) {
         try {
@@ -46,7 +63,6 @@ serve(async (req) => {
         return new Response("Webhook signature verification failed", { status: 400 });
       }
     } else {
-      // In dev/test, parse directly
       event = JSON.parse(body) as Stripe.Event;
       logStep("WARNING: No webhook signature verification");
     }
@@ -54,21 +70,35 @@ serve(async (req) => {
     logStep("Event received", { type: event.type, id: event.id });
 
     switch (event.type) {
-      // ── Invoice paid → record payment + transfer ──
+      // ── Invoice paid → record payment ──
       case "invoice.payment_succeeded": {
-        const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string;
-        const chargeId = invoice.charge as string;
-        const customerId = invoice.customer as string;
+        const invoice = event.data.object as any;
+        const subscriptionId = extractSubscriptionId(invoice);
+        const chargeId = extractChargeId(invoice);
 
-        if (!subscriptionId) break;
+        logStep("Invoice details", {
+          invoiceId: invoice.id,
+          subscriptionId,
+          chargeId,
+          amountPaid: invoice.amount_paid,
+        });
+
+        if (!subscriptionId) {
+          logStep("No subscription ID found in invoice, skipping");
+          break;
+        }
 
         // Find our arrangement
-        const { data: arrangement } = await supabase
+        const { data: arrangement, error: arrError } = await supabase
           .from("recurring_payments")
           .select("*")
           .eq("provider_subscription_id", subscriptionId)
           .maybeSingle();
+
+        if (arrError) {
+          logStep("Error fetching arrangement", { error: arrError.message });
+          break;
+        }
 
         if (!arrangement) {
           logStep("No arrangement found for subscription", { subscriptionId });
@@ -77,7 +107,7 @@ serve(async (req) => {
 
         const amountPaid = (invoice.amount_paid || 0) / 100;
 
-        // Record payment in ledger
+        // Record payment in ledger (idempotent)
         const idempotencyKey = `inv_${invoice.id}`;
         const { data: existingPayment } = await supabase
           .from("payments")
@@ -86,7 +116,7 @@ serve(async (req) => {
           .maybeSingle();
 
         if (!existingPayment) {
-          await supabase.from("payments").insert({
+          const { error: insertError } = await supabase.from("payments").insert({
             idempotency_key: idempotencyKey,
             payer_id: arrangement.user_id,
             payee_id: arrangement.receiver_id || arrangement.user_id,
@@ -99,17 +129,27 @@ serve(async (req) => {
             related_arrangement_id: arrangement.id,
           });
 
-          logStep("Payment recorded", { amount: amountPaid, arrangementId: arrangement.id });
+          if (insertError) {
+            logStep("Error inserting payment", { error: insertError.message });
+          } else {
+            logStep("Payment recorded", { amount: amountPaid, arrangementId: arrangement.id });
+          }
+        } else {
+          logStep("Payment already exists, skipping", { idempotencyKey });
         }
 
         // Update next due date
-        const sub = await stripe.subscriptions.retrieve(subscriptionId);
-        await supabase
-          .from("recurring_payments")
-          .update({
-            next_due_date: new Date(sub.current_period_end * 1000).toISOString(),
-          })
-          .eq("id", arrangement.id);
+        try {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          await supabase
+            .from("recurring_payments")
+            .update({
+              next_due_date: new Date(sub.current_period_end * 1000).toISOString(),
+            })
+            .eq("id", arrangement.id);
+        } catch (e) {
+          logStep("Error updating next due date", { error: String(e) });
+        }
 
         // Audit
         await supabase.from("audit_events").insert({
@@ -124,8 +164,8 @@ serve(async (req) => {
 
       // ── Invoice payment failed ──
       case "invoice.payment_failed": {
-        const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string;
+        const invoice = event.data.object as any;
+        const subscriptionId = extractSubscriptionId(invoice);
 
         if (!subscriptionId) break;
 
@@ -136,7 +176,6 @@ serve(async (req) => {
           .maybeSingle();
 
         if (arrangement) {
-          // Record failed payment
           await supabase.from("payments").insert({
             idempotency_key: `inv_fail_${invoice.id}`,
             payer_id: arrangement.user_id,
@@ -228,9 +267,6 @@ serve(async (req) => {
 
         logStep("Connected account updated via webhook", {
           accountId: account.id,
-          detailsSubmitted: account.details_submitted,
-          chargesEnabled: account.charges_enabled,
-          payoutsEnabled: account.payouts_enabled,
           newStatus,
         });
 
