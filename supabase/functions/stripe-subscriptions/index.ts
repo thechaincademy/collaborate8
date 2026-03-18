@@ -133,7 +133,6 @@ serve(async (req) => {
         .select("*")
         .eq("user_id", receiverId)
         .eq("provider", "stripe")
-        .eq("onboarding_status", "complete")
         .maybeSingle();
 
       if (!connectedAccount) {
@@ -144,6 +143,33 @@ serve(async (req) => {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      // Verify the account actually has transfers capability enabled
+      if (!connectedAccount.charges_enabled) {
+        // Re-check status from Stripe in case it was recently activated
+        const liveStatus = await payoutProvider.getAccountStatus(connectedAccount.provider_account_id);
+        logStep("Re-checked receiver account status", liveStatus);
+
+        if (!liveStatus.chargesEnabled) {
+          return new Response(JSON.stringify({
+            error: "The receiving co-parent's payment account is still being verified by Stripe. Their account capabilities (transfers) are not yet active. Please try again in a few minutes.",
+            code: "RECEIVER_CAPABILITIES_PENDING",
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Update DB since capabilities are now active
+        await supabase
+          .from("connected_accounts")
+          .update({
+            onboarding_status: "complete",
+            charges_enabled: liveStatus.chargesEnabled,
+            payouts_enabled: liveStatus.payoutsEnabled,
+          })
+          .eq("id", connectedAccount.id);
       }
 
       // Create a dynamic price for the custom amount

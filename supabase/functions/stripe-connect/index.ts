@@ -119,8 +119,11 @@ serve(async (req) => {
       const status = await payoutProvider.getAccountStatus(connected.provider_account_id);
       logStep("Account status checked", status);
 
-      // Update local record
-      const newStatus = status.onboardingComplete ? "complete" : "pending";
+      // Only mark as "complete" when transfers capability is actually active
+      const capabilitiesActive = status.chargesEnabled || status.payoutsEnabled;
+      const newStatus = status.onboardingComplete && capabilitiesActive ? "complete" : 
+                        status.onboardingComplete ? "pending_capabilities" : "pending";
+      
       await supabase
         .from("connected_accounts")
         .update({
@@ -135,6 +138,7 @@ serve(async (req) => {
         payoutsEnabled: status.payoutsEnabled,
         chargesEnabled: status.chargesEnabled,
         accountId: connected.provider_account_id,
+        detailsSubmitted: status.onboardingComplete,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
