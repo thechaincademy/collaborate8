@@ -102,11 +102,17 @@ const Profile = () => {
                 value:
                   connectStatus === "complete"
                     ? "Active"
-                    : connectStatus === "pending"
-                      ? "Pending"
-                      : "Not set up",
-                action: connectStatus !== "complete" ? handleConnectOnboarding : undefined,
-                actionLabel: connectStatus !== "complete" ? "Set Up" : undefined,
+                    : connectStatus === "pending_capabilities"
+                      ? "Under review"
+                      : connectStatus === "pending"
+                        ? "Pending"
+                        : "Not set up",
+                sublabel:
+                  connectStatus === "pending_capabilities"
+                    ? "Verification may take a few minutes or hours"
+                    : undefined,
+                action: connectStatus === "not_created" || connectStatus === "pending" ? handleConnectOnboarding : undefined,
+                actionLabel: connectStatus === "not_created" || connectStatus === "pending" ? "Set Up" : undefined,
               },
             ],
           },
@@ -147,7 +153,7 @@ const Profile = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 flex items-center gap-4"
         >
-          <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center">
+          <button onClick={() => { if (window.history.length > 2) { navigate(-1); } else { navigate("/dashboard"); } }} className="flex h-10 w-10 items-center justify-center">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-xl font-semibold text-foreground">Profile</h1>
@@ -200,7 +206,12 @@ const Profile = () => {
                     <span className="text-foreground">{item.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">{item.value}</span>
+                    <div className="text-right">
+                      <span className="text-sm text-muted-foreground">{item.value}</span>
+                      {item.sublabel && (
+                        <p className="text-[10px] text-muted-foreground">{item.sublabel}</p>
+                      )}
+                    </div>
                     {item.action && !item.comingSoon && (
                       <Button
                         variant="outline"
