@@ -218,6 +218,16 @@ const MaintenanceTab = () => {
                 Set Up Payouts
               </Button>
             </div>
+          ) : connectStatus === "pending_capabilities" ? (
+            <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+              <RefreshCw className="h-5 w-5 animate-spin text-amber-500" />
+              <div>
+                <p className="font-medium text-foreground">Account under review</p>
+                <p className="text-sm text-muted-foreground">
+                  Your payout account is being verified. This usually takes a few minutes.
+                </p>
+              </div>
+            </div>
           ) : (
             <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
               <Check className="h-5 w-5 text-emerald-500" />
