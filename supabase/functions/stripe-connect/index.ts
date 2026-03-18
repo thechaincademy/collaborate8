@@ -38,10 +38,11 @@ serve(async (req) => {
 
       if (existing) {
         const existingAccount = await payoutProvider.getAccount(existing.provider_account_id);
-        const shouldReplacePendingBusinessAccount =
-          !existingAccount.details_submitted && existingAccount.business_type !== "individual";
+        const needsReplacement =
+          (!existingAccount.details_submitted && existingAccount.business_type !== "individual") ||
+          (!existingAccount.charges_enabled && !existingAccount.payouts_enabled);
 
-        if (shouldReplacePendingBusinessAccount) {
+        if (needsReplacement) {
           accountId = await payoutProvider.createConnectedAccount(
             user.email!,
             { collabor8_user_id: user.id }
@@ -57,9 +58,14 @@ serve(async (req) => {
             })
             .eq("id", existing.id);
 
-          logStep("Replaced pending business account with individual account", {
+          logStep("Replaced incomplete account with new individual account", {
             previousAccountId: existing.provider_account_id,
             accountId,
+            reason: {
+              detailsSubmitted: existingAccount.details_submitted,
+              chargesEnabled: existingAccount.charges_enabled,
+              payoutsEnabled: existingAccount.payouts_enabled,
+            },
           });
         } else {
           accountId = existing.provider_account_id;
