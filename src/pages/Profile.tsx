@@ -102,11 +102,17 @@ const Profile = () => {
                 value:
                   connectStatus === "complete"
                     ? "Active"
-                    : connectStatus === "pending"
-                      ? "Pending"
-                      : "Not set up",
-                action: connectStatus !== "complete" ? handleConnectOnboarding : undefined,
-                actionLabel: connectStatus !== "complete" ? "Set Up" : undefined,
+                    : connectStatus === "pending_capabilities"
+                      ? "Under review"
+                      : connectStatus === "pending"
+                        ? "Pending"
+                        : "Not set up",
+                sublabel:
+                  connectStatus === "pending_capabilities"
+                    ? "Verification may take a few minutes or hours"
+                    : undefined,
+                action: connectStatus === "not_created" || connectStatus === "pending" ? handleConnectOnboarding : undefined,
+                actionLabel: connectStatus === "not_created" || connectStatus === "pending" ? "Set Up" : undefined,
               },
             ],
           },
