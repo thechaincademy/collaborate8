@@ -206,7 +206,12 @@ const Profile = () => {
                     <span className="text-foreground">{item.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">{item.value}</span>
+                    <div className="text-right">
+                      <span className="text-sm text-muted-foreground">{item.value}</span>
+                      {item.sublabel && (
+                        <p className="text-[10px] text-muted-foreground">{item.sublabel}</p>
+                      )}
+                    </div>
                     {item.action && !item.comingSoon && (
                       <Button
                         variant="outline"
