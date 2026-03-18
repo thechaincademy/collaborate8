@@ -22,12 +22,29 @@ serve(async (req) => {
   try {
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    
+    // Try both webhook secrets: platform (invoices, subscriptions) and connected accounts
+    const platformSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_PLATFORM");
+    const connectSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
     let event: Stripe.Event;
 
-    if (webhookSecret && sig) {
-      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
+    if (sig && (platformSecret || connectSecret)) {
+      // Try platform secret first, then connect secret
+      let verified = false;
+      for (const secret of [platformSecret, connectSecret].filter(Boolean)) {
+        try {
+          event = await stripe.webhooks.constructEventAsync(body, sig, secret!);
+          verified = true;
+          break;
+        } catch {
+          // Try next secret
+        }
+      }
+      if (!verified) {
+        logStep("ERROR: Signature verification failed with all secrets");
+        return new Response("Webhook signature verification failed", { status: 400 });
+      }
     } else {
       // In dev/test, parse directly
       event = JSON.parse(body) as Stripe.Event;
