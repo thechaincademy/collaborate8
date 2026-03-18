@@ -148,7 +148,12 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
 export class StripePayoutProvider implements PayoutProvider {
   async createConnectedAccount(email: string, metadata?: Record<string, string>): Promise<string> {
     const stripe = getStripe();
-    const account = await stripe.accounts.create({
+
+    // Check if we're in test mode (test keys start with sk_test_)
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
+    const isTestMode = stripeKey.startsWith("sk_test_");
+
+    const accountParams: Stripe.AccountCreateParams = {
       type: "express",
       business_type: "individual",
       email,
@@ -162,7 +167,29 @@ export class StripePayoutProvider implements PayoutProvider {
         product_description: "Receiving child maintenance payments via Collabor8",
       },
       metadata: metadata || {},
-    });
+    };
+
+    // In test mode, pre-fill individual details with test tokens to bypass identity verification
+    if (isTestMode) {
+      accountParams.individual = {
+        first_name: "Test",
+        last_name: "User",
+        dob: { day: 1, month: 1, year: 1901 },
+        address: {
+          line1: "address_full_match",
+          city: "London",
+          postal_code: "EC1Y 8SY",
+          country: "GB",
+        },
+        verification: {
+          document: {
+            front: "file_identity_document_success",
+          },
+        },
+      };
+    }
+
+    const account = await stripe.accounts.create(accountParams);
     return account.id;
   }
 
