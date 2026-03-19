@@ -27,32 +27,7 @@ interface Notification {
   type: "payment" | "reminder" | "system";
 }
 
-const notifications: Notification[] = [
-  {
-    id: "1",
-    title: "Payment received",
-    message: "You received £320.00 from John",
-    time: "2 hours ago",
-    read: false,
-    type: "payment"
-  },
-  {
-    id: "2",
-    title: "Payment reminder",
-    message: "Your monthly maintenance is due in 3 days",
-    time: "1 day ago",
-    read: false,
-    type: "reminder"
-  },
-  {
-    id: "3",
-    title: "Expense approved",
-    message: "Your school uniform expense was approved",
-    time: "2 days ago",
-    read: true,
-    type: "system"
-  }
-];
+const notifications: Notification[] = [];
 
 interface DashboardHeaderProps {
   title: string;
