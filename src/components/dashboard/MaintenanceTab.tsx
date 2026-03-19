@@ -276,12 +276,19 @@ const MaintenanceTab = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h3 className="mb-4 text-lg font-semibold text-foreground">Recent Payments</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">Recent Payments</h3>
+          {paymentHistory.length > 3 && (
+            <Button variant="link" className="text-sm text-primary p-0 h-auto" onClick={() => navigate("/payment-history")}>
+              See all
+            </Button>
+          )}
+        </div>
         <div className="space-y-3 pb-24">
           {paymentHistory.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">No payments yet</p>
           ) : (
-            paymentHistory.map((tx, index) => {
+            paymentHistory.slice(0, 3).map((tx, index) => {
               const isIncoming = tx.payee_id === profile?.id;
               const directionIcon = isIncoming ? (
                 <ArrowDownLeft className="h-4 w-4 text-emerald-500" />
@@ -322,8 +329,7 @@ const MaintenanceTab = () => {
                     </p>
                     <p className={`text-xs ${
                       tx.status === "completed" ? "text-emerald-500" :
-                      tx.status === "failed" ? "text-destructive" :
-                      tx.status === "disputed" ? "text-destructive" :
+                      tx.status === "failed" || tx.status === "disputed" ? "text-destructive" :
                       "text-muted-foreground"
                     }`}>
                       {tx.status === "completed" ? "Completed" :
