@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "./DashboardHeader";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { useProfile } from "@/hooks/useProfile";
 import { usePayments } from "@/hooks/usePayments";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
-import { format, addMonths, setDate } from "date-fns";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
 const MaintenanceTab = () => {
@@ -17,23 +18,18 @@ const MaintenanceTab = () => {
   const { isViewing, isManaging, profile, loading: profileLoading } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
   const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
-  const { checkAccountStatus } = useStripeConnect();
-  const [connectStatus, setConnectStatus] = useState<string>("not_created");
+  const { checkAccountStatus, startOnboarding } = useStripeConnect();
+  const [connectStatus, setConnectStatus] = useState<string>("loading");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
-  const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(false);
+  const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(true);
 
   useEffect(() => {
     fetchPayments();
     fetchCards();
 
-    if (!isViewing) {
-      setCoparentArrangement(null);
-      setCoparentArrangementLoading(false);
-      return;
-    }
-
+    // Everyone needs to check their Connect status now (bilateral)
     checkAccountStatus().then((s) => {
-      if (s) setConnectStatus(s.status);
+      setConnectStatus(s?.status ?? "not_created");
     });
 
     if (!profile?.coparent_id) {
@@ -43,7 +39,6 @@ const MaintenanceTab = () => {
     }
 
     setCoparentArrangementLoading(true);
-
     supabase
       .from("recurring_payments")
       .select("*")
@@ -71,26 +66,16 @@ const MaintenanceTab = () => {
     : null;
   const isStripe = displayArrangement?.provider === "stripe";
   const subscriptionStatus = isStripe ? "active" : displayArrangement?.is_active ? "active" : "inactive";
-  const isContentLoading = loading || profileLoading || cardsLoading || coparentArrangementLoading;
+  const isContentLoading = loading || profileLoading || cardsLoading || coparentArrangementLoading || connectStatus === "loading";
 
   const handleSetupCard = async () => {
     const result = await setupCard();
-    if (result?.url) {
-      window.open(result.url, "_blank");
-    }
+    if (result?.url) window.open(result.url, "_blank");
   };
 
   const handleConnectOnboarding = async () => {
-    const { startOnboarding } = await import("@/hooks/useStripe").then(m => ({
-      startOnboarding: new (m.useStripeConnect as any)()
-    })).catch(() => ({ startOnboarding: null }));
-    // Simpler approach: invoke directly
-    const { data } = await supabase.functions.invoke("stripe-connect", {
-      body: { action: "create-account" },
-    });
-    if (data?.url) {
-      window.open(data.url, "_blank");
-    }
+    const result = await startOnboarding();
+    if (result?.url) window.open(result.url, "_blank");
   };
 
   const statusLabel = {
@@ -105,140 +90,183 @@ const MaintenanceTab = () => {
     ? { text: "Loading...", className: "text-muted-foreground" }
     : statusLabel[subscriptionStatus as keyof typeof statusLabel] || statusLabel.inactive;
 
+  // Skeleton for the status card area
+  const renderStatusSkeleton = () => (
+    <div className="mb-6 rounded-3xl bg-card p-6">
+      <div className="mb-1 flex items-center justify-between">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <Skeleton className="mb-4 h-10 w-36" />
+      <Skeleton className="h-4 w-48" />
+    </div>
+  );
+
+  // Skeleton for action buttons area
+  const renderActionsSkeleton = () => (
+    <div className="mb-6 space-y-3">
+      <Skeleton className="h-14 w-full rounded-2xl" />
+      <Skeleton className="h-14 w-full rounded-2xl" />
+    </div>
+  );
+
   return (
     <div className="px-6 pt-12">
       <DashboardHeader title="Child Maintenance" />
 
       {/* Status Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mb-6 rounded-3xl bg-card p-6"
-      >
-        <div className="mb-1 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {isViewing ? "Expected payment" : "Next payment"}
-          </p>
-          <span className={`text-xs font-semibold ${currentStatus.className}`}>
-            {currentStatus.text}
-          </span>
-        </div>
-        <h2 className="mb-4 text-4xl font-bold text-foreground">
-          {isContentLoading ? "Loading..." : `£${amount.toFixed(2)}`}
-        </h2>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>
-            {nextDueDate
-              ? `Due ${format(nextDueDate, "do MMMM yyyy")}`
-              : isContentLoading
-                ? "Loading payment details..."
-                : displayArrangement
-                  ? "Processing..."
-                  : "No arrangement set"}
-          </span>
-        </div>
-        {isStripe && (
-          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-            <CreditCard className="h-3 w-3" />
-            <span>Paid via card{cards.length > 0 ? ` (****${cards[0].last4})` : ""}</span>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Payer Quick Actions */}
-      {isManaging && (
+      {isContentLoading ? (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          {renderStatusSkeleton()}
+        </motion.div>
+      ) : (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6 space-y-3"
+          transition={{ delay: 0.1 }}
+          className="mb-6 rounded-3xl bg-card p-6"
         >
-          {isContentLoading ? (
-            <div className="rounded-2xl bg-card p-4 text-sm text-muted-foreground">
-              Loading payment setup...
-            </div>
-          ) : cards.length === 0 ? (
-            <Button
-              onClick={handleSetupCard}
-              className="w-full gap-2"
-              size="lg"
-              disabled={stripeLoading}
-            >
-              <CreditCard className="h-5 w-5" />
-              {stripeLoading ? "Loading..." : "Add Payment Card"}
-            </Button>
-          ) : !displayArrangement ? (
-            <Button
-              onClick={() => navigate("/edit-payment")}
-              className="w-full gap-2"
-              size="lg"
-            >
-              Set Up Recurring Payment
-            </Button>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <Button className="h-auto flex-col gap-2 py-4" variant="outline">
-                <span className="font-medium">Payment History</span>
-              </Button>
-              <Button
-                className="h-auto flex-col gap-2 py-4"
-                variant="outline"
-                onClick={() => navigate("/edit-payment")}
-              >
-                <span className="font-medium">Manage Arrangement</span>
-              </Button>
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {isViewing ? "Expected payment" : "Next payment"}
+            </p>
+            <span className={`text-xs font-semibold ${currentStatus.className}`}>
+              {currentStatus.text}
+            </span>
+          </div>
+          <h2 className="mb-4 text-4xl font-bold text-foreground">
+            £{amount.toFixed(2)}
+          </h2>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>
+              {nextDueDate
+                ? `Due ${format(nextDueDate, "do MMMM yyyy")}`
+                : displayArrangement
+                  ? "Processing..."
+                  : "No arrangement set"}
+            </span>
+          </div>
+          {isStripe && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <CreditCard className="h-3 w-3" />
+              <span>Paid via card{cards.length > 0 ? ` (****${cards[0].last4})` : ""}</span>
             </div>
           )}
         </motion.div>
       )}
 
-      {/* Receiver Actions */}
-      {isViewing && !isContentLoading && (
+      {/* Setup Section: Bilateral — Card (to send) + Connect (to receive) */}
+      {isContentLoading ? (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          {renderActionsSkeleton()}
+        </motion.div>
+      ) : (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="mb-6 space-y-3"
         >
-          {connectStatus === "not_created" || connectStatus === "pending" ? (
+          {/* Card setup (for sending payments) */}
+          {cards.length === 0 && (
+            <div className="rounded-2xl bg-card p-4">
+              <div className="mb-3 flex items-center gap-3">
+                <CreditCard className="h-5 w-5 text-amber-500" />
+                <div>
+                  <p className="font-medium text-foreground">Add payment card</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add a card to send maintenance payments to your co-parent.
+                  </p>
+                </div>
+              </div>
+              <Button onClick={handleSetupCard} className="w-full gap-2" size="lg" disabled={stripeLoading}>
+                <CreditCard className="h-5 w-5" />
+                {stripeLoading ? "Loading..." : "Add Card to Send Payments"}
+              </Button>
+            </div>
+          )}
+
+          {/* Connect setup (for receiving payments) */}
+          {(connectStatus === "not_created" || connectStatus === "pending") && (
             <div className="rounded-2xl bg-card p-4">
               <div className="mb-3 flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
                 <div>
-                  <p className="font-medium text-foreground">Complete payout setup</p>
+                  <p className="font-medium text-foreground">Set up payout account</p>
                   <p className="text-sm text-muted-foreground">
-                    Set up your account to receive payments from your co-parent.
+                    Complete verification to receive payments from your co-parent.
                   </p>
                 </div>
               </div>
               <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
                 <CreditCard className="h-5 w-5" />
-                Set Up Payouts
+                Set Up to Receive Payments
               </Button>
             </div>
-          ) : connectStatus === "pending_capabilities" ? (
+          )}
+
+          {connectStatus === "pending_capabilities" && (
             <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
               <RefreshCw className="h-5 w-5 animate-spin text-amber-500" />
               <div>
-                <p className="font-medium text-foreground">Account under review</p>
+                <p className="font-medium text-foreground">Payout account under review</p>
                 <p className="text-sm text-muted-foreground">
                   Your payout account is being verified. This usually takes a few minutes.
                 </p>
               </div>
             </div>
-          ) : (
+          )}
+
+          {connectStatus === "complete" && (
             <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
               <Check className="h-5 w-5 text-emerald-500" />
-              <p className="text-sm text-foreground">Payouts enabled — you'll receive payments automatically</p>
+              <p className="text-sm text-foreground">Payouts enabled — you can receive payments</p>
             </div>
           )}
 
-          <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
-            <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Your co-parent manages this arrangement</p>
-          </div>
+          {cards.length > 0 && (
+            <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+              <Check className="h-5 w-5 text-emerald-500" />
+              <p className="text-sm text-foreground">Card added — you can send payments (****{cards[0].last4})</p>
+            </div>
+          )}
+
+          {/* Arrangement actions for managing parent (payer) */}
+          {isManaging && cards.length > 0 && (
+            <>
+              {!displayArrangement ? (
+                <Button
+                  onClick={() => navigate("/edit-payment")}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  Set Up Recurring Payment
+                </Button>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <Button className="h-auto flex-col gap-2 py-4" variant="outline">
+                    <span className="font-medium">Payment History</span>
+                  </Button>
+                  <Button
+                    className="h-auto flex-col gap-2 py-4"
+                    variant="outline"
+                    onClick={() => navigate("/edit-payment")}
+                  >
+                    <span className="font-medium">Manage Arrangement</span>
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Info for viewing parent */}
+          {isViewing && (
+            <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+              <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Your co-parent manages this arrangement</p>
+            </div>
+          )}
         </motion.div>
       )}
 
