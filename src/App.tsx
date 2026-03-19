@@ -22,6 +22,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
+import PaymentHistory from "./pages/PaymentHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
