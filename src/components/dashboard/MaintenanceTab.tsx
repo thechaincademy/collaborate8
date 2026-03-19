@@ -245,7 +245,7 @@ const MaintenanceTab = () => {
                 </Button>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  <Button className="h-auto flex-col gap-2 py-4" variant="outline">
+                  <Button className="h-auto flex-col gap-2 py-4" variant="outline" onClick={() => navigate("/payment-history")}>
                     <span className="font-medium">Payment History</span>
                   </Button>
                   <Button
