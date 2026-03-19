@@ -1,35 +1,55 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, CreditCard, Shield, Users, Building2, Check, AlertTriangle, Construction } from "lucide-react";
+import { ArrowLeft, User, Mail, CreditCard, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
-import { useBanking } from "@/hooks/useBanking";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading } = useProfile();
-  const { connection, fetchConnection } = useBanking();
   const { signOut } = useAuth();
-  const { cards, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
+  const { cards, fetchCards, setupCard, cardsLoading, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus, startOnboarding, loading: connectLoading } = useStripeConnect();
-  const [connectStatus, setConnectStatus] = useState<string>("not_created");
+  const [connectStatus, setConnectStatus] = useState<string>("loading");
 
   useEffect(() => {
-    fetchConnection();
     fetchCards();
     checkAccountStatus().then((s) => {
-      if (s) setConnectStatus(s.status);
+      setConnectStatus(s?.status ?? "not_created");
     });
   }, []);
 
-  if (loading) {
+  const isContentLoading = loading || cardsLoading || connectStatus === "loading";
+
+  if (isContentLoading) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="mx-auto min-h-screen max-w-md bg-background">
+        <div className="px-6 pt-4">
+          <div className="mb-6 flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center">
+              <ArrowLeft className="h-5 w-5 text-foreground" />
+            </button>
+            <h1 className="text-xl font-semibold text-foreground">Profile</h1>
+          </div>
+        </div>
+        <div className="mb-8 flex flex-col items-center px-6">
+          <Skeleton className="mb-4 h-24 w-24 rounded-full" />
+          <Skeleton className="mb-2 h-6 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="px-6 space-y-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i}>
+              <Skeleton className="mb-3 h-4 w-28" />
+              <Skeleton className="h-16 w-full rounded-2xl" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -37,7 +57,6 @@ const Profile = () => {
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "User";
   const email = user?.email || "";
   const isManaging = profile?.role === "managing";
-  const isViewing = profile?.role === "viewing";
 
   const handleSetupCard = async () => {
     const result = await setupCard();
@@ -67,68 +86,48 @@ const Profile = () => {
         },
       ],
     },
-    // Payment Card section (for payer / managing parent)
-    ...(isManaging
-      ? [
-          {
-            title: "Payment Card",
-            items: cards.length > 0
-              ? cards.map((c) => ({
-                  icon: CreditCard,
-                  label: `${c.brand.charAt(0).toUpperCase() + c.brand.slice(1)}`,
-                  value: `****${c.last4} (${c.expMonth}/${c.expYear})`,
-                }))
-              : [
-                  {
-                    icon: CreditCard,
-                    label: "Card",
-                    value: "Not added",
-                    action: handleSetupCard,
-                    actionLabel: "Add Card",
-                  },
-                ],
-          },
-        ]
-      : []),
-    // Payout Account section (for receiver / viewing parent)
-    ...(isViewing
-      ? [
-          {
-            title: "Payout Account",
-            items: [
-              {
-                icon: CreditCard,
-                label: "Stripe Connect",
-                value:
-                  connectStatus === "complete"
-                    ? "Active"
-                    : connectStatus === "pending_capabilities"
-                      ? "Under review"
-                      : connectStatus === "pending"
-                        ? "Pending"
-                        : "Not set up",
-                sublabel:
-                  connectStatus === "pending_capabilities"
-                    ? "Verification may take a few minutes or hours"
-                    : undefined,
-                action: connectStatus === "not_created" || connectStatus === "pending" ? handleConnectOnboarding : undefined,
-                actionLabel: connectStatus === "not_created" || connectStatus === "pending" ? "Set Up" : undefined,
-              },
-            ],
-          },
-        ]
-      : []),
-    // Open Banking (Coming Soon)
+    // Payment Card (to SEND payments) — for ALL users
     {
-      title: "Open Banking",
+      title: "Payment Card (Send)",
+      subtitle: "Add a card to send payments to your co-parent",
+      items: cards.length > 0
+        ? cards.map((c) => ({
+            icon: CreditCard,
+            label: `${c.brand.charAt(0).toUpperCase() + c.brand.slice(1)}`,
+            value: `****${c.last4} (${c.expMonth}/${c.expYear})`,
+          }))
+        : [
+            {
+              icon: CreditCard,
+              label: "Card",
+              value: "Not added",
+              action: handleSetupCard,
+              actionLabel: "Add Card",
+            },
+          ],
+    },
+    // Payout Account (to RECEIVE payments) — for ALL users
+    {
+      title: "Payout Account (Receive)",
+      subtitle: "Set up your account to receive payments from your co-parent",
       items: [
         {
-          icon: Building2,
-          label: "Bank Account",
-          value: connection
-            ? `${connection.institution_name} ${connection.account_number_masked || ""}`
-            : "Not connected",
-          comingSoon: true,
+          icon: CreditCard,
+          label: "Stripe Connect",
+          value:
+            connectStatus === "complete"
+              ? "Active"
+              : connectStatus === "pending_capabilities"
+                ? "Under review"
+                : connectStatus === "pending"
+                  ? "Pending"
+                  : "Not set up",
+          sublabel:
+            connectStatus === "pending_capabilities"
+              ? "Verification may take a few minutes or hours"
+              : undefined,
+          action: connectStatus === "not_created" || connectStatus === "pending" ? handleConnectOnboarding : undefined,
+          actionLabel: connectStatus === "not_created" || connectStatus === "pending" ? "Set Up" : undefined,
         },
       ],
     },
@@ -185,21 +184,19 @@ const Profile = () => {
             transition={{ delay: 0.2 + sectionIndex * 0.1 }}
             className="mb-6"
           >
-            <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <h3 className="mb-1 text-sm font-medium text-muted-foreground">
               {section.title}
-              {section.items.some((i: any) => i.comingSoon) && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  Coming Soon
-                </span>
-              )}
             </h3>
+            {(section as any).subtitle && (
+              <p className="mb-2 text-xs text-muted-foreground">{(section as any).subtitle}</p>
+            )}
             <div className="overflow-hidden rounded-2xl bg-card">
               {section.items.map((item: any, index: number) => (
                 <div
                   key={item.label + index}
                   className={`flex w-full items-center justify-between p-4 ${
                     index !== section.items.length - 1 ? "border-b border-border" : ""
-                  } ${item.comingSoon ? "opacity-50" : ""}`}
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="h-5 w-5 text-muted-foreground" />
@@ -212,7 +209,7 @@ const Profile = () => {
                         <p className="text-[10px] text-muted-foreground">{item.sublabel}</p>
                       )}
                     </div>
-                    {item.action && !item.comingSoon && (
+                    {item.action && (
                       <Button
                         variant="outline"
                         size="sm"
