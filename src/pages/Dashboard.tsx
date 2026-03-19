@@ -7,32 +7,12 @@ import ExpensesTab from "@/components/dashboard/ExpensesTab";
 import BenefitsTab from "@/components/dashboard/BenefitsTab";
 import ChatTab from "@/components/dashboard/ChatTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
-import { useBanking } from "@/hooks/useBanking";
-import { toast } from "sonner";
 
 export type DashboardTab = "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("maintenance");
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { exchangeConsent } = useBanking();
-
-  // Handle bank callback
-  useEffect(() => {
-    const isBankCallback = searchParams.get("bank-callback");
-    const consent = searchParams.get("consent");
-    const institutionId = searchParams.get("institution");
-
-    if (isBankCallback && consent && institutionId) {
-      exchangeConsent(consent, institutionId).then((result) => {
-        if (result) {
-          toast.success("Bank account linked successfully!");
-        }
-        // Clean up URL params
-        setSearchParams({});
-      });
-    }
-  }, [searchParams]);
+  const [searchParams] = useSearchParams();
 
   const renderContent = () => {
     switch (activeTab) {
