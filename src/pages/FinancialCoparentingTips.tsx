@@ -80,7 +80,7 @@ const FinancialCoparentingTips = () => {
 
           <section className="rounded-2xl bg-card p-6">
             <h2 className="mb-3 text-lg font-semibold text-foreground">Why Collabor8?</h2>
-            <p>Collabor8 keeps payments, shared expenses, and reminders all in one place — so you can spend less time stressing and more time supporting your child.</p>
+            <p>Collabor8 keeps payments, shared expenses, and reminders all in one place, so you can spend less time stressing and more time supporting your child.</p>
           </section>
         </div>
       </div>

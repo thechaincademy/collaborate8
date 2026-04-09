@@ -156,7 +156,7 @@ const MaintenanceTab = () => {
         </motion.div>
       )}
 
-      {/* Setup Section: Bilateral — Card (to send) + Connect (to receive) */}
+      {/* Setup Section: Bilateral - Card (to send) + Connect (to receive) */}
       {isContentLoading ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           {renderActionsSkeleton()}
@@ -221,14 +221,14 @@ const MaintenanceTab = () => {
           {connectStatus === "complete" && (
             <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
               <Check className="h-5 w-5 text-emerald-500" />
-              <p className="text-sm text-foreground">Payouts enabled — you can receive payments</p>
+              <p className="text-sm text-foreground">Payouts enabled - you can receive payments</p>
             </div>
           )}
 
           {cards.length > 0 && (
             <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
               <Check className="h-5 w-5 text-emerald-500" />
-              <p className="text-sm text-foreground">Card added — you can send payments (****{cards[0].last4})</p>
+              <p className="text-sm text-foreground">Card added - you can send payments (****{cards[0].last4})</p>
             </div>
           )}
 

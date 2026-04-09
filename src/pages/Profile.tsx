@@ -86,7 +86,7 @@ const Profile = () => {
         },
       ],
     },
-    // Payment Card (to SEND payments) — for ALL users
+    // Payment Card (to SEND payments) - for ALL users
     {
       title: "Payment Card (Send)",
       subtitle: "Add a card to send payments to your co-parent",
@@ -106,7 +106,7 @@ const Profile = () => {
             },
           ],
     },
-    // Payout Account (to RECEIVE payments) — for ALL users
+    // Payout Account (to RECEIVE payments) - for ALL users
     {
       title: "Payout Account (Receive)",
       subtitle: "Set up your account to receive payments from your co-parent",

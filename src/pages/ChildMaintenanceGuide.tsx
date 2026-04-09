@@ -68,7 +68,7 @@ const ChildMaintenanceGuide = () => {
               </ul>
               <p className="text-xs mt-2">Adjustments are made for overnight stays or other children.</p>
             </div>
-            <p className="mt-3">With Collabor8, you get your own in-app calculator to see what works for your family — no need to go anywhere else.</p>
+            <p className="mt-3">With Collabor8, you get your own in-app calculator to see what works for your family, no need to go anywhere else.</p>
           </section>
 
           {/* Section 4 */}
@@ -103,7 +103,7 @@ const ChildMaintenanceGuide = () => {
               </div>
             </div>
 
-            <p className="mt-3">Collabor8 isn't just about paying and tracking — it's about making co-parenting simpler and fairer, with built-in reminders, receipts, and rewards for staying on top of payments.</p>
+            <p className="mt-3">Collabor8 isn't just about paying and tracking. It's about making co-parenting simpler and fairer, with built-in reminders, receipts, and rewards for staying on top of payments.</p>
           </section>
 
           {/* Section 5 */}
@@ -115,7 +115,7 @@ const ChildMaintenanceGuide = () => {
               <li>Clubs, activities, or hobbies</li>
               <li>Medical or dental expenses</li>
             </ul>
-            <p className="mt-3">With Collabor8, you can log these, attach receipts, and request payments — all in one place. You can even earn rewards for keeping everything organised and timely!</p>
+            <p className="mt-3">With Collabor8, you can log these, attach receipts, and request payments, all in one place. You can even earn rewards for keeping everything organised and timely!</p>
           </section>
 
           {/* Section 6 */}
@@ -135,7 +135,7 @@ const ChildMaintenanceGuide = () => {
               <li>Earn rewards and incentives for managing everything responsibly</li>
             </ul>
             <p className="mt-3 text-xs">
-              Note: Collabor8 helps you manage, track, and remind, but it does not enforce payments like a government service. The difference? Everything is faster, easier, and built around your family — and the rewards make it worth staying on top of.
+              Note: Collabor8 helps you manage, track, and remind, but it does not enforce payments like a government service. The difference? Everything is faster, easier, and built around your family, and the rewards make it worth staying on top of.
             </p>
           </section>
 
@@ -146,7 +146,7 @@ const ChildMaintenanceGuide = () => {
               <li>Skip spreadsheets and confusing direct debits</li>
               <li>See every payment and shared expense clearly</li>
               <li>Earn rewards for timely payments</li>
-              <li>Keep everything in one place — your co-parenting hub</li>
+              <li>Keep everything in one place, your co-parenting hub</li>
             </ul>
             <p className="mt-3 font-medium text-foreground">With Collabor8, managing child maintenance becomes a tool for collaboration, not stress.</p>
           </section>

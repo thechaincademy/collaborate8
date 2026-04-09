@@ -129,7 +129,7 @@ serve(async (req) => {
         });
       }
 
-      // Get receiver's connected account — REQUIRED for transfers
+      // Get receiver's connected account - REQUIRED for transfers
       const { data: connectedAccount } = await supabase
         .from("connected_accounts")
         .select("*")

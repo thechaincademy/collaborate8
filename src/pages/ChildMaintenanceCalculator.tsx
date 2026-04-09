@@ -118,11 +118,11 @@ const ChildMaintenanceCalculator = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Child Maintenance Calculator UK 2025 — Free CMS Calculator | Collabor8</title>
+        <title>Child Maintenance Calculator UK 2025 - Free CMS Calculator | Collabor8</title>
         <meta name="description" content="Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly & annual child maintenance payments. Used by thousands of separated parents." />
         <meta name="keywords" content="child maintenance calculator, child maintenance service, CMS calculator, child maintenance UK, how much child maintenance, child maintenance login, separated parents, co-parenting finances" />
         <link rel="canonical" href="https://collabor8.lovable.app/child-maintenance-calculator" />
-        <meta property="og:title" content="Child Maintenance Calculator UK 2025 — Free CMS Calculator" />
+        <meta property="og:title" content="Child Maintenance Calculator UK 2025 - Free CMS Calculator" />
         <meta property="og:description" content="Calculate your child maintenance using the official CMS formula. Free, instant results." />
         <meta property="og:url" content="https://collabor8.lovable.app/child-maintenance-calculator" />
         <meta property="og:type" content="website" />
@@ -140,7 +140,7 @@ const ChildMaintenanceCalculator = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="mb-2 text-3xl font-bold text-foreground">Child Maintenance Calculator</h1>
           <p className="mb-8 text-sm text-muted-foreground">
-            Based on the official Child Maintenance Service (CMS) formula — Great Britain
+            Based on the official Child Maintenance Service (CMS) formula - Great Britain
           </p>
         </motion.div>
 
@@ -196,11 +196,11 @@ const ChildMaintenanceCalculator = () => {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-foreground">Agreed overnight stays per year</label>
               <select value={nights} onChange={(e) => setNights(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
-                <option value="0">Fewer than 52 nights — no reduction</option>
-                <option value="52">52–103 nights — 14.29% reduction</option>
-                <option value="104">104–155 nights — 28.57% reduction</option>
-                <option value="156">156–174 nights — 42.86% reduction</option>
-                <option value="175">175+ nights — 50% reduction + £7/week</option>
+                <option value="0">Fewer than 52 nights - no reduction</option>
+                <option value="52">52-103 nights - 14.29% reduction</option>
+                <option value="104">104-155 nights - 28.57% reduction</option>
+                <option value="156">156-174 nights - 42.86% reduction</option>
+                <option value="175">175+ nights - 50% reduction + £7/week</option>
               </select>
             </div>
           </motion.div>
@@ -250,7 +250,7 @@ const ChildMaintenanceCalculator = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="rounded-2xl bg-card p-5 text-center">
             <h2 className="mb-2 text-lg font-semibold text-foreground">Manage your child maintenance with Collabor8</h2>
             <p className="mb-4 text-sm text-muted-foreground">
-              Set up automated payments, track expenses, earn rewards — all based on this calculation.
+              Set up automated payments, track expenses, earn rewards - all based on this calculation.
             </p>
             <Link to="/" className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background hover:opacity-90 transition-opacity">
               Join the Waitlist
@@ -270,17 +270,17 @@ const ChildMaintenanceCalculator = () => {
             <section>
               <h2 className="mb-2 text-lg font-semibold text-foreground">Understanding the CMS rates</h2>
               <ul className="ml-5 list-disc space-y-1">
-                <li><strong className="text-foreground">Nil rate</strong> — Income below £7 per week. No maintenance payable.</li>
-                <li><strong className="text-foreground">Flat rate</strong> — Income between £7 and £100/week, or on qualifying benefits. Fixed at £7/week.</li>
-                <li><strong className="text-foreground">Reduced rate</strong> — Income between £100 and £200/week. A graduated formula applies.</li>
-                <li><strong className="text-foreground">Basic rate</strong> — Income above £200/week. 12% for 1 child, 16% for 2, 19% for 3+.</li>
+                <li><strong className="text-foreground">Nil rate</strong> - Income below £7 per week. No maintenance payable.</li>
+                <li><strong className="text-foreground">Flat rate</strong> - Income between £7 and £100/week, or on qualifying benefits. Fixed at £7/week.</li>
+                <li><strong className="text-foreground">Reduced rate</strong> - Income between £100 and £200/week. A graduated formula applies.</li>
+                <li><strong className="text-foreground">Basic rate</strong> - Income above £200/week. 12% for 1 child, 16% for 2, 19% for 3+.</li>
               </ul>
             </section>
 
             <section>
               <h2 className="mb-2 text-lg font-semibold text-foreground">Related resources</h2>
               <ul className="ml-5 list-disc space-y-1">
-                <li><Link to="/resources/child-maintenance-guide" className="underline hover:text-foreground">Child Maintenance Made Simple — Full Guide</Link></li>
+                <li><Link to="/resources/child-maintenance-guide" className="underline hover:text-foreground">Child Maintenance Made Simple - Full Guide</Link></li>
                 <li><Link to="/resources/financial-coparenting-tips" className="underline hover:text-foreground">Financial Co-parenting Tips</Link></li>
               </ul>
             </section>
