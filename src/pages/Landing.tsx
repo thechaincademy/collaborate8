@@ -105,9 +105,17 @@ const Landing = () => {
           </div>
           <span className="text-lg font-bold text-foreground">collabor8</span>
         </div>
-        <Button variant="default" size="sm" onClick={scrollToWaitlist}>
-          Join the Waiting List
-        </Button>
+        <div className="flex items-center gap-3">
+          <Link to="/child-maintenance-calculator" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Calculator
+          </Link>
+          <Link to="/resources/child-maintenance-guide" className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Guide
+          </Link>
+          <Button variant="default" size="sm" onClick={scrollToWaitlist}>
+            Join the Waiting List
+          </Button>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -402,7 +410,9 @@ const Landing = () => {
               </div>
               <span className="text-sm font-semibold text-foreground">collabor8</span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <Link to="/child-maintenance-calculator" className="hover:text-foreground">Child Maintenance Calculator</Link>
+              <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">Maintenance Guide</Link>
               <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
               <Link to="/cookies" className="hover:text-foreground">Cookie Policy</Link>
               <span>© 2025 collabor8</span>
