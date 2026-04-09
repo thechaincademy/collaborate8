@@ -1,9 +1,16 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Scale, Heart, FileText, ChevronRight } from "lucide-react";
+import { BookOpen, Scale, Heart, FileText, Calculator, ChevronRight } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
 
 const resources = [
+  {
+    icon: Calculator,
+    title: "Child Maintenance Calculator",
+    description: "Calculate payments using the official CMS formula",
+    category: "Tool",
+    link: "/child-maintenance-calculator"
+  },
   {
     icon: Scale,
     title: "Understanding Child Maintenance",

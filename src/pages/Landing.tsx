@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,6 +98,19 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Collabor8 — Child Maintenance Service & Calculator for UK Parents</title>
+        <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free child maintenance calculator based on the official CMS formula." />
+        <link rel="canonical" href="https://collabor8.lovable.app/" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Collabor8",
+          "url": "https://collabor8.lovable.app",
+          "description": "UK child maintenance service for separated parents. Payment tracking, expense management, and rewards.",
+          "sameAs": []
+        })}</script>
+      </Helmet>
       {/* Nav */}
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
@@ -105,9 +119,17 @@ const Landing = () => {
           </div>
           <span className="text-lg font-bold text-foreground">collabor8</span>
         </div>
-        <Button variant="default" size="sm" onClick={scrollToWaitlist}>
-          Join the Waiting List
-        </Button>
+        <div className="flex items-center gap-3">
+          <Link to="/child-maintenance-calculator" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Calculator
+          </Link>
+          <Link to="/resources/child-maintenance-guide" className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Guide
+          </Link>
+          <Button variant="default" size="sm" onClick={scrollToWaitlist}>
+            Join the Waiting List
+          </Button>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -402,7 +424,9 @@ const Landing = () => {
               </div>
               <span className="text-sm font-semibold text-foreground">collabor8</span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <Link to="/child-maintenance-calculator" className="hover:text-foreground">Child Maintenance Calculator</Link>
+              <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">Maintenance Guide</Link>
               <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
               <Link to="/cookies" className="hover:text-foreground">Cookie Policy</Link>
               <span>© 2025 collabor8</span>
