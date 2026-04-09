@@ -82,7 +82,7 @@ const Landing = () => {
     {
       icon: Calculator,
       title: "Expense Splitting",
-      description: "Log shared expenses, attach receipts, and request reimbursement — all in one place.",
+      description: "Log shared expenses, attach receipts, and request reimbursement, all in one place.",
     },
     {
       icon: MessageSquare,
@@ -99,7 +99,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Collabor8 — Child Maintenance Service & Calculator for UK Parents</title>
+        <title>Collabor8 - Child Maintenance Service & Calculator for UK Parents</title>
         <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free child maintenance calculator based on the official CMS formula." />
         <link rel="canonical" href="https://collabor8.lovable.app/" />
         <script type="application/ld+json">{JSON.stringify({
@@ -265,7 +265,7 @@ const Landing = () => {
               Your subscription, packed with value
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Everything you need to stay on top of co-parenting finances — and then some.
+              Everything you need to stay on top of co-parenting finances, and then some.
             </p>
           </motion.div>
 
@@ -284,7 +284,7 @@ const Landing = () => {
               {
                 icon: Trophy,
                 title: "Hundreds of pounds in rewards",
-                description: "Earn rewards and points for consistent payments — far exceeding the cost of your subscription.",
+                description: "Earn rewards and points for consistent payments, far exceeding the cost of your subscription.",
               },
             ].map((item, i) => (
               <motion.div
