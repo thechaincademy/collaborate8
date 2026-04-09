@@ -1,159 +1,153 @@
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import GuideLayout from "@/components/guide/GuideLayout";
 
-const ChildMaintenanceGuide = () => {
-  const navigate = useNavigate();
+const articles = [
+  {
+    num: "01",
+    time: "4 min read",
+    title: "What is child maintenance?",
+    desc: "The basics explained clearly - what it covers, who it applies to, and why it exists.",
+    img: "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=700&q=80&auto=format&fit=crop&crop=center",
+    alt: "Parent and child at home together",
+    to: "/resources/child-maintenance-guide/what-is-child-maintenance",
+    span: true,
+  },
+  {
+    num: "02",
+    time: "5 min read",
+    title: "Who pays, and how much?",
+    desc: "Three simple ways to work out a fair amount - including the standard UK formula.",
+    img: "https://images.unsplash.com/photo-1554224155-8d04421f81f0?w=700&q=80&auto=format&fit=crop&crop=center",
+    alt: "Calculator and financial paperwork",
+    to: "/resources/child-maintenance-guide/who-pays",
+  },
+  {
+    num: "03",
+    time: "5 min read",
+    title: "How to set up child maintenance payments",
+    desc: "The simplest way to arrange child maintenance - and keep it running smoothly without a third party.",
+    img: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=700&q=80&auto=format&fit=crop&crop=center",
+    alt: "Organised desk with notebook and phone",
+    to: "/resources/child-maintenance-guide/how-to-set-up-payments",
+  },
+  {
+    num: "04",
+    time: "4 min read",
+    title: "Shared and additional expenses",
+    desc: "School trips, clubs, uniforms - how to handle the extras fairly and without friction.",
+    img: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=700&q=80&auto=format&fit=crop&crop=center",
+    alt: "Child doing homework at a desk",
+    to: "/resources/child-maintenance-guide/shared-expenses",
+  },
+  {
+    num: "05",
+    time: "5 min read",
+    title: "Your rights and legal responsibilities",
+    desc: "What the law says, what you're entitled to, and what to do if things go wrong.",
+    img: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=700&q=80&auto=format&fit=crop&crop=center",
+    alt: "Legal document and pen on a desk",
+    to: "/resources/child-maintenance-guide/rights-and-responsibilities",
+  },
+];
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
+const ChildMaintenanceGuide = () => (
+  <GuideLayout>
+    <Helmet>
+      <title>Child Maintenance Made Simple - A Complete Guide | Collabor8</title>
+      <meta name="description" content="Everything separated parents need to know about child maintenance in the UK. Five clear guides covering what it is, how to calculate it, how to set up payments, and your legal rights." />
+      <meta name="keywords" content="child maintenance guide uk, child support uk, co-parenting finances, child maintenance calculator, family arrangement, child maintenance service, child maintenance login" />
+      <link rel="canonical" href="https://collabor8.lovable.app/resources/child-maintenance-guide" />
+      <meta property="og:title" content="Child Maintenance Made Simple | Collabor8" />
+      <meta property="og:description" content="A friendly, practical guide to child maintenance in the UK - your responsibilities, your options, and how to manage everything in one place." />
+      <meta property="og:type" content="website" />
+      <meta property="og:image" content="https://images.unsplash.com/photo-1591019479261-1a103585c559?w=1200&q=80" />
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "headline": "Child Maintenance Made Simple",
+        "description": "A complete guide to child maintenance in the UK for separated parents",
+        "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collabor8.lovable.app" },
+        "hasPart": articles.map(a => ({
+          "@type": "Article",
+          "headline": a.title,
+          "url": `https://collabor8.lovable.app${a.to}`
+        }))
+      })}</script>
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "What is child maintenance?", "acceptedAnswer": { "@type": "Answer", "text": "Child maintenance is money that one parent pays to the other to help cover the everyday costs of raising their child - food, clothing, housing, and general living expenses. Both parents are legally responsible under the Child Support Act 1991." }},
+          { "@type": "Question", "name": "How is child maintenance calculated in the UK?", "acceptedAnswer": { "@type": "Answer", "text": "The standard formula is based on the paying parent's gross weekly income: 12% for 1 child, 16% for 2 children, and 19% for 3 or more. This can be adjusted for overnight stays and other children." }},
+          { "@type": "Question", "name": "Do I need to use the Child Maintenance Service?", "acceptedAnswer": { "@type": "Answer", "text": "No. Most parents handle child maintenance privately in a family-based arrangement. Collabor8 lets you manage payments, track expenses, and keep records without any government involvement." }},
+          { "@type": "Question", "name": "Who pays child maintenance?", "acceptedAnswer": { "@type": "Answer", "text": "Usually the parent who spends less time with the child makes payments to the parent who provides day-to-day care." }}
+        ]
+      })}</script>
+    </Helmet>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="mb-2 text-3xl font-bold text-foreground">Child Maintenance Made Simple</h1>
-          <p className="mb-8 text-sm text-muted-foreground">
-            A friendly guide to understanding your responsibilities, your options, and how Collabor8 makes it easier, fairer, and even rewarding.
-          </p>
-        </motion.div>
-
-        <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
-          {/* Section 1 */}
-          <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">1. What Is Child Maintenance?</h2>
-            <p className="mb-3">
-              Child maintenance is money one parent provides to help cover a child's everyday living costs when parents live apart. Both parents are legally responsible for financially supporting their child (Child Support Act 1991), even if they don't live together. Maintenance helps cover:
-            </p>
-            <ul className="ml-5 list-disc space-y-1">
-              <li>Housing and utilities</li>
-              <li>Food and clothing</li>
-              <li>School and childcare costs</li>
-              <li>Day-to-day living expenses</li>
-            </ul>
-            <p className="mt-3">Think of it as keeping life running smoothly for your child, alongside parenting time and other responsibilities.</p>
-          </section>
-
-          {/* Section 2 */}
-          <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">2. Who Pays Child Maintenance?</h2>
-            <p className="mb-3">
-              Usually, the parent who doesn't live with the child most of the time (the "paying parent") provides maintenance to the parent who cares for the child day-to-day (the "receiving parent"). How much depends on:
-            </p>
-            <ul className="ml-5 list-disc space-y-1">
-              <li>Gross weekly income</li>
-              <li>Number of children</li>
-              <li>Nights spent with each parent</li>
-              <li>Support for other children</li>
-            </ul>
-            <p className="mt-3">Collabor8 makes it easy to calculate, track, and schedule payments, so both parents can stay clear and stress-free.</p>
-          </section>
-
-          {/* Section 3 */}
-          <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">3. How Maintenance Can Be Calculated</h2>
-            <p className="mb-3">
-              The government's Child Maintenance Service (CMS) uses a formula based on income and number of children:
-            </p>
-            <div className="rounded-2xl bg-card p-4 space-y-2">
-              <p className="font-medium text-foreground">Standard Rates</p>
-              <ul className="ml-5 list-disc space-y-1">
-                <li>1 child → 12% of gross weekly income</li>
-                <li>2 children → 16%</li>
-                <li>3+ children → 19%</li>
-              </ul>
-              <p className="text-xs mt-2">Adjustments are made for overnight stays or other children.</p>
-            </div>
-            <p className="mt-3">With Collabor8, you get your own in-app calculator to see what works for your family, no need to go anywhere else.</p>
-          </section>
-
-          {/* Section 4 */}
-          <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">4. How You Can Arrange Payments</h2>
-            <p className="mb-3">Parents can choose what works best:</p>
-
-            <div className="space-y-4">
-              <div className="rounded-2xl bg-card p-4">
-                <h3 className="mb-1 font-semibold text-foreground">Family-Based Arrangement</h3>
-                <ul className="ml-5 list-disc space-y-1">
-                  <li>Decide together on amounts and schedule</li>
-                  <li>Payments flow directly between parents</li>
-                  <li>Collabor8 tracks every payment automatically</li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl bg-card p-4">
-                <h3 className="mb-1 font-semibold text-foreground">Direct Pay (Collabor8 Managed)</h3>
-                <ul className="ml-5 list-disc space-y-1">
-                  <li>Use our app to handle payments directly</li>
-                  <li>See every payment, every receipt, every shared expense</li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl bg-card p-4">
-                <h3 className="mb-1 font-semibold text-foreground">Collect and Pay (Optional)</h3>
-                <ul className="ml-5 list-disc space-y-1">
-                  <li>Traditionally managed by CMS</li>
-                  <li>Collabor8 lets you skip the middleman while keeping everything transparent</li>
-                </ul>
-              </div>
-            </div>
-
-            <p className="mt-3">Collabor8 isn't just about paying and tracking. It's about making co-parenting simpler and fairer, with built-in reminders, receipts, and rewards for staying on top of payments.</p>
-          </section>
-
-          {/* Section 5 */}
-          <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">5. Shared and Additional Expenses</h2>
-            <p className="mb-3">Maintenance covers daily costs, but parents often agree to extra costs like:</p>
-            <ul className="ml-5 list-disc space-y-1">
-              <li>School trips and uniforms</li>
-              <li>Clubs, activities, or hobbies</li>
-              <li>Medical or dental expenses</li>
-            </ul>
-            <p className="mt-3">With Collabor8, you can log these, attach receipts, and request payments, all in one place. You can even earn rewards for keeping everything organised and timely!</p>
-          </section>
-
-          {/* Section 6 */}
-          <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">6. Your Rights and Responsibilities</h2>
-            <p>Both parents are legally responsible for supporting their child financially.</p>
-          </section>
-
-          {/* Section 7 */}
-          <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">7. Setting Up and Paying</h2>
-            <p className="mb-3">With Collabor8:</p>
-            <ul className="ml-5 list-disc space-y-1">
-              <li>Set up payments and recurring schedules in-app</li>
-              <li>Track shared expenses with receipts attached</li>
-              <li>Send and receive payments safely</li>
-              <li>Earn rewards and incentives for managing everything responsibly</li>
-            </ul>
-            <p className="mt-3 text-xs">
-              Note: Collabor8 helps you manage, track, and remind, but it does not enforce payments like a government service. The difference? Everything is faster, easier, and built around your family, and the rewards make it worth staying on top of.
-            </p>
-          </section>
-
-          {/* Why Collabor8 */}
-          <section className="rounded-2xl bg-card p-6">
-            <h2 className="mb-3 text-lg font-semibold text-foreground">Why Collabor8?</h2>
-            <ul className="ml-5 list-disc space-y-1">
-              <li>Skip spreadsheets and confusing direct debits</li>
-              <li>See every payment and shared expense clearly</li>
-              <li>Earn rewards for timely payments</li>
-              <li>Keep everything in one place, your co-parenting hub</li>
-            </ul>
-            <p className="mt-3 font-medium text-foreground">With Collabor8, managing child maintenance becomes a tool for collaboration, not stress.</p>
-          </section>
-        </div>
+    <header className="relative overflow-hidden bg-[#134840] pb-0 pt-[5.5rem] text-center text-white">
+      <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 65% 0%, rgba(45,138,122,0.45) 0%, transparent 65%)" }} />
+      <div className="relative z-10 mx-auto max-w-[680px] px-8">
+        <span className="mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.12em] text-white/80">
+          Complete guide &middot; UK parents
+        </span>
+        <h1 className="mb-5 text-[clamp(2.6rem,6vw,4.2rem)] font-light leading-[1.12] tracking-tight" style={{ fontFamily: "'Georgia', serif" }}>
+          Child maintenance<br /><em className="text-[#7dd3c8]">made simple</em>
+        </h1>
+        <p className="mx-auto mb-12 max-w-[500px] text-lg font-light leading-relaxed text-white/65">
+          Everything you need to know - what it is, how to calculate it, how to set it up, and what your rights are.
+        </p>
       </div>
+      <div className="mx-auto max-w-[860px] overflow-hidden rounded-t-[18px]">
+        <img
+          src="https://images.unsplash.com/photo-1591019479261-1a103585c559?w=1400&q=80&auto=format&fit=crop&crop=center"
+          alt="Parent spending time with child"
+          className="block h-[360px] w-full object-cover"
+          style={{ objectPosition: "center 35%" }}
+          loading="eager"
+        />
+      </div>
+    </header>
+
+    <div className="bg-[#FDFCFA] px-8 pt-16 text-center">
+      <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-[#1E6B5E]">Five articles in this guide</p>
+      <h2 className="mb-3 text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Georgia', serif" }}>
+        Everything separated parents need to know
+      </h2>
+      <p className="mx-auto max-w-[560px] text-base font-light text-[#6B6B64]">
+        From the basics to the legal details - clear, practical, and jargon-free.
+      </p>
     </div>
-  );
-};
+
+    <section className="bg-[#FDFCFA] px-8 pb-20 pt-10" aria-label="Guide articles">
+      <div className="mx-auto grid max-w-[1080px] grid-cols-1 gap-5 md:grid-cols-3">
+        {articles.map((a, i) => (
+          <Link
+            key={a.num}
+            to={a.to}
+            className={`group flex flex-col overflow-hidden rounded-2xl border border-[#E4E2DA] bg-white no-underline transition-all hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(30,107,94,0.12)] ${i === 0 ? "md:col-span-2" : ""}`}
+          >
+            <img
+              src={a.img}
+              alt={a.alt}
+              className={`block w-full object-cover ${i === 0 ? "h-[260px]" : "h-[200px]"}`}
+              loading={i < 2 ? "eager" : "lazy"}
+            />
+            <div className="flex flex-1 flex-col p-5 pb-6">
+              <div className="mb-2 flex items-center gap-3">
+                <span className="rounded-full bg-[#1E6B5E] px-2.5 py-0.5 text-[0.72rem] font-medium tracking-wider text-white">{a.num}</span>
+                <span className="text-[0.78rem] text-[#AEADA5]">{a.time}</span>
+              </div>
+              <h3 className="mb-2 text-lg font-normal leading-tight text-[#1A1A18]" style={{ fontFamily: "'Georgia', serif" }}>{a.title}</h3>
+              <p className="mb-4 flex-1 text-sm leading-relaxed text-[#6B6B64]">{a.desc}</p>
+              <span className="text-sm font-medium text-[#1E6B5E] transition-colors group-hover:text-[#134840]">Read article &rarr;</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  </GuideLayout>
+);
 
 export default ChildMaintenanceGuide;
