@@ -1,12 +1,30 @@
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 
 const FinancialCoparentingTips = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Financial Co-parenting Tips for Separated Parents UK | Collabor8</title>
+        <meta name="description" content="Practical financial co-parenting tips for separated parents in the UK. Learn how to manage child maintenance payments, shared expenses, and communication with Collabor8." />
+        <meta name="keywords" content="co-parenting tips uk, financial co-parenting, child maintenance tips, separated parents finances uk, co-parenting communication" />
+        <link rel="canonical" href="https://collabor8.lovable.app/resources/financial-coparenting-tips" />
+        <meta property="og:title" content="Financial Co-parenting Tips | Collabor8" />
+        <meta property="og:description" content="Practical financial co-parenting tips for separated parents in the UK." />
+        <meta property="og:type" content="article" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "Financial Co-parenting Tips for Separated Parents",
+          "description": "Practical financial co-parenting tips for separated parents in the UK.",
+          "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collabor8.lovable.app" },
+          "mainEntityOfPage": "https://collabor8.lovable.app/resources/financial-coparenting-tips"
+        })}</script>
+      </Helmet>
       <div className="mx-auto max-w-3xl px-6 py-12">
         <button
           onClick={() => navigate(-1)}
@@ -81,6 +99,10 @@ const FinancialCoparentingTips = () => {
           <section className="rounded-2xl bg-card p-6">
             <h2 className="mb-3 text-lg font-semibold text-foreground">Why Collabor8?</h2>
             <p>Collabor8 keeps payments, shared expenses, and reminders all in one place, so you can spend less time stressing and more time supporting your child.</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link to="/child-maintenance-calculator" className="text-sm font-medium text-primary hover:underline">Try the calculator</Link>
+              <Link to="/resources/child-maintenance-guide" className="text-sm font-medium text-primary hover:underline">Read the full guide</Link>
+            </div>
           </section>
         </div>
       </div>
