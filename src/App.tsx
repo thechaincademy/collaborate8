@@ -20,6 +20,11 @@ import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
+import WhatIsChildMaintenance from "./pages/guide/WhatIsChildMaintenance";
+import WhoPaysChildMaintenance from "./pages/guide/WhoPaysChildMaintenance";
+import HowToSetUpPayments from "./pages/guide/HowToSetUpPayments";
+import SharedExpenses from "./pages/guide/SharedExpenses";
+import RightsAndResponsibilities from "./pages/guide/RightsAndResponsibilities";
 import ChildMaintenanceCalculator from "./pages/ChildMaintenanceCalculator";
 import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
@@ -52,6 +57,11 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/cookies" element={<CookiePolicy />} />
               <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
+              <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<WhatIsChildMaintenance />} />
+              <Route path="/resources/child-maintenance-guide/who-pays" element={<WhoPaysChildMaintenance />} />
+              <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<HowToSetUpPayments />} />
+              <Route path="/resources/child-maintenance-guide/shared-expenses" element={<SharedExpenses />} />
+              <Route path="/resources/child-maintenance-guide/rights-and-responsibilities" element={<RightsAndResponsibilities />} />
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
               <Route path="*" element={<NotFound />} />
