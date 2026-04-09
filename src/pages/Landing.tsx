@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,6 +98,19 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Collabor8 — Child Maintenance Service & Calculator for UK Parents</title>
+        <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free child maintenance calculator based on the official CMS formula." />
+        <link rel="canonical" href="https://collabor8.lovable.app/" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Collabor8",
+          "url": "https://collabor8.lovable.app",
+          "description": "UK child maintenance service for separated parents. Payment tracking, expense management, and rewards.",
+          "sameAs": []
+        })}</script>
+      </Helmet>
       {/* Nav */}
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
