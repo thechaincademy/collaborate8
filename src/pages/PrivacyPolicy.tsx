@@ -46,7 +46,7 @@ const PrivacyPolicy = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafb]" style={{ fontFamily: "'Figtree', sans-serif" }}>
+    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4]" style={{ fontFamily: "'Figtree', sans-serif" }}>
       <Helmet>
         <title>Privacy Policy - Collabor8</title>
         <meta name="description" content="Collabor8 Privacy Policy. Learn how Collaborate Technologies Ltd collects, uses, shares and protects your personal data. UK GDPR compliant." />
