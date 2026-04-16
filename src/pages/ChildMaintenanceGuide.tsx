@@ -51,7 +51,7 @@ const articles = [
 ];
 
 const Callout = ({ children }: { children: React.ReactNode }) => (
-  <div className="my-7 rounded-r-[10px] border-l-[3px] border-[#1E6B5E] bg-[#E8F5F2] px-5 py-4 text-[0.95rem] italic leading-[1.65] text-[#134840]">
+  <div className="my-7 rounded-r-[10px] border-l-[3px] border-[#1A1A18] bg-[#F0E4D6] px-5 py-4 text-[0.95rem] italic leading-[1.65] text-[#1A1A18]">
     {children}
   </div>
 );
@@ -70,7 +70,7 @@ const BList = ({ items }: { items: React.ReactNode[] }) => (
   <ul className="my-2 mb-[1.2rem] list-none p-0">
     {items.map((it, i) => (
       <li key={i} className="relative border-b border-[#E4E2DA] py-[0.45rem] pl-6 text-base text-[#3D3D38] last:border-b-0">
-        <span className="absolute left-0 top-1/2 h-[6px] w-[6px] -translate-y-1/2 rounded-full bg-[#1E6B5E]" />
+        <span className="absolute left-0 top-1/2 h-[6px] w-[6px] -translate-y-1/2 rounded-full bg-[#1A1A18]" />
         {it}
       </li>
     ))}
@@ -102,7 +102,7 @@ const ChildMaintenanceGuide = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F4] text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
+    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
       <Helmet>
         <title>Child Maintenance Made Simple - Complete UK Guide | Collabor8</title>
         <meta name="description" content="Everything separated parents need to know about child maintenance in the UK - what it is, who pays, how to calculate it, and how to manage it simply with Collabor8." />
@@ -133,11 +133,11 @@ const ChildMaintenanceGuide = () => {
       </Helmet>
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 flex h-[60px] items-center justify-between border-b border-[#E4E2DA] bg-[#FAF8F4]/92 px-8 backdrop-blur-[12px]">
-        <Link to="/" className="text-xl font-semibold tracking-tight text-[#1E6B5E]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+      <nav className="sticky top-0 z-50 flex h-[60px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/85 px-8 backdrop-blur-[12px]">
+        <Link to="/" className="text-xl font-semibold tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
           Collabor8
         </Link>
-        <Link to="/signup" className="rounded-full bg-[#1E6B5E] px-[1.1rem] py-[0.45rem] text-[0.85rem] font-medium text-white transition-colors hover:bg-[#134840]">
+        <Link to="/signup" className="rounded-full bg-[#1A1A18] px-[1.1rem] py-[0.45rem] text-[0.85rem] font-medium text-white transition-colors hover:bg-[#1A1A18]">
           Get started free
         </Link>
       </nav>
@@ -148,21 +148,21 @@ const ChildMaintenanceGuide = () => {
           <button
             key={i}
             onClick={() => scrollTo(i)}
-            className={`h-2 w-2 rounded-full border-0 p-0 transition-all ${active === i ? "scale-[1.4] bg-[#1E6B5E]" : "bg-[#E4E2DA]"}`}
+            className={`h-2 w-2 rounded-full border-0 p-0 transition-all ${active === i ? "scale-[1.4] bg-[#1A1A18]" : "bg-[#E4E2DA]"}`}
             title={`Article ${i + 1}`}
           />
         ))}
       </div>
 
       {/* HERO */}
-      <header className="relative overflow-hidden bg-[#134840] px-8 pb-0 pt-20 text-center text-white">
+      <header className="relative overflow-hidden bg-[#1A1A18] px-8 pb-0 pt-20 text-center text-white">
         <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 60% 0%, rgba(45,138,122,0.4) 0%, transparent 70%)" }} />
         <div className="relative z-10 mx-auto max-w-[720px]">
           <span className="mb-6 inline-block rounded-full border border-white/20 bg-white/[0.12] px-[0.9rem] py-[0.35rem] text-xs font-medium uppercase tracking-[0.1em] text-white/85">
             Complete guide &middot; UK parents
           </span>
           <h1 className="mb-5 text-[clamp(2.4rem,6vw,4rem)] font-light leading-[1.15] tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-            Child maintenance <em className="italic text-[#7dd3c8]">made simple</em>
+            Child maintenance <em className="italic text-[#D9D9D5]">made simple</em>
           </h1>
           <p className="mx-auto mb-10 max-w-[520px] text-[1.1rem] font-light text-white/70">
             Everything you need to know about your responsibilities, your options, and how to manage it all without the stress.
@@ -178,9 +178,9 @@ const ChildMaintenanceGuide = () => {
       </header>
 
       {/* INDEX */}
-      <section className="border-b border-[#E4E2DA] bg-[#FDFCFA] px-8 py-16">
+      <section className="border-b border-[#E4E2DA] bg-[#FAF1E6] px-8 py-16">
         <div className="mb-12 text-center">
-          <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-[#1E6B5E]">In this guide</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-[#1A1A18]">In this guide</p>
           <h2 className="text-[clamp(1.8rem,4vw,2.6rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
             Five things every separated parent should know
           </h2>
@@ -190,14 +190,14 @@ const ChildMaintenanceGuide = () => {
             <button
               key={a.id}
               onClick={() => scrollTo(i)}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-[#E4E2DA] bg-white text-left transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(30,107,94,0.1)]"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-[#E4E2DA] bg-white text-left transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)]"
             >
               <img src={a.img} alt={a.alt} className="block h-[180px] w-full object-cover" loading={i < 2 ? "eager" : "lazy"} />
               <div className="flex flex-1 flex-col p-[1.25rem] pb-[1.4rem]">
-                <p className="mb-[0.4rem] text-[0.75rem] font-medium uppercase tracking-[0.08em] text-[#1E6B5E]">Article {a.num}</p>
+                <p className="mb-[0.4rem] text-[0.75rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article {a.num}</p>
                 <h3 className="mb-[0.6rem] text-[1.15rem] font-normal leading-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{a.title}</h3>
                 <p className="flex-1 text-[0.88rem] leading-[1.6] text-[#6B6B64]">{a.desc}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-[0.85rem] font-medium text-[#1E6B5E]">Read article &rarr;</span>
+                <span className="mt-4 inline-flex items-center gap-1 text-[0.85rem] font-medium text-[#1A1A18]">Read article &rarr;</span>
               </div>
             </button>
           ))}
@@ -209,7 +209,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 1 */}
         <article ref={(el) => (refs.current[0] = el)} id="article-1" className="border-b border-[#E4E2DA] py-20">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#E8F5F2] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#134840]">Article 01</span>
+            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 01</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>What is child maintenance?</h2>
           </header>
           <img src={articles[0].img} alt={articles[0].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -234,7 +234,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 2 */}
         <article ref={(el) => (refs.current[1] = el)} id="article-2" className="border-b border-[#E4E2DA] py-20">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#E8F5F2] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#134840]">Article 02</span>
+            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 02</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Who pays, and how much?</h2>
           </header>
           <img src={articles[1].img} alt={articles[1].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -255,14 +255,14 @@ const ChildMaintenanceGuide = () => {
               { n: 3, t: "Agree an amount yourselves", d: "If you're both happy with a figure that feels fair for your family, that's completely valid, with or without the formula." },
             ].map((p) => (
               <div key={p.n} className="flex items-start gap-4 rounded-[10px] border border-[#E4E2DA] bg-white px-5 py-4">
-                <div className="mt-px flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1E6B5E] text-[0.8rem] font-medium text-white">{p.n}</div>
+                <div className="mt-px flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1A1A18] text-[0.8rem] font-medium text-white">{p.n}</div>
                 <div>
                   <strong className="mb-1 block text-[0.95rem] font-medium text-[#1A1A18]">{p.t}</strong>
                   <span className="text-[0.88rem] leading-[1.5] text-[#6B6B64]">{p.d}</span>
                 </div>
               </div>
             ))}
-            <p className="py-2 text-center text-[1.05rem] italic text-[#1E6B5E]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Whichever way you get there, manage it all in Collabor8.</p>
+            <p className="py-2 text-center text-[1.05rem] italic text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Whichever way you get there, manage it all in Collabor8.</p>
           </div>
           <ArticleH3>What adjusts the amount?</ArticleH3>
           <BList items={[<><strong>Overnight stays:</strong> the more nights the child spends with the paying parent, the lower the contribution</>, <><strong>Other children:</strong> if the paying parent supports other children, this can reduce the assessable amount</>, <><strong>Very low income:</strong> a smaller flat rate applies if earnings fall below a certain threshold</>]} />
@@ -274,7 +274,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 3 */}
         <article ref={(el) => (refs.current[2] = el)} id="article-3" className="border-b border-[#E4E2DA] py-20">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#E8F5F2] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#134840]">Article 03</span>
+            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 03</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>How to set up child maintenance payments</h2>
           </header>
           <img src={articles[2].img} alt={articles[2].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -296,7 +296,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 4 */}
         <article ref={(el) => (refs.current[3] = el)} id="article-4" className="border-b border-[#E4E2DA] py-20">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#E8F5F2] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#134840]">Article 04</span>
+            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 04</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Shared and additional expenses</h2>
           </header>
           <img src={articles[3].img} alt={articles[3].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -319,7 +319,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 5 */}
         <article ref={(el) => (refs.current[4] = el)} id="article-5" className="py-20">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#E8F5F2] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#134840]">Article 05</span>
+            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 05</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Your rights and legal responsibilities</h2>
           </header>
           <img src={articles[4].img} alt={articles[4].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -344,20 +344,20 @@ const ChildMaintenanceGuide = () => {
       </main>
 
       {/* CTA */}
-      <section id="get-started" className="bg-[#1E6B5E] px-8 py-16 text-center text-white">
+      <section id="get-started" className="bg-[#1A1A18] px-8 py-16 text-center text-white">
         <h2 className="mb-4 text-[clamp(1.8rem,4vw,2.8rem)] font-light leading-tight tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
           Ready to make things simpler?
         </h2>
         <p className="mx-auto mb-8 max-w-[480px] text-[1.05rem] font-light text-white/75">
           Join thousands of co-parents managing maintenance clearly, fairly, and without the stress.
         </p>
-        <Link to="/signup" className="inline-block rounded-full bg-white px-8 py-[0.85rem] text-[0.95rem] font-medium text-[#134840] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+        <Link to="/signup" className="inline-block rounded-full bg-white px-8 py-[0.85rem] text-[0.95rem] font-medium text-[#1A1A18] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
           Get started with Collabor8, it's free
         </Link>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-10">
           {["Track payments automatically", "Log shared expenses with receipts", "Earn rewards for staying on top", "No fees. No middlemen."].map((f) => (
             <span key={f} className="flex items-center gap-2 text-[0.88rem] text-white/70">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#7dd3c8]" />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9D9D5]" />
               {f}
             </span>
           ))}
