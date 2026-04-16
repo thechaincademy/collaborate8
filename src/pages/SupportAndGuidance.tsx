@@ -31,7 +31,7 @@ const orgs = [
 ];
 
 const SupportAndGuidance = () => (
-  <div className="min-h-screen bg-[#F5E8DC] text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
+  <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
     <Helmet>
       <title>Support & Financial Guidance After Separation | Collabor8</title>
       <meta name="description" content="Free support for separated parents in the UK. Find financial guidance and benefits eligibility checks from organisations that can help, plus tools to manage child maintenance simply." />
@@ -49,7 +49,7 @@ const SupportAndGuidance = () => (
       })}</script>
     </Helmet>
 
-    <nav className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/93 px-8 backdrop-blur-[14px]">
+    <nav className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/85 px-8 backdrop-blur-[14px]">
       <Link to="/" className="text-xl font-semibold tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Collabor8</Link>
       <Link to="/signup" className="rounded-full bg-[#1A1A18] px-[1.15rem] py-[0.45rem] text-[0.85rem] font-medium text-white transition-colors hover:bg-[#1A1A18]">Open Collabor8</Link>
     </nav>

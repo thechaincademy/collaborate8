@@ -102,7 +102,7 @@ const ChildMaintenanceGuide = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5E8DC] text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
+    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
       <Helmet>
         <title>Child Maintenance Made Simple - Complete UK Guide | Collabor8</title>
         <meta name="description" content="Everything separated parents need to know about child maintenance in the UK - what it is, who pays, how to calculate it, and how to manage it simply with Collabor8." />
@@ -133,7 +133,7 @@ const ChildMaintenanceGuide = () => {
       </Helmet>
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 flex h-[60px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/92 px-8 backdrop-blur-[12px]">
+      <nav className="sticky top-0 z-50 flex h-[60px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/85 px-8 backdrop-blur-[12px]">
         <Link to="/" className="text-xl font-semibold tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
           Collabor8
         </Link>
