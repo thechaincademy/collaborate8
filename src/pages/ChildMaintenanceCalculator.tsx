@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { ArrowLeft, Download, Info } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import TopBanner from "@/components/TopBanner";
 
 const nightOptions = [
   { value: 0, label: "Fewer than 52 nights" },
@@ -180,7 +181,9 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] px-4 py-10" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <TopBanner />
+      <div className="px-4 py-10">
       <Helmet>
         <title>Child Maintenance Calculator UK 2025 - Free CMS Calculator | Collabor8</title>
         <meta name="description" content="Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly & annual child maintenance payments." />
