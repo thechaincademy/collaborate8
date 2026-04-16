@@ -199,12 +199,6 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
       <div className="mx-auto max-w-[640px]">
         {/* Header */}
         <div className="mb-8">
-          <div className="mb-5 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1A1A18]">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" fill="white" /><path d="M3 15c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" /></svg>
-            </div>
-            <span className="text-[15px] font-semibold tracking-tight text-[#1A1A18]">Collabor8</span>
-          </div>
           <h1 className="mb-1.5 text-[26px] font-semibold tracking-tight text-[#1A1A18]">Child maintenance calculator</h1>
           <p className="text-sm leading-relaxed text-[#6B6B64]">An estimate based on Child Maintenance Service (CMS) calculations. Enter your details below to see an indicative figure.</p>
         </div>
