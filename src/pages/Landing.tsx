@@ -112,28 +112,7 @@ const Landing = () => {
         })}</script>
       </Helmet>
       {/* Nav */}
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
-            <span className="text-sm font-bold text-background">C8</span>
-          </div>
-          <span className="text-lg font-bold text-foreground">collabor8</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link to="/child-maintenance-calculator" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Calculator
-          </Link>
-          <Link to="/resources/child-maintenance-guide" className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Guide
-          </Link>
-          <Link to="/resources/support-and-guidance" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Money Help
-          </Link>
-          <Button variant="default" size="sm" onClick={scrollToWaitlist}>
-            Join the Waiting List
-          </Button>
-        </div>
-      </nav>
+      <TopBanner />
 
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 text-center md:pt-24 rounded-3xl mt-4 mx-6" style={{ background: 'linear-gradient(180deg, hsl(25 70% 88%) 0%, hsl(30 50% 93%) 100%)' }}>
@@ -361,7 +340,7 @@ const Landing = () => {
       </section>
 
       {/* Waitlist CTA */}
-      <section ref={waitlistRef} className="py-20">
+      <section id="waitlist" ref={waitlistRef} className="py-20">
         <div className="mx-auto max-w-5xl px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

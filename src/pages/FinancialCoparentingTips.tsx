@@ -2,12 +2,14 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
+import TopBanner from "@/components/TopBanner";
 
 const FinancialCoparentingTips = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4]">
+      <TopBanner />
       <Helmet>
         <title>Financial Co-parenting Tips for Separated Parents UK | Collabor8</title>
         <meta name="description" content="Practical financial co-parenting tips for separated parents in the UK. Learn how to manage child maintenance payments, shared expenses, and communication with Collabor8." />
