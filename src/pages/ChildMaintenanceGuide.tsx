@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import TopBanner from "@/components/TopBanner";
 
 const articles = [
   {
@@ -132,15 +133,7 @@ const ChildMaintenanceGuide = () => {
         })}</script>
       </Helmet>
 
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 flex h-[60px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/85 px-8 backdrop-blur-[12px]">
-        <Link to="/" className="text-xl font-semibold tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-          Collabor8
-        </Link>
-        <Link to="/signup" className="rounded-full bg-[#1A1A18] px-[1.1rem] py-[0.45rem] text-[0.85rem] font-medium text-white transition-colors hover:bg-[#1A1A18]">
-          Get started free
-        </Link>
-      </nav>
+      <TopBanner />
 
       {/* SIDE DOTS */}
       <div className="fixed right-6 top-1/2 z-40 hidden -translate-y-1/2 flex-col gap-[10px] md:flex" aria-hidden="true">

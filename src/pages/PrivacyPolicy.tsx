@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import TopBanner from "@/components/TopBanner";
 
 const sections = [
   { id: "s1", num: "01", label: "Who we are" },
@@ -53,13 +54,7 @@ const PrivacyPolicy = () => {
         <link rel="canonical" href="https://collabor8.lovable.app/privacy" />
       </Helmet>
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E4E2DA] bg-white/95 px-[5vw] py-4 backdrop-blur-md">
-        <span className="text-[1.4rem] font-normal text-[#1A1A18]" style={{ fontFamily: "'Fraunces', serif" }}>Collabor8</span>
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-[0.85rem] font-medium text-[#6B6B64] transition-colors hover:text-[#1A1A18]">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to home
-        </button>
-      </nav>
+      <TopBanner />
 
       {/* Hero */}
       <div className="relative overflow-hidden bg-[#1A1A18] px-[5vw] pb-16 pt-20">

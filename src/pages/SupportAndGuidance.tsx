@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import TopBanner from "@/components/TopBanner";
 
 const orgs = [
   {
@@ -49,10 +50,7 @@ const SupportAndGuidance = () => (
       })}</script>
     </Helmet>
 
-    <nav className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/85 px-8 backdrop-blur-[14px]">
-      <Link to="/" className="text-xl font-semibold tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Collabor8</Link>
-      <Link to="/signup" className="rounded-full bg-[#1A1A18] px-[1.15rem] py-[0.45rem] text-[0.85rem] font-medium text-white transition-colors hover:bg-[#1A1A18]">Open Collabor8</Link>
-    </nav>
+    <TopBanner />
 
     <header className="mx-auto max-w-[680px] px-8 pb-16 pt-20 text-center">
       <span className="mb-5 inline-block text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#1A1A18]">Resources for separated parents</span>
