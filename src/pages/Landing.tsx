@@ -112,23 +112,26 @@ const Landing = () => {
         })}</script>
       </Helmet>
       {/* Nav */}
-      <nav className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-[#F5E8DC]/85 px-8 backdrop-blur-[14px]">
-        <Link to="/" className="text-xl font-semibold tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-          Collabor8
-        </Link>
-        <div className="flex items-center gap-5">
-          <Link to="/child-maintenance-calculator" className="text-[0.85rem] font-medium text-[#6B6B64] transition-colors hover:text-[#1A1A18]">
+      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
+            <span className="text-sm font-bold text-background">C8</span>
+          </div>
+          <span className="text-lg font-bold text-foreground">collabor8</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link to="/child-maintenance-calculator" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Calculator
           </Link>
-          <Link to="/resources/child-maintenance-guide" className="hidden text-[0.85rem] font-medium text-[#6B6B64] transition-colors hover:text-[#1A1A18] sm:inline">
+          <Link to="/resources/child-maintenance-guide" className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Guide
           </Link>
-          <Link to="/resources/support-and-guidance" className="hidden text-[0.85rem] font-medium text-[#6B6B64] transition-colors hover:text-[#1A1A18] md:inline">
+          <Link to="/resources/support-and-guidance" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Money Help
           </Link>
-          <button onClick={scrollToWaitlist} className="rounded-full bg-[#1A1A18] px-[1.15rem] py-[0.45rem] text-[0.85rem] font-medium text-white transition-colors hover:bg-[#1A1A18]">
-            Join Waitlist
-          </button>
+          <Button variant="default" size="sm" onClick={scrollToWaitlist}>
+            Join the Waiting List
+          </Button>
         </div>
       </nav>
 

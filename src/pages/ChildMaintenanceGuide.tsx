@@ -156,7 +156,7 @@ const ChildMaintenanceGuide = () => {
 
       {/* HERO */}
       <header className="relative overflow-hidden bg-[#1A1A18] px-8 pb-0 pt-20 text-center text-white">
-        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 60% 0%, rgba(240,228,214,0.18) 0%, transparent 70%)" }} />
+        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 60% 0%, rgba(45,138,122,0.4) 0%, transparent 70%)" }} />
         <div className="relative z-10 mx-auto max-w-[720px]">
           <span className="mb-6 inline-block rounded-full border border-white/20 bg-white/[0.12] px-[0.9rem] py-[0.35rem] text-xs font-medium uppercase tracking-[0.1em] text-white/85">
             Complete guide &middot; UK parents
