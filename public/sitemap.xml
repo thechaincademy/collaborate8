@@ -26,27 +26,7 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://collabor8.lovable.app/resources/child-maintenance-guide/what-is-child-maintenance</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://collabor8.lovable.app/resources/child-maintenance-guide/who-pays</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://collabor8.lovable.app/resources/child-maintenance-guide/how-to-set-up-payments</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://collabor8.lovable.app/resources/child-maintenance-guide/shared-expenses</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://collabor8.lovable.app/resources/child-maintenance-guide/rights-and-responsibilities</loc>
+    <loc>https://collabor8.lovable.app/resources/support-and-guidance</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
