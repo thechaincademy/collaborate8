@@ -58,8 +58,8 @@ const PrivacyPolicy = () => {
 
       {/* Hero */}
       <div className="relative overflow-hidden bg-[#1A1A18] px-[5vw] pb-16 pt-20">
-        <div className="pointer-events-none absolute -top-[40%] right-[-10%] h-full w-[50vw] bg-[radial-gradient(ellipse_at_center,rgba(42,124,111,0.25)_0%,transparent_65%)]" />
-        <div className="pointer-events-none absolute -bottom-[30%] -left-[5%] h-[80%] w-[40vw] bg-[radial-gradient(ellipse_at_center,rgba(58,158,142,0.12)_0%,transparent_65%)]" />
+        <div className="pointer-events-none absolute -top-[40%] right-[-10%] h-full w-[50vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,transparent_65%)]" />
+        <div className="pointer-events-none absolute -bottom-[30%] -left-[5%] h-[80%] w-[40vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_65%)]" />
         <div className="relative z-10 max-w-[760px]">
           <div className="mb-5 flex items-center gap-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#1A1A18]">
             <span className="inline-block h-[1.5px] w-6 bg-[#1A1A18]" />
