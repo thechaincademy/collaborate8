@@ -400,6 +400,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
           </section>
         </div>
       </div>
+      </div>
     </div>
   );
 };
