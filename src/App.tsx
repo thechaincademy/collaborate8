@@ -54,6 +54,7 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/cookies" element={<CookiePolicy />} />
               <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
+              <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><ChildMaintenanceGuideApp /></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<Navigate to="/resources/child-maintenance-guide#article-1" replace />} />
               <Route path="/resources/child-maintenance-guide/who-pays" element={<Navigate to="/resources/child-maintenance-guide#article-2" replace />} />
               <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<Navigate to="/resources/child-maintenance-guide#article-3" replace />} />
