@@ -194,7 +194,7 @@ const Landing = () => {
       </section>
 
       {/* Features */}
-      <section className="py-20">
+      <section className="py-20 bg-inherit">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -341,7 +341,7 @@ const Landing = () => {
       </section>
 
       {/* Waitlist CTA */}
-      <section id="waitlist" ref={waitlistRef} className="py-20">
+      <section id="waitlist" ref={waitlistRef} className="py-20 bg-inherit">
         <div className="mx-auto max-w-5xl px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
