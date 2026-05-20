@@ -98,7 +98,7 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background bg-yellow-500">
+    <div className="min-h-screen bg-background">
       <Helmet>
         <title>Collabor8 - Child Maintenance Service & Calculator for UK Parents</title>
         <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free child maintenance calculator based on the official CMS formula." />
@@ -116,39 +116,68 @@ const Landing = () => {
       <TopBanner />
 
       {/* Hero */}
-      <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 text-center md:pt-24 rounded-3xl mt-4 mx-6 bg-yellow-500">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground">
-            <Shield className="h-4 w-4" />
-            Launching Soon
-          </div>
-          <h1 className="mx-auto max-w-3xl text-4xl font-bold leading-tight text-foreground md:text-5xl md:leading-tight">
-            Co-parenting finances,{" "}
-            <span className="text-muted-foreground">made simple.</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-            Helping separated parents handle payments and expenses with clarity.
-          </p>
-          <div className="mt-8">
-            <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
-              Join the Waiting List <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </motion.div>
+      <div className="px-4 pt-4 md:px-6">
+        <section className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl bg-primary shadow-2xl shadow-primary/20">
+          {/* Texture & Depth Overlays */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-40"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 20% 20%, rgba(250, 248, 243, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(26, 26, 22, 0.1) 0%, transparent 50%)",
+            }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-20 mix-blend-overlay"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
+            }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="relative z-10 flex flex-col items-center px-6 py-20 text-center md:px-8 md:py-28"
+          >
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background/20 px-4 py-1.5 backdrop-blur-sm">
+              <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-foreground" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                Launching Soon
+              </span>
+            </div>
+
+            <h1 className="mb-6 max-w-2xl text-4xl font-extrabold tracking-tight text-foreground md:text-6xl lg:leading-[1.1]">
+              Co-parenting finances,{" "}
+              <br className="hidden md:block" />
+              <span className="text-background">made simple.</span>
+            </h1>
+
+            <p className="mb-10 max-w-lg text-lg leading-relaxed text-foreground/80 md:text-xl">
+              Helping separated parents handle payments and expenses with clarity, transparency, and trust.
+            </p>
+
+            <button
+              onClick={scrollToWaitlist}
+              className="group flex items-center gap-3 rounded-full bg-foreground px-8 py-4 text-sm font-bold text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+            >
+              Join the Waiting List
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </button>
+          </motion.div>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+        </section>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-16 flex justify-center"
+          className="mt-10 flex justify-center"
         >
           <ChevronDown className="h-5 w-5 animate-bounce text-muted-foreground" />
         </motion.div>
-      </section>
+      </div>
 
       {/* App Screenshots */}
       <section className="overflow-hidden border-t border-border bg-card py-20 bg-background">
