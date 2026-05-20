@@ -148,7 +148,7 @@ const ChildMaintenanceGuide = () => {
       </div>
 
       {/* HERO */}
-      <header className="relative overflow-hidden bg-[#1A1A18] px-8 pb-0 pt-20 text-center text-white">
+      <header className="relative overflow-hidden px-8 pb-0 pt-20 text-center text-white bg-yellow-500">
         <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 60% 0%, rgba(255,255,255,0.08) 0%, transparent 70%)" }} />
         <div className="relative z-10 mx-auto max-w-[720px]">
           <span className="mb-6 inline-block rounded-full border border-white/20 bg-white/[0.12] px-[0.9rem] py-[0.35rem] text-xs font-medium uppercase tracking-[0.1em] text-white/85">
