@@ -200,7 +200,7 @@ const ChildMaintenanceGuide = () => {
       {/* ARTICLES */}
       <main className="mx-auto max-w-[740px] px-8">
         {/* Article 1 */}
-        <article ref={(el) => (refs.current[0] = el)} id="article-1" className="border-b border-[#E4E2DA] py-20">
+        <article ref={(el) => (refs.current[0] = el)} id="article-1" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">
             <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 01</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>What is child maintenance?</h2>
@@ -225,7 +225,7 @@ const ChildMaintenanceGuide = () => {
         </article>
 
         {/* Article 2 */}
-        <article ref={(el) => (refs.current[1] = el)} id="article-2" className="border-b border-[#E4E2DA] py-20">
+        <article ref={(el) => (refs.current[1] = el)} id="article-2" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">
             <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 02</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Who pays, and how much?</h2>
