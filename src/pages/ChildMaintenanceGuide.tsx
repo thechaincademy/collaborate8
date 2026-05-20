@@ -171,7 +171,7 @@ const ChildMaintenanceGuide = () => {
       </header>
 
       {/* INDEX */}
-      <section className="border-b border-[#E4E2DA] bg-[#FAF1E6] px-8 py-16">
+      <section className="border-b border-[#E4E2DA] px-8 py-16 bg-[#f9f5f1]">
         <div className="mb-12 text-center">
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-[#1A1A18]">In this guide</p>
           <h2 className="text-[clamp(1.8rem,4vw,2.6rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
