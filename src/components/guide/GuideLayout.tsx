@@ -52,7 +52,7 @@ const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
         </div>
       </section>
 
-      <footer className="bg-[#1A1A18] px-8 py-8 text-center text-[0.82rem] leading-8 text-white/45">
+      <footer className="bg-foreground px-8 py-8 text-center text-[0.82rem] leading-8 text-white/45">
         <p>
           <Link to="/" className="text-white/55 no-underline hover:text-white">Collabor8</Link>
           {" \u00B7 "}

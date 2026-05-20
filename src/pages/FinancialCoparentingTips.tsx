@@ -8,7 +8,7 @@ const FinancialCoparentingTips = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4]">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
       <TopBanner />
       <Helmet>
         <title>Financial Co-parenting Tips for Separated Parents UK | Collabor8</title>

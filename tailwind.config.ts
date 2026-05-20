@@ -17,6 +17,28 @@ export default {
         sans: ['Inter', 'sans-serif'],
       },
       colors: {
+        /* Remap stray hardcoded palettes to the 2-color system */
+        yellow: {
+          50: "hsl(var(--background))", 100: "hsl(var(--background))",
+          200: "hsl(var(--primary))", 300: "hsl(var(--primary))",
+          400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--primary))", 700: "hsl(var(--primary))",
+          800: "hsl(var(--primary))", 900: "hsl(var(--primary))",
+        },
+        slate: {
+          50: "hsl(var(--background))", 100: "hsl(var(--background))",
+          200: "hsl(var(--border))", 300: "hsl(var(--border))",
+          400: "hsl(var(--muted-foreground))", 500: "hsl(var(--muted-foreground))",
+          600: "hsl(var(--foreground))", 700: "hsl(var(--foreground))",
+          800: "hsl(var(--foreground))", 900: "hsl(var(--foreground))",
+        },
+        gray: {
+          50: "hsl(var(--background))", 100: "hsl(var(--background))",
+          200: "hsl(var(--secondary))", 300: "hsl(var(--border))",
+          400: "hsl(var(--muted-foreground))", 500: "hsl(var(--muted-foreground))",
+          600: "hsl(var(--foreground))", 700: "hsl(var(--foreground))",
+          800: "hsl(var(--foreground))", 900: "hsl(var(--foreground))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

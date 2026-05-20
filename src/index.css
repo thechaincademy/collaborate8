@@ -6,45 +6,44 @@
 
 @layer base {
   :root {
-    /* Medi8 Clean Minimal Design System */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 9%;
+    /* Two-color system: off-white base + mustard accent */
+    --background: 40 39% 97%;        /* #FAF8F3 off-white */
+    --foreground: 0 0% 9%;            /* ink for text */
 
-    --card: 0 0% 100%;
+    --card: 40 39% 97%;
     --card-foreground: 0 0% 9%;
 
-    --popover: 0 0% 100%;
+    --popover: 40 39% 97%;
     --popover-foreground: 0 0% 9%;
 
-    /* Primary - Black */
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - Mustard */
+    --primary: 45 80% 46%;            /* #D4A017 */
+    --primary-foreground: 0 0% 9%;
 
-    /* Secondary - Light Gray */
-    --secondary: 0 0% 96%;
+    /* Secondary - same off-white family */
+    --secondary: 40 30% 94%;
     --secondary-foreground: 0 0% 9%;
 
-    /* Muted */
-    --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 40 25% 92%;
+    --muted-foreground: 0 0% 35%;
 
-    /* Accent */
-    --accent: 0 0% 96%;
+    --accent: 45 80% 46%;
     --accent-foreground: 0 0% 9%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 9%;
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 45 80% 46%;
 
     --radius: 1rem;
 
-    /* Warm clay accent (used sparingly: signup CTAs, role/plan selection, success ticks) */
-    --clay: 13 47% 51%;
-    --clay-foreground: 0 0% 100%;
-    --clay-soft: 13 47% 95%;
+    /* Clay token kept as alias of primary so legacy classes still resolve to mustard */
+    --clay: 45 80% 46%;
+    --clay-foreground: 0 0% 9%;
+    --clay-soft: 45 80% 92%;
+
 
     /* Custom tokens */
     --shadow-card: 0 1px 3px rgba(0,0,0,0.04);
