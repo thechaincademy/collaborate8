@@ -1,137 +1,209 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, User, Check, Lock } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, Lock, ArrowRight, ArrowDownLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type SignUpStep = "name" | "email" | "password" | "coparent" | "subscription" | "verify";
+type Role = "managing" | "viewing";
+type SignUpStep = "role" | "name" | "email" | "password" | "coparent" | "subscription" | "verify";
+
+const STEPS: SignUpStep[] = ["role", "name", "email", "password", "coparent", "subscription", "verify"];
+
+const MONTHLY = 7.99;
+const ANNUAL = 84.99;
+const SAVE_PCT = Math.round((1 - ANNUAL / (MONTHLY * 12)) * 100);
 
 const generateInviteCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
+  for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
   return code;
 };
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const passwordChecks = (pw: string) => ({
+  length: pw.length >= 8,
+  mixed: /[a-z]/.test(pw) && /[A-Z]/.test(pw),
+  number: /\d/.test(pw),
+});
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
-  const [step, setStep] = useState<SignUpStep>("name");
+  const [step, setStep] = useState<SignUpStep>("role");
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
 
-  // Form states
+  // Form state
+  const [role, setRole] = useState<Role | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [coparentEmail, setCoparentEmail] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly" | null>(null);
+  const [accountCreated, setAccountCreated] = useState(false);
 
-  const isNameValid = firstName.length > 0 && lastName.length > 0;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isEmailValid = email.length > 0 && emailRegex.test(email);
-  const isPasswordValid = password.length >= 6;
+  const isNameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
+  const isEmailFormatValid = emailRegex.test(email);
+  const pwc = passwordChecks(password);
+  const isPasswordValid = pwc.length && pwc.mixed && pwc.number;
   const isCoparentValid = coparentEmail.length === 0 || emailRegex.test(coparentEmail);
-  const isSubscriptionValid = selectedPlan !== null;
 
   const handleBack = () => {
-    switch (step) {
-      case "name": navigate("/"); break;
-      case "email": setStep("name"); break;
-      case "password": setStep("email"); break;
-      case "coparent": setStep("password"); break;
-      case "subscription": setStep("coparent"); break;
-      case "verify": setStep("subscription"); break;
-    }
-  };
-
-  const getStepIndex = () => {
-    switch (step) {
-      case "name": return 0;
-      case "email": return 1;
-      case "password": return 2;
-      case "coparent": return 3;
-      case "subscription": return 4;
-      case "verify": return 5;
-      default: return 0;
-    }
-  };
-
-  const handleSignUp = async () => {
-    setIsLoading(true);
-    const { error } = await signUp(email, password);
-
-    if (error) {
-      setIsLoading(false);
-      toast.error(error.message || "Failed to create account");
+    const idx = STEPS.indexOf(step);
+    if (idx <= 0) {
+      navigate("/");
       return;
     }
+    setStep(STEPS[idx - 1]);
+  };
 
-    // Wait for trigger to create profile, then update it and create invitation
-    setTimeout(async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const code = generateInviteCode();
+  const getStepIndex = () => STEPS.indexOf(step);
 
-        // Update profile with name and role
-        await supabase
-          .from("profiles")
-          .update({
-            first_name: firstName,
-            last_name: lastName,
-            role: "managing",
-            invite_code: code,
-          })
-          .eq("id", user.id);
-
-      // Create invitation
-        await supabase
-          .from("invitations")
-          .insert({
-            inviter_id: user.id,
-            invite_code: code,
-            invitee_email: coparentEmail || null,
-          });
-
-        setGeneratedCode(code);
-
-        // Send invite email if co-parent email was provided
-        if (coparentEmail) {
-          await supabase.functions.invoke("send-invite-email", {
-            body: {
-              recipientEmail: coparentEmail,
-              inviteCode: code,
-              senderName: `${firstName} ${lastName}`,
-            },
-          });
-        }
+  // Create the account at the password step so we surface "email exists" inline.
+  const handlePasswordContinue = async () => {
+    if (accountCreated) {
+      setStep("coparent");
+      return;
+    }
+    setIsLoading(true);
+    const { error } = await signUp(email, password);
+    setIsLoading(false);
+    if (error) {
+      const msg = error.message?.toLowerCase() ?? "";
+      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        setEmailError("An account already exists for this email.");
+        setStep("email");
+      } else if (msg.includes("password")) {
+        toast.error(error.message);
+      } else {
+        toast.error(error.message || "Could not create account");
       }
+      return;
+    }
+    setAccountCreated(true);
+    setStep("coparent");
+  };
 
+  const handleEmailContinue = () => {
+    setEmailError(null);
+    setStep("password");
+  };
+
+  const finishSignUp = async () => {
+    setIsLoading(true);
+    // Profile may take a moment to be created by the trigger
+    await new Promise((r) => setTimeout(r, 800));
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       setIsLoading(false);
-      setStep("verify");
-    }, 1500);
+      toast.error("Session expired. Please log in.");
+      navigate("/login");
+      return;
+    }
+    const code = generateInviteCode();
+    await supabase
+      .from("profiles")
+      .update({
+        first_name: firstName,
+        last_name: lastName,
+        role: role ?? "managing",
+        invite_code: code,
+      })
+      .eq("id", user.id);
+
+    await supabase.from("invitations").insert({
+      inviter_id: user.id,
+      invite_code: code,
+      invitee_email: coparentEmail || null,
+    });
+
+    if (coparentEmail) {
+      await supabase.functions.invoke("send-invite-email", {
+        body: {
+          recipientEmail: coparentEmail,
+          inviteCode: code,
+          senderName: `${firstName} ${lastName}`,
+        },
+      });
+    }
+
+    setGeneratedCode(code);
+    setIsLoading(false);
+    setStep("verify");
   };
 
   const renderProgressBar = () => {
-    const currentStep = getStepIndex();
+    const current = getStepIndex();
     return (
       <div className="flex items-center gap-2">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
+        {STEPS.map((_, i) => (
           <div
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors ${
-              i <= currentStep ? "bg-foreground" : "bg-muted"
+              i < current ? "bg-foreground" : i === current ? "bg-clay" : "bg-muted"
             }`}
           />
         ))}
       </div>
+    );
+  };
+
+  // ── Role (NEW first step) ──
+  const renderRole = () => {
+    const Card = ({
+      value, title, body, icon: Icon,
+    }: { value: Role; title: string; body: string; icon: typeof ArrowRight }) => {
+      const selected = role === value;
+      return (
+        <button
+          onClick={() => setRole(value)}
+          className={`flex w-full items-start gap-4 rounded-2xl border-2 p-5 text-left transition-all ${
+            selected ? "border-clay bg-clay-soft" : "border-border bg-background hover:border-muted-foreground"
+          }`}
+        >
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+            selected ? "bg-clay text-clay-foreground" : "bg-muted text-foreground"
+          }`}>
+            <Icon className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">{title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+          </div>
+          <div className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+            selected ? "border-clay bg-clay" : "border-muted-foreground"
+          }`}>
+            {selected && <Check className="h-3 w-3 text-clay-foreground" />}
+          </div>
+        </button>
+      );
+    };
+
+    return (
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+        <h1 className="mb-2 text-3xl font-bold text-foreground">Which parent are you?</h1>
+        <p className="mb-8 text-muted-foreground">
+          Please choose the correct option - it controls which dashboard you see.
+        </p>
+        <div className="flex flex-col gap-3">
+          <Card value="managing" title="The parent making payments" body="You'll set up and manage the arrangement." icon={ArrowRight} />
+          <Card value="viewing" title="The parent receiving payments" body="You'll see the arrangement once it's set up." icon={ArrowDownLeft} />
+        </div>
+        <div className="flex-1" />
+        <div className="pb-8 pt-6">
+          <Button onClick={() => setStep("name")} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!role}>
+            Continue
+          </Button>
+        </div>
+      </motion.div>
     );
   };
 
@@ -143,67 +215,104 @@ const SignUp = () => {
         <div className="relative">
           <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input type="text" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
         </div>
         <div className="relative">
           <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input type="text" placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
         </div>
       </div>
       <div className="flex-1" />
       <div className="pb-8 pt-6">
-        <Button onClick={() => setStep("email")} className="w-full" size="lg" disabled={!isNameValid}>Continue</Button>
+        <Button onClick={() => setStep("email")} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isNameValid}>
+          Continue
+        </Button>
       </div>
     </motion.div>
   );
 
-  const renderEmail = () => (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
-      <h1 className="mb-2 text-3xl font-bold text-foreground">What's your email?</h1>
-      <p className="mb-8 text-muted-foreground">We'll use this to keep you updated and to verify your account.</p>
-      <div className="relative">
-        <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-        <Input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)}
-          className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
-      </div>
-      <div className="flex-1" />
-      <div className="pb-8 pt-6">
-        <Button onClick={() => setStep("password")} className="w-full" size="lg" disabled={!isEmailValid}>Continue</Button>
-      </div>
-    </motion.div>
-  );
+  const renderEmail = () => {
+    const showFormatError = email.length > 0 && !isEmailFormatValid;
+    return (
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+        <h1 className="mb-2 text-3xl font-bold text-foreground">What's your email?</h1>
+        <p className="mb-8 text-muted-foreground">We'll use this to keep you updated and to verify your account.</p>
+        <div className="relative">
+          <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
+            className={`h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${
+              emailError ? "border-destructive" : ""
+            }`}
+          />
+        </div>
+        {(showFormatError || emailError) && (
+          <p className="mt-2 text-sm text-destructive">
+            {emailError ?? "Please enter a valid email address."}
+          </p>
+        )}
+        <div className="flex-1" />
+        <div className="pb-8 pt-6">
+          <Button onClick={handleEmailContinue} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isEmailFormatValid}>
+            Continue
+          </Button>
+        </div>
+      </motion.div>
+    );
+  };
 
-  const renderPassword = () => (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
-      <h1 className="mb-2 text-3xl font-bold text-foreground">Create a password</h1>
-      <p className="mb-8 text-muted-foreground">Choose a secure password with at least 6 characters.</p>
-      <div className="relative">
-        <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-        <Input type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)}
-          className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+  const renderPassword = () => {
+    const Rule = ({ ok, label }: { ok: boolean; label: string }) => (
+      <div className={`flex items-center gap-2 text-sm ${ok ? "text-clay" : "text-muted-foreground"}`}>
+        <Check className={`h-4 w-4 ${ok ? "opacity-100" : "opacity-30"}`} />
+        {label}
       </div>
-      <div className="flex-1" />
-      <div className="pb-8 pt-6">
-        <Button onClick={() => setStep("coparent")} className="w-full" size="lg" disabled={!isPasswordValid}>Continue</Button>
-      </div>
-    </motion.div>
-  );
+    );
+    return (
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+        <h1 className="mb-2 text-3xl font-bold text-foreground">Create a password</h1>
+        <p className="mb-6 text-muted-foreground">Use 8+ characters with a number and mixed case.</p>
+        <div className="relative">
+          <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Input type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)}
+            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
+        </div>
+        <div className="mt-4 flex flex-col gap-2">
+          <Rule ok={pwc.length} label="At least 8 characters" />
+          <Rule ok={pwc.mixed} label="Mix of upper and lower case" />
+          <Rule ok={pwc.number} label="Contains a number" />
+        </div>
+        <div className="flex-1" />
+        <div className="pb-8 pt-6">
+          <Button onClick={handlePasswordContinue} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isPasswordValid || isLoading}>
+            {isLoading ? "Checking..." : "Continue"}
+          </Button>
+        </div>
+      </motion.div>
+    );
+  };
 
   const renderCoparent = () => (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
       <h1 className="mb-2 text-3xl font-bold text-foreground">Invite your co-parent</h1>
       <p className="mb-8 text-muted-foreground">
-        After you sign up, you'll receive a unique invite code to share with your co-parent so they can create their account.
+        After you sign up, your co-parent will receive a unique invite code so they can create their account. You'll also receive a copy of this code.
       </p>
       <div className="relative">
         <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input type="email" placeholder="Co-parent's email (optional)" value={coparentEmail} onChange={(e) => setCoparentEmail(e.target.value)}
-          className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+          className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
       </div>
+      {coparentEmail.length > 0 && !isCoparentValid && (
+        <p className="mt-2 text-sm text-destructive">Please enter a valid email address.</p>
+      )}
       <div className="flex-1" />
       <div className="pb-8 pt-6">
-        <Button onClick={() => setStep("subscription")} className="mb-3 w-full" size="lg" disabled={!isCoparentValid}>Continue</Button>
+        <Button onClick={() => setStep("subscription")} className="mb-3 w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isCoparentValid}>Continue</Button>
         <Button onClick={() => setStep("subscription")} variant="ghost" className="w-full text-muted-foreground" size="lg">Skip for now</Button>
       </div>
     </motion.div>
@@ -212,46 +321,46 @@ const SignUp = () => {
   const renderSubscription = () => (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
       <h1 className="mb-2 text-3xl font-bold text-foreground">Choose your plan</h1>
-      <p className="mb-8 text-muted-foreground">Select a subscription that works best for you.</p>
+      <p className="mb-8 text-muted-foreground">Pick the option that works best for you.</p>
       <div className="flex flex-col gap-4">
         <button onClick={() => setSelectedPlan("annual")}
           className={`relative flex items-center justify-between rounded-2xl border-2 p-5 text-left transition-all ${
-            selectedPlan === "annual" ? "border-foreground bg-accent" : "border-border bg-background hover:border-muted-foreground"
+            selectedPlan === "annual" ? "border-clay bg-clay-soft" : "border-border bg-background hover:border-muted-foreground"
           }`}>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold text-foreground">Annual</span>
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">Save 17%</span>
+              <span className="rounded-full bg-clay px-2 py-0.5 text-xs font-medium text-clay-foreground">Save {SAVE_PCT}%</span>
             </div>
-            <p className="mt-1 text-2xl font-bold text-foreground">£49.99<span className="text-base font-normal text-muted-foreground">/year</span></p>
-            <p className="mt-1 text-sm text-muted-foreground">That's just £4.17/month</p>
+            <p className="mt-1 text-2xl font-bold text-foreground">£{ANNUAL.toFixed(2)}<span className="text-base font-normal text-muted-foreground">/year</span></p>
+            <p className="mt-1 text-sm text-muted-foreground">That's just £{(ANNUAL / 12).toFixed(2)}/month</p>
           </div>
           <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-            selectedPlan === "annual" ? "border-foreground bg-foreground" : "border-muted-foreground"
+            selectedPlan === "annual" ? "border-clay bg-clay" : "border-muted-foreground"
           }`}>
-            {selectedPlan === "annual" && <Check className="h-4 w-4 text-background" />}
+            {selectedPlan === "annual" && <Check className="h-4 w-4 text-clay-foreground" />}
           </div>
         </button>
         <button onClick={() => setSelectedPlan("monthly")}
           className={`relative flex items-center justify-between rounded-2xl border-2 p-5 text-left transition-all ${
-            selectedPlan === "monthly" ? "border-foreground bg-accent" : "border-border bg-background hover:border-muted-foreground"
+            selectedPlan === "monthly" ? "border-clay bg-clay-soft" : "border-border bg-background hover:border-muted-foreground"
           }`}>
           <div>
             <span className="text-lg font-semibold text-foreground">Monthly</span>
-            <p className="mt-1 text-2xl font-bold text-foreground">£4.99<span className="text-base font-normal text-muted-foreground">/month</span></p>
+            <p className="mt-1 text-2xl font-bold text-foreground">£{MONTHLY.toFixed(2)}<span className="text-base font-normal text-muted-foreground">/month</span></p>
             <p className="mt-1 text-sm text-muted-foreground">Flexible monthly billing</p>
           </div>
           <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-            selectedPlan === "monthly" ? "border-foreground bg-foreground" : "border-muted-foreground"
+            selectedPlan === "monthly" ? "border-clay bg-clay" : "border-muted-foreground"
           }`}>
-            {selectedPlan === "monthly" && <Check className="h-4 w-4 text-background" />}
+            {selectedPlan === "monthly" && <Check className="h-4 w-4 text-clay-foreground" />}
           </div>
         </button>
       </div>
       <div className="flex-1" />
       <div className="pb-8 pt-6">
-        <Button onClick={handleSignUp} className="w-full" size="lg" disabled={!isSubscriptionValid || isLoading}>
-          {isLoading ? "Creating account..." : "Create Account"}
+        <Button onClick={finishSignUp} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!selectedPlan || isLoading}>
+          {isLoading ? "Finishing..." : "Create Account"}
         </Button>
       </div>
     </motion.div>
@@ -260,8 +369,8 @@ const SignUp = () => {
   const renderVerify = () => (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
       className="flex flex-1 flex-col items-center justify-center text-center">
-      <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-        <Check className="h-10 w-10 text-primary" />
+      <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-clay-soft">
+        <Check className="h-10 w-10 text-clay" />
       </div>
       <h1 className="mb-2 text-3xl font-bold text-foreground">Account created!</h1>
       <p className="mb-2 text-muted-foreground">Your account has been set up for</p>
@@ -269,23 +378,18 @@ const SignUp = () => {
 
       {generatedCode && (
         <div className="mb-6 w-full rounded-2xl bg-card p-6">
-          <p className="mb-2 text-sm text-muted-foreground">Share this invite code with your co-parent:</p>
-          <p className="text-3xl font-bold tracking-widest text-foreground">{generatedCode}</p>
-          <p className="mt-2 text-xs text-muted-foreground">They'll use this code to create their account</p>
+          <p className="mb-2 text-sm text-muted-foreground">Your invite code:</p>
+          <p className="text-3xl font-bold tracking-widest text-clay">{generatedCode}</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            An invite code has been shared with your co-parent. This is the code they'll use to create their account. You may want to send a copy to them.
+          </p>
         </div>
       )}
-
-      <p className="text-sm text-muted-foreground">
-        You can now set up your maintenance arrangement.
-      </p>
 
       <div className="flex-1" />
 
       <div className="w-full pb-8 pt-6">
-        <Button onClick={() => navigate("/post-signup")} className="mb-3 w-full" size="lg">
-          Complete Onboarding
-        </Button>
-        <Button onClick={() => navigate("/dashboard")} variant="ghost" className="w-full text-muted-foreground" size="lg">
+        <Button onClick={() => navigate("/dashboard")} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg">
           Go to Dashboard
         </Button>
       </div>
@@ -296,14 +400,17 @@ const SignUp = () => {
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
       <div className="px-6 pt-4">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <button onClick={handleBack} className="mb-4 flex h-10 w-10 items-center justify-center">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          {renderProgressBar()}
+          {step !== "verify" && (
+            <button onClick={handleBack} className="mb-4 flex h-10 w-10 items-center justify-center">
+              <ArrowLeft className="h-5 w-5 text-foreground" />
+            </button>
+          )}
+          {step !== "verify" && renderProgressBar()}
         </motion.div>
       </div>
       <div className="flex flex-1 flex-col px-6">
         <AnimatePresence mode="wait">
+          {step === "role" && renderRole()}
           {step === "name" && renderName()}
           {step === "email" && renderEmail()}
           {step === "password" && renderPassword()}
