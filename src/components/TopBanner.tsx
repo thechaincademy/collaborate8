@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import collabor8Wordmark from "@/assets/collabor8-wordmark.png";
 
 const TopBanner = () => {
   const navigate = useNavigate();
@@ -19,11 +20,12 @@ const TopBanner = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground">
-            <span className="text-xs font-bold text-background">C8</span>
-          </div>
-          <span className="text-lg font-bold text-foreground">collabor8</span>
+        <Link to="/" className="flex items-center">
+          <img
+            src={collabor8Wordmark}
+            alt="collabor8"
+            className="h-8 w-auto md:h-9"
+          />
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
