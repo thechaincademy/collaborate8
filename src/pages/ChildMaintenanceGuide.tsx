@@ -162,7 +162,7 @@ const ChildMaintenanceGuide = () => {
           </p>
         </div>
         <img
-          src="https://images.unsplash.com/photo-1591019479261-1a103585c559?w=1400&q=80&auto=format&fit=crop"
+          src="/guide-hero.jpg"
           alt="Parent and child spending time together"
           className="mx-auto block h-[320px] w-full max-w-[780px] rounded-t-2xl object-cover"
           style={{ objectPosition: "center 30%" }}
