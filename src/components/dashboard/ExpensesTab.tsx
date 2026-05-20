@@ -15,10 +15,10 @@ const ExpensesTab = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="mb-6"
+        className="mb-6 rounded-2xl border border-border bg-card p-5"
       >
-        <p className="text-base text-muted-foreground">Log it. Split it. Done.</p>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-base font-medium text-foreground">Log it. Split it. Done.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
           Log expenses and stay on the same page.
         </p>
       </motion.div>
@@ -30,11 +30,11 @@ const ExpensesTab = () => {
         transition={{ delay: 0.1 }}
         className="mb-6 grid grid-cols-2 gap-3"
       >
-        <div className="rounded-2xl bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <p className="mb-1 text-xs text-muted-foreground">This month</p>
           <p className="text-2xl font-semibold text-foreground">£342</p>
         </div>
-        <div className="rounded-2xl bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <p className="mb-1 text-xs text-muted-foreground">Still to settle</p>
           <p className="text-2xl font-semibold text-foreground">£90</p>
         </div>
