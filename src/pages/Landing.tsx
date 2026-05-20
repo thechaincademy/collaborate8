@@ -151,7 +151,7 @@ const Landing = () => {
       </section>
 
       {/* App Screenshots */}
-      <section className="overflow-hidden border-t border-border bg-card py-20 bg-white">
+      <section className="overflow-hidden border-t border-border bg-card py-20 bg-background">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -398,7 +398,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 bg-white">
+      <footer className="border-t border-border py-8 bg-background">
         <div className="mx-auto max-w-5xl px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
