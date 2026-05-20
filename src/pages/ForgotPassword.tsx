@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, Image } from "lucide-react";
+import { ArrowLeft, Mail, MailCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -11,15 +15,25 @@ const ForgotPassword = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const isValid = emailRegex.test(email);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-    }, 1000);
+  const sendReset = async () => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setIsLoading(false);
+    if (error) {
+      toast.error(error.message || "Could not send reset email");
+      return;
+    }
+    setIsSubmitted(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) return;
+    sendReset();
   };
 
   return (
@@ -31,9 +45,8 @@ const ForgotPassword = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, x: -20 }}
-            className="px-6"
+            className="flex min-h-screen flex-col px-6"
           >
-            {/* Header */}
             <div className="pt-12">
               <button
                 onClick={() => navigate(-1)}
@@ -42,39 +55,35 @@ const ForgotPassword = () => {
                 <ArrowLeft className="h-6 w-6 text-foreground" />
               </button>
 
-              <h1 className="mb-2 text-3xl font-bold text-foreground">
-                Reset your password
-              </h1>
+              <h1 className="mb-2 text-3xl font-bold text-foreground">Reset your password</h1>
               <p className="mb-8 text-muted-foreground">
-                What's your email address or username?
+                Enter your email address and we'll send you a reset link.
               </p>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit}>
-              <div className="relative mb-8">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  type="text"
-                  placeholder="Search"
+                  type="email"
+                  placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground"
+                  className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
                 />
               </div>
 
-              {/* Reset Button - Fixed at bottom */}
-              <div className="fixed bottom-0 left-0 right-0 bg-background p-6">
-                <div className="mx-auto max-w-md">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={isLoading || !email}
-                  >
-                    {isLoading ? "Sending..." : "Reset Password"}
-                  </Button>
-                </div>
+              <div className="flex-1" />
+
+              <div className="pb-8 pt-6">
+                <Button
+                  type="submit"
+                  className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
+                  size="lg"
+                  disabled={isLoading || !isValid}
+                >
+                  {isLoading ? "Sending..." : "Reset Password"}
+                </Button>
               </div>
             </form>
           </motion.div>
@@ -83,41 +92,44 @@ const ForgotPassword = () => {
             key="success"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex min-h-screen flex-col"
+            className="flex min-h-screen flex-col px-6"
           >
-            {/* Success Illustration */}
-            <div className="flex flex-1 items-center justify-center bg-secondary">
-              <div className="flex h-32 w-32 items-center justify-center rounded-3xl bg-card">
-                <Image className="h-16 w-16 text-muted-foreground/50" />
-              </div>
+            <div className="pt-12">
+              <button
+                onClick={() => navigate("/login")}
+                className="mb-8 flex h-10 w-10 items-center justify-center"
+              >
+                <ArrowLeft className="h-6 w-6 text-foreground" />
+              </button>
             </div>
 
-            {/* Success Content */}
-            <div className="rounded-t-3xl bg-background px-6 py-10">
-              <h1 className="mb-4 text-3xl font-bold text-foreground">
-                Check your inbox
-              </h1>
-              <p className="mb-8 text-muted-foreground">
-                We have sent a password recover instructions to your email.
+            <div className="flex flex-1 flex-col items-center justify-center text-center">
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-clay-soft">
+                <MailCheck className="h-10 w-10 text-clay" />
+              </div>
+              <h1 className="mb-4 text-3xl font-bold text-foreground">Check your inbox</h1>
+              <p className="mb-2 text-muted-foreground">We sent a reset link to</p>
+              <p className="mb-8 font-semibold text-foreground">{email}</p>
+              <p className="text-base text-foreground">
+                Click the link in that email to reset your password.
               </p>
+            </div>
 
+            <div className="pb-8">
               <Button
                 onClick={() => navigate("/login")}
-                className="mb-6 w-full"
+                className="mb-3 w-full bg-clay text-clay-foreground hover:bg-clay/90"
                 size="lg"
               >
-                Done
+                Back to log in
               </Button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Didn't receive the email? Check your spam filter or{" "}
-                <button
-                  onClick={() => setIsSubmitted(false)}
-                  className="font-semibold text-foreground"
-                >
-                  try another email address
-                </button>
-              </p>
+              <button
+                onClick={sendReset}
+                disabled={isLoading}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                {isLoading ? "Resending..." : "Didn't receive it? Resend email"}
+              </button>
             </div>
           </motion.div>
         )}

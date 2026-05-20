@@ -41,6 +41,11 @@
 
     --radius: 1rem;
 
+    /* Warm clay accent (used sparingly: signup CTAs, role/plan selection, success ticks) */
+    --clay: 13 47% 51%;
+    --clay-foreground: 0 0% 100%;
+    --clay-soft: 13 47% 95%;
+
     /* Custom tokens */
     --shadow-card: 0 1px 3px rgba(0,0,0,0.04);
     --shadow-elevated: 0 4px 12px rgba(0,0,0,0.08);
@@ -79,6 +84,11 @@
 
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
+
+    --clay: 13 47% 56%;
+    --clay-foreground: 0 0% 100%;
+    --clay-soft: 13 47% 15%;
+
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
