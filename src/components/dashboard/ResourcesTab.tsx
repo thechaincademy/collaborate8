@@ -1,41 +1,22 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Scale, Heart, FileText, Calculator, ChevronRight } from "lucide-react";
+import { BookOpen, Calculator, ChevronRight } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
 
 const resources = [
   {
     icon: Calculator,
     title: "Child Maintenance Calculator",
-    description: "Calculate payments using the official CMS formula",
+    description: "Work out a fair amount using the UK standard formula",
     category: "Tool",
     link: "/child-maintenance-calculator"
   },
   {
-    icon: Scale,
-    title: "Understanding Child Maintenance",
-    description: "Learn about your rights and responsibilities",
-    category: "Legal",
-    link: "/resources/child-maintenance-guide"
-  },
-  {
-    icon: FileText,
-    title: "Child Maintenance Service Guide",
-    description: "How the CMS works and when to use it",
-    category: "Guide"
-  },
-  {
-    icon: Heart,
-    title: "Managing Co-parenting Finances",
-    description: "Tips for healthy financial communication",
-    category: "Wellbeing",
-    link: "/resources/financial-coparenting-tips"
-  },
-  {
     icon: BookOpen,
-    title: "Budgeting for Two Homes",
-    description: "Practical advice for separated parents",
-    category: "Finance"
+    title: "Child Maintenance Guide",
+    description: "Everything separated parents need to know",
+    category: "Guide",
+    link: "/resources/child-maintenance-guide-app"
   },
 ];
 
