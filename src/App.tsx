@@ -20,6 +20,7 @@ import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
+import ChildMaintenanceGuideApp from "./pages/ChildMaintenanceGuideApp";
 import SupportAndGuidance from "./pages/SupportAndGuidance";
 import ChildMaintenanceCalculator from "./pages/ChildMaintenanceCalculator";
 import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
