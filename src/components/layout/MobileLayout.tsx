@@ -12,7 +12,7 @@ interface MobileLayoutProps {
 const MobileLayout = ({ 
   children, 
   showNav = true, 
-  activeTab = "maintenance",
+  activeTab = "home",
   onTabChange 
 }: MobileLayoutProps) => {
   return (
