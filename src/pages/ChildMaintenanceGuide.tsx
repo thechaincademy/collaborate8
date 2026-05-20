@@ -198,7 +198,7 @@ const ChildMaintenanceGuide = () => {
       </section>
 
       {/* ARTICLES */}
-      <main className="mx-auto max-w-[740px] px-8">
+      <main className="mx-auto max-w-[740px] px-8 bg-white">
         {/* Article 1 */}
         <article ref={(el) => (refs.current[0] = el)} id="article-1" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">
