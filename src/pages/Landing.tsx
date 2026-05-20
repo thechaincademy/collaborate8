@@ -116,7 +116,7 @@ const Landing = () => {
       <TopBanner />
 
       {/* Hero */}
-      <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 text-center md:pt-24 rounded-3xl mt-4 mx-6" style={{ background: 'linear-gradient(180deg, hsl(25 70% 88%) 0%, hsl(30 50% 93%) 100%)' }}>
+      <section className="mx-auto max-w-5xl px-6 pb-20 pt-16 text-center md:pt-24 rounded-3xl mt-4 mx-6 bg-yellow-500">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -236,7 +236,7 @@ const Landing = () => {
       </section>
 
       {/* Subscription Value Section */}
-      <section className="border-t border-border py-20" style={{ background: 'linear-gradient(180deg, hsl(25 70% 88%) 0%, hsl(30 50% 93%) 100%)' }}>
+      <section className="border-t border-border py-20 bg-yellow-500">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
