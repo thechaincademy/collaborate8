@@ -1,31 +1,20 @@
 import { motion } from "framer-motion";
-import { Ticket, Gift, Percent, Star } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
+import amazonLogo from "@/assets/amazon-logo.png";
+import amexLogo from "@/assets/amex-logo.png";
 
 const benefits = [
   {
-    icon: Ticket,
-    title: "Cinema Tickets",
-    description: "Up to 40% off at selected cinemas",
-    discount: "40% off"
+    logo: amazonLogo,
+    title: "£5 Amazon Voucher",
+    description: "After 6 months of consistent payments",
+    badge: "6 months",
   },
   {
-    icon: Gift,
-    title: "Days Out",
-    description: "Family discounts at theme parks & attractions",
-    discount: "25% off"
-  },
-  {
-    icon: Percent,
-    title: "Grocery Savings",
-    description: "Exclusive deals at major supermarkets",
-    discount: "10% off"
-  },
-  {
-    icon: Star,
-    title: "Kids Activities",
-    description: "Sports clubs, classes & hobbies",
-    discount: "20% off"
+    logo: amexLogo,
+    title: "Earn Credit Card Points",
+    description: "Pay one of your biggest monthly expenses, earn points",
+    badge: "Amex",
   },
 ];
 
@@ -42,47 +31,56 @@ const BenefitsTab = () => {
         className="mb-8"
       >
         <h2 className="mb-2 text-2xl font-bold text-foreground">
-          Exclusive offers for families
+          Rewards for consistent payments
         </h2>
         <p className="text-muted-foreground">
-          As a Medi8 member, you get access to discounts and deals to help your family save.
+          As a Collabor8 subscriber, you unlock perks that make co-parenting payments even more rewarding.
         </p>
       </motion.div>
 
       {/* Benefits Grid */}
       <div className="space-y-4">
         {benefits.map((benefit, index) => (
-          <motion.button
+          <motion.div
             key={benefit.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 + index * 0.1 }}
-            className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left"
+            className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-              <benefit.icon className="h-6 w-6 text-foreground" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-muted">
+              <img
+                src={benefit.logo}
+                alt={benefit.title}
+                className="h-10 w-10 object-contain"
+                loading="lazy"
+                width={40}
+                height={40}
+              />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">{benefit.title}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-foreground truncate">{benefit.title}</p>
+                <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                  {benefit.badge}
+                </span>
+              </div>
               <p className="text-sm text-muted-foreground">{benefit.description}</p>
             </div>
-            <div className="rounded-full bg-muted px-3 py-1">
-              <p className="text-xs font-medium text-foreground">{benefit.discount}</p>
-            </div>
-          </motion.button>
+          </motion.div>
         ))}
       </div>
 
-      {/* Coming Soon */}
+      {/* More Coming */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
+        transition={{ delay: 0.5 }}
         className="mt-8 rounded-2xl border border-dashed border-border bg-background p-6 text-center"
       >
         <p className="font-medium text-foreground">More benefits coming soon</p>
         <p className="text-sm text-muted-foreground">
-          We're always adding new offers for families
+          We're always adding new rewards for subscribers
         </p>
       </motion.div>
     </div>
