@@ -18,7 +18,7 @@ const TopBanner = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 bg-white">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 bg-slate-50">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground">
             <span className="text-xs font-bold text-background">C8</span>
