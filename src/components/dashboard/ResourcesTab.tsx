@@ -20,12 +20,6 @@ const resources = [
   },
 ];
 
-const quickLinks = [
-  "Child Maintenance Calculator",
-  "Benefits & Tax Credits",
-  "Legal Aid Eligibility",
-  "Mediation Services",
-];
 
 const ResourcesTab = () => {
   const navigate = useNavigate();
