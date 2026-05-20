@@ -32,7 +32,7 @@ const orgs = [
 ];
 
 const SupportAndGuidance = () => (
-  <div className="min-h-screen bg-gradient-to-b from-background via-background to-background text-[#1A1A18] bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
+  <div className="min-h-screen bg-gradient-to-b from-background via-background to-background text-[#1A1A18] bg-background" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
     <Helmet>
       <title>Support & Financial Guidance After Separation | Collabor8</title>
       <meta name="description" content="Free support for separated parents in the UK. Find financial guidance and benefits eligibility checks from organisations that can help, plus tools to manage child maintenance simply." />
@@ -52,7 +52,7 @@ const SupportAndGuidance = () => (
 
     <TopBanner />
 
-    <header className="mx-auto max-w-[680px] px-8 pb-16 pt-20 text-center bg-white">
+    <header className="mx-auto max-w-[680px] px-8 pb-16 pt-20 text-center bg-background">
       <span className="mb-5 inline-block text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#1A1A18]">Resources for separated parents</span>
       <h1 className="mb-5 text-[clamp(2rem,5vw,3rem)] font-light leading-[1.15] tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
         Support &amp; financial guidance<br /><em className="italic text-[#1A1A18]">after separation</em>
@@ -73,13 +73,13 @@ const SupportAndGuidance = () => (
           <h2 className="mb-2 text-[1.3rem] font-normal leading-[1.25] tracking-tight text-white" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Work out child maintenance in minutes</h2>
           <p className="max-w-[400px] text-[0.93rem] leading-[1.65] text-white/70">Collabor8's built-in calculator uses the standard UK formula to give you a fair, instant figure, then helps you set up and manage payments straight away, all in one place.</p>
         </div>
-        <Link to="/child-maintenance-calculator" className="inline-block flex-shrink-0 whitespace-nowrap rounded-full bg-white px-[1.6rem] py-[0.7rem] text-[0.9rem] font-medium text-[#1A1A18] no-underline transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)]">
+        <Link to="/child-maintenance-calculator" className="inline-block flex-shrink-0 whitespace-nowrap rounded-full bg-background px-[1.6rem] py-[0.7rem] text-[0.9rem] font-medium text-[#1A1A18] no-underline transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)]">
           Use the calculator &rarr;
         </Link>
       </div>
 
       {orgs.map((o) => (
-        <div key={o.name} className="mb-5 rounded-2xl border border-[#E4E2DA] bg-white px-9 py-8 transition-shadow hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-sm:px-6 max-sm:py-6">
+        <div key={o.name} className="mb-5 rounded-2xl border border-[#E4E2DA] bg-background px-9 py-8 transition-shadow hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-sm:px-6 max-sm:py-6">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <h2 className="text-[1.3rem] font-normal leading-[1.2] tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{o.name}</h2>
             <span className="mt-[3px] flex-shrink-0 self-start whitespace-nowrap rounded-full bg-secondary px-[0.7rem] py-1 text-[0.73rem] font-medium uppercase tracking-[0.06em] text-[#1A1A18]">{o.tag}</span>
@@ -106,7 +106,7 @@ const SupportAndGuidance = () => (
       </p>
     </div>
 
-    <div className="border-t border-[#E4E2DA] bg-[#FAF1E6] px-8 py-12">
+    <div className="border-t border-[#E4E2DA] bg-background px-8 py-12">
       <div className="mx-auto flex max-w-[720px] flex-wrap items-center justify-between gap-8">
         <div>
           <h2 className="mb-[0.4rem] text-[1.25rem] font-normal tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Managing shared finances with Collabor8</h2>

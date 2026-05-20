@@ -70,11 +70,11 @@ const PrivacyPolicy = () => {
           </h1>
           <div className="flex flex-wrap items-center gap-6 text-[0.85rem] text-white/50">
             <span>Last updated: April 2026</span>
-            <span className="h-1 w-1 rounded-full bg-white/20" />
+            <span className="h-1 w-1 rounded-full bg-background/20" />
             <span>Version 1.1</span>
-            <span className="h-1 w-1 rounded-full bg-white/20" />
+            <span className="h-1 w-1 rounded-full bg-background/20" />
             <span>UK GDPR compliant</span>
-            <span className="h-1 w-1 rounded-full bg-white/20" />
+            <span className="h-1 w-1 rounded-full bg-background/20" />
             <span>ICO Reg: C1906893</span>
           </div>
         </div>
@@ -94,7 +94,7 @@ const PrivacyPolicy = () => {
                   activeId === s.id
                     ? "border-[#1A1A18] text-[#1A1A18]"
                     : "border-transparent text-[#6B6B64] hover:text-[#1A1A18]"
-                } max-md:ml-0 max-md:rounded-full max-md:border max-md:border-[#E4E2DA] max-md:bg-white max-md:px-3 max-md:py-1.5 max-md:text-[0.78rem] ${
+                } max-md:ml-0 max-md:rounded-full max-md:border max-md:border-[#E4E2DA] max-md:bg-background max-md:px-3 max-md:py-1.5 max-md:text-[0.78rem] ${
                   activeId === s.id ? "max-md:border-[#E4D8C6] max-md:bg-secondary" : ""
                 }`}
               >
@@ -131,14 +131,14 @@ const PrivacyPolicy = () => {
                 { label: "ICO Registration No.", val: "C1906893" },
                 { label: "Data Protection contact", val: "privacy@collaborate8.com", isLink: true },
               ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-[#E4E2DA] bg-white p-3.5">
+                <div key={item.label} className="rounded-xl border border-[#E4E2DA] bg-background p-3.5">
                   <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#6B6B64]">{item.label}</div>
                   <div className="text-[0.9rem] font-medium text-[#1A1A18]">
                     {item.isLink ? <a href={`mailto:${item.val}`} className="text-[#1A1A18] hover:underline">{item.val}</a> : item.val}
                   </div>
                 </div>
               ))}
-              <div className="rounded-xl border border-[#E4E2DA] bg-white p-3.5 sm:col-span-2">
+              <div className="rounded-xl border border-[#E4E2DA] bg-background p-3.5 sm:col-span-2">
                 <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#6B6B64]">Postal address</div>
                 <div className="text-[0.9rem] font-medium text-[#1A1A18]">86-90 Paul Street, London, EC2A 4NE</div>
               </div>
@@ -227,7 +227,7 @@ const PrivacyPolicy = () => {
                     ["Comply with legal obligations", "Any data required by applicable law", "Legal obligation (Art. 6(1)(c))"],
                     ["Send marketing (with consent)", "Email address", "Consent (Art. 6(1)(a)) - withdraw at any time"],
                   ].map((row, i) => (
-                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-secondary"} hover:bg-secondary`}>
+                    <tr key={i} className={`${i % 2 === 0 ? "bg-background" : "bg-secondary"} hover:bg-secondary`}>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 font-medium text-[#1A1A18]">{row[0]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[1]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[2]}</td>
@@ -333,7 +333,7 @@ const PrivacyPolicy = () => {
                     ["Crash logs & error data", "90 days"],
                     ["Backups", "Deleted within 35 days of the live data deletion"],
                   ].map((row, i) => (
-                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-secondary"} hover:bg-secondary`}>
+                    <tr key={i} className={`${i % 2 === 0 ? "bg-background" : "bg-secondary"} hover:bg-secondary`}>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 font-medium text-[#1A1A18]">{row[0]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[1]}</td>
                     </tr>
@@ -384,7 +384,7 @@ const PrivacyPolicy = () => {
                 { title: "Withdraw consent", desc: "Where processing is based on consent, withdraw it at any time without affecting prior lawful processing." },
                 { title: "Automated decisions", desc: "Not to be subject to solely automated decisions that produce significant effects." },
               ].map((r) => (
-                <div key={r.title} className="rounded-xl border border-[#E4E2DA] bg-white p-4 transition-all hover:border-[#E4D8C6] hover:shadow-md">
+                <div key={r.title} className="rounded-xl border border-[#E4E2DA] bg-background p-4 transition-all hover:border-[#E4D8C6] hover:shadow-md">
                   <div className="mb-1 text-[0.88rem] font-semibold text-[#1A1A18]">{r.title}</div>
                   <div className="text-[0.8rem] leading-snug text-[#6B6B64]">{r.desc}</div>
                 </div>
@@ -422,7 +422,7 @@ const PrivacyPolicy = () => {
                     ["Analytics", "Google Analytics _ga", "Understand how users navigate the Service (IP anonymised)"],
                     ["Marketing", "Meta Pixel (if enabled)", "Measure ad campaign performance - only with your consent"],
                   ].map((row, i) => (
-                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-secondary"} hover:bg-secondary`}>
+                    <tr key={i} className={`${i % 2 === 0 ? "bg-background" : "bg-secondary"} hover:bg-secondary`}>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 font-medium text-[#1A1A18]">{row[0]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[1]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[2]}</td>
