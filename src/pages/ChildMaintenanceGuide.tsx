@@ -18,7 +18,7 @@ const articles = [
     id: "article-2",
     title: "Who pays, and how much?",
     desc: "Three simple ways to work out a fair amount, including the standard UK formula.",
-    img: "https://images.unsplash.com/photo-1554224155-8d04421f81f0?w=1200&q=80&auto=format&fit=crop",
+    img: "/guide-calc.jpg",
     alt: "Working out finances on a calculator",
     keywords: "who pays child maintenance uk, paying parent receiving parent, child maintenance calculator uk",
   },
