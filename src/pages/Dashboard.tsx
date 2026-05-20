@@ -2,20 +2,23 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import MobileLayout from "@/components/layout/MobileLayout";
+import HomeTab from "@/components/dashboard/HomeTab";
 import MaintenanceTab from "@/components/dashboard/MaintenanceTab";
 import ExpensesTab from "@/components/dashboard/ExpensesTab";
 import BenefitsTab from "@/components/dashboard/BenefitsTab";
 import ChatTab from "@/components/dashboard/ChatTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
 
-export type DashboardTab = "maintenance" | "expenses" | "benefits" | "chat" | "resources";
+export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState<DashboardTab>("maintenance");
+  const [activeTab, setActiveTab] = useState<DashboardTab>("home");
   const [searchParams] = useSearchParams();
 
   const renderContent = () => {
     switch (activeTab) {
+      case "home":
+        return <HomeTab onNavigate={setActiveTab} />;
       case "maintenance":
         return <MaintenanceTab />;
       case "expenses":
