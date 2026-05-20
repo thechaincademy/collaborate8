@@ -124,7 +124,7 @@ const MaintenanceTab = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6 rounded-3xl bg-card p-6"
+          className="mb-6 rounded-3xl border border-border bg-card p-6"
         >
           <div className="mb-1 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
@@ -170,7 +170,7 @@ const MaintenanceTab = () => {
         >
           {/* Card setup (for sending payments) */}
           {cards.length === 0 && (
-            <div className="rounded-2xl bg-card p-4">
+            <div className="rounded-2xl border border-border bg-card p-4">
               <div className="mb-3 flex items-center gap-3">
                 <CreditCard className="h-5 w-5 text-amber-500" />
                 <div>
@@ -189,7 +189,7 @@ const MaintenanceTab = () => {
 
           {/* Connect setup (for receiving payments) */}
           {(connectStatus === "not_created" || connectStatus === "pending") && (
-            <div className="rounded-2xl bg-card p-4">
+            <div className="rounded-2xl border border-border bg-card p-4">
               <div className="mb-3 flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
                 <div>
@@ -207,7 +207,7 @@ const MaintenanceTab = () => {
           )}
 
           {connectStatus === "pending_capabilities" && (
-            <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
               <RefreshCw className="h-5 w-5 animate-spin text-amber-500" />
               <div>
                 <p className="font-medium text-foreground">Payout account under review</p>
@@ -219,14 +219,14 @@ const MaintenanceTab = () => {
           )}
 
           {connectStatus === "complete" && (
-            <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
               <Check className="h-5 w-5 text-emerald-500" />
               <p className="text-sm text-foreground">Payouts enabled - you can receive payments</p>
             </div>
           )}
 
           {cards.length > 0 && (
-            <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
               <Check className="h-5 w-5 text-emerald-500" />
               <p className="text-sm text-foreground">Card added - you can send payments (****{cards[0].last4})</p>
             </div>
@@ -262,7 +262,7 @@ const MaintenanceTab = () => {
 
           {/* Info for viewing parent */}
           {isViewing && (
-            <div className="flex items-center gap-3 rounded-2xl bg-card p-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
               <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Your co-parent manages this arrangement</p>
             </div>
@@ -302,7 +302,7 @@ const MaintenanceTab = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 + index * 0.05 }}
-                  className="flex w-full items-center justify-between rounded-2xl bg-card p-4"
+                  className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
