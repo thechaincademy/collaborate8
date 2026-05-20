@@ -226,6 +226,42 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          original_body: string | null
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          tone_score: number | null
+          used_suggestion: boolean
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          original_body?: string | null
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          tone_score?: number | null
+          used_suggestion?: boolean
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          original_body?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          tone_score?: number | null
+          used_suggestion?: boolean
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
