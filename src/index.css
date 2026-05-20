@@ -85,6 +85,11 @@
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
 
+    --clay: 13 47% 56%;
+    --clay-foreground: 0 0% 100%;
+    --clay-soft: 13 47% 15%;
+
+
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 0 0% 100%;
