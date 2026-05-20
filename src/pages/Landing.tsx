@@ -116,8 +116,8 @@ const Landing = () => {
       <TopBanner />
 
       {/* Hero */}
-      <div className="px-4 pt-4 md:px-6">
-        <section className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl bg-primary shadow-2xl shadow-primary/20">
+      <div>
+        <section className="relative w-full overflow-hidden bg-primary">
           {/* Texture & Depth Overlays */}
           <div
             className="pointer-events-none absolute inset-0 opacity-40"
