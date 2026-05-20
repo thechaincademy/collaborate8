@@ -1,6 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import collabor8Wordmark from "@/assets/collabor8-wordmark.png";
 
 const TopBanner = () => {
   const navigate = useNavigate();
