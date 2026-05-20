@@ -151,7 +151,7 @@ const Landing = () => {
       </section>
 
       {/* App Screenshots */}
-      <section className="overflow-hidden border-t border-border bg-card py-20">
+      <section className="overflow-hidden border-t border-border bg-card py-20 bg-white">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -194,7 +194,7 @@ const Landing = () => {
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-inherit">
+      <section className="py-20 bg-slate-50">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -341,7 +341,7 @@ const Landing = () => {
       </section>
 
       {/* Waitlist CTA */}
-      <section id="waitlist" ref={waitlistRef} className="py-20 bg-inherit">
+      <section id="waitlist" ref={waitlistRef} className="py-20 bg-slate-50">
         <div className="mx-auto max-w-5xl px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
