@@ -19,12 +19,13 @@ const TopBanner = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center">
-          <img
-            src={collabor8Wordmark}
-            alt="collabor8"
-            className="h-8 w-auto md:h-9"
-          />
+        <Link to="/" className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
+            <span className="text-sm font-bold text-background">C8</span>
+          </div>
+          <span className="text-lg font-semibold tracking-tight text-foreground">
+            collabor8
+          </span>
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
