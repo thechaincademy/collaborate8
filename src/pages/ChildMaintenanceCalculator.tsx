@@ -181,7 +181,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <TopBanner />
       <div className="px-4 py-10 bg-white">
       <Helmet>

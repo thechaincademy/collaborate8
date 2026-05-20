@@ -32,7 +32,7 @@ const orgs = [
 ];
 
 const SupportAndGuidance = () => (
-  <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
+  <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] text-[#1A1A18] bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
     <Helmet>
       <title>Support & Financial Guidance After Separation | Collabor8</title>
       <meta name="description" content="Free support for separated parents in the UK. Find financial guidance and benefits eligibility checks from organisations that can help, plus tools to manage child maintenance simply." />
@@ -52,7 +52,7 @@ const SupportAndGuidance = () => (
 
     <TopBanner />
 
-    <header className="mx-auto max-w-[680px] px-8 pb-16 pt-20 text-center">
+    <header className="mx-auto max-w-[680px] px-8 pb-16 pt-20 text-center bg-white">
       <span className="mb-5 inline-block text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#1A1A18]">Resources for separated parents</span>
       <h1 className="mb-5 text-[clamp(2rem,5vw,3rem)] font-light leading-[1.15] tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
         Support &amp; financial guidance<br /><em className="italic text-[#1A1A18]">after separation</em>
