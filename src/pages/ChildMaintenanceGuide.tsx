@@ -349,8 +349,8 @@ const ChildMaintenanceGuide = () => {
         </Link>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-10">
           {["Track payments automatically", "Log shared expenses with receipts", "Earn rewards for staying on top", "No fees. No middlemen."].map((f) => (
-            <span key={f} className="flex items-center gap-2 text-[0.88rem] text-white/70">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9D9D5]" />
+            <span key={f} className="flex items-center gap-2 text-[0.88rem] text-slate-600">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
               {f}
             </span>
           ))}
