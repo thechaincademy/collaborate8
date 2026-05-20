@@ -52,7 +52,7 @@ const articles = [
 ];
 
 const Callout = ({ children }: { children: React.ReactNode }) => (
-  <div className="my-7 rounded-r-[10px] border-l-[3px] border-[#1A1A18] bg-[#F0E4D6] px-5 py-4 text-[0.95rem] italic leading-[1.65] text-[#1A1A18]">
+  <div className="my-7 rounded-r-[10px] border-l-[3px] border-[#1A1A18] bg-secondary px-5 py-4 text-[0.95rem] italic leading-[1.65] text-[#1A1A18]">
     {children}
   </div>
 );
@@ -71,7 +71,7 @@ const BList = ({ items }: { items: React.ReactNode[] }) => (
   <ul className="my-2 mb-[1.2rem] list-none p-0">
     {items.map((it, i) => (
       <li key={i} className="relative border-b border-[#E4E2DA] py-[0.45rem] pl-6 text-base text-[#3D3D38] last:border-b-0">
-        <span className="absolute left-0 top-1/2 h-[6px] w-[6px] -translate-y-1/2 rounded-full bg-[#1A1A18]" />
+        <span className="absolute left-0 top-1/2 h-[6px] w-[6px] -translate-y-1/2 rounded-full bg-foreground" />
         {it}
       </li>
     ))}
@@ -141,7 +141,7 @@ const ChildMaintenanceGuide = () => {
           <button
             key={i}
             onClick={() => scrollTo(i)}
-            className={`h-2 w-2 rounded-full border-0 p-0 transition-all ${active === i ? "scale-[1.4] bg-[#1A1A18]" : "bg-[#E4E2DA]"}`}
+            className={`h-2 w-2 rounded-full border-0 p-0 transition-all ${active === i ? "scale-[1.4] bg-foreground" : "bg-[#E4E2DA]"}`}
             title={`Article ${i + 1}`}
           />
         ))}
@@ -171,7 +171,7 @@ const ChildMaintenanceGuide = () => {
       </header>
 
       {/* INDEX */}
-      <section className="border-b border-[#E4E2DA] px-8 py-16 bg-[#f9f5f1]">
+      <section className="border-b border-[#E4E2DA] px-8 py-16 bg-background">
         <div className="mb-12 text-center">
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-[#1A1A18]">In this guide</p>
           <h2 className="text-[clamp(1.8rem,4vw,2.6rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
@@ -202,7 +202,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 1 */}
         <article ref={(el) => (refs.current[0] = el)} id="article-1" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 01</span>
+            <span className="mb-4 inline-block rounded-full bg-secondary px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 01</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>What is child maintenance?</h2>
           </header>
           <img src={articles[0].img} alt={articles[0].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -227,7 +227,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 2 */}
         <article ref={(el) => (refs.current[1] = el)} id="article-2" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 02</span>
+            <span className="mb-4 inline-block rounded-full bg-secondary px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 02</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Who pays, and how much?</h2>
           </header>
           <img src={articles[1].img} alt={articles[1].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -248,7 +248,7 @@ const ChildMaintenanceGuide = () => {
               { n: 3, t: "Agree an amount yourselves", d: "If you're both happy with a figure that feels fair for your family, that's completely valid, with or without the formula." },
             ].map((p) => (
               <div key={p.n} className="flex items-start gap-4 rounded-[10px] border border-[#E4E2DA] bg-white px-5 py-4">
-                <div className="mt-px flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1A1A18] text-[0.8rem] font-medium text-white">{p.n}</div>
+                <div className="mt-px flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-foreground text-[0.8rem] font-medium text-white">{p.n}</div>
                 <div>
                   <strong className="mb-1 block text-[0.95rem] font-medium text-[#1A1A18]">{p.t}</strong>
                   <span className="text-[0.88rem] leading-[1.5] text-[#6B6B64]">{p.d}</span>
@@ -267,7 +267,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 3 */}
         <article ref={(el) => (refs.current[2] = el)} id="article-3" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 03</span>
+            <span className="mb-4 inline-block rounded-full bg-secondary px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 03</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>How to set up child maintenance payments</h2>
           </header>
           <img src={articles[2].img} alt={articles[2].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -289,7 +289,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 4 */}
         <article ref={(el) => (refs.current[3] = el)} id="article-4" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 04</span>
+            <span className="mb-4 inline-block rounded-full bg-secondary px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 04</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Shared and additional expenses</h2>
           </header>
           <img src={articles[3].img} alt={articles[3].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -312,7 +312,7 @@ const ChildMaintenanceGuide = () => {
         {/* Article 5 */}
         <article ref={(el) => (refs.current[4] = el)} id="article-5" className="py-20">
           <header className="mb-10">
-            <span className="mb-4 inline-block rounded-full bg-[#F0E4D6] px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 05</span>
+            <span className="mb-4 inline-block rounded-full bg-secondary px-3 py-[0.3rem] text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#1A1A18]">Article 05</span>
             <h2 className="text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Your rights and legal responsibilities</h2>
           </header>
           <img src={articles[4].img} alt={articles[4].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
@@ -357,7 +357,7 @@ const ChildMaintenanceGuide = () => {
         </div>
       </section>
 
-      <footer className="bg-[#1A1A18] px-8 py-8 text-center text-[0.85rem] text-white/50">
+      <footer className="bg-foreground px-8 py-8 text-center text-[0.85rem] text-white/50">
         <p>
           <Link to="/" className="text-white/60 no-underline hover:text-white">Collabor8</Link>
           {" \u00B7 "}

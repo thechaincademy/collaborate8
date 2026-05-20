@@ -181,7 +181,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <TopBanner />
       <div className="px-4 py-10 bg-white">
       <Helmet>
@@ -206,7 +206,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
         {/* Paying parent card */}
         <div className="mb-4 rounded-2xl border border-[#E4E2DA] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="mb-5 flex items-center gap-2.5">
-            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-[#F0E4D6]">
+            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-secondary">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" stroke="#1A1A18" strokeWidth="1.5" /><path d="M2.5 14c0-2.761 2.462-4.5 5.5-4.5s5.5 1.739 5.5 4.5" stroke="#1A1A18" strokeWidth="1.5" strokeLinecap="round" /></svg>
             </div>
             <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-[#3D3D38]">Parent making payments</span>
@@ -264,7 +264,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
         {/* Shared care card */}
         <div className="mb-4 rounded-2xl border border-[#E4E2DA] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="mb-5 flex items-center gap-2.5">
-            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-[#F0E4D6]">
+            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-secondary">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="#1A1A18" strokeWidth="1.5" /><path d="M5 3V2m6 1V2M2 7h12" stroke="#1A1A18" strokeWidth="1.5" strokeLinecap="round" /></svg>
             </div>
             <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-[#3D3D38]">Shared care - overnight stays</span>
@@ -285,7 +285,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
         </div>
 
         {/* Result card */}
-        <div className="mb-4 rounded-2xl bg-[#1A1A18] p-7">
+        <div className="mb-4 rounded-2xl bg-foreground p-7">
           <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-white/60">Estimated child maintenance</div>
           <div className="mb-6 flex items-end gap-1.5">
             <span className="text-[56px] font-semibold leading-none tracking-tight text-white max-[480px]:text-[44px]">{fmt(result.totalFinal)}</span>
@@ -303,7 +303,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2.5">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#1A1A18]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
               {result.rateName}
             </span>
             <button onClick={downloadSummary} className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-[#1A1A18] transition-colors hover:bg-white">

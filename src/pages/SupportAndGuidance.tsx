@@ -32,7 +32,7 @@ const orgs = [
 ];
 
 const SupportAndGuidance = () => (
-  <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4] text-[#1A1A18] bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
+  <div className="min-h-screen bg-gradient-to-b from-background via-background to-background text-[#1A1A18] bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
     <Helmet>
       <title>Support & Financial Guidance After Separation | Collabor8</title>
       <meta name="description" content="Free support for separated parents in the UK. Find financial guidance and benefits eligibility checks from organisations that can help, plus tools to manage child maintenance simply." />
@@ -60,7 +60,7 @@ const SupportAndGuidance = () => (
       <p className="mx-auto mb-6 max-w-[560px] text-[1.05rem] font-light leading-[1.8] text-[#6B6B64]">
         Financial situations often change significantly after separation. Many parents aren't aware of all the support and benefits they may be entitled to. This page points you towards free resources that can help, and to Collabor8's own tools for managing child maintenance.
       </p>
-      <span className="inline-block max-w-[520px] rounded-[10px] bg-[#F0E4D6] px-5 py-[0.65rem] text-[0.9rem] italic leading-[1.6] text-[#6B6B64]">
+      <span className="inline-block max-w-[520px] rounded-[10px] bg-secondary px-5 py-[0.65rem] text-[0.9rem] italic leading-[1.6] text-[#6B6B64]">
         You may wish to explore whether you are eligible for additional financial support or benefits you haven't yet claimed.
       </span>
     </header>
@@ -68,7 +68,7 @@ const SupportAndGuidance = () => (
     <section className="mx-auto max-w-[720px] px-8 pb-12 pt-4" aria-label="Support and guidance resources">
       <span className="mb-8 block text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#AEADA5]">Free resources</span>
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-8 rounded-2xl bg-[#1A1A18] px-10 py-9 text-white max-sm:flex-col max-sm:items-start max-sm:px-6 max-sm:py-6">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-8 rounded-2xl bg-foreground px-10 py-9 text-white max-sm:flex-col max-sm:items-start max-sm:px-6 max-sm:py-6">
         <div>
           <h2 className="mb-2 text-[1.3rem] font-normal leading-[1.25] tracking-tight text-white" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Work out child maintenance in minutes</h2>
           <p className="max-w-[400px] text-[0.93rem] leading-[1.65] text-white/70">Collabor8's built-in calculator uses the standard UK formula to give you a fair, instant figure, then helps you set up and manage payments straight away, all in one place.</p>
@@ -82,18 +82,18 @@ const SupportAndGuidance = () => (
         <div key={o.name} className="mb-5 rounded-2xl border border-[#E4E2DA] bg-white px-9 py-8 transition-shadow hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-sm:px-6 max-sm:py-6">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <h2 className="text-[1.3rem] font-normal leading-[1.2] tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{o.name}</h2>
-            <span className="mt-[3px] flex-shrink-0 self-start whitespace-nowrap rounded-full bg-[#F0E4D6] px-[0.7rem] py-1 text-[0.73rem] font-medium uppercase tracking-[0.06em] text-[#1A1A18]">{o.tag}</span>
+            <span className="mt-[3px] flex-shrink-0 self-start whitespace-nowrap rounded-full bg-secondary px-[0.7rem] py-1 text-[0.73rem] font-medium uppercase tracking-[0.06em] text-[#1A1A18]">{o.tag}</span>
           </div>
           <p className="mb-[1.1rem] text-[0.98rem] leading-[1.75] text-[#3D3D38]">{o.desc}</p>
           <ul className="mb-6 flex list-none flex-col gap-[0.35rem] p-0">
             {o.helps.map((h) => (
               <li key={h} className="relative pl-[1.3rem] text-[0.9rem] leading-[1.5] text-[#6B6B64]">
-                <span className="absolute left-0 top-[0.55em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                <span className="absolute left-0 top-[0.55em] h-[5px] w-[5px] rounded-full bg-foreground" />
                 {h}
               </li>
             ))}
           </ul>
-          <a href={o.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-[0.4rem] rounded-full border border-[#1A1A18] px-[1.1rem] py-2 text-[0.88rem] font-medium text-[#1A1A18] no-underline transition-all hover:bg-[#1A1A18] hover:text-white">
+          <a href={o.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-[0.4rem] rounded-full border border-[#1A1A18] px-[1.1rem] py-2 text-[0.88rem] font-medium text-[#1A1A18] no-underline transition-all hover:bg-foreground hover:text-white">
             {o.cta} &#8599;
           </a>
         </div>
@@ -112,13 +112,13 @@ const SupportAndGuidance = () => (
           <h2 className="mb-[0.4rem] text-[1.25rem] font-normal tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Managing shared finances with Collabor8</h2>
           <p className="max-w-[440px] text-[0.92rem] leading-[1.65] text-[#6B6B64]">Collabor8 helps separated parents track payments, log shared expenses, and stay on top of financial responsibilities together, simply, clearly, and without the stress.</p>
         </div>
-        <Link to="/signup" className="inline-block flex-shrink-0 whitespace-nowrap rounded-full bg-[#1A1A18] px-7 py-3 text-[0.9rem] font-medium text-white no-underline transition-all hover:-translate-y-0.5 hover:bg-[#1A1A18]">
+        <Link to="/signup" className="inline-block flex-shrink-0 whitespace-nowrap rounded-full bg-foreground px-7 py-3 text-[0.9rem] font-medium text-white no-underline transition-all hover:-translate-y-0.5 hover:bg-foreground">
           Try Collabor8 free
         </Link>
       </div>
     </div>
 
-    <footer className="bg-[#1A1A18] px-8 py-8 text-center text-[0.82rem] leading-[2] text-white/50">
+    <footer className="bg-foreground px-8 py-8 text-center text-[0.82rem] leading-[2] text-white/50">
       <p>
         <Link to="/" className="text-white/55 no-underline hover:text-white">Collabor8</Link>
         {" \u00B7 "}

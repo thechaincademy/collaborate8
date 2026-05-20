@@ -47,7 +47,7 @@ const PrivacyPolicy = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F2DFCF] via-[#F7E9D8] to-[#FBF1E4]" style={{ fontFamily: "'Figtree', sans-serif" }}>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background" style={{ fontFamily: "'Figtree', sans-serif" }}>
       <Helmet>
         <title>Privacy Policy - Collabor8</title>
         <meta name="description" content="Collabor8 Privacy Policy. Learn how Collaborate Technologies Ltd collects, uses, shares and protects your personal data. UK GDPR compliant." />
@@ -57,12 +57,12 @@ const PrivacyPolicy = () => {
       <TopBanner />
 
       {/* Hero */}
-      <div className="relative overflow-hidden bg-[#1A1A18] px-[5vw] pb-16 pt-20">
+      <div className="relative overflow-hidden bg-foreground px-[5vw] pb-16 pt-20">
         <div className="pointer-events-none absolute -top-[40%] right-[-10%] h-full w-[50vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,transparent_65%)]" />
         <div className="pointer-events-none absolute -bottom-[30%] -left-[5%] h-[80%] w-[40vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_65%)]" />
         <div className="relative z-10 max-w-[760px]">
           <div className="mb-5 flex items-center gap-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#1A1A18]">
-            <span className="inline-block h-[1.5px] w-6 bg-[#1A1A18]" />
+            <span className="inline-block h-[1.5px] w-6 bg-foreground" />
             Legal
           </div>
           <h1 className="mb-5 text-[clamp(2.4rem,5vw,3.6rem)] font-light leading-[1.1] tracking-tight text-white" style={{ fontFamily: "'Fraunces', serif" }}>
@@ -95,7 +95,7 @@ const PrivacyPolicy = () => {
                     ? "border-[#1A1A18] text-[#1A1A18]"
                     : "border-transparent text-[#6B6B64] hover:text-[#1A1A18]"
                 } max-md:ml-0 max-md:rounded-full max-md:border max-md:border-[#E4E2DA] max-md:bg-white max-md:px-3 max-md:py-1.5 max-md:text-[0.78rem] ${
-                  activeId === s.id ? "max-md:border-[#E4D8C6] max-md:bg-[#F0E4D6]" : ""
+                  activeId === s.id ? "max-md:border-[#E4D8C6] max-md:bg-secondary" : ""
                 }`}
               >
                 <span className="text-[0.7rem] font-semibold text-[#E4D8C6]">{s.num}</span>
@@ -103,7 +103,7 @@ const PrivacyPolicy = () => {
               </a>
             ))}
           </nav>
-          <div className="mt-8 rounded-xl border border-[#E4D8C6] bg-[#F0E4D6] p-4">
+          <div className="mt-8 rounded-xl border border-[#E4D8C6] bg-secondary p-4">
             <p className="mb-2 text-[0.8rem] leading-snug text-[#3D3D38]">Questions about your data?</p>
             <a href="mailto:privacy@collaborate8.com" className="break-all text-[0.82rem] font-semibold text-[#1A1A18] hover:underline">privacy@collaborate8.com</a>
           </div>
@@ -112,7 +112,7 @@ const PrivacyPolicy = () => {
         {/* Content */}
         <main className="min-w-0">
           {/* About box */}
-          <div className="mb-8 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-[#F0E4D6] p-4">
+          <div className="mb-8 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-secondary p-4">
             <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">About this policy</div>
             <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">
               This Privacy Policy explains how Collaborate Technologies Ltd ("Collabor8", "we", "us", "our") collects, uses, shares and protects personal data when you use our website and app. We are committed to handling your data lawfully and transparently in accordance with the UK GDPR and the Data Protection Act 2018.
@@ -161,7 +161,7 @@ const PrivacyPolicy = () => {
                 "Communications you send us via email or in-app support",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   {t}
                 </li>
               ))}
@@ -176,7 +176,7 @@ const PrivacyPolicy = () => {
                 "Crash reports and error logs",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   {t}
                 </li>
               ))}
@@ -189,13 +189,13 @@ const PrivacyPolicy = () => {
                 "Sign-in tokens if you use Google or Apple Sign-In",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   {t}
                 </li>
               ))}
             </ul>
 
-            <div className="rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-[#F0E4D6] p-4">
+            <div className="rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-secondary p-4">
               <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">What we do not collect</div>
               <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">We do not collect personal data about dependants. Collabor8 is a tool for adults only. All data we hold relates solely to the adults who register and use the Service.</p>
             </div>
@@ -209,7 +209,7 @@ const PrivacyPolicy = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[0.86rem]">
                 <thead>
-                  <tr className="bg-[#1A1A18]">
+                  <tr className="bg-foreground">
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Purpose</th>
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Data used</th>
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Lawful basis</th>
@@ -227,7 +227,7 @@ const PrivacyPolicy = () => {
                     ["Comply with legal obligations", "Any data required by applicable law", "Legal obligation (Art. 6(1)(c))"],
                     ["Send marketing (with consent)", "Email address", "Consent (Art. 6(1)(a)) - withdraw at any time"],
                   ].map((row, i) => (
-                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-[#F0E4D6]"} hover:bg-[#F0E4D6]`}>
+                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-secondary"} hover:bg-secondary`}>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 font-medium text-[#1A1A18]">{row[0]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[1]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[2]}</td>
@@ -255,7 +255,7 @@ const PrivacyPolicy = () => {
                 { bold: "Google Analytics / Mixpanel", rest: " - anonymised usage analytics (IP anonymisation enabled)" },
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   <strong className="font-semibold text-[#1A1A18]">{t.bold}</strong>{t.rest}
                 </li>
               ))}
@@ -272,13 +272,13 @@ const PrivacyPolicy = () => {
                 { bold: "You are always in control of your own account.", rest: " You may leave a shared workspace, request deletion of your account, or withdraw access at any time without affecting the other parent's account." },
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   <strong className="font-semibold text-[#1A1A18]">{t.bold}</strong>{t.rest}
                 </li>
               ))}
             </ul>
 
-            <div className="my-6 rounded-xl bg-[#1A1A18] p-6">
+            <div className="my-6 rounded-xl bg-foreground p-6">
               <p className="text-[0.9rem] leading-[1.7] text-white/85">
                 <strong className="text-white">Your financial data is yours alone.</strong> We will never expose your payment details, card information, subscription status or personal income figures to another user - including your co-parent. These are held in strict confidence between you and Collaborate Technologies Ltd.
               </p>
@@ -303,7 +303,7 @@ const PrivacyPolicy = () => {
                 "Adequacy decisions under UK GDPR",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   {t}
                 </li>
               ))}
@@ -318,7 +318,7 @@ const PrivacyPolicy = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[0.86rem]">
                 <thead>
-                  <tr className="bg-[#1A1A18]">
+                  <tr className="bg-foreground">
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Data type</th>
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Retention period</th>
                   </tr>
@@ -333,7 +333,7 @@ const PrivacyPolicy = () => {
                     ["Crash logs & error data", "90 days"],
                     ["Backups", "Deleted within 35 days of the live data deletion"],
                   ].map((row, i) => (
-                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-[#F0E4D6]"} hover:bg-[#F0E4D6]`}>
+                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-secondary"} hover:bg-secondary`}>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 font-medium text-[#1A1A18]">{row[0]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[1]}</td>
                     </tr>
@@ -359,7 +359,7 @@ const PrivacyPolicy = () => {
                 "Data breach response procedure - we will notify the ICO within 72 hours and affected users without undue delay where required",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   {t}
                 </li>
               ))}
@@ -391,7 +391,7 @@ const PrivacyPolicy = () => {
               ))}
             </div>
 
-            <div className="mt-6 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-[#F0E4D6] p-4">
+            <div className="mt-6 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-secondary p-4">
               <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">Right to complain</div>
               <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">
                 You have the right to lodge a complaint with the Information Commissioner's Office (ICO) at{" "}
@@ -409,7 +409,7 @@ const PrivacyPolicy = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[0.86rem]">
                 <thead>
-                  <tr className="bg-[#1A1A18]">
+                  <tr className="bg-foreground">
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Category</th>
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Examples</th>
                     <th className="px-4 py-3 text-left text-[0.8rem] font-semibold tracking-wide text-white">Purpose</th>
@@ -422,7 +422,7 @@ const PrivacyPolicy = () => {
                     ["Analytics", "Google Analytics _ga", "Understand how users navigate the Service (IP anonymised)"],
                     ["Marketing", "Meta Pixel (if enabled)", "Measure ad campaign performance - only with your consent"],
                   ].map((row, i) => (
-                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-[#F0E4D6]"} hover:bg-[#F0E4D6]`}>
+                    <tr key={i} className={`${i % 2 === 0 ? "bg-white" : "bg-secondary"} hover:bg-secondary`}>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 font-medium text-[#1A1A18]">{row[0]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[1]}</td>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 text-[#3D3D38]">{row[2]}</td>
@@ -452,7 +452,7 @@ const PrivacyPolicy = () => {
                 "Where required, seek fresh consent",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                  <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                   {t}
                 </li>
               ))}
@@ -467,20 +467,20 @@ const PrivacyPolicy = () => {
             <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">For any questions about this policy, to exercise your rights, or to raise a data concern:</p>
             <ul className="mb-4 flex flex-col gap-2">
               <li className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                 <strong className="font-semibold text-[#1A1A18]">Email:</strong>{" "}
                 <a href="mailto:privacy@collaborate8.com" className="text-[#1A1A18] hover:underline">privacy@collaborate8.com</a>
               </li>
               <li className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                 <strong className="font-semibold text-[#1A1A18]">Post:</strong> Data Protection, Collaborate Technologies Ltd, 86-90 Paul Street, London, EC2A 4NE
               </li>
               <li className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
-                <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-[#1A1A18]" />
+                <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                 <strong className="font-semibold text-[#1A1A18]">Response time:</strong> We aim to acknowledge all requests within 5 business days
               </li>
             </ul>
-            <div className="mt-6 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-[#F0E4D6] p-4">
+            <div className="mt-6 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-secondary p-4">
               <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">ICO Registration</div>
               <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">
                 Collaborate Technologies Ltd is registered with the Information Commissioner's Office (ICO) under registration number <strong className="font-semibold text-[#1A1A18]">C1906893</strong>. You can verify this at{" "}
@@ -492,7 +492,7 @@ const PrivacyPolicy = () => {
       </div>
 
       {/* Footer */}
-      <footer className="flex flex-wrap items-center justify-between gap-4 bg-[#1A1A18] px-[5vw] py-10">
+      <footer className="flex flex-wrap items-center justify-between gap-4 bg-foreground px-[5vw] py-10">
         <div>
           <span className="text-[1.1rem] text-white/70" style={{ fontFamily: "'Fraunces', serif" }}>Collabor8</span>
           <p className="mt-1 text-[0.8rem] text-white/35">&copy; 2026 Collaborate Technologies Ltd. All rights reserved.</p>
