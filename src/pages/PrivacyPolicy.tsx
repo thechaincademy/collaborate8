@@ -51,7 +51,7 @@ const PrivacyPolicy = () => {
       <Helmet>
         <title>Privacy Policy - Collabor8</title>
         <meta name="description" content="Collabor8 Privacy Policy. Learn how Collaborate Technologies Ltd collects, uses, shares and protects your personal data. UK GDPR compliant." />
-        <link rel="canonical" href="https://collabor8.lovable.app/privacy" />
+        <link rel="canonical" href="https://collaborate8.com/privacy" />
       </Helmet>
 
       <TopBanner />

@@ -37,7 +37,7 @@ const SupportAndGuidance = () => (
       <title>Support & Financial Guidance After Separation | Collabor8</title>
       <meta name="description" content="Free support for separated parents in the UK. Find financial guidance and benefits eligibility checks from organisations that can help, plus tools to manage child maintenance simply." />
       <meta name="keywords" content="financial support after separation uk, benefits for separated parents, money help after divorce uk, child maintenance calculator, MoneyHelper, Turn2us" />
-      <link rel="canonical" href="https://collabor8.lovable.app/resources/support-and-guidance" />
+      <link rel="canonical" href="https://collaborate8.com/resources/support-and-guidance" />
       <meta property="og:title" content="Support & Financial Guidance After Separation | Collabor8" />
       <meta property="og:description" content="Find financial guidance and benefits support after separation, plus Collabor8's tools to help you manage child maintenance simply." />
       <meta property="og:type" content="website" />
@@ -46,7 +46,7 @@ const SupportAndGuidance = () => (
         "@type": "WebPage",
         "name": "Support & Financial Guidance After Separation",
         "description": "A signposting page for separated parents, linking to financial guidance and benefits support.",
-        "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collabor8.lovable.app" }
+        "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collaborate8.com" }
       })}</script>
     </Helmet>
 

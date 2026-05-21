@@ -108,7 +108,7 @@ const ChildMaintenanceGuide = () => {
         <title>Child Maintenance Made Simple - Complete UK Guide | Collabor8</title>
         <meta name="description" content="Everything separated parents need to know about child maintenance in the UK - what it is, who pays, how to calculate it, and how to manage it simply with Collabor8." />
         <meta name="keywords" content="child maintenance, child support UK, child maintenance calculator, child maintenance service, CMS, paying parent, receiving parent, co-parenting, family arrangement, child maintenance login" />
-        <link rel="canonical" href="https://collabor8.lovable.app/resources/child-maintenance-guide" />
+        <link rel="canonical" href="https://collaborate8.com/resources/child-maintenance-guide" />
         <meta property="og:title" content="Child Maintenance Made Simple | Collabor8" />
         <meta property="og:description" content="A friendly, practical guide to child maintenance in the UK - your responsibilities, your options, and how to manage everything in one place." />
         <meta property="og:type" content="article" />
@@ -118,7 +118,7 @@ const ChildMaintenanceGuide = () => {
           "@type": "Article",
           "headline": "Child Maintenance Made Simple",
           "description": "A complete guide to child maintenance in the UK for separated parents",
-          "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collabor8.lovable.app" },
+          "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collaborate8.com" },
           "hasPart": articles.map(a => ({ "@type": "WebPageElement", "name": a.title, "url": `#${a.id}` }))
         })}</script>
         <script type="application/ld+json">{JSON.stringify({
