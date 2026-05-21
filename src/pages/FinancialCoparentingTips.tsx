@@ -11,20 +11,21 @@ const FinancialCoparentingTips = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
       <TopBanner />
       <Helmet>
-        <title>Financial Co-parenting Tips for Separated Parents UK | Collabor8</title>
-        <meta name="description" content="Practical financial co-parenting tips for separated parents in the UK. Learn how to manage child maintenance payments, shared expenses, and communication with Collabor8." />
+        <title>Co-parenting Finance Tips UK | Collabor8</title>
+        <meta name="description" content="Practical financial co-parenting tips for separated parents in the UK. Manage child maintenance payments, shared expenses, and communication with Collabor8." />
         <meta name="keywords" content="co-parenting tips uk, financial co-parenting, child maintenance tips, separated parents finances uk, co-parenting communication" />
-        <link rel="canonical" href="https://collabor8.lovable.app/resources/financial-coparenting-tips" />
-        <meta property="og:title" content="Financial Co-parenting Tips | Collabor8" />
+        <link rel="canonical" href="https://collaborate8.com/resources/financial-coparenting-tips" />
+        <meta property="og:title" content="Co-parenting Finance Tips | Collabor8" />
         <meta property="og:description" content="Practical financial co-parenting tips for separated parents in the UK." />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://collaborate8.com/resources/financial-coparenting-tips" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Article",
           "headline": "Financial Co-parenting Tips for Separated Parents",
           "description": "Practical financial co-parenting tips for separated parents in the UK.",
-          "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collabor8.lovable.app" },
-          "mainEntityOfPage": "https://collabor8.lovable.app/resources/financial-coparenting-tips"
+          "publisher": { "@type": "Organization", "name": "Collabor8", "url": "https://collaborate8.com" },
+          "mainEntityOfPage": "https://collaborate8.com/resources/financial-coparenting-tips"
         })}</script>
       </Helmet>
       <div className="mx-auto max-w-3xl px-6 py-12">

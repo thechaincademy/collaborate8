@@ -100,14 +100,14 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Collabor8 - Child Maintenance Service & Calculator for UK Parents</title>
-        <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free child maintenance calculator based on the official CMS formula." />
-        <link rel="canonical" href="https://collabor8.lovable.app/" />
+        <title>Collabor8 - Child Maintenance App for UK Parents</title>
+        <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free CMS calculator based on the official UK formula." />
+        <link rel="canonical" href="https://collaborate8.com/" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "Collabor8",
-          "url": "https://collabor8.lovable.app",
+          "url": "https://collaborate8.com",
           "description": "UK child maintenance service for separated parents. Payment tracking, expense management, and rewards.",
           "sameAs": []
         })}</script>

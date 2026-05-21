@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, MailCheck } from "lucide-react";
@@ -37,7 +38,13 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background">
+    <>
+      <Helmet>
+        <title>Reset Password - Collabor8</title>
+        <meta name="description" content="Reset your Collabor8 password. Enter your email to receive a secure password reset link." />
+        <link rel="canonical" href="https://collaborate8.com/forgot-password" />
+      </Helmet>
+      <div className="mx-auto min-h-screen max-w-md bg-background">
       <AnimatePresence mode="wait">
         {!isSubmitted ? (
           <motion.div
@@ -135,6 +142,7 @@ const ForgotPassword = () => {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 };
 

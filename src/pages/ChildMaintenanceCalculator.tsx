@@ -173,11 +173,11 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
     "@type": "WebApplication",
     name: "Child Maintenance Calculator UK",
     description: "Free child maintenance calculator based on the official CMS formula.",
-    url: "https://collabor8.lovable.app/child-maintenance-calculator",
+    url: "https://collaborate8.com/child-maintenance-calculator",
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",
     offers: { "@type": "Offer", price: "0", priceCurrency: "GBP" },
-    provider: { "@type": "Organization", name: "Collabor8", url: "https://collabor8.lovable.app" },
+    provider: { "@type": "Organization", name: "Collabor8", url: "https://collaborate8.com" },
   };
 
   return (
@@ -185,13 +185,13 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
       <TopBanner />
       <div className="px-4 py-10 bg-background">
       <Helmet>
-        <title>Child Maintenance Calculator UK 2025 - Free CMS Calculator | Collabor8</title>
-        <meta name="description" content="Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly & annual child maintenance payments." />
+        <title>Child Maintenance Calculator UK 2025 | Collabor8</title>
+        <meta name="description" content="Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly and annual payments instantly." />
         <meta name="keywords" content="child maintenance calculator, child maintenance service, CMS calculator, child maintenance UK, how much child maintenance, child maintenance login" />
-        <link rel="canonical" href="https://collabor8.lovable.app/child-maintenance-calculator" />
+        <link rel="canonical" href="https://collaborate8.com/child-maintenance-calculator" />
         <meta property="og:title" content="Child Maintenance Calculator UK 2025 - Free CMS Calculator" />
         <meta property="og:description" content="Calculate your child maintenance using the official CMS formula. Free, instant results." />
-        <meta property="og:url" content="https://collabor8.lovable.app/child-maintenance-calculator" />
+        <meta property="og:url" content="https://collaborate8.com/child-maintenance-calculator" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>

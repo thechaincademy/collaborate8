@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
@@ -32,7 +33,13 @@ const Login = () => {
       navigate("/dashboard");
     }
   };
-  return <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
+  return <>
+    <Helmet>
+      <title>Log In - Collabor8</title>
+      <meta name="description" content="Log in to Collabor8 to manage child maintenance payments, track expenses, and stay on top of co-parenting finances." />
+      <link rel="canonical" href="https://collaborate8.com/login" />
+    </Helmet>
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
       {/* Header */}
       <motion.div initial={{
       opacity: 0,
@@ -103,6 +110,7 @@ const Login = () => {
           </button>
         </div>
       </motion.form>
-    </div>;
+    </div>
+  </>;
 };
 export default Login;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Check, Calculator, PoundSterling, Loader2, CreditCard } from "lucide-react";
@@ -236,31 +237,43 @@ const PostSignupOnboarding = () => {
   if (profileLoading) {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center bg-background px-6">
+        <Helmet>
+          <title>Getting Started - Collabor8</title>
+          <meta name="description" content="Set up your Collabor8 account. Connect your payment method and configure child maintenance arrangements." />
+          <link rel="canonical" href="https://collaborate8.com/post-signup" />
+        </Helmet>
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
-      {showBackButton && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-12">
-          <button onClick={handleBack} className="mb-6 flex h-10 w-10 items-center justify-center">
-            <ArrowLeft className="h-6 w-6 text-foreground" />
-          </button>
-        </motion.div>
-      )}
-      <div className={`flex flex-1 flex-col pb-8 ${!showBackButton ? "pt-12" : ""}`}>
-        <AnimatePresence mode="wait">
-          {step === "setup-card" && renderSetupCard()}
-          {step === "setup-connect" && renderSetupConnect()}
-          {step === "payment-amount" && renderPaymentAmount()}
-          {step === "payment-frequency" && renderPaymentFrequency()}
-          {step === "complete" && renderComplete()}
-          {step === "waiting-coparent" && renderWaitingCoparent()}
-        </AnimatePresence>
+    <>
+      <Helmet>
+        <title>Getting Started - Collabor8</title>
+        <meta name="description" content="Set up your Collabor8 account. Connect your payment method and configure child maintenance arrangements." />
+        <link rel="canonical" href="https://collaborate8.com/post-signup" />
+      </Helmet>
+      <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
+        {showBackButton && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-12">
+            <button onClick={handleBack} className="mb-6 flex h-10 w-10 items-center justify-center">
+              <ArrowLeft className="h-6 w-6 text-foreground" />
+            </button>
+          </motion.div>
+        )}
+        <div className={`flex flex-1 flex-col pb-8 ${!showBackButton ? "pt-12" : ""}`}>
+          <AnimatePresence mode="wait">
+            {step === "setup-card" && renderSetupCard()}
+            {step === "setup-connect" && renderSetupConnect()}
+            {step === "payment-amount" && renderPaymentAmount()}
+            {step === "payment-frequency" && renderPaymentFrequency()}
+            {step === "complete" && renderComplete()}
+            {step === "waiting-coparent" && renderWaitingCoparent()}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
