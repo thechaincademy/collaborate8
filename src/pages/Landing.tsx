@@ -343,7 +343,7 @@ const Landing = () => {
                 Your finances, at your fingertips
               </h2>
               <p className="mb-6 text-muted-foreground">
-                Manage payments with ease. Get rewarded along the way. Collabor8 gives families the clarity they need to stay on track.
+                The only app helping co-parents manage payments with ease. Collabor8 gives families the clarity they need to stay on track.
               </p>
               <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
                 Get Early Access <ArrowRight className="h-4 w-4" />
