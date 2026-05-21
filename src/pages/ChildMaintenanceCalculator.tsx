@@ -200,7 +200,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
         {/* Header */}
         <div className="mb-8">
           <h1 className="mb-1.5 text-[26px] font-semibold tracking-tight text-[#1A1A18]">Child maintenance calculator</h1>
-          <p className="text-sm leading-relaxed text-[#6B6B64]">An estimate based on Child Maintenance Service (CMS) calculations. Enter your details below to see an indicative figure.</p>
+          <p className="text-sm leading-relaxed text-[#6B6B64]">Child maintenance in the UK is calculated using a standard government formula, based on the paying parent's gross weekly income and number of children. This calculator uses the same formula — giving you an accurate baseline both parents can refer to.</p>
         </div>
 
         {/* Paying parent card */}
