@@ -296,7 +296,7 @@ const Landing = () => {
               {
                 icon: Trophy,
                 title: "Hundreds of pounds in rewards",
-                description: "Earn rewards and points for consistent payments, far exceeding the cost of your subscription.",
+                description: "Make everyday payments. Get rewards in return.",
               },
             ].map((item, i) => (
               <motion.div
