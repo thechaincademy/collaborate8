@@ -322,10 +322,6 @@ const Landing = () => {
             viewport={{ once: true }}
             className="mt-10 text-center"
           >
-            <p className="mb-6 font-medium text-foreground">
-              <Star className="mr-1 inline h-4 w-4" />
-              Stay consistent, earn points, and watch your rewards grow.
-            </p>
             <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
               Join the Waiting List <ArrowRight className="h-4 w-4" />
             </Button>
