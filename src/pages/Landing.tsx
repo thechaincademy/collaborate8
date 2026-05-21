@@ -154,7 +154,7 @@ const Landing = () => {
             </h1>
 
             <p className="mb-10 max-w-lg text-lg leading-relaxed text-foreground/80 md:text-xl">
-              Helping separated parents handle payments and expenses with clarity, transparency, and trust.
+              Supporting both parents to stay on top of payments and shared expenses, together
             </p>
 
             <button
