@@ -1,11 +1,18 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 
 const Splash = () => {
   const navigate = useNavigate();
 
   return (
+    <>
+      <Helmet>
+        <title>Get Started - Collabor8</title>
+        <meta name="description" content="Create your account or log in to Collabor8. The app helping co-parents manage child maintenance payments with ease." />
+        <link rel="canonical" href="https://collaborate8.com/splash" />
+      </Helmet>
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
       {/* Logo/Brand Area */}
       <div className="flex flex-1 flex-col items-center justify-center">
@@ -48,6 +55,7 @@ const Splash = () => {
         </Button>
       </motion.div>
     </div>
+    </>
   );
 };
 
