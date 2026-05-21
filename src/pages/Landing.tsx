@@ -93,7 +93,7 @@ const Landing = () => {
     {
       icon: Gift,
       title: "Rewards",
-      description: "Earn rewards and points for consistent payments. Unlock milestones, climb leaderboards, and save hundreds of pounds a year.",
+      description: "Earn Rewards and points for each payment. Unlock milestones.",
     },
   ];
 
