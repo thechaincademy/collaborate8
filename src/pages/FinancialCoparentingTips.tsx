@@ -11,8 +11,8 @@ const FinancialCoparentingTips = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
       <TopBanner />
       <Helmet>
-        <title>Financial Co-parenting Tips for Separated Parents UK | Collabor8</title>
-        <meta name="description" content="Practical financial co-parenting tips for separated parents in the UK. Learn how to manage child maintenance payments, shared expenses, and communication with Collabor8." />
+        <title>Co-parenting Finance Tips UK | Collabor8</title>
+        <meta name="description" content="Practical financial co-parenting tips for separated parents in the UK. Manage child maintenance payments, shared expenses, and communication with Collabor8." />
         <meta name="keywords" content="co-parenting tips uk, financial co-parenting, child maintenance tips, separated parents finances uk, co-parenting communication" />
         <link rel="canonical" href="https://collaborate8.com/resources/financial-coparenting-tips" />
         <meta property="og:title" content="Financial Co-parenting Tips | Collabor8" />

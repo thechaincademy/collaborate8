@@ -105,8 +105,8 @@ const ChildMaintenanceGuide = () => {
   return (
     <div className="min-h-screen text-[#1A1A18] bg-background" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
       <Helmet>
-        <title>Child Maintenance Made Simple - Complete UK Guide | Collabor8</title>
-        <meta name="description" content="Everything separated parents need to know about child maintenance in the UK - what it is, who pays, how to calculate it, and how to manage it simply with Collabor8." />
+        <title>Child Maintenance Guide UK | Collabor8</title>
+        <meta name="description" content="Everything separated parents need to know about child maintenance in the UK. What it is, who pays, how to calculate it, and how to manage it with Collabor8." />
         <meta name="keywords" content="child maintenance, child support UK, child maintenance calculator, child maintenance service, CMS, paying parent, receiving parent, co-parenting, family arrangement, child maintenance login" />
         <link rel="canonical" href="https://collaborate8.com/resources/child-maintenance-guide" />
         <meta property="og:title" content="Child Maintenance Made Simple | Collabor8" />
