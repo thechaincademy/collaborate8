@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Mail, User, Check, Lock, ArrowRight, ArrowDownLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -397,29 +398,36 @@ const SignUp = () => {
   );
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
-      <div className="px-6 pt-4">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          {step !== "verify" && (
-            <button onClick={handleBack} className="mb-4 flex h-10 w-10 items-center justify-center">
-              <ArrowLeft className="h-5 w-5 text-foreground" />
-            </button>
-          )}
-          {step !== "verify" && renderProgressBar()}
-        </motion.div>
+    <>
+      <Helmet>
+        <title>Sign Up - Collabor8</title>
+        <meta name="description" content="Create your Collabor8 account. Manage child maintenance payments, track expenses, and earn rewards as a co-parent." />
+        <link rel="canonical" href="https://collaborate8.com/signup" />
+      </Helmet>
+      <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
+        <div className="px-6 pt-4">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            {step !== "verify" && (
+              <button onClick={handleBack} className="mb-4 flex h-10 w-10 items-center justify-center">
+                <ArrowLeft className="h-5 w-5 text-foreground" />
+              </button>
+            )}
+            {step !== "verify" && renderProgressBar()}
+          </motion.div>
+        </div>
+        <div className="flex flex-1 flex-col px-6">
+          <AnimatePresence mode="wait">
+            {step === "role" && renderRole()}
+            {step === "name" && renderName()}
+            {step === "email" && renderEmail()}
+            {step === "password" && renderPassword()}
+            {step === "coparent" && renderCoparent()}
+            {step === "subscription" && renderSubscription()}
+            {step === "verify" && renderVerify()}
+          </AnimatePresence>
+        </div>
       </div>
-      <div className="flex flex-1 flex-col px-6">
-        <AnimatePresence mode="wait">
-          {step === "role" && renderRole()}
-          {step === "name" && renderName()}
-          {step === "email" && renderEmail()}
-          {step === "password" && renderPassword()}
-          {step === "coparent" && renderCoparent()}
-          {step === "subscription" && renderSubscription()}
-          {step === "verify" && renderVerify()}
-        </AnimatePresence>
-      </div>
-    </div>
+    </>
   );
 };
 
