@@ -109,9 +109,10 @@ const ChildMaintenanceGuide = () => {
         <meta name="description" content="Everything separated parents need to know about child maintenance in the UK. What it is, who pays, how to calculate it, and how to manage it with Collabor8." />
         <meta name="keywords" content="child maintenance, child support UK, child maintenance calculator, child maintenance service, CMS, paying parent, receiving parent, co-parenting, family arrangement, child maintenance login" />
         <link rel="canonical" href="https://collaborate8.com/resources/child-maintenance-guide" />
-        <meta property="og:title" content="Child Maintenance Made Simple | Collabor8" />
+        <meta property="og:title" content="Child Maintenance Guide UK | Collabor8" />
         <meta property="og:description" content="A friendly, practical guide to child maintenance in the UK - your responsibilities, your options, and how to manage everything in one place." />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://collaborate8.com/resources/child-maintenance-guide" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1591019479261-1a103585c559?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
