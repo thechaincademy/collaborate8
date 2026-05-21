@@ -1,0 +1,22 @@
+# Collabor8
+
+> The app helping separated and divorced co-parents in the UK manage child maintenance payments and shared expenses with clarity and transparency.
+
+## Pages
+
+- [/](/): Home - Learn how Collabor8 helps co-parents manage payments, track shared expenses, and stay on top of child maintenance.
+- [/splash](/splash): App entry point for returning users.
+- [/signup](/signup): Create a Collabor8 account - choose whether you're the parent managing payments or the parent viewing them.
+- [/login](/login): Sign in to your Collabor8 account.
+- [/forgot-password](/forgot-password): Reset your account password.
+- [/dashboard](/dashboard): Main app dashboard - view and manage payment schedules, shared expenses, and upcoming payments.
+- [/profile](/profile): Manage your profile, linked co-parent, and account settings.
+- [/settings](/settings): App settings and preferences.
+- [/edit-payment](/edit-payment): Set up or edit recurring child maintenance payments.
+- [/payment-history](/payment-history): Full transaction history and payment records.
+- [/child-maintenance-calculator](/child-maintenance-calculator): Free UK government-style child maintenance calculator - estimate your baseline payment amount.
+- [/resources/child-maintenance-guide](/resources/child-maintenance-guide): Comprehensive guide to child maintenance in the UK - what it is, who pays, how to set up payments, shared expenses, and rights.
+- [/resources/support-and-guidance](/resources/support-and-guidance): Support resources, FAQs, and guidance for co-parents.
+- [/resources/financial-coparenting-tips](/resources/financial-coparenting-tips): Practical tips for managing finances as co-parents.
+- [/privacy](/privacy): Privacy policy.
+- [/cookies](/cookies): Cookie policy.
