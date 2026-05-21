@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://collabor8.lovable.app/sitemap.xml
+Sitemap: https://collaborate8.com/sitemap.xml
