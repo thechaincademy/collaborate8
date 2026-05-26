@@ -1,8 +1,22 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /settings
+Disallow: /edit-payment
+Disallow: /payment-history
+Disallow: /post-signup
+Disallow: /resources/child-maintenance-guide-app
 
 User-agent: Bingbot
 Allow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /settings
+Disallow: /edit-payment
+Disallow: /payment-history
+Disallow: /post-signup
+Disallow: /resources/child-maintenance-guide-app
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +26,12 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /settings
+Disallow: /edit-payment
+Disallow: /payment-history
+Disallow: /post-signup
+Disallow: /resources/child-maintenance-guide-app
 
 Sitemap: https://collaborate8.com/sitemap.xml
