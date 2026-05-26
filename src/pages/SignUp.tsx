@@ -215,12 +215,12 @@ const SignUp = () => {
       <div className="flex flex-col gap-4">
         <div className="relative">
           <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="text" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+          <Input type="text" placeholder="First name" aria-label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)}
             className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
         </div>
         <div className="relative">
           <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="text" placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)}
+          <Input type="text" placeholder="Last name" aria-label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)}
             className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
         </div>
       </div>
@@ -244,6 +244,7 @@ const SignUp = () => {
           <Input
             type="email"
             placeholder="Enter your email"
+            aria-label="Email address"
             value={email}
             onChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
             className={`h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${
@@ -279,7 +280,7 @@ const SignUp = () => {
         <p className="mb-6 text-muted-foreground">Use 8+ characters with a number and mixed case.</p>
         <div className="relative">
           <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)}
+          <Input type="password" placeholder="Enter your password" aria-label="Password" value={password} onChange={(e) => setPassword(e.target.value)}
             className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
         </div>
         <div className="mt-4 flex flex-col gap-2">
@@ -305,7 +306,7 @@ const SignUp = () => {
       </p>
       <div className="relative">
         <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-        <Input type="email" placeholder="Co-parent's email (optional)" value={coparentEmail} onChange={(e) => setCoparentEmail(e.target.value)}
+        <Input type="email" placeholder="Co-parent's email (optional)" aria-label="Co-parent's email address" value={coparentEmail} onChange={(e) => setCoparentEmail(e.target.value)}
           className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
       </div>
       {coparentEmail.length > 0 && !isCoparentValid && (
@@ -408,7 +409,7 @@ const SignUp = () => {
         <div className="px-6 pt-4">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             {step !== "verify" && (
-              <button onClick={handleBack} className="mb-4 flex h-10 w-10 items-center justify-center">
+              <button onClick={handleBack} aria-label="Go back" className="mb-4 flex h-10 w-10 items-center justify-center">
                 <ArrowLeft className="h-5 w-5 text-foreground" />
               </button>
             )}

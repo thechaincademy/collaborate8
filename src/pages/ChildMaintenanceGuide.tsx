@@ -138,10 +138,11 @@ const ChildMaintenanceGuide = () => {
 
       {/* SIDE DOTS */}
       <div className="fixed right-6 top-1/2 z-40 hidden -translate-y-1/2 flex-col gap-[10px] md:flex" aria-hidden="true">
-        {articles.map((_, i) => (
+        {articles.map((a, i) => (
           <button
             key={i}
             onClick={() => scrollTo(i)}
+            aria-label={`Go to article ${i + 1}: ${a.title}`}
             className={`h-2 w-2 rounded-full border-0 p-0 transition-all ${active === i ? "scale-[1.4] bg-foreground" : "bg-[#E4E2DA]"}`}
             title={`Article ${i + 1}`}
           />
