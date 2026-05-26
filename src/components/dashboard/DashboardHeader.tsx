@@ -65,7 +65,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
       {/* Avatar Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent">
+          <button aria-label="Open user menu" className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent">
             <User className="h-5 w-5 text-foreground" />
           </button>
         </DropdownMenuTrigger>
@@ -91,7 +91,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
       {/* Notifications Popover */}
       <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
         <PopoverTrigger asChild>
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent">
+          <button aria-label="Open notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent">
             <Bell className="h-5 w-5 text-foreground" />
             {unreadCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">

@@ -26,7 +26,7 @@ const Splash = () => {
           <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-foreground">
             <span className="text-3xl font-bold text-background">C8</span>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">collabor8</h1>
+          <h1 className="text-3xl font-bold text-foreground">Collabor8 - Co-parenting made simple</h1>
           <p className="mt-2 text-muted-foreground">Co-parenting made simple</p>
         </motion.div>
       </div>

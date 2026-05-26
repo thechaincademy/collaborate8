@@ -48,7 +48,7 @@ const Login = () => {
       opacity: 1,
       y: 0
     }} className="pt-12">
-        <button onClick={() => navigate(-1)} className="mb-8 flex h-10 w-10 items-center justify-center">
+        <button onClick={() => navigate(-1)} aria-label="Go back" className="mb-8 flex h-10 w-10 items-center justify-center">
           <ArrowLeft className="h-6 w-6 text-foreground" />
         </button>
 
@@ -70,13 +70,13 @@ const Login = () => {
           {/* Email Input */}
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+            <Input type="email" placeholder="Email" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
           </div>
 
           {/* Password Input */}
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+            <Input type="password" placeholder="Password" aria-label="Password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
           </div>
 
           {/* Forgot Password */}

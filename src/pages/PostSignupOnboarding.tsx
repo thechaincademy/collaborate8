@@ -257,7 +257,7 @@ const PostSignupOnboarding = () => {
       <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
         {showBackButton && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-12">
-            <button onClick={handleBack} className="mb-6 flex h-10 w-10 items-center justify-center">
+            <button onClick={handleBack} aria-label="Go back" className="mb-6 flex h-10 w-10 items-center justify-center">
               <ArrowLeft className="h-6 w-6 text-foreground" />
             </button>
           </motion.div>
