@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
 import {
@@ -18,6 +19,12 @@ const MAINTENANCE_PRODUCT_ID = "prod_U9HZcihClGUNVA";
 
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-SUBSCRIPTIONS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
+};
+
+const getStripe = () => {
+  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
+  return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 };
 
 const normalizeInterval = (interval?: string): "day" | "week" | "month" | "year" => {
@@ -95,7 +102,107 @@ serve(async (req) => {
       });
     }
 
-    // ── Create subscription ──
+    // ── Create subscription via hosted Checkout (Apple Pay / Google Pay / card) ──
+    if (action === "create-subscription-checkout") {
+      const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      const normalizedInterval = normalizeInterval(interval);
+      const dbFrequency = toDbFrequency(normalizedInterval);
+
+      if (!amount || !receiverId) {
+        return new Response(JSON.stringify({ error: "Missing amount or receiverId" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!dbFrequency) {
+        return new Response(JSON.stringify({ error: "Unsupported interval for recurring payments" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      logStep("Creating subscription checkout", { amount, currency, normalizedInterval, receiverId });
+
+      const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
+
+      // Verify receiver Connect account is ready
+      const { data: connectedAccount } = await supabase
+        .from("connected_accounts")
+        .select("*")
+        .eq("user_id", receiverId)
+        .eq("provider", "stripe")
+        .maybeSingle();
+
+      if (!connectedAccount) {
+        return new Response(JSON.stringify({
+          error: "The receiving co-parent has not completed their payment setup.",
+          code: "RECEIVER_NOT_ONBOARDED",
+        }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      if (!connectedAccount.charges_enabled) {
+        const liveStatus = await payoutProvider.getAccountStatus(connectedAccount.provider_account_id);
+        if (!liveStatus.chargesEnabled) {
+          return new Response(JSON.stringify({
+            error: "The receiving co-parent's payment account is still being verified by Stripe.",
+            code: "RECEIVER_CAPABILITIES_PENDING",
+          }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        await supabase
+          .from("connected_accounts")
+          .update({
+            onboarding_status: "complete",
+            charges_enabled: liveStatus.chargesEnabled,
+            payouts_enabled: liveStatus.payoutsEnabled,
+          })
+          .eq("id", connectedAccount.id);
+      }
+
+      // Create dynamic price
+      const amountInPence = Math.round(amount * 100);
+      const priceId = await pricingProvider.createPrice({
+        amount: amountInPence,
+        currency,
+        interval: normalizedInterval,
+        productId: MAINTENANCE_PRODUCT_ID,
+        metadata: { payer_id: user.id, receiver_id: receiverId },
+      });
+
+      const origin = req.headers.get("origin") || "https://collabor8.lovable.app";
+      const stripe = getStripe();
+
+      // Hosted Checkout in subscription mode. `payment_method_types: ["card"]`
+      // includes Apple Pay + Google Pay automatically (wallets ride on card).
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: customerId,
+        payment_method_types: ["card"],
+        line_items: [{ price: priceId, quantity: 1 }],
+        subscription_data: {
+          transfer_data: {
+            destination: connectedAccount.provider_account_id,
+          },
+          metadata: {
+            collabor8_payer_id: user.id,
+            collabor8_receiver_id: receiverId,
+            collabor8_type: "maintenance",
+            collabor8_db_frequency: dbFrequency,
+            collabor8_amount: String(amount),
+          },
+        },
+        success_url: `${origin}/dashboard?subscription-checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/edit-payment?subscription-checkout=cancelled`,
+      });
+
+      logStep("Checkout session created", { sessionId: session.id, priceId });
+
+      return new Response(JSON.stringify({ url: session.url, sessionId: session.id, priceId }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Create subscription (legacy: uses saved card off-session) ──
     if (action === "create-subscription") {
       const { amount, currency = "gbp", interval = "month", receiverId } = body;
       const normalizedInterval = normalizeInterval(interval);

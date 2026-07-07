@@ -110,7 +110,33 @@ export const useStripePayments = () => {
     }
   }, [user]);
 
-  /** Create a recurring subscription */
+  /** Create a recurring subscription via hosted Checkout (Apple Pay / Google Pay / card) */
+  const createSubscriptionCheckout = async (params: {
+    amount: number;
+    currency?: string;
+    interval?: string;
+    receiverId: string;
+  }) => {
+    if (!user) return null;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-subscriptions", {
+        body: {
+          action: "create-subscription-checkout",
+          ...params,
+        },
+      });
+      if (error) throw error;
+      return data as { url: string; sessionId: string; priceId: string };
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to start checkout");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Create a recurring subscription (legacy: uses saved card off-session) */
   const createSubscription = async (params: {
     amount: number;
     currency?: string;
@@ -194,6 +220,7 @@ export const useStripePayments = () => {
     setupCard,
     fetchCards,
     createSubscription,
+    createSubscriptionCheckout,
     cancelSubscription,
     getSubscriptionStatus,
     recreateSubscription,

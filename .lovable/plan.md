@@ -1,128 +1,110 @@
+# Adicionar Apple Pay, Google Pay, Credit e Debit Card
 
-## Goal
+## Descoberta principal (da documentação Stripe)
 
-Rework signup, the post-signup "account created" screen and the password reset screen with new copy, role selection up front, updated pricing, inline validation, and a subtle warm-clay accent introduced into the design system.
+Boa notícia: **Apple Pay, Google Pay, credit card e debit card são todos o mesmo "payment method type" no Stripe: `card`**. Não são integrações separadas - são "wallets" que aparecem automaticamente em cima do fluxo de cartão, desde que:
 
-## Scope
+1. Estejam habilitados no Dashboard Stripe (Settings → Payment methods)
+2. O domínio da app esteja registrado (Payment Method Domains) - válido separadamente para test/live e para plataforma/connected accounts
+3. O usuário esteja num device/browser compatível (Safari iOS/macOS para Apple Pay; Chrome/Android com cartão salvo para Google Pay)
+4. O fluxo de coleta suporte wallets
 
-Frontend + a small auth tweak. No new tables, no migrations. The clay accent is added as a design token so it can be rolled into other pages over time.
+Debit cards já funcionam hoje - qualquer cartão Visa/Mastercard debit passa pelo mesmo `payment_method_types: ["card"]` que já usamos.
 
----
+## O problema com o fluxo atual
 
-## 1. Design system - add the warm-clay accent
+Hoje `stripe-subscriptions/setup-card` cria uma **Checkout Session em `mode: "setup"`** para salvar cartão, e depois `create-subscription` chama `stripe.subscriptions.create` off-session. Esse fluxo:
 
-`src/index.css` + `tailwind.config.ts`:
+- Aceita Apple Pay/Google Pay em teoria (SetupIntent suporta), **mas** muitos bancos exigem 3DS na primeira cobrança off-session, o que quebra a UX com wallets
+- Não é a forma recomendada pela Stripe para wallets em subscriptions
 
-- New HSL token `--accent-clay` set to `#b8624a` (≈ `hsl(13 47% 51%)`), plus a `--accent-clay-soft` tint (`hsl(13 47% 95%)`) for surfaces.
-- Wire `accent` and `accent-foreground` in Tailwind so existing components can use `bg-accent-clay`, `text-accent-clay`, `bg-accent-clay-soft`.
-- Don't repaint the whole app - reserve clay for: signup CTAs, progress bar, selected plan/role cards, success check icons, and small highlights. B&W stays the base.
+## Solução recomendada
 
-## 2. Sign-up flow (`src/pages/SignUp.tsx`)
+Migrar o fluxo de "salvar cartão + criar subscription depois" para **um único Checkout Session `mode: "subscription"`**, que:
 
-New step order, role moved to step 1:
+- Renderiza automaticamente Apple Pay, Google Pay, cartão (credit + debit) num carrossel
+- Autentica 3DS na hora (SCA compliant no Reino Unido)
+- Cria a subscription com `transfer_data.destination` (Connect) já no mesmo passo
+- Salva o payment method para renovações automáticas
 
-```
-role → name → email → password → coparent → subscription → verify
-```
+## Mudanças de código
 
-Progress bar updated to 7 steps. Back nav updated.
+### 1. `supabase/functions/stripe-subscriptions/index.ts`
+Substituir as duas ações separadas (`setup-card` + `create-subscription`) por uma nova ação **`create-subscription-checkout`** que:
+- Recebe `amount`, `currency`, `interval`, `receiverId`
+- Cria/reusa o Stripe customer do payer
+- Verifica que o receiver tem Connect account com `charges_enabled` + `payouts_enabled`
+- Cria price dinâmico (mantendo padrão atual via `StripeDynamicPricing`)
+- Chama `stripe.checkout.sessions.create` com:
+  ```
+  mode: "subscription"
+  payment_method_types: ["card"]   // wallets ridem no card
+  line_items: [{ price, quantity: 1 }]
+  subscription_data: {
+    transfer_data: { destination: receiverAccountId },
+    metadata: { arrangement_id, payer_id, payee_id }
+  }
+  success_url, cancel_url
+  ```
+- Retorna `{ url }` para o frontend redirecionar
 
-### Step 1 - Role (NEW)
+Manter `list-cards`, `get-status`, `cancel-subscription`, `recreate-subscription` como estão (ainda úteis para exibir método salvo e gerenciar).
 
-Title: **Which parent are you?**
-Subtitle: "Please choose the correct option - it controls which dashboard you see."
+Manter `setup-card` como fallback opcional (adicionar novo cartão fora de um checkout).
 
-Two large radio cards:
-- **The parent making payments** - "You'll set up and manage the arrangement."  → `role: "managing"`
-- **The parent receiving payments** - "You'll see the arrangement once it's set up."  → `role: "viewing"`
+### 2. `supabase/functions/_shared/stripe-adapter.ts`
+Adicionar método `createSubscriptionCheckoutSession` em `StripeRecurringProvider` que encapsula a lógica de Checkout Session com `transfer_data`.
 
-Selected card uses clay border + clay-soft background.
+### 3. `src/hooks/useStripe.tsx`
+- Adicionar `createSubscriptionCheckout(params)` que invoca a nova action e retorna `{ url }` para redirecionar
+- Manter `setupCard` / `createSubscription` para retro-compatibilidade enquanto migramos as telas
 
-Continue is disabled until a role is chosen.
+### 4. Telas que iniciam pagamento recorrente
+Trocar o fluxo "adicionar cartão → confirmar valor → criar subscription" por "confirmar valor → redirecionar para Checkout Stripe (com Apple Pay/Google Pay/cartão)".
+- `src/pages/NewEnvelope.tsx` (criação de novo pagamento recorrente)
+- `src/pages/EditRecurringPayment.tsx` (mudança de valor - vai precisar cancelar + recriar via checkout, ou seguir usando `updateSubscription`)
+- `src/pages/TopUp.tsx` e `src/pages/SendMoney.tsx` (se aplicável a one-off)
 
-### Inline validation (replaces the at-the-end errors)
+### 5. One-off payments (opcional, se o app tiver "enviar agora")
+Se houver caso de uso de pagamento único payer → payee, criar action `create-payment-checkout` com `mode: "payment"` + `payment_intent_data.transfer_data`. Não obrigatório nesta iteração se o foco é recorrente.
 
-- **Email step**: on blur (debounced), call `supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } })` against the API only as a feature-flag-friendly client-side check is unreliable. Instead use a lightweight call to our own edge function or just rely on the existing pattern: validate format inline, and attempt account creation early by calling `supabase.auth.signUp` after the password step's "Continue" but before the coparent step, surfacing **"This email already has an account"** immediately if `error.message` indicates so. If the signUp succeeds we keep the session and the later steps just update profile/invitation (already the pattern in `handleSignUp`'s second half, so the second submit becomes profile-update + invitation-create only). This removes the "fail at the end" problem cleanly.
-- **Password step**: live strength check while typing - min 8 chars, mixed case, a number. Show inline red helper text the moment a rule fails and a green check when it passes; Continue stays disabled until all rules pass. Update copy: "Use 8+ characters with a number and mixed case."
-- **Name step**: trim + length check inline (already partly there).
+## Configuração fora do código (o usuário precisa fazer)
 
-### Coparent step copy (replace)
+Instruções que o app **não pode fazer sozinho** e vou detalhar no chat quando implementarmos:
 
-> "After you sign up, your co-parent will receive a unique invite code so they can create their account. You'll also receive a copy of this code."
+1. **Habilitar Apple Pay + Google Pay** no Stripe Dashboard (test e live)
+2. **Registrar Payment Method Domains** para `collabor8.lovable.app`, `collabor8.com`, `www.collabor8.com` (test e live separadamente)
+3. Para Connect com destination charges: registrar os domínios também no contexto da plataforma (Stripe faz isso automaticamente em destination charges, sem ação extra por conta conectada)
+4. Apple Pay não requer certificados extras quando usado via Stripe Checkout (Stripe hospeda a página) - só via Elements/Express Checkout embutido
 
-(Keep the optional email input + Skip.)
+## O que NÃO muda
 
-### Subscription step copy (replace)
+- Modelo Stripe Connect charge-and-transfer (destination charge com `transfer_data`) permanece igual
+- Onboarding do receiver via `stripe-connect` permanece igual
+- Webhooks `stripe-webhooks` continuam processando `invoice.paid` / `invoice.payment_failed` da mesma forma
+- Estrutura do banco (arrangements, payments) não muda
+- RLS, políticas, hooks de auth - nada muda
 
-Title: **Choose your plan**
-Subtitle: "Pick the option that works best for you."
+## Riscos e considerações
 
-Plans:
-- **Monthly - £7.99/month**
-- **Annual - £84.99/year** with auto-calculated **"Save 11%"** badge (`1 - 84.99 / (7.99*12)`).
+- **UX shift**: hoje o usuário fica dentro do app; passará a ser redirecionado ao Stripe Checkout hospedado (opção mais confiável para wallets). Se quiser experiência embutida, usar Payment Element + Express Checkout Element, mas é significativamente mais complexo. Recomendo Checkout hospedado.
+- **Editar valor**: mudar valor de subscription existente não precisa novo Checkout - `updateSubscription` continua funcionando.
+- **Primeira cobrança acontece no Checkout**, não off-session depois. Isso simplifica 3DS e Apple/Google Pay, mas muda o timing atual (hoje a subscription é criada e a primeira invoice roda em background).
 
-Remove the role-question wording from this step (role is already step 1).
+## Detalhes técnicos
 
-### Verify / "Account created" step
+- API version: manter `2025-08-27.basil`
+- `payment_method_types: ["card"]` inclui Apple Pay e Google Pay automaticamente (não precisa listar separadamente)
+- Para Connect destination charges, `transfer_data.destination` vai em `subscription_data` no Checkout Session
+- Wallets aparecem em carrossel se `consent_collection.terms_of_service` estiver configurado; sem essa flag, aparecem como botões separados no topo
 
-Replace body copy with:
+## Ordem de implementação sugerida
 
-> "An invite code has been shared with your co-parent. This is the code they'll use to create their account. You may want to send a copy to them."
+1. Adicionar action `create-subscription-checkout` em `stripe-subscriptions/index.ts`
+2. Adicionar `createSubscriptionCheckout` em `useStripe.tsx`
+3. Migrar `NewEnvelope.tsx` para usar o novo fluxo
+4. Testar com cartão de teste `4242 4242 4242 4242` e verificar wallets aparecerem no Safari/Chrome
+5. Migrar `EditRecurringPayment.tsx` se necessário
+6. Passar instruções de Dashboard para o usuário habilitar wallets em live mode
 
-Remove the "You can now set up your maintenance arrangement." line entirely.
-
-Only one button: **Go to Dashboard** → `/dashboard`. Remove "Complete Onboarding" (and the link to `/post-signup`).
-
-The success check icon uses clay.
-
-## 3. Forgot Password (`src/pages/ForgotPassword.tsx`)
-
-Replace the success block:
-
-- Title stays **Check your inbox**
-- Body replaced with the exact line requested:
-  > **Click here to reset your password.**
-  
-  (the line is itself a link/button that re-opens the user's mail client via `mailto:` is overkill - instead it routes to `/login` and we keep a secondary "Resend email" link beneath that re-triggers `resetPasswordForEmail`).
-
-Also fix the broken UI on this page:
-- Replace the Search icon with `Mail`, change placeholder from "Search" to "Email address", and remove the `fixed` button positioning (use the same in-flow pattern as the rest of the app).
-
-### Password reset email not arriving - investigation note
-
-The verified Lovable email domain is `notify.jobs.thechaincademy.com` (a leftover from another project) - not collaborate8.com. Out of scope for this turn, but I'll flag it in the closing message so the user can decide whether to set up a dedicated sending domain. No code change required here.
-
-## 4. Routing
-
-`src/App.tsx`: remove the `/post-signup` route (or leave the route file but unlink it). Sign-up's final CTA now goes straight to `/dashboard`.
-
-## 5. Profile / invitation save (`handleSignUp` refactor)
-
-Because we move account creation earlier (for inline "email exists" feedback), the final step becomes:
-
-1. Generate invite code.
-2. Update `profiles` with `first_name`, `last_name`, `role` (from step 1), `invite_code`.
-3. Insert into `invitations`.
-4. Optionally invoke `send-invite-email`.
-5. Set `generatedCode` and move to `verify`.
-
-No DB changes - `profiles.role` already accepts `'managing' | 'viewing'`.
-
-## 6. Out of scope
-
-- Real Stripe checkout / payment for the new £7.99 / £84.99 plans (just the selection UI for now).
-- Sending-domain swap for password reset emails (will surface as a follow-up question).
-- Repainting the rest of the app with clay - tokens added now, broader rollout later.
-
-## 7. Files touched
-
-- `src/index.css`, `tailwind.config.ts` - add clay tokens.
-- `src/pages/SignUp.tsx` - new role step, reordered steps, inline validation, copy updates, single Dashboard CTA.
-- `src/pages/ForgotPassword.tsx` - copy + UI fix.
-- `src/App.tsx` - drop `/post-signup` link (route can stay).
-
-## 8. Verification
-
-- Walk through the 7-step signup at mobile width; confirm role drives `profile.role`, email-in-use error appears immediately, password helper updates live, plans show £7.99 / £84.99 with "Save 11%" badge, final screen has only "Go to Dashboard".
-- Open Forgot Password → submit → see new "Check your inbox" copy with the new line, no broken fixed button.
-- Confirm clay accent appears only in the planned spots; the rest of the app is unchanged.
+Confirma que quer que eu implemente exatamente isso? Alguma preferência entre **Checkout hospedado** (redirect, mais simples, recomendado) vs **Payment Element embutido** (fica dentro do app, mais complexo)?
