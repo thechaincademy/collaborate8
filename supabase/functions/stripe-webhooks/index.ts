@@ -273,6 +273,106 @@ serve(async (req) => {
         break;
       }
 
+      // ── Checkout Session completed (new hosted-checkout subscription flow) ──
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        if (session.mode !== "subscription" || !session.subscription) {
+          logStep("Ignoring non-subscription checkout session", { id: session.id, mode: session.mode });
+          break;
+        }
+
+        const subscriptionId = typeof session.subscription === "string"
+          ? session.subscription
+          : session.subscription.id;
+
+        // Retrieve full subscription with metadata + item price
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+          expand: ["items.data.price"],
+        });
+
+        const meta = subscription.metadata || {};
+        const payerId = meta.collabor8_payer_id;
+        const receiverId = meta.collabor8_receiver_id;
+        const dbFrequency = meta.collabor8_db_frequency as "daily" | "weekly" | "monthly" | undefined;
+        const amount = meta.collabor8_amount ? parseFloat(meta.collabor8_amount) : null;
+
+        if (!payerId || !receiverId || !dbFrequency || amount === null) {
+          logStep("Checkout session missing collabor8 metadata; skipping arrangement insert", {
+            sessionId: session.id,
+            subscriptionId,
+          });
+          break;
+        }
+
+        // Idempotency: don't re-insert if arrangement already exists for this subscription
+        const { data: existing } = await supabase
+          .from("recurring_payments")
+          .select("id")
+          .eq("provider_subscription_id", subscriptionId)
+          .maybeSingle();
+
+        if (existing) {
+          logStep("Arrangement already exists for subscription", { subscriptionId, arrangementId: existing.id });
+          break;
+        }
+
+        // Deactivate prior active Stripe arrangements for this payer
+        await supabase
+          .from("recurring_payments")
+          .update({ is_active: false })
+          .eq("user_id", payerId)
+          .eq("provider", "stripe")
+          .eq("is_active", true);
+
+        const priceId = subscription.items.data[0]?.price?.id ?? null;
+        const customerId = typeof subscription.customer === "string"
+          ? subscription.customer
+          : subscription.customer.id;
+        const nextDue = new Date((subscription.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000).toISOString();
+
+        const { data: arrangement, error: arrErr } = await supabase
+          .from("recurring_payments")
+          .insert({
+            user_id: payerId,
+            receiver_id: receiverId,
+            amount,
+            frequency: dbFrequency,
+            provider: "stripe",
+            provider_subscription_id: subscriptionId,
+            provider_price_id: priceId,
+            provider_customer_id: customerId,
+            next_due_date: nextDue,
+            is_active: true,
+          })
+          .select()
+          .single();
+
+        if (arrErr) {
+          logStep("Failed to insert arrangement from checkout.session.completed", { error: arrErr.message });
+          break;
+        }
+
+        await supabase.from("audit_events").insert({
+          user_id: payerId,
+          event_type: "subscription_created",
+          entity_type: "recurring_payment",
+          metadata: {
+            subscriptionId,
+            checkoutSessionId: session.id,
+            amount,
+            source: "hosted_checkout",
+          },
+        });
+
+        logStep("Arrangement created from hosted checkout", {
+          arrangementId: arrangement.id,
+          subscriptionId,
+        });
+
+        break;
+      }
+
       default:
         logStep("Unhandled event type", { type: event.type });
     }
