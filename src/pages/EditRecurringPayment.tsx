@@ -22,7 +22,7 @@ const EditRecurringPayment = () => {
   const { user } = useAuth();
   const { isViewing, profile, loading: profileLoading } = useProfile();
   const { getActivePayment, loading } = useRecurringPayments();
-  const { cards, cardsLoading, fetchCards, setupCard, createSubscription, cancelSubscription, loading: stripeLoading } = useStripePayments();
+  const { cards, cardsLoading, fetchCards, setupCard, createSubscriptionCheckout, cancelSubscription, loading: stripeLoading } = useStripePayments();
 
   const [amount, setAmount] = useState("50.00");
   const [repeat, setRepeat] = useState<"Weekly" | "Monthly">("Monthly");
