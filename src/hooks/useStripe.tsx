@@ -220,6 +220,7 @@ export const useStripePayments = () => {
     setupCard,
     fetchCards,
     createSubscription,
+    createSubscriptionCheckout,
     cancelSubscription,
     getSubscriptionStatus,
     recreateSubscription,
