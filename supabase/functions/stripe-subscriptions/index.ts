@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
 import {
@@ -18,6 +19,12 @@ const MAINTENANCE_PRODUCT_ID = "prod_U9HZcihClGUNVA";
 
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-SUBSCRIPTIONS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
+};
+
+const getStripe = () => {
+  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
+  return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 };
 
 const normalizeInterval = (interval?: string): "day" | "week" | "month" | "year" => {
