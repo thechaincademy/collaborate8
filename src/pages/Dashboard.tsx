@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
+import { toast } from "sonner";
 import MobileLayout from "@/components/layout/MobileLayout";
 import HomeTab from "@/components/dashboard/HomeTab";
 import MaintenanceTab from "@/components/dashboard/MaintenanceTab";
@@ -14,7 +15,18 @@ export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "c
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("home");
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const checkoutResult = searchParams.get("subscription-checkout");
+    if (checkoutResult === "success") {
+      toast.success("Recurring payment set up successfully!");
+      setActiveTab("maintenance");
+      searchParams.delete("subscription-checkout");
+      searchParams.delete("session_id");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const renderContent = () => {
     switch (activeTab) {
