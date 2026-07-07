@@ -70,15 +70,10 @@ const EditRecurringPayment = () => {
       return;
     }
 
-    if (cards.length === 0) {
-      toast.error("Please add a payment card first");
-      return;
-    }
-
     setIsSaving(true);
     const interval = repeat === "Monthly" ? "month" : "week";
 
-    const result = await createSubscription({
+    const result = await createSubscriptionCheckout({
       amount: parseFloat(amount),
       currency: "gbp",
       interval,
@@ -86,8 +81,9 @@ const EditRecurringPayment = () => {
     });
 
     setIsSaving(false);
-    if (result) {
-      navigate("/dashboard");
+    if (result?.url) {
+      // Redirect to Stripe hosted Checkout - supports Apple Pay, Google Pay, credit + debit cards
+      window.location.href = result.url;
     }
   };
 
