@@ -96,13 +96,29 @@ const EditRecurringPayment = () => {
     if (result?.url) window.open(result.url, "_blank");
   };
 
+  const sendReceiverReminder = async () => {
+    if (!profile?.coparent_id) return;
+    setSendingReminder(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-coparent-reminder", {
+        body: { type: "setup_bank_account", recipientId: profile.coparent_id },
+      });
+      if (error) throw error;
+      toast.success("Reminder sent to your co-parent");
+    } catch {
+      toast.error("Could not send reminder");
+    } finally {
+      setSendingReminder(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user || !profile?.coparent_id) {
       toast.error("Please connect with your co-parent first");
       return;
     }
     if (!receiverReady) {
-      toast.error("Your co-parent needs to set up their bank account first");
+      setShowReceiverAlert(true);
       return;
     }
 
