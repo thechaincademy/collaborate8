@@ -226,7 +226,7 @@ const SignUpInvited = () => {
       <div className="flex-1" />
 
       <div className="pb-8 pt-6">
-        <Button onClick={handleVerifyCode} className="w-full" size="lg" disabled={!isCodeValid || isLoading}>
+        <Button onClick={() => handleVerifyCode()} className="w-full" size="lg" disabled={!isCodeValid || isLoading}>
           {isLoading ? "Verifying..." : "Continue"}
         </Button>
       </div>
