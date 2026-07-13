@@ -1,9 +1,16 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Calculator, ChevronRight } from "lucide-react";
+import { BookOpen, Calculator, ChevronRight, MessageCircle } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
 
 const resources = [
+  {
+    icon: MessageCircle,
+    title: "Let's chat tool",
+    description: "An interactive guide for both parents to reach agreement on key issues",
+    category: "Tool",
+    link: "/resources/lets-chat-tool"
+  },
   {
     icon: Calculator,
     title: "Child Maintenance Calculator",
