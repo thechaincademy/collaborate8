@@ -372,7 +372,7 @@ const SignUp = () => {
             {step === "email" && renderEmail()}
             {step === "password" && renderPassword()}
             {step === "coparent" && renderCoparent()}
-            {step === "subscription" && renderSubscription()}
+            
             {step === "verify" && renderVerify()}
           </AnimatePresence>
         </div>
