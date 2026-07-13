@@ -231,7 +231,7 @@ const SignUp = () => {
         </div>
       </div>
 
-      <h1 className="mb-2 text-center text-3xl font-bold text-foreground">Welcome to Collabor8</h1>
+      <h1 className="mb-2 text-center text-3xl font-bold text-foreground">Collabor8</h1>
       <p className="mb-8 text-center text-muted-foreground">
         The simple way to manage child maintenance and shared expenses with your co-parent.
       </p>
