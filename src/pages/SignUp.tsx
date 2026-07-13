@@ -44,7 +44,6 @@ const SignUp = () => {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [coparentEmail, setCoparentEmail] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly" | null>(null);
   const [accountCreated, setAccountCreated] = useState(false);
 
   const isNameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
