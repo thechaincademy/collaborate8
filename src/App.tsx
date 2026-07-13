@@ -52,6 +52,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />
               <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+              <Route path="/statement/:type" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/cookies" element={<CookiePolicy />} />
               <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
