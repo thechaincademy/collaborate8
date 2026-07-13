@@ -30,14 +30,6 @@ const SignUpInvited = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Continue Apple sign-up flow after OAuth redirect
-  useEffect(() => {
-    const pendingApple = localStorage.getItem("invited_pending_apple") === "true";
-    if (user && pendingApple && invitationData) {
-      finishSignUp(user);
-    }
-  }, [user, invitationData]);
-
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isCodeValid = inviteCode.length >= 6;
   const isNameValid = firstName.length > 0 && lastName.length > 0;
