@@ -1,18 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Mail, User, Check, Lock, ArrowRight, ArrowDownLeft } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, Lock, ArrowRight, ArrowDownLeft, Apple } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import appScreenshot1 from "@/assets/app-screenshot-1.png";
+import appScreenshot2 from "@/assets/app-screenshot-2.png";
+import appScreenshot3 from "@/assets/app-screenshot-3.png";
 
 type Role = "managing" | "viewing";
-type SignUpStep = "role" | "name" | "email" | "password" | "coparent" | "verify";
+type SignUpStep = "welcome" | "role" | "name" | "email" | "password" | "coparent" | "verify";
+type AuthMethod = "choice" | "apple" | "manual";
 
-const STEPS: SignUpStep[] = ["role", "name", "email", "password", "coparent", "verify"];
+const STEPS: SignUpStep[] = ["welcome", "role", "name", "email", "password", "coparent", "verify"];
 
 const generateInviteCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -31,10 +36,12 @@ const passwordChecks = (pw: string) => ({
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
-  const [step, setStep] = useState<SignUpStep>("role");
+  const { signUp, user } = useAuth();
+  const [step, setStep] = useState<SignUpStep>("welcome");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
+  const [appleLoading, setAppleLoading] = useState(false);
 
   // Form state
   const [role, setRole] = useState<Role | null>(null);
@@ -45,6 +52,21 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [coparentEmail, setCoparentEmail] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
+
+  // Continue Apple sign-up flow after OAuth redirect
+  useEffect(() => {
+    const pendingApple = localStorage.getItem("signup_pending_apple") === "true";
+    const savedMethod = localStorage.getItem("signup_method") as AuthMethod | null;
+    const savedRole = localStorage.getItem("signup_role") as Role | null;
+
+    if (user && pendingApple && savedMethod === "apple" && (savedRole === "managing" || savedRole === "viewing")) {
+      setAuthMethod("apple");
+      setRole(savedRole);
+      setAccountCreated(true);
+      setEmail(user.email ?? "");
+      setStep("name");
+    }
+  }, [user]);
 
   const isNameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
   const isEmailFormatValid = emailRegex.test(email);
@@ -62,6 +84,36 @@ const SignUp = () => {
   };
 
   const getStepIndex = () => STEPS.indexOf(step);
+
+  const handleAppleSignUp = async () => {
+    if (!role) return;
+    setAppleLoading(true);
+
+    // Persist signup intent so we can continue after OAuth redirect
+    localStorage.setItem("signup_method", "apple");
+    localStorage.setItem("signup_role", role);
+    localStorage.setItem("signup_pending_apple", "true");
+
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: `${window.location.origin}/signup`,
+    });
+
+    setAppleLoading(false);
+
+    if (result.error) {
+      toast.error(result.error.message || "Apple sign up failed. Please try again.");
+      localStorage.removeItem("signup_pending_apple");
+      return;
+    }
+
+    if (result.redirected) {
+      // Browser is redirecting to Apple; let it happen
+      return;
+    }
+
+    // Popup flow completed; session will be set via onAuthStateChange and the
+    // useEffect above will continue the flow.
+  };
 
   // Create the account at the password step so we surface "email exists" inline.
   const handlePasswordContinue = async () => {
@@ -133,6 +185,12 @@ const SignUp = () => {
 
     setGeneratedCode(code);
     setIsLoading(false);
+
+    // Clear any persisted Apple sign-up state
+    localStorage.removeItem("signup_method");
+    localStorage.removeItem("signup_role");
+    localStorage.removeItem("signup_pending_apple");
+
     setStep("verify");
   };
 
@@ -151,6 +209,64 @@ const SignUp = () => {
       </div>
     );
   };
+
+  // ── Welcome: choose sign-up method ──
+  const renderWelcome = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-1 flex-col"
+    >
+      {/* Picture collage */}
+      <div className="relative mb-8 mt-4 h-56 w-full">
+        <div className="absolute left-4 top-0 h-48 w-32 rotate-[-6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot1} alt="App dashboard preview" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute left-1/2 top-4 h-52 w-36 -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot2} alt="Payment setup preview" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute right-4 top-8 h-44 w-32 rotate-[6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot3} alt="Expense tracking preview" className="h-full w-full object-cover" />
+        </div>
+      </div>
+
+      <h1 className="mb-2 text-center text-3xl font-bold text-foreground">Welcome to Collabor8</h1>
+      <p className="mb-8 text-center text-muted-foreground">
+        The simple way to manage child maintenance and shared expenses with your co-parent.
+      </p>
+
+      <div className="flex flex-col gap-3">
+        <Button
+          onClick={() => { setAuthMethod("apple"); setStep("role"); }}
+          className="w-full gap-3 bg-foreground text-background hover:bg-foreground/90"
+          size="lg"
+        >
+          <Apple className="h-5 w-5" />
+          Sign up with Apple
+        </Button>
+
+        <Button
+          onClick={() => { setAuthMethod("manual"); setStep("role"); }}
+          className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
+          size="lg"
+        >
+          Sign up with email
+        </Button>
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="pb-8 pt-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <button onClick={() => navigate("/login")} className="font-semibold text-foreground">
+            Log in
+          </button>
+        </p>
+      </div>
+    </motion.div>
+  );
 
   // ── Role (NEW first step) ──
   const renderRole = () => {
@@ -195,8 +311,19 @@ const SignUp = () => {
         </div>
         <div className="flex-1" />
         <div className="pb-8 pt-6">
-          <Button onClick={() => setStep("name")} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!role}>
-            Continue
+          <Button
+            onClick={() => {
+              if (authMethod === "apple") {
+                handleAppleSignUp();
+              } else {
+                setStep("name");
+              }
+            }}
+            className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
+            size="lg"
+            disabled={!role || appleLoading}
+          >
+            {appleLoading ? "Redirecting..." : authMethod === "apple" ? "Continue with Apple" : "Continue"}
           </Button>
         </div>
       </motion.div>
@@ -367,12 +494,12 @@ const SignUp = () => {
         </div>
         <div className="flex flex-1 flex-col px-6">
           <AnimatePresence mode="wait">
+            {step === "welcome" && renderWelcome()}
             {step === "role" && renderRole()}
             {step === "name" && renderName()}
             {step === "email" && renderEmail()}
             {step === "password" && renderPassword()}
             {step === "coparent" && renderCoparent()}
-            
             {step === "verify" && renderVerify()}
           </AnimatePresence>
         </div>
