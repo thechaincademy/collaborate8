@@ -60,13 +60,58 @@ const Profile = () => {
 
   const handleSetupCard = async () => {
     const result = await setupCard();
-    if (result?.url) window.open(result.url, "_blank");
+    if (result?.url) window.location.href = result.url;
   };
 
   const handleConnectOnboarding = async () => {
     const result = await startOnboarding();
-    if (result?.url) window.open(result.url, "_blank");
+    if (result?.url) window.location.href = result.url;
   };
+
+  const paymentSection = isManaging
+    ? {
+        title: "Payment Card (Send)",
+        subtitle: "Add a card to send payments to your co-parent",
+        items: cards.length > 0
+          ? cards.map((c) => ({
+              icon: CreditCard,
+              label: `${c.brand.charAt(0).toUpperCase() + c.brand.slice(1)}`,
+              value: `****${c.last4} (${c.expMonth}/${c.expYear})`,
+            }))
+          : [
+              {
+                icon: CreditCard,
+                label: "Card",
+                value: "Not added",
+                action: handleSetupCard,
+                actionLabel: "Add Card",
+              },
+            ],
+      }
+    : {
+        title: "Payout Account (Receive)",
+        subtitle: "Set up your account to receive payments from your co-parent",
+        items: [
+          {
+            icon: CreditCard,
+            label: "Stripe Connect",
+            value:
+              connectStatus === "complete"
+                ? "Active"
+                : connectStatus === "pending_capabilities"
+                  ? "Under review"
+                  : connectStatus === "pending"
+                    ? "Pending"
+                    : "Not set up",
+            sublabel:
+              connectStatus === "pending_capabilities"
+                ? "Verification may take a few minutes or hours"
+                : undefined,
+            action: connectStatus === "not_created" || connectStatus === "pending" ? handleConnectOnboarding : undefined,
+            actionLabel: connectStatus === "not_created" || connectStatus === "pending" ? "Set Up" : undefined,
+          },
+        ],
+      };
 
   const profileSections = [
     {
@@ -86,51 +131,7 @@ const Profile = () => {
         },
       ],
     },
-    // Payment Card (to SEND payments) - for ALL users
-    {
-      title: "Payment Card (Send)",
-      subtitle: "Add a card to send payments to your co-parent",
-      items: cards.length > 0
-        ? cards.map((c) => ({
-            icon: CreditCard,
-            label: `${c.brand.charAt(0).toUpperCase() + c.brand.slice(1)}`,
-            value: `****${c.last4} (${c.expMonth}/${c.expYear})`,
-          }))
-        : [
-            {
-              icon: CreditCard,
-              label: "Card",
-              value: "Not added",
-              action: handleSetupCard,
-              actionLabel: "Add Card",
-            },
-          ],
-    },
-    // Payout Account (to RECEIVE payments) - for ALL users
-    {
-      title: "Payout Account (Receive)",
-      subtitle: "Set up your account to receive payments from your co-parent",
-      items: [
-        {
-          icon: CreditCard,
-          label: "Stripe Connect",
-          value:
-            connectStatus === "complete"
-              ? "Active"
-              : connectStatus === "pending_capabilities"
-                ? "Under review"
-                : connectStatus === "pending"
-                  ? "Pending"
-                  : "Not set up",
-          sublabel:
-            connectStatus === "pending_capabilities"
-              ? "Verification may take a few minutes or hours"
-              : undefined,
-          action: connectStatus === "not_created" || connectStatus === "pending" ? handleConnectOnboarding : undefined,
-          actionLabel: connectStatus === "not_created" || connectStatus === "pending" ? "Set Up" : undefined,
-        },
-      ],
-    },
+    paymentSection,
     {
       title: "Account",
       items: [

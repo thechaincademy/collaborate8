@@ -10,21 +10,30 @@ import ExpensesTab from "@/components/dashboard/ExpensesTab";
 import BenefitsTab from "@/components/dashboard/BenefitsTab";
 import ChatTab from "@/components/dashboard/ChatTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
+import { useStripePayments } from "@/hooks/useStripe";
 
 export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("home");
   const [searchParams, setSearchParams] = useSearchParams();
+  const { syncCheckoutSession } = useStripePayments();
 
   useEffect(() => {
     const checkoutResult = searchParams.get("subscription-checkout");
+    const sessionId = searchParams.get("session_id");
     if (checkoutResult === "success") {
-      toast.success("Recurring payment set up successfully!");
-      setActiveTab("maintenance");
-      searchParams.delete("subscription-checkout");
-      searchParams.delete("session_id");
-      setSearchParams(searchParams, { replace: true });
+      const finalize = async () => {
+        if (sessionId) {
+          await syncCheckoutSession(sessionId);
+        }
+        toast.success("Recurring payment set up successfully!");
+        setActiveTab("maintenance");
+        searchParams.delete("subscription-checkout");
+        searchParams.delete("session_id");
+        setSearchParams(searchParams, { replace: true });
+      };
+      finalize();
     }
   }, [searchParams, setSearchParams]);
 

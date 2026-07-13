@@ -213,6 +213,20 @@ export const useStripePayments = () => {
     }
   };
 
+  /** Sync a Stripe Checkout Session into our DB (fallback for missed webhooks) */
+  const syncCheckoutSession = async (sessionId: string) => {
+    if (!user) return null;
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-subscriptions", {
+        body: { action: "sync-checkout-session", sessionId },
+      });
+      if (error) throw error;
+      return data as { success: boolean; arrangementId: string; subscriptionId: string };
+    } catch (e: any) {
+      return null;
+    }
+  };
+
   return {
     loading,
     cardsLoading,
@@ -224,5 +238,6 @@ export const useStripePayments = () => {
     cancelSubscription,
     getSubscriptionStatus,
     recreateSubscription,
+    syncCheckoutSession,
   };
 };
