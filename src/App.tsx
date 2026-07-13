@@ -66,6 +66,7 @@ const App = () => (
               <Route path="/resources/support-and-guidance" element={<SupportAndGuidance />} />
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
+              <Route path="/resources/lets-chat-tool" element={<ProtectedRoute><LetsChatTool /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieConsent />
