@@ -257,6 +257,13 @@ serve(async (req) => {
         const newStatus = account.details_submitted && capabilitiesActive ? "complete" :
                           account.details_submitted ? "pending_capabilities" : "pending";
 
+        // Load prior state to detect transition to fully-ready
+        const { data: prior } = await supabase
+          .from("connected_accounts")
+          .select("id, user_id, charges_enabled, payouts_enabled")
+          .eq("provider_account_id", account.id)
+          .maybeSingle();
+
         await supabase
           .from("connected_accounts")
           .update({
@@ -266,10 +273,70 @@ serve(async (req) => {
           })
           .eq("provider_account_id", account.id);
 
+        const wasReady = !!(prior?.charges_enabled && prior?.payouts_enabled);
+        const isReady = !!(account.charges_enabled && account.payouts_enabled);
+        if (prior && !wasReady && isReady) {
+          // Receiver just became fully ready → remind linked payer to send payments
+          const { data: payerProfile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("coparent_id", prior.user_id)
+            .maybeSingle();
+          if (payerProfile) {
+            await sendCoparentReminder(payerProfile.id, prior.user_id, "send_payment");
+            logStep("Sent 'send_payment' reminder to payer", { payerId: payerProfile.id });
+          }
+        }
+
         logStep("Connected account updated via webhook", {
           accountId: account.id,
           newStatus,
         });
+
+        break;
+      }
+
+      // ── Payer added a payment method → remind receiver to connect bank ──
+      case "setup_intent.succeeded":
+      case "payment_method.attached": {
+        const obj = event.data.object as any;
+        const customerId = typeof obj.customer === "string" ? obj.customer : obj.customer?.id;
+        if (!customerId) break;
+
+        // Find the payer profile via profiles.stripe_customer_id, fallback via recurring_payments
+        let payerId: string | null = null;
+        const { data: byRecurring } = await supabase
+          .from("recurring_payments")
+          .select("user_id")
+          .eq("provider_customer_id", customerId)
+          .limit(1)
+          .maybeSingle();
+        if (byRecurring?.user_id) payerId = byRecurring.user_id;
+
+        if (!payerId) {
+          logStep("No payer resolved for customer", { customerId });
+          break;
+        }
+
+        const { data: payerProfile } = await supabase
+          .from("profiles")
+          .select("id, coparent_id")
+          .eq("id", payerId)
+          .maybeSingle();
+
+        if (payerProfile?.coparent_id) {
+          // Check receiver readiness — only remind if bank not yet ready
+          const { data: receiverAcc } = await supabase
+            .from("connected_accounts")
+            .select("charges_enabled, payouts_enabled")
+            .eq("user_id", payerProfile.coparent_id)
+            .maybeSingle();
+          const ready = !!(receiverAcc?.charges_enabled && receiverAcc?.payouts_enabled);
+          if (!ready) {
+            await sendCoparentReminder(payerProfile.coparent_id, payerProfile.id, "setup_bank_account");
+            logStep("Sent 'setup_bank_account' reminder to receiver", { receiverId: payerProfile.coparent_id });
+          }
+        }
 
         break;
       }
