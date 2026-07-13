@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type InvitedStep = "code" | "name" | "credentials" | "subscription" | "verify";
+type InvitedStep = "code" | "name" | "credentials" | "verify";
 
 const SignUpInvited = () => {
   const navigate = useNavigate();
