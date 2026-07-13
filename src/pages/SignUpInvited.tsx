@@ -12,7 +12,8 @@ import { toast } from "sonner";
 import appScreenshot1 from "@/assets/app-screenshot-1.png";
 import appScreenshot2 from "@/assets/app-screenshot-2.png";
 
-type InvitedStep = "code" | "name" | "credentials" | "verify";
+type InvitedStep = "code" | "name" | "method" | "credentials" | "verify";
+type AuthMethod = "choice" | "apple" | "manual";
 
 const SignUpInvited = () => {
   const navigate = useNavigate();
