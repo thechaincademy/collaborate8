@@ -239,8 +239,67 @@ const SignUpInvited = () => {
       <div className="flex-1" />
 
       <div className="pb-8 pt-6">
-        <Button onClick={() => setStep("credentials")} className="w-full" size="lg" disabled={!isNameValid}>
+        <Button onClick={() => setStep("method")} className="w-full" size="lg" disabled={!isNameValid}>
           Continue
+        </Button>
+      </div>
+    </motion.div>
+  );
+
+  const renderMethod = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-1 flex-col"
+    >
+      <div className="mb-8 mt-4 flex justify-center gap-4">
+        <div className="h-40 w-28 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot1} alt="App dashboard preview" className="h-full w-full object-cover" />
+        </div>
+        <div className="h-40 w-28 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot2} alt="Payment setup preview" className="h-full w-full object-cover" />
+        </div>
+      </div>
+
+      <h1 className="mb-2 text-3xl font-bold text-foreground">Create your account</h1>
+      <p className="mb-8 text-muted-foreground">Choose how you would like to sign up.</p>
+
+      <div className="flex flex-col gap-3">
+        <Button
+          onClick={() => setAuthMethod("apple")}
+          className={`w-full gap-3 ${authMethod === "apple" ? "bg-foreground text-background" : "bg-card text-foreground hover:bg-muted"}`}
+          size="lg"
+        >
+          <Apple className="h-5 w-5" />
+          Sign up with Apple
+        </Button>
+
+        <Button
+          onClick={() => setAuthMethod("manual")}
+          className={`w-full ${authMethod === "manual" ? "bg-clay text-clay-foreground" : "bg-card text-foreground hover:bg-muted"}`}
+          size="lg"
+        >
+          Sign up with email
+        </Button>
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="pb-8 pt-6">
+        <Button
+          onClick={() => {
+            if (authMethod === "apple") {
+              handleAppleSignUp();
+            } else {
+              setStep("credentials");
+            }
+          }}
+          className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
+          size="lg"
+          disabled={authMethod === "choice" || appleLoading}
+        >
+          {appleLoading ? "Redirecting..." : authMethod === "apple" ? "Continue with Apple" : "Continue"}
         </Button>
       </div>
     </motion.div>
