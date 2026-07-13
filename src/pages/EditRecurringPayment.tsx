@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments } from "@/hooks/useStripe";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const repeatOptions = ["Weekly", "Monthly"] as const;
 const days = Array.from({ length: 28 }, (_, i) => i + 1);
@@ -28,6 +29,7 @@ const EditRecurringPayment = () => {
   const [repeat, setRepeat] = useState<"Weekly" | "Monthly">("Monthly");
   const [selectedDay, setSelectedDay] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [receiverReady, setReceiverReady] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchCards();
@@ -39,6 +41,24 @@ const EditRecurringPayment = () => {
       if (activePayment.day_of_month) setSelectedDay(activePayment.day_of_month);
     }
   }, [loading]);
+
+  useEffect(() => {
+    const checkReceiver = async () => {
+      if (!profile?.coparent_id) {
+        setReceiverReady(null);
+        return;
+      }
+      const { data } = await supabase
+        .from("connected_accounts")
+        .select("charges_enabled, payouts_enabled")
+        .eq("user_id", profile.coparent_id)
+        .maybeSingle();
+      setReceiverReady(
+        !!(data && (data as any).charges_enabled && (data as any).payouts_enabled)
+      );
+    };
+    checkReceiver();
+  }, [profile?.coparent_id]);
 
   const handleKeyPress = (key: string) => {
     if (key === "delete") {
@@ -67,6 +87,10 @@ const EditRecurringPayment = () => {
   const handleSave = async () => {
     if (!user || !profile?.coparent_id) {
       toast.error("Please connect with your co-parent first");
+      return;
+    }
+    if (!receiverReady) {
+      toast.error("Your co-parent needs to set up their bank account first");
       return;
     }
 
@@ -140,7 +164,7 @@ const EditRecurringPayment = () => {
             <button
               onClick={handleSave}
               className="font-medium text-foreground disabled:opacity-50"
-              disabled={isSaving || stripeLoading || cardsLoading}
+              disabled={isSaving || stripeLoading || cardsLoading || !receiverReady}
             >
               {isSaving ? "Creating..." : "Create"}
             </button>
@@ -179,6 +203,20 @@ const EditRecurringPayment = () => {
             )}
           </div>
         </div>
+
+        {!hasActiveSubscription && receiverReady === false && (
+          <div className="mb-4 rounded-2xl border border-primary/40 bg-primary/10 p-4">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div>
+                <p className="font-medium text-foreground">Waiting on your co-parent</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Your co-parent hasn't finished setting up their bank details yet. Once they've connected their payout account, you'll be able to start a recurring payment.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {!hasActiveSubscription && (
           <>
