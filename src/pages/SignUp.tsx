@@ -14,9 +14,10 @@ import appScreenshot2 from "@/assets/app-screenshot-2.png";
 import appScreenshot3 from "@/assets/app-screenshot-3.png";
 
 type Role = "managing" | "viewing";
-type SignUpStep = "role" | "name" | "email" | "password" | "coparent" | "verify";
+type SignUpStep = "welcome" | "role" | "name" | "email" | "password" | "coparent" | "verify";
+type AuthMethod = "choice" | "apple" | "manual";
 
-const STEPS: SignUpStep[] = ["role", "name", "email", "password", "coparent", "verify"];
+const STEPS: SignUpStep[] = ["welcome", "role", "name", "email", "password", "coparent", "verify"];
 
 const generateInviteCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
