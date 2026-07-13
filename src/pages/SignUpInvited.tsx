@@ -73,7 +73,43 @@ const SignUpInvited = () => {
     setStep("name");
   };
 
-  const handleSignUp = async () => {
+  const finishSignUp = async (signedInUser: any) => {
+    if (!invitationData || !signedInUser) return;
+
+    setIsLoading(true);
+    await new Promise((r) => setTimeout(r, 800));
+
+    // Update profile with role and name
+    await supabase
+      .from("profiles")
+      .update({
+        first_name: firstName,
+        last_name: lastName,
+        role: "viewing",
+        coparent_id: invitationData.inviter_id,
+      })
+      .eq("id", signedInUser.id);
+
+    // Update the inviter's coparent_id
+    await supabase
+      .from("profiles")
+      .update({ coparent_id: signedInUser.id })
+      .eq("id", invitationData.inviter_id);
+
+    // Mark invitation as accepted
+    await supabase
+      .from("invitations")
+      .update({ status: "accepted", invitee_email: signedInUser.email })
+      .eq("id", invitationData.id);
+
+    setEmail(signedInUser.email ?? "");
+    setIsLoading(false);
+
+    localStorage.removeItem("invited_pending_apple");
+    setStep("verify");
+  };
+
+  const handleManualSignUp = async () => {
     if (!invitationData) return;
 
     setIsLoading(true);
@@ -85,38 +121,50 @@ const SignUpInvited = () => {
       return;
     }
 
-    // Wait a moment for the trigger to create the profile, then update it
+    // Wait a moment for the trigger to create the profile, then finish
     setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Update profile with role and name
-        await supabase
-          .from("profiles")
-          .update({
-            first_name: firstName,
-            last_name: lastName,
-            role: "viewing",
-            coparent_id: invitationData.inviter_id,
-          })
-          .eq("id", user.id);
-
-        // Update the inviter's coparent_id
-        await supabase
-          .from("profiles")
-          .update({ coparent_id: user.id })
-          .eq("id", invitationData.inviter_id);
-
-        // Mark invitation as accepted
-        await supabase
-          .from("invitations")
-          .update({ status: "accepted", invitee_email: email })
-          .eq("id", invitationData.id);
+        await finishSignUp(user);
+      } else {
+        setIsLoading(false);
+        toast.error("Session expired. Please try again.");
       }
-
-      setIsLoading(false);
-      setStep("verify");
     }, 1500);
   };
+
+  const handleAppleSignUp = async () => {
+    if (!invitationData) return;
+    setAppleLoading(true);
+
+    localStorage.setItem("invited_pending_apple", "true");
+
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: `${window.location.origin}/signup/invited`,
+    });
+
+    setAppleLoading(false);
+
+    if (result.error) {
+      toast.error(result.error.message || "Apple sign up failed. Please try again.");
+      localStorage.removeItem("invited_pending_apple");
+      return;
+    }
+
+    if (result.redirected) {
+      return;
+    }
+
+    // Popup flow completed; session will be set via onAuthStateChange
+  };
+
+  // Continue Apple sign-up flow after OAuth redirect
+  useEffect(() => {
+    const pendingApple = localStorage.getItem("invited_pending_apple") === "true";
+    if (user && pendingApple && invitationData) {
+      finishSignUp(user);
+    }
+  }, [user, invitationData]);
 
   const renderProgressBar = () => (
     <div className="flex items-center gap-2">
