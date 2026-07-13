@@ -34,13 +34,12 @@ const SignUpInvited = () => {
       case "code": navigate("/login"); break;
       case "name": setStep("code"); break;
       case "credentials": setStep("name"); break;
-      case "subscription": setStep("credentials"); break;
       case "verify": break;
     }
   };
 
   const getStepIndex = () => {
-    const steps: InvitedStep[] = ["code", "name", "credentials", "subscription", "verify"];
+    const steps: InvitedStep[] = ["code", "name", "credentials", "verify"];
     return steps.indexOf(step);
   };
 
