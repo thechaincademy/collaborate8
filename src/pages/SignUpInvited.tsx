@@ -17,9 +17,11 @@ type AuthMethod = "choice" | "apple" | "manual";
 
 const SignUpInvited = () => {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp, user } = useAuth();
   const [step, setStep] = useState<InvitedStep>("code");
   const [isLoading, setIsLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
 
   const [inviteCode, setInviteCode] = useState("");
   const [invitationData, setInvitationData] = useState<{ id: string; inviter_id: string } | null>(null);
@@ -27,6 +29,14 @@ const SignUpInvited = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // Continue Apple sign-up flow after OAuth redirect
+  useEffect(() => {
+    const pendingApple = localStorage.getItem("invited_pending_apple") === "true";
+    if (user && pendingApple && invitationData) {
+      finishSignUp(user);
+    }
+  }, [user, invitationData]);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isCodeValid = inviteCode.length >= 6;
