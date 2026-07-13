@@ -39,7 +39,8 @@ const SignUpInvited = () => {
     switch (step) {
       case "code": navigate("/login"); break;
       case "name": setStep("code"); break;
-      case "credentials": setStep("name"); break;
+      case "method": setStep("name"); break;
+      case "credentials": setStep("method"); break;
       case "verify": break;
     }
   };
