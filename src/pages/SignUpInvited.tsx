@@ -24,7 +24,7 @@ const SignUpInvited = () => {
   const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
 
   const [inviteCode, setInviteCode] = useState("");
-  const [invitationData, setInvitationData] = useState<{ id: string; inviter_id: string } | null>(null);
+  const [invitationData, setInvitationData] = useState<{ id: string; inviter_id: string; invitee_email: string | null } | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -50,12 +50,14 @@ const SignUpInvited = () => {
     return steps.indexOf(step);
   };
 
-  const handleVerifyCode = async () => {
+  const handleVerifyCode = async (codeOverride?: string) => {
+    const code = (codeOverride ?? inviteCode).toUpperCase();
+    if (code.length < 6) return;
     setIsLoading(true);
     const { data, error } = await supabase
       .from("invitations")
-      .select("id, inviter_id, status")
-      .eq("invite_code", inviteCode.toUpperCase())
+      .select("id, inviter_id, status, invitee_email")
+      .eq("invite_code", code)
       .single();
 
     setIsLoading(false);
@@ -70,38 +72,55 @@ const SignUpInvited = () => {
       return;
     }
 
-    setInvitationData({ id: (data as any).id, inviter_id: (data as any).inviter_id });
+    setInvitationData({
+      id: (data as any).id,
+      inviter_id: (data as any).inviter_id,
+      invitee_email: (data as any).invitee_email ?? null,
+    });
+    if ((data as any).invitee_email) {
+      setEmail((data as any).invitee_email);
+    }
     setStep("name");
   };
+
+  // Auto-fill invite code from ?code= in URL and auto-verify
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const codeFromUrl = params.get("code");
+    if (codeFromUrl && codeFromUrl.length >= 6) {
+      const upper = codeFromUrl.toUpperCase().slice(0, 6);
+      setInviteCode(upper);
+      handleVerifyCode(upper);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const finishSignUp = async (signedInUser: any) => {
     if (!invitationData || !signedInUser) return;
 
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
 
-    // Update profile with role and name
+    // Update own profile with role and name (allowed by RLS)
     await supabase
       .from("profiles")
       .update({
         first_name: firstName,
         last_name: lastName,
         role: "viewing",
-        coparent_id: invitationData.inviter_id,
       })
       .eq("id", signedInUser.id);
 
-    // Update the inviter's coparent_id
-    await supabase
-      .from("profiles")
-      .update({ coparent_id: signedInUser.id })
-      .eq("id", invitationData.inviter_id);
+    // Link both sides atomically via SECURITY DEFINER RPC
+    const { error: linkError } = await supabase.rpc("accept_coparent_invitation", {
+      _invite_code: inviteCode.toUpperCase(),
+    });
 
-    // Mark invitation as accepted
-    await supabase
-      .from("invitations")
-      .update({ status: "accepted", invitee_email: signedInUser.email })
-      .eq("id", invitationData.id);
+    if (linkError) {
+      console.error("accept_coparent_invitation failed", linkError);
+      toast.error("Could not link co-parent accounts. Please contact support.");
+      setIsLoading(false);
+      return;
+    }
 
     setEmail(signedInUser.email ?? "");
     setIsLoading(false);
@@ -207,7 +226,7 @@ const SignUpInvited = () => {
       <div className="flex-1" />
 
       <div className="pb-8 pt-6">
-        <Button onClick={handleVerifyCode} className="w-full" size="lg" disabled={!isCodeValid || isLoading}>
+        <Button onClick={() => handleVerifyCode()} className="w-full" size="lg" disabled={!isCodeValid || isLoading}>
           {isLoading ? "Verifying..." : "Continue"}
         </Button>
       </div>

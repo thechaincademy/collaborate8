@@ -600,6 +600,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_coparent_invitation: {
+        Args: { _invite_code: string }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
