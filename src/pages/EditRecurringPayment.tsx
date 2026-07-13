@@ -361,6 +361,30 @@ const EditRecurringPayment = () => {
           </Button>
         </div>
       )}
+
+      <AlertDialog open={showReceiverAlert} onOpenChange={setShowReceiverAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Co-parent hasn't set up their bank account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your co-parent needs to finish connecting their payout account before you can start a recurring payment. Send them a reminder now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sendingReminder}>Close</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={sendingReminder}
+              onClick={async (e) => {
+                e.preventDefault();
+                await sendReceiverReminder();
+                setShowReceiverAlert(false);
+              }}
+            >
+              {sendingReminder ? "Sending..." : "Send reminder"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
