@@ -185,6 +185,12 @@ const SignUp = () => {
 
     setGeneratedCode(code);
     setIsLoading(false);
+
+    // Clear any persisted Apple sign-up state
+    localStorage.removeItem("signup_method");
+    localStorage.removeItem("signup_role");
+    localStorage.removeItem("signup_pending_apple");
+
     setStep("verify");
   };
 
