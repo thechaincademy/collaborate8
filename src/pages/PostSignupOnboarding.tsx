@@ -66,12 +66,12 @@ const PostSignupOnboarding = () => {
 
   const handleAddCard = async () => {
     const result = await setupCard();
-    if (result?.url) window.open(result.url, "_blank");
+    if (result?.url) window.location.href = result.url;
   };
 
   const handleStartConnect = async () => {
     const result = await startOnboarding();
-    if (result?.url) window.open(result.url, "_blank");
+    if (result?.url) window.location.href = result.url;
   };
 
   const handleCardNext = () => {
