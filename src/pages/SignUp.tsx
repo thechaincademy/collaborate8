@@ -85,6 +85,36 @@ const SignUp = () => {
 
   const getStepIndex = () => STEPS.indexOf(step);
 
+  const handleAppleSignUp = async () => {
+    if (!role) return;
+    setAppleLoading(true);
+
+    // Persist signup intent so we can continue after OAuth redirect
+    localStorage.setItem("signup_method", "apple");
+    localStorage.setItem("signup_role", role);
+    localStorage.setItem("signup_pending_apple", "true");
+
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: `${window.location.origin}/signup`,
+    });
+
+    setAppleLoading(false);
+
+    if (result.error) {
+      toast.error(result.error.message || "Apple sign up failed. Please try again.");
+      localStorage.removeItem("signup_pending_apple");
+      return;
+    }
+
+    if (result.redirected) {
+      // Browser is redirecting to Apple; let it happen
+      return;
+    }
+
+    // Popup flow completed; session will be set via onAuthStateChange and the
+    // useEffect above will continue the flow.
+  };
+
   // Create the account at the password step so we surface "email exists" inline.
   const handlePasswordContinue = async () => {
     if (accountCreated) {
