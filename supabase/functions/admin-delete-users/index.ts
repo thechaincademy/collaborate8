@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   const results = [];
   for (const id of ids) {
     const { error } = await admin.auth.admin.deleteUser(id);
-    results.push({ id, ok: !error, error: error?.message });
+    results.push({ id, ok: !error, error: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : null });
   }
 
   return new Response(JSON.stringify({ results }), {
