@@ -394,8 +394,8 @@ const SignUpInvited = () => {
           <AnimatePresence mode="wait">
             {step === "code" && renderCode()}
             {step === "name" && renderName()}
+            {step === "method" && renderMethod()}
             {step === "credentials" && renderCredentials()}
-            
             {step === "verify" && renderVerify()}
           </AnimatePresence>
         </div>
