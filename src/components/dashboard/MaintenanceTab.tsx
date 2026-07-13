@@ -70,12 +70,12 @@ const MaintenanceTab = () => {
 
   const handleSetupCard = async () => {
     const result = await setupCard();
-    if (result?.url) window.open(result.url, "_blank");
+    if (result?.url) window.location.href = result.url;
   };
 
   const handleConnectOnboarding = async () => {
     const result = await startOnboarding();
-    if (result?.url) window.open(result.url, "_blank");
+    if (result?.url) window.location.href = result.url;
   };
 
   const statusLabel = {
@@ -147,7 +147,7 @@ const MaintenanceTab = () => {
                   : "No arrangement set"}
             </span>
           </div>
-          {isStripe && (
+          {isStripe && isManaging && (
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <CreditCard className="h-3 w-3" />
               <span>Paid via card{cards.length > 0 ? ` (****${cards[0].last4})` : ""}</span>
@@ -156,7 +156,7 @@ const MaintenanceTab = () => {
         </motion.div>
       )}
 
-      {/* Setup Section: Bilateral - Card (to send) + Connect (to receive) */}
+      {/* Setup Section: Managing = card only; Viewing = payout only */}
       {isContentLoading ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           {renderActionsSkeleton()}
@@ -168,8 +168,8 @@ const MaintenanceTab = () => {
           transition={{ delay: 0.2 }}
           className="mb-6 space-y-3"
         >
-          {/* Card setup (for sending payments) */}
-          {cards.length === 0 && (
+          {/* MANAGING (payer): card to send */}
+          {isManaging && cards.length === 0 && (
             <div className="rounded-2xl border border-border bg-card p-4">
               <div className="mb-3 flex items-center gap-3">
                 <CreditCard className="h-5 w-5 text-amber-500" />
@@ -187,8 +187,15 @@ const MaintenanceTab = () => {
             </div>
           )}
 
-          {/* Connect setup (for receiving payments) */}
-          {(connectStatus === "not_created" || connectStatus === "pending") && (
+          {isManaging && cards.length > 0 && (
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+              <Check className="h-5 w-5 text-emerald-500" />
+              <p className="text-sm text-foreground">Card added - you can send payments (****{cards[0].last4})</p>
+            </div>
+          )}
+
+          {/* VIEWING (receiver): payout account */}
+          {isViewing && (connectStatus === "not_created" || connectStatus === "pending") && (
             <div className="rounded-2xl border border-border bg-card p-4">
               <div className="mb-3 flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -206,7 +213,7 @@ const MaintenanceTab = () => {
             </div>
           )}
 
-          {connectStatus === "pending_capabilities" && (
+          {isViewing && connectStatus === "pending_capabilities" && (
             <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
               <RefreshCw className="h-5 w-5 animate-spin text-amber-500" />
               <div>
@@ -218,22 +225,15 @@ const MaintenanceTab = () => {
             </div>
           )}
 
-          {connectStatus === "complete" && (
+          {isViewing && connectStatus === "complete" && (
             <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
               <Check className="h-5 w-5 text-emerald-500" />
               <p className="text-sm text-foreground">Payouts enabled - you can receive payments</p>
             </div>
           )}
 
-          {cards.length > 0 && (
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <Check className="h-5 w-5 text-emerald-500" />
-              <p className="text-sm text-foreground">Card added - you can send payments (****{cards[0].last4})</p>
-            </div>
-          )}
-
           {/* Arrangement actions for managing parent (payer) */}
-          {isManaging && cards.length > 0 && (
+          {isManaging && cards.length > 0 && profile?.coparent_id && (
             <>
               {!displayArrangement ? (
                 <Button
@@ -260,6 +260,13 @@ const MaintenanceTab = () => {
             </>
           )}
 
+          {isManaging && cards.length > 0 && !profile?.coparent_id && (
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+              <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Link your co-parent to set up a recurring payment.</p>
+            </div>
+          )}
+
           {/* Info for viewing parent */}
           {isViewing && (
             <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
@@ -269,6 +276,7 @@ const MaintenanceTab = () => {
           )}
         </motion.div>
       )}
+
 
       {/* Payment History */}
       <motion.div
