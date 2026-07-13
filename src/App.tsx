@@ -27,6 +27,7 @@ import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
 import PaymentHistory from "./pages/PaymentHistory";
 import Statement from "./pages/Statement";
+import LetsChatTool from "./pages/LetsChatTool";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/resources/support-and-guidance" element={<SupportAndGuidance />} />
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
+              <Route path="/resources/lets-chat-tool" element={<ProtectedRoute><LetsChatTool /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieConsent />
