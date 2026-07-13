@@ -305,8 +305,19 @@ const SignUp = () => {
         </div>
         <div className="flex-1" />
         <div className="pb-8 pt-6">
-          <Button onClick={() => setStep("name")} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!role}>
-            Continue
+          <Button
+            onClick={() => {
+              if (authMethod === "apple") {
+                handleAppleSignUp();
+              } else {
+                setStep("name");
+              }
+            }}
+            className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
+            size="lg"
+            disabled={!role || appleLoading}
+          >
+            {appleLoading ? "Redirecting..." : authMethod === "apple" ? "Continue with Apple" : "Continue"}
           </Button>
         </div>
       </motion.div>
