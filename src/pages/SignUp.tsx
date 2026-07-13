@@ -10,13 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type Role = "managing" | "viewing";
-type SignUpStep = "role" | "name" | "email" | "password" | "coparent" | "subscription" | "verify";
+type SignUpStep = "role" | "name" | "email" | "password" | "coparent" | "verify";
 
-const STEPS: SignUpStep[] = ["role", "name", "email", "password", "coparent", "subscription", "verify"];
-
-const MONTHLY = 7.99;
-const ANNUAL = 84.99;
-const SAVE_PCT = Math.round((1 - ANNUAL / (MONTHLY * 12)) * 100);
+const STEPS: SignUpStep[] = ["role", "name", "email", "password", "coparent", "verify"];
 
 const generateInviteCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
