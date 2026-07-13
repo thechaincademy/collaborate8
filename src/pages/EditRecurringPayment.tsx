@@ -40,6 +40,8 @@ const EditRecurringPayment = () => {
   const [selectedDay, setSelectedDay] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [receiverReady, setReceiverReady] = useState<boolean | null>(null);
+  const [showReceiverAlert, setShowReceiverAlert] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
 
   useEffect(() => {
     fetchCards();
