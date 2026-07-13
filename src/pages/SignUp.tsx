@@ -204,6 +204,64 @@ const SignUp = () => {
     );
   };
 
+  // ── Welcome: choose sign-up method ──
+  const renderWelcome = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-1 flex-col"
+    >
+      {/* Picture collage */}
+      <div className="relative mb-8 mt-4 h-56 w-full">
+        <div className="absolute left-4 top-0 h-48 w-32 rotate-[-6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot1} alt="App dashboard preview" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute left-1/2 top-4 h-52 w-36 -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot2} alt="Payment setup preview" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute right-4 top-8 h-44 w-32 rotate-[6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+          <img src={appScreenshot3} alt="Expense tracking preview" className="h-full w-full object-cover" />
+        </div>
+      </div>
+
+      <h1 className="mb-2 text-center text-3xl font-bold text-foreground">Welcome to Collabor8</h1>
+      <p className="mb-8 text-center text-muted-foreground">
+        The simple way to manage child maintenance and shared expenses with your co-parent.
+      </p>
+
+      <div className="flex flex-col gap-3">
+        <Button
+          onClick={() => { setAuthMethod("apple"); setStep("role"); }}
+          className="w-full gap-3 bg-foreground text-background hover:bg-foreground/90"
+          size="lg"
+        >
+          <Apple className="h-5 w-5" />
+          Sign up with Apple
+        </Button>
+
+        <Button
+          onClick={() => { setAuthMethod("manual"); setStep("role"); }}
+          className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
+          size="lg"
+        >
+          Sign up with email
+        </Button>
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="pb-8 pt-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <button onClick={() => navigate("/login")} className="font-semibold text-foreground">
+            Log in
+          </button>
+        </p>
+      </div>
+    </motion.div>
+  );
+
   // ── Role (NEW first step) ──
   const renderRole = () => {
     const Card = ({
