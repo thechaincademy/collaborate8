@@ -24,7 +24,7 @@ const SignUpInvited = () => {
   const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
 
   const [inviteCode, setInviteCode] = useState("");
-  const [invitationData, setInvitationData] = useState<{ id: string; inviter_id: string } | null>(null);
+  const [invitationData, setInvitationData] = useState<{ id: string; inviter_id: string; invitee_email: string | null } | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
