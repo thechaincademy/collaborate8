@@ -281,7 +281,7 @@ const SignUpInvited = () => {
             {step === "code" && renderCode()}
             {step === "name" && renderName()}
             {step === "credentials" && renderCredentials()}
-            {step === "subscription" && renderSubscription()}
+            
             {step === "verify" && renderVerify()}
           </AnimatePresence>
         </div>
