@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Mail, User, Check, Lock, ArrowRight, ArrowDownLeft } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, Lock, ArrowRight, ArrowDownLeft, Apple } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import appScreenshot1 from "@/assets/app-screenshot-1.png";
+import appScreenshot2 from "@/assets/app-screenshot-2.png";
+import appScreenshot3 from "@/assets/app-screenshot-3.png";
 
 type Role = "managing" | "viewing";
 type SignUpStep = "role" | "name" | "email" | "password" | "coparent" | "verify";
