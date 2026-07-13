@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Plane } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
 import amazonLogo from "@/assets/amazon-logo.png";
 import amexLogo from "@/assets/amex-logo.png";
