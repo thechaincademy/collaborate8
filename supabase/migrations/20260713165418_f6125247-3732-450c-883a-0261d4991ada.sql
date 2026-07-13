@@ -1,0 +1,3 @@
+DELETE FROM public.payments WHERE payer_id IN ('27eae25e-988d-49cf-99b3-e4980fad430d','04735e9b-d081-4520-83a9-b30d278ec8c7') OR payee_id IN ('27eae25e-988d-49cf-99b3-e4980fad430d','04735e9b-d081-4520-83a9-b30d278ec8c7');
+DELETE FROM public.recurring_payments WHERE user_id IN ('27eae25e-988d-49cf-99b3-e4980fad430d','04735e9b-d081-4520-83a9-b30d278ec8c7') OR receiver_id IN ('27eae25e-988d-49cf-99b3-e4980fad430d','04735e9b-d081-4520-83a9-b30d278ec8c7');
+DELETE FROM public.connected_accounts WHERE user_id IN ('27eae25e-988d-49cf-99b3-e4980fad430d','04735e9b-d081-4520-83a9-b30d278ec8c7');
