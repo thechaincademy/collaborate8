@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments } from "@/hooks/useStripe";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const repeatOptions = ["Weekly", "Monthly"] as const;
 const days = Array.from({ length: 28 }, (_, i) => i + 1);
