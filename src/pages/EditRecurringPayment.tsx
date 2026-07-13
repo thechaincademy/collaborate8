@@ -50,7 +50,7 @@ const EditRecurringPayment = () => {
       }
       const { data } = await supabase
         .from("connected_accounts")
-        .select("charges_enabled, payouts_enabled, onboarding_complete")
+        .select("charges_enabled, payouts_enabled")
         .eq("user_id", profile.coparent_id)
         .maybeSingle();
       setReceiverReady(
