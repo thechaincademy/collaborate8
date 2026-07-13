@@ -72,6 +72,36 @@ const BenefitsTab = () => {
         ))}
       </div>
 
+      {/* Avios tracker */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-8 rounded-2xl border border-primary/40 bg-primary/10 p-5"
+      >
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/20 text-primary">
+            <Plane className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">Check how many Avios points you have generated</p>
+            <p className="text-xs text-muted-foreground">Earned through your linked rewards card</p>
+          </div>
+        </div>
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-xs text-foreground/60">Your Avios balance</p>
+            <p className="mt-1 text-3xl font-bold text-foreground">0 <span className="text-base font-medium text-foreground/60">pts</span></p>
+          </div>
+          <button
+            type="button"
+            className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+          >
+            View details
+          </button>
+        </div>
+      </motion.div>
+
       {/* More Coming */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
