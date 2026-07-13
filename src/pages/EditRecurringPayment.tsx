@@ -8,6 +8,16 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -30,6 +40,8 @@ const EditRecurringPayment = () => {
   const [selectedDay, setSelectedDay] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [receiverReady, setReceiverReady] = useState<boolean | null>(null);
+  const [showReceiverAlert, setShowReceiverAlert] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
 
   useEffect(() => {
     fetchCards();
@@ -84,13 +96,29 @@ const EditRecurringPayment = () => {
     if (result?.url) window.open(result.url, "_blank");
   };
 
+  const sendReceiverReminder = async () => {
+    if (!profile?.coparent_id) return;
+    setSendingReminder(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-coparent-reminder", {
+        body: { type: "setup_bank_account", recipientId: profile.coparent_id },
+      });
+      if (error) throw error;
+      toast.success("Reminder sent to your co-parent");
+    } catch {
+      toast.error("Could not send reminder");
+    } finally {
+      setSendingReminder(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user || !profile?.coparent_id) {
       toast.error("Please connect with your co-parent first");
       return;
     }
     if (!receiverReady) {
-      toast.error("Your co-parent needs to set up their bank account first");
+      setShowReceiverAlert(true);
       return;
     }
 
@@ -165,7 +193,7 @@ const EditRecurringPayment = () => {
             <button
               onClick={handleSave}
               className="font-medium text-foreground disabled:opacity-50"
-              disabled={isSaving || stripeLoading || cardsLoading || !receiverReady}
+              disabled={isSaving || stripeLoading || cardsLoading}
             >
               {isSaving ? "Creating..." : "Create"}
             </button>
@@ -333,6 +361,30 @@ const EditRecurringPayment = () => {
           </Button>
         </div>
       )}
+
+      <AlertDialog open={showReceiverAlert} onOpenChange={setShowReceiverAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Co-parent hasn't set up their bank account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your co-parent needs to finish connecting their payout account before you can start a recurring payment. Send them a reminder now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sendingReminder}>Close</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={sendingReminder}
+              onClick={async (e) => {
+                e.preventDefault();
+                await sendReceiverReminder();
+                setShowReceiverAlert(false);
+              }}
+            >
+              {sendingReminder ? "Sending..." : "Send reminder"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
