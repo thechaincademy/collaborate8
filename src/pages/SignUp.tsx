@@ -36,7 +36,7 @@ const passwordChecks = (pw: string) => ({
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp, user } = useAuth();
   const [step, setStep] = useState<SignUpStep>("welcome");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
   const [isLoading, setIsLoading] = useState(false);
