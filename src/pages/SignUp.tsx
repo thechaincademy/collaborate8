@@ -37,9 +37,11 @@ const passwordChecks = (pw: string) => ({
 const SignUp = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
-  const [step, setStep] = useState<SignUpStep>("role");
+  const [step, setStep] = useState<SignUpStep>("welcome");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
+  const [appleLoading, setAppleLoading] = useState(false);
 
   // Form state
   const [role, setRole] = useState<Role | null>(null);
@@ -50,6 +52,21 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [coparentEmail, setCoparentEmail] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
+
+  // Continue Apple sign-up flow after OAuth redirect
+  useEffect(() => {
+    const pendingApple = localStorage.getItem("signup_pending_apple") === "true";
+    const savedMethod = localStorage.getItem("signup_method") as AuthMethod | null;
+    const savedRole = localStorage.getItem("signup_role") as Role | null;
+
+    if (user && pendingApple && savedMethod === "apple" && (savedRole === "managing" || savedRole === "viewing")) {
+      setAuthMethod("apple");
+      setRole(savedRole);
+      setAccountCreated(true);
+      setEmail(user.email ?? "");
+      setStep("name");
+    }
+  }, [user]);
 
   const isNameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
   const isEmailFormatValid = emailRegex.test(email);
