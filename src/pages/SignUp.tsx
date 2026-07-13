@@ -309,56 +309,10 @@ const SignUp = () => {
       )}
       <div className="flex-1" />
       <div className="pb-8 pt-6">
-        <Button onClick={() => setStep("subscription")} className="mb-3 w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isCoparentValid}>Continue</Button>
-        <Button onClick={() => setStep("subscription")} variant="ghost" className="w-full text-muted-foreground" size="lg">Skip for now</Button>
-      </div>
-    </motion.div>
-  );
-
-  const renderSubscription = () => (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
-      <h1 className="mb-2 text-3xl font-bold text-foreground">Choose your plan</h1>
-      <p className="mb-8 text-muted-foreground">Pick the option that works best for you.</p>
-      <div className="flex flex-col gap-4">
-        <button onClick={() => setSelectedPlan("annual")}
-          className={`relative flex items-center justify-between rounded-2xl border-2 p-5 text-left transition-all ${
-            selectedPlan === "annual" ? "border-clay bg-clay-soft" : "border-border bg-background hover:border-muted-foreground"
-          }`}>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-foreground">Annual</span>
-              <span className="rounded-full bg-clay px-2 py-0.5 text-xs font-medium text-clay-foreground">Save {SAVE_PCT}%</span>
-            </div>
-            <p className="mt-1 text-2xl font-bold text-foreground">£{ANNUAL.toFixed(2)}<span className="text-base font-normal text-muted-foreground">/year</span></p>
-            <p className="mt-1 text-sm text-muted-foreground">That's just £{(ANNUAL / 12).toFixed(2)}/month</p>
-          </div>
-          <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-            selectedPlan === "annual" ? "border-clay bg-clay" : "border-muted-foreground"
-          }`}>
-            {selectedPlan === "annual" && <Check className="h-4 w-4 text-clay-foreground" />}
-          </div>
-        </button>
-        <button onClick={() => setSelectedPlan("monthly")}
-          className={`relative flex items-center justify-between rounded-2xl border-2 p-5 text-left transition-all ${
-            selectedPlan === "monthly" ? "border-clay bg-clay-soft" : "border-border bg-background hover:border-muted-foreground"
-          }`}>
-          <div>
-            <span className="text-lg font-semibold text-foreground">Monthly</span>
-            <p className="mt-1 text-2xl font-bold text-foreground">£{MONTHLY.toFixed(2)}<span className="text-base font-normal text-muted-foreground">/month</span></p>
-            <p className="mt-1 text-sm text-muted-foreground">Flexible monthly billing</p>
-          </div>
-          <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-            selectedPlan === "monthly" ? "border-clay bg-clay" : "border-muted-foreground"
-          }`}>
-            {selectedPlan === "monthly" && <Check className="h-4 w-4 text-clay-foreground" />}
-          </div>
-        </button>
-      </div>
-      <div className="flex-1" />
-      <div className="pb-8 pt-6">
-        <Button onClick={finishSignUp} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!selectedPlan || isLoading}>
-          {isLoading ? "Finishing..." : "Create Account"}
+        <Button onClick={finishSignUp} className="mb-3 w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isCoparentValid || isLoading}>
+          {isLoading ? "Finishing..." : "Continue"}
         </Button>
+        <Button onClick={finishSignUp} variant="ghost" className="w-full text-muted-foreground" size="lg" disabled={isLoading}>Skip for now</Button>
       </div>
     </motion.div>
   );
