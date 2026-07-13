@@ -193,7 +193,7 @@ const EditRecurringPayment = () => {
             <button
               onClick={handleSave}
               className="font-medium text-foreground disabled:opacity-50"
-              disabled={isSaving || stripeLoading || cardsLoading || !receiverReady}
+              disabled={isSaving || stripeLoading || cardsLoading}
             >
               {isSaving ? "Creating..." : "Create"}
             </button>
