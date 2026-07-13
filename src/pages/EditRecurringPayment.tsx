@@ -124,7 +124,8 @@ const EditRecurringPayment = () => {
   // Show permission denied for viewing parents
   if (!profileLoading && isViewing) {
     return (
-      <div className="flex min-h-screen flex-col bg-card">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card">
+
         <div className="px-6 pt-12">
           <div className="mb-8">
             <button onClick={() => navigate(-1)}>
@@ -154,7 +155,7 @@ const EditRecurringPayment = () => {
   const hasActiveSubscription = !!activePayment?.provider_subscription_id;
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card">
       <div className="px-6 pt-12">
         <div className="mb-8 flex items-center justify-between">
           <button onClick={() => navigate(-1)}>

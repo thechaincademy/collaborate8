@@ -264,7 +264,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Subscription Value Section */}
+      {/* Value Section */}
       <section className="border-t border-border py-20 bg-yellow-500">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div
@@ -274,7 +274,7 @@ const Landing = () => {
             className="mb-14 text-center"
           >
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-              Your subscription, packed with value
+              Everything you get, in one app
             </h2>
             <p className="mt-3 text-muted-foreground">
               Everything you need to stay on top of co-parenting finances, and then some.

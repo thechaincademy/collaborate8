@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type InvitedStep = "code" | "name" | "credentials" | "subscription" | "verify";
+type InvitedStep = "code" | "name" | "credentials" | "verify";
 
 const SignUpInvited = () => {
   const navigate = useNavigate();
@@ -23,26 +23,23 @@ const SignUpInvited = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly" | null>(null);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isCodeValid = inviteCode.length >= 6;
   const isNameValid = firstName.length > 0 && lastName.length > 0;
   const isCredentialsValid = emailRegex.test(email) && password.length >= 6;
-  const isSubscriptionValid = selectedPlan !== null;
 
   const handleBack = () => {
     switch (step) {
       case "code": navigate("/login"); break;
       case "name": setStep("code"); break;
       case "credentials": setStep("name"); break;
-      case "subscription": setStep("credentials"); break;
       case "verify": break;
     }
   };
 
   const getStepIndex = () => {
-    const steps: InvitedStep[] = ["code", "name", "credentials", "subscription", "verify"];
+    const steps: InvitedStep[] = ["code", "name", "credentials", "verify"];
     return steps.indexOf(step);
   };
 
@@ -222,68 +219,7 @@ const SignUpInvited = () => {
       <div className="flex-1" />
 
       <div className="pb-8 pt-6">
-        <Button onClick={() => setStep("subscription")} className="w-full" size="lg" disabled={!isCredentialsValid}>
-          Continue
-        </Button>
-      </div>
-    </motion.div>
-  );
-
-  const renderSubscription = () => (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="flex flex-1 flex-col"
-    >
-      <h1 className="mb-2 text-3xl font-bold text-foreground">Choose your plan</h1>
-      <p className="mb-8 text-muted-foreground">Select a subscription that works best for you.</p>
-
-      <div className="flex flex-col gap-4">
-        <button
-          onClick={() => setSelectedPlan("annual")}
-          className={`relative flex items-center justify-between rounded-2xl border-2 p-5 text-left transition-all ${
-            selectedPlan === "annual" ? "border-foreground bg-accent" : "border-border bg-background hover:border-muted-foreground"
-          }`}
-        >
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-foreground">Annual</span>
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">Save 17%</span>
-            </div>
-            <p className="mt-1 text-2xl font-bold text-foreground">£49.99<span className="text-base font-normal text-muted-foreground">/year</span></p>
-            <p className="mt-1 text-sm text-muted-foreground">That's just £4.17/month</p>
-          </div>
-          <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-            selectedPlan === "annual" ? "border-foreground bg-foreground" : "border-muted-foreground"
-          }`}>
-            {selectedPlan === "annual" && <Check className="h-4 w-4 text-background" />}
-          </div>
-        </button>
-
-        <button
-          onClick={() => setSelectedPlan("monthly")}
-          className={`relative flex items-center justify-between rounded-2xl border-2 p-5 text-left transition-all ${
-            selectedPlan === "monthly" ? "border-foreground bg-accent" : "border-border bg-background hover:border-muted-foreground"
-          }`}
-        >
-          <div>
-            <span className="text-lg font-semibold text-foreground">Monthly</span>
-            <p className="mt-1 text-2xl font-bold text-foreground">£4.99<span className="text-base font-normal text-muted-foreground">/month</span></p>
-            <p className="mt-1 text-sm text-muted-foreground">Flexible monthly billing</p>
-          </div>
-          <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-            selectedPlan === "monthly" ? "border-foreground bg-foreground" : "border-muted-foreground"
-          }`}>
-            {selectedPlan === "monthly" && <Check className="h-4 w-4 text-background" />}
-          </div>
-        </button>
-      </div>
-
-      <div className="flex-1" />
-
-      <div className="pb-8 pt-6">
-        <Button onClick={handleSignUp} className="w-full" size="lg" disabled={!isSubscriptionValid || isLoading}>
+        <Button onClick={handleSignUp} className="w-full" size="lg" disabled={!isCredentialsValid || isLoading}>
           {isLoading ? "Creating account..." : "Create Account"}
         </Button>
       </div>
@@ -345,7 +281,7 @@ const SignUpInvited = () => {
             {step === "code" && renderCode()}
             {step === "name" && renderName()}
             {step === "credentials" && renderCredentials()}
-            {step === "subscription" && renderSubscription()}
+            
             {step === "verify" && renderVerify()}
           </AnimatePresence>
         </div>
