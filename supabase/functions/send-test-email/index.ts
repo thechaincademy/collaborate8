@@ -12,6 +12,31 @@ Deno.serve(async (req) => {
   const to = "ericbarreto521@gmail.com";
   const inviteCode = "TEST01";
   const inviteUrl = `https://collaborate8.com/signup/invited?code=${inviteCode}`;
+
+  // Get or create an unsubscribe token for this recipient
+  let unsubToken: string | null = null;
+  const { data: existing } = await supabase
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", to)
+    .maybeSingle();
+  if (existing?.token) {
+    unsubToken = existing.token;
+  } else {
+    const newToken = crypto.randomUUID().replace(/-/g, "");
+    const { data: inserted, error: insErr } = await supabase
+      .from("email_unsubscribe_tokens")
+      .insert({ email: to, token: newToken })
+      .select("token")
+      .single();
+    if (insErr) {
+      return new Response(JSON.stringify({ ok: false, error: `token insert: ${insErr.message}` }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    unsubToken = inserted.token;
+  }
+
   const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;background:#FAF8F3;padding:24px;color:#111">
     <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px">
       <h1 style="margin:0 0 12px;font-size:22px">Collabor8 - Test email</h1>
@@ -37,6 +62,7 @@ Deno.serve(async (req) => {
     text: `Collabor8 test email. Sample invite code: ${inviteCode}. Open ${inviteUrl}`,
     purpose: "transactional",
     label: "test_email",
+    unsubscribe_token: unsubToken,
     queued_at: new Date().toISOString(),
   };
 
