@@ -89,6 +89,10 @@ const EditRecurringPayment = () => {
       toast.error("Please connect with your co-parent first");
       return;
     }
+    if (!receiverReady) {
+      toast.error("Your co-parent needs to set up their bank account first");
+      return;
+    }
 
     setIsSaving(true);
     const interval = repeat === "Monthly" ? "month" : "week";
