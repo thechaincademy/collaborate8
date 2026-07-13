@@ -1,20 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Mail, Lock } from "lucide-react";
+import { ArrowLeft, Mail, Lock, Apple } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { lovable } from "@/integrations/lovable";
+import appScreenshot1 from "@/assets/app-screenshot-1.png";
+import appScreenshot2 from "@/assets/app-screenshot-2.png";
+import appScreenshot3 from "@/assets/app-screenshot-3.png";
+
 const Login = () => {
   const navigate = useNavigate();
-  const {
-    signIn
-  } = useAuth();
+  const { signIn, user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -22,9 +33,7 @@ const Login = () => {
       return;
     }
     setIsLoading(true);
-    const {
-      error
-    } = await signIn(email, password);
+    const { error } = await signIn(email, password);
     setIsLoading(false);
     if (error) {
       toast.error(error.message || "Failed to log in");
@@ -33,84 +42,165 @@ const Login = () => {
       navigate("/dashboard");
     }
   };
-  return <>
-    <Helmet>
-      <title>Log In - Collabor8</title>
-      <meta name="description" content="Log in to Collabor8 to manage child maintenance payments, track expenses, and stay on top of co-parenting finances." />
-      <link rel="canonical" href="https://collaborate8.com/login" />
-    </Helmet>
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
-      {/* Header */}
-      <motion.div initial={{
-      opacity: 0,
-      y: -10
-    }} animate={{
-      opacity: 1,
-      y: 0
-    }} className="pt-12">
-        <button onClick={() => navigate(-1)} aria-label="Go back" className="mb-8 flex h-10 w-10 items-center justify-center">
-          <ArrowLeft className="h-6 w-6 text-foreground" />
-        </button>
 
-        <h1 className="mb-8 text-3xl font-bold text-foreground">Log in to Collabor8
- </h1>
-      </motion.div>
+  const handleAppleSignIn = async () => {
+    setAppleLoading(true);
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin,
+    });
+    setAppleLoading(false);
 
-      {/* Form */}
-      <motion.form initial={{
-      opacity: 0,
-      y: 20
-    }} animate={{
-      opacity: 1,
-      y: 0
-    }} transition={{
-      delay: 0.1
-    }} onSubmit={handleLogin} className="flex flex-1 flex-col">
-        <div className="flex flex-col gap-4">
-          {/* Email Input */}
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input type="email" placeholder="Email" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
-          </div>
+    if (result.error) {
+      toast.error(result.error.message || "Apple sign in failed. Please try again.");
+      return;
+    }
 
-          {/* Password Input */}
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input type="password" placeholder="Password" aria-label="Password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
-          </div>
+    if (result.redirected) {
+      // Browser is redirecting to Apple; let it happen
+      return;
+    }
 
-          {/* Forgot Password */}
-          <button type="button" onClick={() => navigate("/forgot-password")} className="self-start text-sm font-semibold text-foreground">
-            Forgot password?
+    // In popup/iframe flows the session is set via onAuthStateChange and the
+    // useEffect above will redirect once user is available.
+  };
+
+  return (
+    <>
+      <Helmet>
+        <title>Log In - Collabor8</title>
+        <meta name="description" content="Log in to Collabor8 to manage child maintenance payments, track expenses, and stay on top of co-parenting finances." />
+        <link rel="canonical" href="https://collaborate8.com/login" />
+      </Helmet>
+      <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="pt-4"
+        >
+          <button onClick={() => navigate(-1)} aria-label="Go back" className="mb-4 flex h-10 w-10 items-center justify-center">
+            <ArrowLeft className="h-6 w-6 text-foreground" />
           </button>
-        </div>
+        </motion.div>
 
-        {/* Spacer to push button to bottom */}
-        <div className="flex-1" />
+        <div className="flex flex-1 flex-col">
+          {/* Picture collage */}
+          <div className="relative mb-6 mt-2 h-56 w-full">
+            <div className="absolute left-4 top-0 h-48 w-32 rotate-[-6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+              <img src={appScreenshot1} alt="App dashboard preview" className="h-full w-full object-cover" />
+            </div>
+            <div className="absolute left-1/2 top-4 h-52 w-36 -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+              <img src={appScreenshot2} alt="Payment setup preview" className="h-full w-full object-cover" />
+            </div>
+            <div className="absolute right-4 top-8 h-44 w-32 rotate-[6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+              <img src={appScreenshot3} alt="Expense tracking preview" className="h-full w-full object-cover" />
+            </div>
+          </div>
 
-        {/* Login Button & Terms */}
-        <div className="pb-8 pt-6">
-          <Button type="submit" className="mb-4 w-full" size="lg" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Log In"}
-          </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            By proceeding, you accept to our{" "}
-            <button type="button" className="font-semibold text-foreground">Privacy Policy</button>
-            {" "}and{" "}
-            <button type="button" className="font-semibold text-foreground">Terms of Services</button>.
+          <h1 className="mb-2 text-center text-3xl font-bold text-foreground">Log in to Collabor8</h1>
+          <p className="mb-8 text-center text-muted-foreground">
+            Welcome back. Sign in with Apple or your email to continue.
           </p>
 
-          <button
-            type="button"
-            onClick={() => navigate("/signup/invited")}
-            className="mt-4 w-full text-center text-sm font-semibold text-foreground"
+          {/* Apple sign in */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-col gap-3"
           >
-            Have an invite code? Sign up here →
-          </button>
+            <Button
+              onClick={handleAppleSignIn}
+              className="w-full gap-3 bg-foreground text-background hover:bg-foreground/90"
+              size="lg"
+              disabled={appleLoading}
+            >
+              <Apple className="h-5 w-5" />
+              {appleLoading ? "Redirecting..." : "Sign in with Apple"}
+            </Button>
+          </motion.div>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-sm text-muted-foreground">or continue with email</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          {/* Manual form */}
+          <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            onSubmit={handleLogin}
+            className="flex flex-1 flex-col"
+          >
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  aria-label="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
+                />
+              </div>
+
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  aria-label="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="self-start text-sm font-semibold text-foreground"
+              >
+                Forgot password?
+              </button>
+            </div>
+
+            <div className="flex-1" />
+
+            <div className="pb-8 pt-6">
+              <Button
+                type="submit"
+                className="mb-4 w-full bg-clay text-clay-foreground hover:bg-clay/90"
+                size="lg"
+                disabled={isLoading}
+              >
+                {isLoading ? "Logging in..." : "Log In"}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                By proceeding, you accept to our{" "}
+                <button type="button" className="font-semibold text-foreground">Privacy Policy</button>
+                {" "}and{" "}
+                <button type="button" className="font-semibold text-foreground">Terms of Services</button>.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => navigate("/signup/invited")}
+                className="mt-4 w-full text-center text-sm font-semibold text-foreground"
+              >
+                Have an invite code? Sign up here
+              </button>
+            </div>
+          </motion.form>
         </div>
-      </motion.form>
-    </div>
-  </>;
+      </div>
+    </>
+  );
 };
+
 export default Login;
