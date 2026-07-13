@@ -29,6 +29,7 @@ const EditRecurringPayment = () => {
   const [repeat, setRepeat] = useState<"Weekly" | "Monthly">("Monthly");
   const [selectedDay, setSelectedDay] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [receiverReady, setReceiverReady] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchCards();
@@ -40,6 +41,24 @@ const EditRecurringPayment = () => {
       if (activePayment.day_of_month) setSelectedDay(activePayment.day_of_month);
     }
   }, [loading]);
+
+  useEffect(() => {
+    const checkReceiver = async () => {
+      if (!profile?.coparent_id) {
+        setReceiverReady(null);
+        return;
+      }
+      const { data } = await supabase
+        .from("connected_accounts")
+        .select("charges_enabled, payouts_enabled, onboarding_complete")
+        .eq("user_id", profile.coparent_id)
+        .maybeSingle();
+      setReceiverReady(
+        !!(data && (data as any).charges_enabled && (data as any).payouts_enabled)
+      );
+    };
+    checkReceiver();
+  }, [profile?.coparent_id]);
 
   const handleKeyPress = (key: string) => {
     if (key === "delete") {
