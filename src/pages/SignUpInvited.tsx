@@ -23,13 +23,11 @@ const SignUpInvited = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly" | null>(null);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isCodeValid = inviteCode.length >= 6;
   const isNameValid = firstName.length > 0 && lastName.length > 0;
   const isCredentialsValid = emailRegex.test(email) && password.length >= 6;
-  const isSubscriptionValid = selectedPlan !== null;
 
   const handleBack = () => {
     switch (step) {
