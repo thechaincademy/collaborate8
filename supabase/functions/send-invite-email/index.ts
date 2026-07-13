@@ -59,6 +59,25 @@ serve(async (req) => {
     const displayName = senderName || "Your co-parent";
     const messageId = crypto.randomUUID();
 
+    // Ensure an unsubscribe token exists for this recipient (required for transactional emails)
+    let unsubscribeToken: string | null = null;
+    const { data: existingTok } = await supabase
+      .from("email_unsubscribe_tokens")
+      .select("token")
+      .eq("email", recipientEmail)
+      .maybeSingle();
+    if (existingTok?.token) {
+      unsubscribeToken = existingTok.token;
+    } else {
+      const newToken = crypto.randomUUID().replace(/-/g, "");
+      const { data: insertedTok, error: tokErr } = await supabase
+        .from("email_unsubscribe_tokens")
+        .insert({ email: recipientEmail, token: newToken })
+        .select("token")
+        .single();
+      if (!tokErr && insertedTok) unsubscribeToken = insertedTok.token;
+    }
+
     const payload = {
       message_id: messageId,
       idempotency_key: `coparent_invite:${inviteCode}:${recipientEmail}`,
@@ -70,6 +89,7 @@ serve(async (req) => {
       text: renderText(inviteCode, displayName),
       purpose: "transactional",
       label: "coparent_invite",
+      unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
     };
 
