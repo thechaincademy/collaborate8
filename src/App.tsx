@@ -26,6 +26,7 @@ import ChildMaintenanceCalculator from "./pages/ChildMaintenanceCalculator";
 import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
 import PaymentHistory from "./pages/PaymentHistory";
+import Statement from "./pages/Statement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />
               <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+              <Route path="/statement/:type" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/cookies" element={<CookiePolicy />} />
               <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />

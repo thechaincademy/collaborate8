@@ -1,12 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { PoundSterling, Receipt, Gift, MessageCircle, BookOpen, ArrowRight, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { PoundSterling, Receipt, Gift, MessageCircle, BookOpen, ArrowRight, Clock, ChevronRight } from "lucide-react";
+import { format, subMonths } from "date-fns";
 import DashboardHeader from "./DashboardHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile } from "@/hooks/useProfile";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { usePayments } from "@/hooks/usePayments";
+import { useExpenses } from "@/hooks/useExpenses";
 import { DashboardTab } from "@/pages/Dashboard";
 
 interface HomeTabProps {
@@ -27,9 +29,11 @@ const quickLinks: Array<{
 ];
 
 const HomeTab = ({ onNavigate }: HomeTabProps) => {
+  const navigate = useNavigate();
   const { profile, loading: profileLoading } = useProfile();
   const { getActivePayment, loading: paymentsLoading } = useRecurringPayments();
   const { payments, fetchPayments, loading: historyLoading } = usePayments();
+  const { expenses, loading: expensesLoading } = useExpenses();
 
   useEffect(() => {
     fetchPayments();
@@ -41,6 +45,22 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
 
   const firstName = profile?.first_name?.trim();
   const greeting = firstName ? `Hi, ${firstName}` : "Welcome back";
+
+  const oneMonthAgo = useMemo(() => subMonths(new Date(), 1), []);
+  const monthlyPaymentsTotal = useMemo(
+    () =>
+      payments
+        .filter((p) => new Date(p.created_at) >= oneMonthAgo)
+        .reduce((sum, p) => sum + Number(p.amount), 0),
+    [payments, oneMonthAgo]
+  );
+  const monthlyExpensesTotal = useMemo(
+    () =>
+      expenses
+        .filter((e) => new Date(e.created_at) >= oneMonthAgo)
+        .reduce((sum, e) => sum + Number(e.amount), 0),
+    [expenses, oneMonthAgo]
+  );
 
   const isLoading = profileLoading || paymentsLoading;
 
@@ -55,15 +75,56 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         className="mb-6"
       >
         <h2 className="text-2xl font-bold text-foreground">{greeting}</h2>
-        <p className="text-sm text-muted-foreground">Here's a snapshot of your co-parenting today.</p>
+        <p className="text-sm text-muted-foreground">A snapshot of your activity in the last month.</p>
       </motion.div>
 
-      {/* Summary card */}
+      {/* Snapshot options */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="mb-6 rounded-3xl border border-primary/40 bg-primary/10 p-6"
+        className="mb-6 grid grid-cols-2 gap-3"
+      >
+        <button
+          onClick={() => navigate("/statement/maintenance")}
+          className="rounded-2xl border border-primary/40 bg-primary/10 p-4 text-left transition-colors hover:bg-primary/15"
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <PoundSterling className="h-5 w-5 text-primary" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <p className="text-xs font-medium text-foreground/70">Monthly payments</p>
+          <p className="text-[11px] text-muted-foreground">Child maintenance</p>
+          {historyLoading ? (
+            <Skeleton className="mt-2 h-6 w-20" />
+          ) : (
+            <p className="mt-1 text-xl font-bold text-foreground">£{monthlyPaymentsTotal.toFixed(2)}</p>
+          )}
+        </button>
+        <button
+          onClick={() => navigate("/statement/expenses")}
+          className="rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <Receipt className="h-5 w-5 text-primary" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <p className="text-xs font-medium text-foreground/70">Expenses</p>
+          <p className="text-[11px] text-muted-foreground">Shared costs</p>
+          {expensesLoading ? (
+            <Skeleton className="mt-2 h-6 w-20" />
+          ) : (
+            <p className="mt-1 text-xl font-bold text-foreground">£{monthlyExpensesTotal.toFixed(2)}</p>
+          )}
+        </button>
+      </motion.div>
+
+      {/* Next payment card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="mb-6 rounded-3xl border border-border bg-card p-6"
       >
         {isLoading ? (
           <>
@@ -73,16 +134,16 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           </>
         ) : activePayment ? (
           <>
-            <p className="text-sm text-foreground/70">Next payment</p>
+            <p className="text-sm text-muted-foreground">Next payment</p>
             <h3 className="my-1 text-4xl font-bold text-foreground">£{activePayment.amount.toFixed(2)}</h3>
-            <div className="flex items-center gap-2 text-sm text-foreground/70">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>{nextDueDate ? `Due ${format(nextDueDate, "do MMM yyyy")}` : "Processing..."}</span>
             </div>
           </>
         ) : (
           <>
-            <p className="text-sm text-foreground/70">No arrangement yet</p>
+            <p className="text-sm text-muted-foreground">No arrangement yet</p>
             <h3 className="my-1 text-2xl font-bold text-foreground">Set up your first payment</h3>
             <button
               onClick={() => onNavigate("maintenance")}
