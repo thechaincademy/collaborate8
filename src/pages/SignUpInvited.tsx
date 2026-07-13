@@ -332,7 +332,7 @@ const SignUpInvited = () => {
       <div className="flex-1" />
 
       <div className="pb-8 pt-6">
-        <Button onClick={handleSignUp} className="w-full" size="lg" disabled={!isCredentialsValid || isLoading}>
+        <Button onClick={handleManualSignUp} className="w-full" size="lg" disabled={!isCredentialsValid || isLoading}>
           {isLoading ? "Creating account..." : "Create Account"}
         </Button>
       </div>
