@@ -26,6 +26,7 @@ import ChildMaintenanceCalculator from "./pages/ChildMaintenanceCalculator";
 import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
 import PaymentHistory from "./pages/PaymentHistory";
+import Statement from "./pages/Statement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
