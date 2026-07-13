@@ -61,6 +61,7 @@ serve(async (req) => {
 
     const payload = {
       message_id: messageId,
+      idempotency_key: `coparent_invite:${inviteCode}:${recipientEmail}`,
       to: recipientEmail,
       from: FROM_ADDRESS,
       sender_domain: SENDER_DOMAIN,
