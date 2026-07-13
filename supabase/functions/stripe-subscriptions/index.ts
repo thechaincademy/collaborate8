@@ -535,6 +535,133 @@ serve(async (req) => {
       });
     }
 
+    // ── Sync checkout session (fallback when webhook does not fire) ──
+    if (action === "sync-checkout-session") {
+      const { sessionId } = body;
+      if (!sessionId) {
+        return new Response(JSON.stringify({ error: "Missing sessionId" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["subscription", "subscription.items.data.price", "subscription.latest_invoice"],
+      });
+
+      if (session.mode !== "subscription" || !session.subscription) {
+        return new Response(JSON.stringify({ error: "Not a subscription checkout session" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const subscription = typeof session.subscription === "string"
+        ? await stripe.subscriptions.retrieve(session.subscription, { expand: ["items.data.price", "latest_invoice"] })
+        : session.subscription as Stripe.Subscription;
+
+      const meta = subscription.metadata || {};
+      const payerId = meta.collabor8_payer_id;
+      const receiverId = meta.collabor8_receiver_id;
+      const dbFrequency = meta.collabor8_db_frequency as "daily" | "weekly" | "monthly" | undefined;
+      const amount = meta.collabor8_amount ? parseFloat(meta.collabor8_amount) : null;
+
+      if (!payerId || payerId !== user.id) {
+        return new Response(JSON.stringify({ error: "Session does not belong to this user" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!receiverId || !dbFrequency || amount === null) {
+        return new Response(JSON.stringify({ error: "Session metadata incomplete" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: existing } = await supabase
+        .from("recurring_payments")
+        .select("id")
+        .eq("provider_subscription_id", subscription.id)
+        .maybeSingle();
+
+      let arrangementId = existing?.id as string | undefined;
+
+      if (!arrangementId) {
+        await supabase
+          .from("recurring_payments")
+          .update({ is_active: false })
+          .eq("user_id", payerId)
+          .eq("provider", "stripe")
+          .eq("is_active", true);
+
+        const priceId = subscription.items.data[0]?.price?.id ?? null;
+        const customerId = typeof subscription.customer === "string"
+          ? subscription.customer
+          : subscription.customer.id;
+        const nextDue = new Date(
+          (subscription.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000
+        ).toISOString();
+
+        const { data: inserted, error: insErr } = await supabase
+          .from("recurring_payments")
+          .insert({
+            user_id: payerId,
+            receiver_id: receiverId,
+            amount,
+            frequency: dbFrequency,
+            provider: "stripe",
+            provider_subscription_id: subscription.id,
+            provider_price_id: priceId,
+            provider_customer_id: customerId,
+            next_due_date: nextDue,
+            is_active: true,
+          })
+          .select()
+          .single();
+
+        if (insErr) {
+          return new Response(JSON.stringify({ error: `Insert failed: ${insErr.message}` }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        arrangementId = inserted.id;
+      }
+
+      // Backfill the first paid invoice if not already recorded
+      const latestInvoice = subscription.latest_invoice as Stripe.Invoice | null;
+      if (latestInvoice && (latestInvoice.status === "paid" || latestInvoice.amount_paid > 0)) {
+        const idempotencyKey = `inv_${latestInvoice.id}`;
+        const { data: existingPayment } = await supabase
+          .from("payments")
+          .select("id")
+          .eq("idempotency_key", idempotencyKey)
+          .maybeSingle();
+
+        if (!existingPayment) {
+          await supabase.from("payments").insert({
+            idempotency_key: idempotencyKey,
+            payer_id: payerId,
+            payee_id: receiverId,
+            amount: (latestInvoice.amount_paid || 0) / 100,
+            currency: (latestInvoice.currency || "gbp").toUpperCase(),
+            type: "maintenance",
+            status: "completed",
+            provider: "stripe",
+            related_arrangement_id: arrangementId,
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, arrangementId, subscriptionId: subscription.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
