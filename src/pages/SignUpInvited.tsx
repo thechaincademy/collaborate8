@@ -46,7 +46,7 @@ const SignUpInvited = () => {
   };
 
   const getStepIndex = () => {
-    const steps: InvitedStep[] = ["code", "name", "credentials", "verify"];
+    const steps: InvitedStep[] = ["code", "name", "method", "credentials", "verify"];
     return steps.indexOf(step);
   };
 
