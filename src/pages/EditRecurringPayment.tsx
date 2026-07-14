@@ -1,390 +1,318 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, ChevronDown, Check, ShieldAlert, CreditCard, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Check, CalendarIcon, ShieldAlert, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useNavigate } from "react-router-dom";
+import { format, addDays } from "date-fns";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments } from "@/hooks/useStripe";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
-const repeatOptions = ["Weekly", "Monthly"] as const;
-const days = Array.from({ length: 28 }, (_, i) => i + 1);
+type Frequency = "Weekly" | "Monthly";
+
+const StepShell = ({
+  index,
+  title,
+  active,
+  completed,
+  summary,
+  onOpen,
+  children,
+}: {
+  index: number;
+  title: string;
+  active: boolean;
+  completed: boolean;
+  summary?: string;
+  onOpen?: () => void;
+  children?: React.ReactNode;
+}) => {
+  return (
+    <motion.div
+      layout
+      className={cn(
+        "rounded-2xl border p-5 transition-colors",
+        completed
+          ? "border-emerald-500/40 bg-emerald-500/5"
+          : active
+            ? "border-primary bg-card"
+            : "border-border bg-card/60"
+      )}
+    >
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={active}
+        className="flex w-full items-center gap-3 text-left"
+      >
+        <div
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+            completed
+              ? "bg-emerald-500 text-white"
+              : active
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+          )}
+        >
+          {completed ? <Check className="h-4 w-4" /> : index}
+        </div>
+        <div className="flex-1">
+          <p className="font-semibold text-foreground">{title}</p>
+          {summary && !active && (
+            <p className="mt-0.5 text-sm text-muted-foreground">{summary}</p>
+          )}
+        </div>
+      </button>
+      {active && <div className="mt-4">{children}</div>}
+    </motion.div>
+  );
+};
 
 const EditRecurringPayment = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isViewing, profile, loading: profileLoading } = useProfile();
-  const { getActivePayment, loading } = useRecurringPayments();
-  const { cards, cardsLoading, fetchCards, setupCard, createSubscriptionCheckout, cancelSubscription, loading: stripeLoading } = useStripePayments();
+  const { getActivePayment, loading, createOrUpdatePayment } = useRecurringPayments();
+  const { createSubscriptionCheckout, loading: stripeLoading } = useStripePayments();
 
+  const [step, setStep] = useState(1);
   const [amount, setAmount] = useState("50.00");
-  const [repeat, setRepeat] = useState<"Weekly" | "Monthly">("Monthly");
-  const [selectedDay, setSelectedDay] = useState(1);
-  const [isSaving, setIsSaving] = useState(false);
-  const [receiverReady, setReceiverReady] = useState<boolean | null>(null);
-  const [showReceiverAlert, setShowReceiverAlert] = useState(false);
-  const [sendingReminder, setSendingReminder] = useState(false);
+  const [frequency, setFrequency] = useState<Frequency>("Monthly");
+  const [firstDate, setFirstDate] = useState<Date | undefined>(addDays(new Date(), 7));
+  const [completed, setCompleted] = useState<Record<number, boolean>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchCards();
-    const activePayment = getActivePayment();
-    if (activePayment) {
-      setAmount(activePayment.amount.toFixed(2));
-      const freq = activePayment.frequency.charAt(0).toUpperCase() + activePayment.frequency.slice(1);
-      if (freq === "Weekly" || freq === "Monthly") setRepeat(freq as any);
-      if (activePayment.day_of_month) setSelectedDay(activePayment.day_of_month);
+    const active = getActivePayment();
+    if (active) {
+      setAmount(active.amount.toFixed(2));
+      const freq = active.frequency.charAt(0).toUpperCase() + active.frequency.slice(1);
+      if (freq === "Weekly" || freq === "Monthly") setFrequency(freq as Frequency);
+      if (active.next_due_date) setFirstDate(new Date(active.next_due_date));
     }
   }, [loading]);
 
-  useEffect(() => {
-    const checkReceiver = async () => {
-      if (!profile?.coparent_id) {
-        setReceiverReady(null);
+  const complete = (n: number, next: number) => {
+    setCompleted((prev) => ({ ...prev, [n]: true }));
+    setStep(next);
+  };
+
+  const handleSetUp = async () => {
+    if (!user) return;
+    setSaving(true);
+
+    const freqLower = frequency.toLowerCase() as "weekly" | "monthly";
+    const dayOfMonth = frequency === "Monthly" && firstDate ? firstDate.getDate() : undefined;
+
+    // If co-parent is linked, create Stripe subscription; otherwise, save draft arrangement.
+    if (profile?.coparent_id) {
+      const result = await createSubscriptionCheckout({
+        amount: parseFloat(amount),
+        currency: "gbp",
+        interval: frequency === "Monthly" ? "month" : "week",
+        receiverId: profile.coparent_id,
+      });
+      setSaving(false);
+      if (result?.url) {
+        window.location.href = result.url;
         return;
       }
-      const { data } = await supabase
-        .from("connected_accounts")
-        .select("charges_enabled, payouts_enabled")
-        .eq("user_id", profile.coparent_id)
-        .maybeSingle();
-      setReceiverReady(
-        !!(data && (data as any).charges_enabled && (data as any).payouts_enabled)
-      );
-    };
-    checkReceiver();
-  }, [profile?.coparent_id]);
-
-  const handleKeyPress = (key: string) => {
-    if (key === "delete") {
-      setAmount((prev) => {
-        const newVal = prev.replace(".", "").slice(0, -1) || "0";
-        return (parseInt(newVal, 10) / 100).toFixed(2);
-      });
-    } else if (key === ".") {
-      return;
-    } else {
-      setAmount((prev) => {
-        const current = prev.replace(".", "");
-        const newVal = current + key;
-        const num = parseInt(newVal, 10);
-        if (num > 9999999) return prev;
-        return (num / 100).toFixed(2);
-      });
-    }
-  };
-
-  const handleSetupCard = async () => {
-    const result = await setupCard();
-    if (result?.url) window.open(result.url, "_blank");
-  };
-
-  const sendReceiverReminder = async () => {
-    if (!profile?.coparent_id) return;
-    setSendingReminder(true);
-    try {
-      const { error } = await supabase.functions.invoke("send-coparent-reminder", {
-        body: { type: "setup_bank_account", recipientId: profile.coparent_id },
-      });
-      if (error) throw error;
-      toast.success("Reminder sent to your co-parent");
-    } catch {
-      toast.error("Could not send reminder");
-    } finally {
-      setSendingReminder(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user || !profile?.coparent_id) {
-      toast.error("Please connect with your co-parent first");
-      return;
-    }
-    if (!receiverReady) {
-      setShowReceiverAlert(true);
       return;
     }
 
-    setIsSaving(true);
-    const interval = repeat === "Monthly" ? "month" : "week";
-
-    const result = await createSubscriptionCheckout({
-      amount: parseFloat(amount),
-      currency: "gbp",
-      interval,
-      receiverId: profile.coparent_id,
-    });
-
-    setIsSaving(false);
-    if (result?.url) {
-      // Redirect to Stripe hosted Checkout - supports Apple Pay, Google Pay, credit + debit cards
-      window.location.href = result.url;
-    }
-  };
-
-  const handleCancel = async () => {
-    const activePayment = getActivePayment();
-    if (activePayment?.provider_subscription_id) {
-      setIsSaving(true);
-      await cancelSubscription(activePayment.provider_subscription_id);
-      setIsSaving(false);
+    const { error } = await createOrUpdatePayment(
+      parseFloat(amount),
+      freqLower,
+      dayOfMonth
+    );
+    setSaving(false);
+    if (!error) {
+      toast.success("Arrangement saved. Link your co-parent to start payments.");
       navigate("/dashboard");
     }
   };
 
-  // Show permission denied for viewing parents
   if (!profileLoading && isViewing) {
     return (
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card">
-
-        <div className="px-6 pt-12">
-          <div className="mb-8">
-            <button onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6 text-foreground" />
-            </button>
-          </div>
-        </div>
-        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-            <ShieldAlert className="h-10 w-10 text-muted-foreground" />
-          </div>
-          <h1 className="mb-4 text-2xl font-bold text-foreground">
-            You don't have permission to edit this arrangement
-          </h1>
-          <p className="mb-8 max-w-sm text-muted-foreground">
-            If you'd like to change the maintenance arrangement, you would need to seek legal advice or apply to the court for a variation of the existing order.
-          </p>
-          <Button onClick={() => navigate(-1)} variant="outline" size="lg" className="w-full max-w-xs">
-            Go Back
-          </Button>
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card px-6 pt-12">
+        <button onClick={() => navigate(-1)} className="mb-8">
+          <ArrowLeft className="h-6 w-6 text-foreground" />
+        </button>
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <ShieldAlert className="mb-6 h-12 w-12 text-muted-foreground" />
+          <h1 className="mb-4 text-2xl font-bold">You don't have permission to edit this arrangement</h1>
+          <Button onClick={() => navigate(-1)} variant="outline" size="lg">Go Back</Button>
         </div>
       </div>
     );
   }
 
-  const activePayment = getActivePayment();
-  const hasActiveSubscription = !!activePayment?.provider_subscription_id;
+  const amountNum = parseFloat(amount || "0");
+  const step4Ready = completed[1] && completed[2] && completed[3];
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card">
-      <div className="px-6 pt-12">
-        <div className="mb-8 flex items-center justify-between">
-          <button onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-6 w-6 text-foreground" />
-          </button>
-          {!hasActiveSubscription && (
-            <button
-              onClick={handleSave}
-              className="font-medium text-foreground disabled:opacity-50"
-              disabled={isSaving || stripeLoading || cardsLoading}
-            >
-              {isSaving ? "Creating..." : "Create"}
-            </button>
-          )}
-        </div>
+      <div className="px-6 pt-12 pb-24">
+        <button onClick={() => navigate(-1)} className="mb-6">
+          <ArrowLeft className="h-6 w-6 text-foreground" />
+        </button>
 
-        <h1 className="mb-2 text-2xl font-bold text-foreground">
-          {hasActiveSubscription ? "Manage Payment" : "Set Up Recurring Payment"}
-        </h1>
+        <h1 className="mb-2 text-2xl font-bold text-foreground">Set up your arrangement</h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          {hasActiveSubscription
-            ? "Your recurring payment is active and processing automatically."
-            : "Set up an automatic payment to your co-parent via credit card."}
+          Complete each step to schedule your child maintenance payment.
         </p>
 
-        {/* Card Status */}
-        <div className="mb-4 rounded-2xl border border-border bg-background p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="font-medium text-foreground">Payment Method</p>
-                <p className="text-sm text-muted-foreground">
-                  {cardsLoading
-                    ? "Loading saved card..."
-                    : cards.length > 0
-                      ? `${cards[0].brand.charAt(0).toUpperCase() + cards[0].brand.slice(1)} ****${cards[0].last4}`
-                      : "No card on file"}
-                </p>
-              </div>
+        <div className="space-y-3">
+          {/* Step 1: Amount */}
+          <StepShell
+            index={1}
+            title="Amount"
+            active={step === 1}
+            completed={!!completed[1]}
+            summary={completed[1] ? `£${amountNum.toFixed(2)}` : undefined}
+            onOpen={() => setStep(1)}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-semibold text-foreground">£</span>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="h-14 text-2xl"
+              />
             </div>
-            {!cardsLoading && cards.length === 0 && (
-              <Button size="sm" variant="outline" onClick={handleSetupCard} disabled={stripeLoading}>
-                Add Card
-              </Button>
-            )}
-          </div>
-        </div>
+            <Button
+              className="mt-4 w-full"
+              size="lg"
+              disabled={!amountNum || amountNum <= 0}
+              onClick={() => complete(1, 2)}
+            >
+              Continue
+            </Button>
+          </StepShell>
 
-        {!hasActiveSubscription && receiverReady === false && (
-          <div className="mb-4 rounded-2xl border border-primary/40 bg-primary/10 p-4">
-            <div className="flex items-start gap-3">
-              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              <div>
-                <p className="font-medium text-foreground">Waiting on your co-parent</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Your co-parent hasn't finished setting up their bank details yet. Once they've connected their payout account, you'll be able to start a recurring payment.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {!hasActiveSubscription && (
-          <>
-            {/* Amount */}
-            <div className="mb-4 rounded-2xl border border-border bg-background p-4">
-              <p className="mb-2 text-center text-sm text-muted-foreground">Payment Amount</p>
-              <p className="text-center text-4xl font-bold text-foreground">£ {amount}</p>
-            </div>
-
-            {/* Amount Keypad */}
-            <div className="mb-4 grid grid-cols-3 gap-2">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "delete"].map((key, i) => (
+          {/* Step 2: Frequency */}
+          <StepShell
+            index={2}
+            title="Frequency"
+            active={step === 2}
+            completed={!!completed[2]}
+            summary={completed[2] ? frequency : undefined}
+            onOpen={() => completed[1] && setStep(2)}
+          >
+            <div className="grid grid-cols-2 gap-2">
+              {(["Weekly", "Monthly"] as Frequency[]).map((f) => (
                 <button
-                  key={i}
-                  onClick={() => key && handleKeyPress(key)}
-                  className={`flex h-12 items-center justify-center rounded-xl text-lg font-medium ${
-                    key === "" ? "" : "bg-muted text-foreground active:bg-muted/70"
-                  }`}
+                  key={f}
+                  onClick={() => setFrequency(f)}
+                  className={cn(
+                    "rounded-xl border p-4 text-center font-medium transition-colors",
+                    frequency === f
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-border bg-background text-muted-foreground"
+                  )}
                 >
-                  {key === "delete" ? "⌫" : key}
+                  {f}
                 </button>
               ))}
             </div>
+            <Button className="mt-4 w-full" size="lg" onClick={() => complete(2, 3)}>
+              Continue
+            </Button>
+          </StepShell>
 
-            {/* Frequency */}
-            <Drawer>
-              <DrawerTrigger asChild>
-                <button className="mb-4 flex w-full items-center justify-between rounded-2xl border border-border bg-background p-4">
-                  <div className="text-left">
-                    <p className="text-sm text-muted-foreground">Frequency</p>
-                    <p className="font-medium text-foreground">
-                      {repeat}{repeat === "Monthly" ? ` on the ${selectedDay}${selectedDay === 1 ? "st" : selectedDay === 2 ? "nd" : selectedDay === 3 ? "rd" : "th"}` : ""}
-                    </p>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </DrawerTrigger>
-              <DrawerContent className="px-6 pb-8">
-                <div className="mb-6 mt-4">
-                  <h2 className="text-2xl font-bold text-foreground">Frequency</h2>
-                </div>
-                {repeatOptions.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => setRepeat(option)}
-                    className="flex w-full items-center justify-between border-b border-border py-4"
-                  >
-                    <span className="text-foreground">{option}</span>
-                    {repeat === option && <Check className="h-5 w-5 text-foreground" />}
-                  </button>
-                ))}
-              </DrawerContent>
-            </Drawer>
-
-            {/* Day selector for monthly */}
-            {repeat === "Monthly" && (
-              <div className="mb-4 rounded-2xl border border-border bg-background p-4">
-                <p className="mb-4 text-sm text-muted-foreground">Day of month</p>
-                <div className="grid grid-cols-7 gap-2">
-                  {days.map((day) => (
-                    <button
-                      key={day}
-                      onClick={() => setSelectedDay(day)}
-                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                        selectedDay === day
-                          ? "bg-foreground text-background"
-                          : "text-foreground hover:bg-muted"
-                      }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {hasActiveSubscription && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-sm text-muted-foreground">Amount</p>
-              <p className="text-2xl font-bold text-foreground">£{activePayment?.amount.toFixed(2)}</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-sm text-muted-foreground">Frequency</p>
-              <p className="font-medium text-foreground capitalize">{activePayment?.frequency}</p>
-            </div>
-            {activePayment?.next_due_date && (
-              <div className="rounded-2xl border border-border bg-background p-4">
-                <p className="text-sm text-muted-foreground">Next payment</p>
-                <p className="font-medium text-foreground">
-                  {new Date(activePayment.next_due_date).toLocaleDateString("en-GB", {
-                    day: "numeric", month: "long", year: "numeric"
-                  })}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {hasActiveSubscription && (
-        <div className="mt-auto px-6 pb-12">
-          <Button
-            variant="outline"
-            className="w-full text-destructive hover:text-destructive"
-            size="lg"
-            onClick={handleCancel}
-            disabled={isSaving}
+          {/* Step 3: First payment date */}
+          <StepShell
+            index={3}
+            title="When would you like your first payment to be?"
+            active={step === 3}
+            completed={!!completed[3]}
+            summary={completed[3] && firstDate ? format(firstDate, "do MMMM yyyy") : undefined}
+            onOpen={() => completed[2] && setStep(3)}
           >
-            {isSaving ? "Cancelling..." : "Cancel This Arrangement"}
-          </Button>
-        </div>
-      )}
-
-      <AlertDialog open={showReceiverAlert} onOpenChange={setShowReceiverAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Co-parent hasn't set up their bank account</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your co-parent needs to finish connecting their payout account before you can start a recurring payment. Send them a reminder now?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={sendingReminder}>Close</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={sendingReminder}
-              onClick={async (e) => {
-                e.preventDefault();
-                await sendReceiverReminder();
-                setShowReceiverAlert(false);
-              }}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {firstDate ? format(firstDate, "PPP") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={firstDate}
+                  onSelect={setFirstDate}
+                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            <Button
+              className="mt-4 w-full"
+              size="lg"
+              disabled={!firstDate}
+              onClick={() => complete(3, 4)}
             >
-              {sendingReminder ? "Sending..." : "Send reminder"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              Continue
+            </Button>
+          </StepShell>
+
+          {/* Step 4: Review */}
+          <StepShell
+            index={4}
+            title="Review agreement"
+            active={step === 4}
+            completed={!!completed[4]}
+            onOpen={() => step4Ready && setStep(4)}
+          >
+            <div className="space-y-2 rounded-xl bg-background p-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount</span>
+                <span className="font-medium text-foreground">£{amountNum.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Frequency</span>
+                <span className="font-medium text-foreground">{frequency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">First payment</span>
+                <span className="font-medium text-foreground">
+                  {firstDate ? format(firstDate, "do MMM yyyy") : "-"}
+                </span>
+              </div>
+              {!profile?.coparent_id && (
+                <p className="mt-3 rounded-lg bg-primary/10 p-3 text-xs text-muted-foreground">
+                  Your co-parent isn't linked yet. We'll save this arrangement and start payments once they join.
+                </p>
+              )}
+            </div>
+            <Button
+              className="mt-4 w-full"
+              size="lg"
+              onClick={handleSetUp}
+              disabled={saving || stripeLoading}
+            >
+              {saving || stripeLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Setting up...
+                </>
+              ) : (
+                "Set up"
+              )}
+            </Button>
+          </StepShell>
+        </div>
+      </div>
     </div>
   );
 };
