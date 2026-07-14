@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Calculator, ChevronRight, MessageCircle } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
+import resourcesImage from "@/assets/resources-learning.jpg";
 
 const resources = [
   {
@@ -72,6 +73,21 @@ const ResourcesTab = () => {
         ))}
       </div>
 
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="mb-24 overflow-hidden rounded-3xl border border-border bg-card"
+      >
+        <img
+          src={resourcesImage}
+          alt="Parents reading with child"
+          width={1024}
+          height={1024}
+          loading="lazy"
+          className="h-48 w-full object-cover"
+        />
+      </motion.div>
     </div>
   );
 };
