@@ -269,22 +269,21 @@ const MaintenanceTab = () => {
             </div>
           )}
 
-          {/* VIEWING (receiver): payout account */}
-          {isViewing && (connectStatus === "not_created" || connectStatus === "pending") && (
+          {/* VIEWING (receiver): explanation + payout account */}
+          {isViewing && (
             <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="mb-3 flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                <div>
-                  <p className="font-medium text-foreground">Set up payout account</p>
-                  <p className="text-sm text-muted-foreground">
-                    Complete verification to receive payments from your co-parent.
-                  </p>
-                </div>
+              <div className="mb-3 flex items-start gap-3">
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Only the paying parent can set this up. When it's been completed, you'll receive a notification. In the meantime, please confirm the account you'd like to receive the funds into.
+                </p>
               </div>
-              <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
-                <CreditCard className="h-5 w-5" />
-                Set Up to Receive Payments
-              </Button>
+              {(connectStatus === "not_created" || connectStatus === "pending") && (
+                <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
+                  <CreditCard className="h-5 w-5" />
+                  Confirm receiving account
+                </Button>
+              )}
             </div>
           )}
 
