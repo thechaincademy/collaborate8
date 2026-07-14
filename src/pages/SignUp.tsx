@@ -9,9 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
-import appScreenshot1 from "@/assets/app-screenshot-1.png";
-import appScreenshot2 from "@/assets/app-screenshot-2.png";
-import appScreenshot3 from "@/assets/app-screenshot-3.png";
+import signupFamily from "@/assets/signup-family.jpg";
 
 type SignUpStep = "welcome" | "name" | "email" | "password" | "coparent" | "verify";
 type AuthMethod = "choice" | "apple" | "manual";
@@ -211,17 +209,15 @@ const SignUp = () => {
       exit={{ opacity: 0, x: -20 }}
       className="flex flex-1 flex-col"
     >
-      {/* Picture collage */}
-      <div className="relative mb-8 mt-4 h-56 w-full">
-        <div className="absolute left-4 top-0 h-48 w-32 rotate-[-6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
-          <img src={appScreenshot1} alt="App dashboard preview" className="h-full w-full object-cover" />
-        </div>
-        <div className="absolute left-1/2 top-4 h-52 w-36 -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
-          <img src={appScreenshot2} alt="Payment setup preview" className="h-full w-full object-cover" />
-        </div>
-        <div className="absolute right-4 top-8 h-44 w-32 rotate-[6deg] overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
-          <img src={appScreenshot3} alt="Expense tracking preview" className="h-full w-full object-cover" />
-        </div>
+      {/* Family illustration */}
+      <div className="mb-8 mt-4 h-56 w-full overflow-hidden rounded-3xl border border-border bg-card shadow-elevated">
+        <img
+          src={signupFamily}
+          alt="A parent and child at home in a warm, welcoming moment"
+          width={1024}
+          height={1024}
+          className="h-full w-full object-cover"
+        />
       </div>
 
       <h1 className="mb-2 text-center text-3xl font-bold text-foreground">Collabor8</h1>

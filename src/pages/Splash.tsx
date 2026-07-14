@@ -45,7 +45,7 @@ const Splash = () => {
             <div className="mt-6 w-full overflow-hidden rounded-3xl border border-border bg-card">
               <img
                 src={splashFamily}
-                alt="Family illustration"
+                alt="A parent and child sharing a warm moment together"
                 width={1024}
                 height={1024}
                 className="h-52 w-full object-cover"
