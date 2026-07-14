@@ -334,13 +334,6 @@ const MaintenanceTab = () => {
             </>
           )}
 
-          {/* Info for viewing parent */}
-          {isViewing && (
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Your co-parent manages this arrangement</p>
-            </div>
-          )}
         </motion.div>
       )}
 
