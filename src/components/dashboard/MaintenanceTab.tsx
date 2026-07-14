@@ -42,6 +42,12 @@ const MaintenanceTab = () => {
     setRoleSaving(false);
   };
 
+  const handleGoBack = () => {
+    if (!profile?.id) return;
+    localStorage.removeItem(`role_confirmed_${profile.id}`);
+    setRoleConfirmed(false);
+  };
+
   useEffect(() => {
     fetchPayments();
     fetchCards();
