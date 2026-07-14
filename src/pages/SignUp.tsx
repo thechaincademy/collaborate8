@@ -43,7 +43,6 @@ const SignUp = () => {
   const [appleLoading, setAppleLoading] = useState(false);
 
   // Form state
-  const [role, setRole] = useState<Role | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -56,11 +55,9 @@ const SignUp = () => {
   useEffect(() => {
     const pendingApple = localStorage.getItem("signup_pending_apple") === "true";
     const savedMethod = localStorage.getItem("signup_method") as AuthMethod | null;
-    const savedRole = localStorage.getItem("signup_role") as Role | null;
 
-    if (user && pendingApple && savedMethod === "apple" && (savedRole === "managing" || savedRole === "viewing")) {
+    if (user && pendingApple && savedMethod === "apple") {
       setAuthMethod("apple");
-      setRole(savedRole);
       setAccountCreated(true);
       setEmail(user.email ?? "");
       setStep("name");
