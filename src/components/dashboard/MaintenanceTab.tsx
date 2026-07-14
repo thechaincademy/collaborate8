@@ -144,7 +144,7 @@ const MaintenanceTab = () => {
                 ? `Due ${format(nextDueDate, "do MMMM yyyy")}`
                 : displayArrangement
                   ? "Processing..."
-                  : "No arrangement set"}
+                  : ""}
             </span>
           </div>
           {isStripe && isManaging && (
@@ -153,8 +153,12 @@ const MaintenanceTab = () => {
               <span>Paid via card{cards.length > 0 ? ` (****${cards[0].last4})` : ""}</span>
             </div>
           )}
+          {!displayArrangement && (
+            <p className="mt-3 text-sm font-medium text-muted-foreground">no arrangement set up</p>
+          )}
         </motion.div>
       )}
+
 
       {/* Setup Section: Managing = card only; Viewing = payout only */}
       {isContentLoading ? (
@@ -172,20 +176,18 @@ const MaintenanceTab = () => {
           {isManaging && cards.length === 0 && (
             <div className="rounded-2xl border border-border bg-card p-4">
               <div className="mb-3 flex items-center gap-3">
-                <CreditCard className="h-5 w-5 text-amber-500" />
+                <CreditCard className="h-5 w-5 text-primary" />
                 <div>
-                  <p className="font-medium text-foreground">Add payment card</p>
-                  <p className="text-sm text-muted-foreground">
-                    Add a card to send maintenance payments to your co-parent.
-                  </p>
+                  <p className="font-medium text-foreground">Add your preferred card to get your arrangement set up</p>
                 </div>
               </div>
               <Button onClick={handleSetupCard} className="w-full gap-2" size="lg" disabled={stripeLoading}>
                 <CreditCard className="h-5 w-5" />
-                {stripeLoading ? "Loading..." : "Add Card to Send Payments"}
+                {stripeLoading ? "Loading..." : "Select your preferred payment method"}
               </Button>
             </div>
           )}
+
 
           {isManaging && cards.length > 0 && (
             <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
