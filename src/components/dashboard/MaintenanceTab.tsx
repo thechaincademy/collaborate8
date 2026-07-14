@@ -235,16 +235,16 @@ const MaintenanceTab = () => {
           )}
 
           {/* Arrangement actions for managing parent (payer) */}
-          {isManaging && cards.length > 0 && profile?.coparent_id && (
+          {isManaging && cards.length > 0 && (
             <>
               {!displayArrangement ? (
-                <Button
+                <button
                   onClick={() => navigate("/edit-payment")}
-                  className="w-full gap-2"
-                  size="lg"
+                  className="w-full rounded-2xl border border-primary/40 bg-primary/10 p-5 text-left transition-colors hover:bg-primary/15"
                 >
-                  Set Up Recurring Payment
-                </Button>
+                  <p className="font-semibold text-foreground">You're nearly there</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Click here to set up payment.</p>
+                </button>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <Button className="h-auto flex-col gap-2 py-4" variant="outline" onClick={() => navigate("/payment-history")}>
@@ -260,13 +260,6 @@ const MaintenanceTab = () => {
                 </div>
               )}
             </>
-          )}
-
-          {isManaging && cards.length > 0 && !profile?.coparent_id && (
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Link your co-parent to set up a recurring payment.</p>
-            </div>
           )}
 
           {/* Info for viewing parent */}
