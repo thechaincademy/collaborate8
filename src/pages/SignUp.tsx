@@ -82,12 +82,10 @@ const SignUp = () => {
   const getStepIndex = () => STEPS.indexOf(step);
 
   const handleAppleSignUp = async () => {
-    if (!role) return;
     setAppleLoading(true);
 
     // Persist signup intent so we can continue after OAuth redirect
     localStorage.setItem("signup_method", "apple");
-    localStorage.setItem("signup_role", role);
     localStorage.setItem("signup_pending_apple", "true");
 
     const result = await lovable.auth.signInWithOAuth("apple", {
@@ -158,7 +156,6 @@ const SignUp = () => {
       .update({
         first_name: firstName,
         last_name: lastName,
-        role: role ?? "managing",
         invite_code: code,
       })
       .eq("id", user.id);
@@ -234,16 +231,17 @@ const SignUp = () => {
 
       <div className="flex flex-col gap-3">
         <Button
-          onClick={() => { setAuthMethod("apple"); setStep("role"); }}
+          onClick={() => { setAuthMethod("apple"); handleAppleSignUp(); }}
           className="w-full gap-3 bg-foreground text-background hover:bg-foreground/90"
           size="lg"
+          disabled={appleLoading}
         >
           <Apple className="h-5 w-5" />
-          Sign up with Apple
+          {appleLoading ? "Redirecting..." : "Sign up with Apple"}
         </Button>
 
         <Button
-          onClick={() => { setAuthMethod("manual"); setStep("role"); }}
+          onClick={() => { setAuthMethod("manual"); setStep("name"); }}
           className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
           size="lg"
         >
@@ -264,67 +262,7 @@ const SignUp = () => {
     </motion.div>
   );
 
-  // ── Role (NEW first step) ──
-  const renderRole = () => {
-    const Card = ({
-      value, title, body, icon: Icon,
-    }: { value: Role; title: string; body: string; icon: typeof ArrowRight }) => {
-      const selected = role === value;
-      return (
-        <button
-          onClick={() => setRole(value)}
-          className={`flex w-full items-start gap-4 rounded-2xl border-2 p-5 text-left transition-all ${
-            selected ? "border-clay bg-clay-soft" : "border-border bg-background hover:border-muted-foreground"
-          }`}
-        >
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            selected ? "bg-clay text-clay-foreground" : "bg-muted text-foreground"
-          }`}>
-            <Icon className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-foreground">{title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-          </div>
-          <div className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-            selected ? "border-clay bg-clay" : "border-muted-foreground"
-          }`}>
-            {selected && <Check className="h-3 w-3 text-clay-foreground" />}
-          </div>
-        </button>
-      );
-    };
-
-    return (
-      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
-        <h1 className="mb-2 text-3xl font-bold text-foreground">Which parent are you?</h1>
-        <p className="mb-8 text-muted-foreground">
-          Please choose the correct option - it controls which dashboard you see.
-        </p>
-        <div className="flex flex-col gap-3">
-          <Card value="managing" title="The parent making payments" body="You'll set up and manage the arrangement." icon={ArrowRight} />
-          <Card value="viewing" title="The parent receiving payments" body="You'll see the arrangement once it's set up." icon={ArrowDownLeft} />
-        </div>
-        <div className="flex-1" />
-        <div className="pb-8 pt-6">
-          <Button
-            onClick={() => {
-              if (authMethod === "apple") {
-                handleAppleSignUp();
-              } else {
-                setStep("name");
-              }
-            }}
-            className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
-            size="lg"
-            disabled={!role || appleLoading}
-          >
-            {appleLoading ? "Redirecting..." : authMethod === "apple" ? "Continue with Apple" : "Continue"}
-          </Button>
-        </div>
-      </motion.div>
-    );
-  };
+  // Role selection removed — users now choose on the Maintenance tab post-signup.
 
   const renderName = () => (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
