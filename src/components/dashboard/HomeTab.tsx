@@ -1,15 +1,41 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { PoundSterling, Receipt, Gift, MessageCircle, BookOpen, ArrowRight, Clock, ChevronRight } from "lucide-react";
+import {
+  PoundSterling,
+  Receipt,
+  Gift,
+  MessageCircle,
+  BookOpen,
+  ArrowRight,
+  Clock,
+  ChevronRight,
+  Check,
+  AlertCircle,
+  Copy,
+  Mail,
+  Loader2,
+} from "lucide-react";
 import { format, subMonths } from "date-fns";
 import DashboardHeader from "./DashboardHeader";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { usePayments } from "@/hooks/usePayments";
 import { useExpenses } from "@/hooks/useExpenses";
 import { DashboardTab } from "@/pages/Dashboard";
+import familyImage from "@/assets/home-family.jpg";
 
 interface HomeTabProps {
   onNavigate: (tab: DashboardTab) => void;
@@ -21,27 +47,41 @@ const quickLinks: Array<{
   description: string;
   icon: React.ElementType;
 }> = [
-  { tab: "maintenance", label: "Maintenance", description: "Track your recurring payments", icon: PoundSterling },
-  { tab: "expenses", label: "Expenses", description: "Log and split shared costs", icon: Receipt },
-  { tab: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
   { tab: "chat", label: "Chat", description: "Stay in touch with your co-parent", icon: MessageCircle },
+  { tab: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
   { tab: "resources", label: "Resources", description: "Guides and tools", icon: BookOpen },
 ];
 
 const HomeTab = ({ onNavigate }: HomeTabProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { getActivePayment, loading: paymentsLoading } = useRecurringPayments();
   const { payments, fetchPayments, loading: historyLoading } = usePayments();
   const { expenses, loading: expensesLoading } = useExpenses();
 
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [invitation, setInvitation] = useState<{ invitee_email: string | null } | null>(null);
+  const [resending, setResending] = useState(false);
+
   useEffect(() => {
     fetchPayments();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("invitations")
+      .select("invitee_email")
+      .eq("inviter_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setInvitation(data ?? null));
+  }, [user]);
+
   const activePayment = getActivePayment();
   const nextDueDate = activePayment?.next_due_date ? new Date(activePayment.next_due_date) : null;
-  const lastPayment = payments[0];
 
   const firstName = profile?.first_name?.trim();
   const greeting = firstName ? `Hi, ${firstName}` : "Welcome back";
@@ -63,6 +103,43 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   );
 
   const isLoading = profileLoading || paymentsLoading;
+  const isLinked = !!profile?.coparent_id;
+  const inviteCode = profile?.invite_code ?? "";
+  const coparentEmail = invitation?.invitee_email ?? user?.email ?? "";
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      if (navigator.share) {
+        await navigator.share({
+          title: "Link with me on Collabor8",
+          text: `Use this code to link with me on Collabor8: ${inviteCode}`,
+        }).catch(() => {});
+      }
+      toast.success("Code copied to clipboard");
+    } catch {
+      toast.error("Could not copy code");
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!coparentEmail || !inviteCode) {
+      toast.error("Missing co-parent email");
+      return;
+    }
+    setResending(true);
+    const { error } = await supabase.functions.invoke("send-invite-email", {
+      body: {
+        recipientEmail: coparentEmail,
+        inviteCode,
+        senderName: `${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`.trim(),
+      },
+    });
+    setResending(false);
+    if (error) toast.error("Could not resend email");
+    else toast.success("Invite email sent");
+  };
 
   return (
     <div className="px-6 pt-12">
@@ -76,6 +153,23 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
       >
         <h2 className="text-2xl font-bold text-foreground">{greeting}</h2>
         <p className="text-sm text-muted-foreground">A snapshot of your activity in the last month.</p>
+      </motion.div>
+
+      {/* Family image */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.03 }}
+        className="mb-6 overflow-hidden rounded-3xl border border-border bg-card"
+      >
+        <img
+          src={familyImage}
+          alt="Family illustration"
+          width={1024}
+          height={1024}
+          loading="lazy"
+          className="h-40 w-full object-cover"
+        />
       </motion.div>
 
       {/* Snapshot options */}
@@ -119,7 +213,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         </button>
       </motion.div>
 
-      {/* Next payment card */}
+      {/* Next payment / Status card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -141,48 +235,32 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
               <span>{nextDueDate ? `Due ${format(nextDueDate, "do MMM yyyy")}` : "Processing..."}</span>
             </div>
           </>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">No arrangement yet</p>
-            <h3 className="my-1 text-2xl font-bold text-foreground">Set up your first payment</h3>
-            <button
-              onClick={() => onNavigate("maintenance")}
-              className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-foreground"
-            >
-              Get started <ArrowRight className="h-4 w-4" />
-            </button>
-          </>
-        )}
+        ) : null}
       </motion.div>
 
-      {/* Quick stats row */}
-      <motion.div
+      {/* Co-parent status tab */}
+      <motion.button
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="mb-8 grid grid-cols-2 gap-3"
+        onClick={() => setStatusOpen(true)}
+        className="mb-8 flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
       >
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Last payment</p>
-          {historyLoading ? (
-            <Skeleton className="mt-2 h-6 w-20" />
-          ) : lastPayment ? (
-            <>
-              <p className="mt-1 text-xl font-bold text-foreground">£{lastPayment.amount.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground">{format(new Date(lastPayment.created_at), "d MMM")}</p>
-            </>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">No activity yet</p>
-          )}
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+            isLinked ? "bg-emerald-500/15 text-emerald-600" : "bg-primary/15 text-primary"
+          }`}
+        >
+          {isLinked ? <Check className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
         </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Role</p>
-          <p className="mt-1 text-xl font-bold capitalize text-foreground">
-            {profile?.role ?? "—"}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground">Status</p>
+          <p className="font-semibold text-foreground">
+            {isLinked ? "Co-parent linked" : "Waiting for co-parent to link"}
           </p>
-          <p className="text-xs text-muted-foreground">Co-parent {profile?.coparent_id ? "linked" : "not linked"}</p>
         </div>
-      </motion.div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </motion.button>
 
       {/* Quick links */}
       <motion.div
@@ -216,6 +294,53 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           ))}
         </div>
       </motion.div>
+
+      {/* Status dialog */}
+      <Dialog open={statusOpen} onOpenChange={setStatusOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{isLinked ? "Co-parent linked" : "Link your co-parent"}</DialogTitle>
+            <DialogDescription>
+              {isLinked
+                ? "You're linked with your co-parent."
+                : coparentEmail
+                  ? `An email was sent to your co-parent at ${coparentEmail}.`
+                  : "Share your unique code with your co-parent so they can link with you."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!isLinked && (
+            <>
+              <button
+                onClick={handleCopyCode}
+                className="mt-2 w-full rounded-2xl border border-primary/40 bg-primary/10 p-5 text-center transition-colors hover:bg-primary/15"
+              >
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Your unique code</p>
+                <p className="mt-1 text-3xl font-bold tracking-widest text-foreground">
+                  {inviteCode || "------"}
+                </p>
+                <p className="mt-2 text-[11px] text-muted-foreground">Tap to copy</p>
+              </button>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResendEmail}
+                  disabled={resending || !coparentEmail}
+                  className="gap-2"
+                >
+                  {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                  Re-send email
+                </Button>
+                <Button onClick={handleCopyCode} className="gap-2" disabled={!inviteCode}>
+                  <Copy className="h-4 w-4" />
+                  Copy code
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -261,6 +261,15 @@ const ChatTab = () => {
     <div className="flex h-[calc(100vh-6rem)] flex-col px-6 pt-12">
       <DashboardHeader title="Chat" />
 
+      <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <p className="text-xs text-foreground/80">
+          This chat tool uses AI to help co-parents maintain constructive discussions.
+        </p>
+      </div>
+
+
+
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto pb-3">
         {loading ? (
           <div className="space-y-3">
