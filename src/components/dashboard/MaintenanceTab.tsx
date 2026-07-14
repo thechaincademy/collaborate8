@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -15,13 +15,32 @@ import { supabase } from "@/integrations/supabase/client";
 const MaintenanceTab = () => {
   const navigate = useNavigate();
   const { getActivePayment, loading } = useRecurringPayments();
-  const { isViewing, isManaging, profile, loading: profileLoading } = useProfile();
+  const { isViewing, isManaging, profile, loading: profileLoading, updateProfile } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
   const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus, startOnboarding } = useStripeConnect();
   const [connectStatus, setConnectStatus] = useState<string>("loading");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
   const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(true);
+  const [roleConfirmed, setRoleConfirmed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return false; // set below in effect once we know user id
+  });
+  const [roleSaving, setRoleSaving] = useState(false);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    setRoleConfirmed(localStorage.getItem(`role_confirmed_${profile.id}`) === "true");
+  }, [profile?.id]);
+
+  const handleChooseRole = async (chosen: "managing" | "viewing") => {
+    if (!profile?.id) return;
+    setRoleSaving(true);
+    await updateProfile({ role: chosen });
+    localStorage.setItem(`role_confirmed_${profile.id}`, "true");
+    setRoleConfirmed(true);
+    setRoleSaving(false);
+  };
 
   useEffect(() => {
     fetchPayments();
