@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -15,13 +15,32 @@ import { supabase } from "@/integrations/supabase/client";
 const MaintenanceTab = () => {
   const navigate = useNavigate();
   const { getActivePayment, loading } = useRecurringPayments();
-  const { isViewing, isManaging, profile, loading: profileLoading } = useProfile();
+  const { isViewing, isManaging, profile, loading: profileLoading, updateProfile } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
   const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus, startOnboarding } = useStripeConnect();
   const [connectStatus, setConnectStatus] = useState<string>("loading");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
   const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(true);
+  const [roleConfirmed, setRoleConfirmed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return false; // set below in effect once we know user id
+  });
+  const [roleSaving, setRoleSaving] = useState(false);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    setRoleConfirmed(localStorage.getItem(`role_confirmed_${profile.id}`) === "true");
+  }, [profile?.id]);
+
+  const handleChooseRole = async (chosen: "managing" | "viewing") => {
+    if (!profile?.id) return;
+    setRoleSaving(true);
+    await updateProfile({ role: chosen });
+    localStorage.setItem(`role_confirmed_${profile.id}`, "true");
+    setRoleConfirmed(true);
+    setRoleSaving(false);
+  };
 
   useEffect(() => {
     fetchPayments();
@@ -110,9 +129,63 @@ const MaintenanceTab = () => {
     </div>
   );
 
+  // Role selection gate — shown once, before the arrangement UI is unlocked.
+  if (!profileLoading && profile && !roleConfirmed) {
+    return (
+      <div className="px-6 pt-12">
+        <DashboardHeader title="Child Maintenance" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 rounded-3xl border border-border bg-card p-6"
+        >
+          <h2 className="mb-2 text-xl font-semibold text-foreground">
+            Will you be making payments or receiving them?
+          </h2>
+          <p className="mb-6 text-sm text-muted-foreground">
+            Please select the correct answer — this unlocks your ability to set up an arrangement.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => handleChooseRole("managing")}
+              disabled={roleSaving}
+              className="flex w-full items-start gap-4 rounded-2xl border-2 border-border bg-background p-4 text-left transition-colors hover:border-primary disabled:opacity-60"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                <ArrowRight className="h-5 w-5 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">I'll be making payments</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You set up and manage the arrangement.
+                </p>
+              </div>
+            </button>
+            <button
+              onClick={() => handleChooseRole("viewing")}
+              disabled={roleSaving}
+              className="flex w-full items-start gap-4 rounded-2xl border-2 border-border bg-background p-4 text-left transition-colors hover:border-primary disabled:opacity-60"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                <ArrowDownLeft className="h-5 w-5 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">I'll be receiving payments</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Your co-parent sets things up. You'll confirm where funds arrive.
+                </p>
+              </div>
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-6 pt-12">
       <DashboardHeader title="Child Maintenance" />
+
 
       {/* Status Card */}
       {isContentLoading ? (
@@ -196,22 +269,21 @@ const MaintenanceTab = () => {
             </div>
           )}
 
-          {/* VIEWING (receiver): payout account */}
-          {isViewing && (connectStatus === "not_created" || connectStatus === "pending") && (
+          {/* VIEWING (receiver): explanation + payout account */}
+          {isViewing && (
             <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="mb-3 flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                <div>
-                  <p className="font-medium text-foreground">Set up payout account</p>
-                  <p className="text-sm text-muted-foreground">
-                    Complete verification to receive payments from your co-parent.
-                  </p>
-                </div>
+              <div className="mb-3 flex items-start gap-3">
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Only the paying parent can set this up. When it's been completed, you'll receive a notification. In the meantime, please confirm the account you'd like to receive the funds into.
+                </p>
               </div>
-              <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
-                <CreditCard className="h-5 w-5" />
-                Set Up to Receive Payments
-              </Button>
+              {(connectStatus === "not_created" || connectStatus === "pending") && (
+                <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
+                  <CreditCard className="h-5 w-5" />
+                  Confirm receiving account
+                </Button>
+              )}
             </div>
           )}
 
@@ -262,13 +334,6 @@ const MaintenanceTab = () => {
             </>
           )}
 
-          {/* Info for viewing parent */}
-          {isViewing && (
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <Info className="h-5 w-5 shrink-0 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Your co-parent manages this arrangement</p>
-            </div>
-          )}
         </motion.div>
       )}
 
