@@ -42,6 +42,12 @@ const MaintenanceTab = () => {
     setRoleSaving(false);
   };
 
+  const handleGoBack = () => {
+    if (!profile?.id) return;
+    localStorage.removeItem(`role_confirmed_${profile.id}`);
+    setRoleConfirmed(false);
+  };
+
   useEffect(() => {
     fetchPayments();
     fetchCards();
@@ -412,6 +418,26 @@ const MaintenanceTab = () => {
           )}
         </div>
       </motion.div>
+
+      {/* Go back option for parents who chose the wrong role */}
+      {isManaging && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="pb-28 pt-2 text-center"
+        >
+          <p className="text-sm text-muted-foreground">
+            Are you the receiving parent instead?{" "}
+            <button
+              onClick={handleGoBack}
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Click here to go back
+            </button>
+          </p>
+        </motion.div>
+      )}
     </div>
   );
 };
