@@ -188,7 +188,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="text-xs font-medium text-foreground/70">Monthly payments</p>
-          <p className="text-[11px] text-muted-foreground">Child maintenance</p>
           {historyLoading ? (
             <Skeleton className="mt-2 h-6 w-20" />
           ) : (
@@ -204,7 +203,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="text-xs font-medium text-foreground/70">Expenses</p>
-          <p className="text-[11px] text-muted-foreground">Shared costs</p>
           {expensesLoading ? (
             <Skeleton className="mt-2 h-6 w-20" />
           ) : (
@@ -213,30 +211,32 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         </button>
       </motion.div>
 
-      {/* Next payment / Status card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
-        className="mb-6 rounded-3xl border border-border bg-card p-6"
-      >
-        {isLoading ? (
-          <>
-            <Skeleton className="mb-2 h-4 w-28" />
-            <Skeleton className="mb-3 h-10 w-32" />
-            <Skeleton className="h-4 w-40" />
-          </>
-        ) : activePayment ? (
-          <>
-            <p className="text-sm text-muted-foreground">Next payment</p>
-            <h3 className="my-1 text-4xl font-bold text-foreground">£{activePayment.amount.toFixed(2)}</h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>{nextDueDate ? `Due ${format(nextDueDate, "do MMM yyyy")}` : "Processing..."}</span>
-            </div>
-          </>
-        ) : null}
-      </motion.div>
+      {/* Next payment card - only shown when active */}
+      {(isLoading || activePayment) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="mb-6 rounded-3xl border border-border bg-card p-6"
+        >
+          {isLoading ? (
+            <>
+              <Skeleton className="mb-2 h-4 w-28" />
+              <Skeleton className="mb-3 h-10 w-32" />
+              <Skeleton className="h-4 w-40" />
+            </>
+          ) : activePayment ? (
+            <>
+              <p className="text-sm text-muted-foreground">Next payment</p>
+              <h3 className="my-1 text-4xl font-bold text-foreground">£{activePayment.amount.toFixed(2)}</h3>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>{nextDueDate ? `Due ${format(nextDueDate, "do MMM yyyy")}` : "Processing..."}</span>
+              </div>
+            </>
+          ) : null}
+        </motion.div>
+      )}
 
       {/* Co-parent status tab */}
       <motion.button
