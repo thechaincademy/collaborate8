@@ -9,9 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
-import appScreenshot1 from "@/assets/app-screenshot-1.png";
-import appScreenshot2 from "@/assets/app-screenshot-2.png";
-import appScreenshot3 from "@/assets/app-screenshot-3.png";
+import signupFamily from "@/assets/signup-family.jpg";
 
 type SignUpStep = "welcome" | "name" | "email" | "password" | "coparent" | "verify";
 type AuthMethod = "choice" | "apple" | "manual";
