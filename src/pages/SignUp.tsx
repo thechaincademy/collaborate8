@@ -429,7 +429,7 @@ const SignUp = () => {
         <div className="flex flex-1 flex-col px-6">
           <AnimatePresence mode="wait">
             {step === "welcome" && renderWelcome()}
-            {step === "role" && renderRole()}
+            
             {step === "name" && renderName()}
             {step === "email" && renderEmail()}
             {step === "password" && renderPassword()}
