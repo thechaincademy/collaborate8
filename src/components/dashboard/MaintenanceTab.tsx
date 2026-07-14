@@ -129,9 +129,63 @@ const MaintenanceTab = () => {
     </div>
   );
 
+  // Role selection gate — shown once, before the arrangement UI is unlocked.
+  if (!profileLoading && profile && !roleConfirmed) {
+    return (
+      <div className="px-6 pt-12">
+        <DashboardHeader title="Child Maintenance" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 rounded-3xl border border-border bg-card p-6"
+        >
+          <h2 className="mb-2 text-xl font-semibold text-foreground">
+            Will you be making payments or receiving them?
+          </h2>
+          <p className="mb-6 text-sm text-muted-foreground">
+            Please select the correct answer — this unlocks your ability to set up an arrangement.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => handleChooseRole("managing")}
+              disabled={roleSaving}
+              className="flex w-full items-start gap-4 rounded-2xl border-2 border-border bg-background p-4 text-left transition-colors hover:border-primary disabled:opacity-60"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                <ArrowRight className="h-5 w-5 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">I'll be making payments</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You set up and manage the arrangement.
+                </p>
+              </div>
+            </button>
+            <button
+              onClick={() => handleChooseRole("viewing")}
+              disabled={roleSaving}
+              className="flex w-full items-start gap-4 rounded-2xl border-2 border-border bg-background p-4 text-left transition-colors hover:border-primary disabled:opacity-60"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                <ArrowDownLeft className="h-5 w-5 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">I'll be receiving payments</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Your co-parent sets things up. You'll confirm where funds arrive.
+                </p>
+              </div>
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-6 pt-12">
       <DashboardHeader title="Child Maintenance" />
+
 
       {/* Status Card */}
       {isContentLoading ? (
