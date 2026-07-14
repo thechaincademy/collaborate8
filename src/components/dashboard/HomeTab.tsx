@@ -188,7 +188,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="text-xs font-medium text-foreground/70">Monthly payments</p>
-          <p className="text-[11px] text-muted-foreground">Child maintenance</p>
           {historyLoading ? (
             <Skeleton className="mt-2 h-6 w-20" />
           ) : (
@@ -204,7 +203,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="text-xs font-medium text-foreground/70">Expenses</p>
-          <p className="text-[11px] text-muted-foreground">Shared costs</p>
           {expensesLoading ? (
             <Skeleton className="mt-2 h-6 w-20" />
           ) : (
