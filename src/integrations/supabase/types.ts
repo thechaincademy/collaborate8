@@ -614,6 +614,15 @@ export type Database = {
         Returns: number
       }
       get_coparent_id: { Args: { _user_id: string }; Returns: string }
+      get_invitation_by_code: {
+        Args: { _invite_code: string }
+        Returns: {
+          id: string
+          invitee_email: string
+          inviter_id: string
+          status: string
+        }[]
+      }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       move_to_dlq: {
         Args: {
