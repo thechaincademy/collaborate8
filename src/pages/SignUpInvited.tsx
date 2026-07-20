@@ -54,31 +54,30 @@ const SignUpInvited = () => {
     const code = (codeOverride ?? inviteCode).toUpperCase();
     if (code.length < 6) return;
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("invitations")
-      .select("id, inviter_id, status, invitee_email")
-      .eq("invite_code", code)
-      .single();
+    const { data, error } = await supabase.rpc("get_invitation_by_code", {
+      _invite_code: code,
+    });
 
     setIsLoading(false);
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
       toast.error("Invalid invite code. Please check and try again.");
       return;
     }
 
-    if ((data as any).status === "accepted") {
+    const invite = data[0];
+    if (invite.status === "accepted") {
       toast.error("This invite code has already been used.");
       return;
     }
 
     setInvitationData({
-      id: (data as any).id,
-      inviter_id: (data as any).inviter_id,
-      invitee_email: (data as any).invitee_email ?? null,
+      id: invite.id,
+      inviter_id: invite.inviter_id,
+      invitee_email: invite.invitee_email ?? null,
     });
-    if ((data as any).invitee_email) {
-      setEmail((data as any).invitee_email);
+    if (invite.invitee_email) {
+      setEmail(invite.invitee_email);
     }
     setStep("name");
   };
