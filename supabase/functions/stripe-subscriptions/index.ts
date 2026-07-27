@@ -22,7 +22,8 @@ const logStep = (step: string, details?: any) => {
 };
 
 const getStripe = () => {
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  //const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = Deno.env.get("STRIPE_SECRET_KEY_BRYAN");
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 };
@@ -47,9 +48,7 @@ const normalizeInterval = (interval?: string): "day" | "week" | "month" | "year"
   }
 };
 
-const toDbFrequency = (
-  interval: "day" | "week" | "month" | "year",
-): "daily" | "weekly" | "monthly" | null => {
+const toDbFrequency = (interval: "day" | "week" | "month" | "year"): "daily" | "weekly" | "monthly" | null => {
   switch (interval) {
     case "day":
       return "daily";
@@ -82,7 +81,7 @@ serve(async (req) => {
       const url = await paymentMethodProvider.createSetupSession(
         customerId,
         `${origin}/dashboard?card-setup=success`,
-        `${origin}/dashboard?card-setup=cancelled`
+        `${origin}/dashboard?card-setup=cancelled`,
       );
 
       logStep("Setup session created", { customerId });
@@ -104,7 +103,8 @@ serve(async (req) => {
 
     // ── Create subscription via hosted Checkout (Apple Pay / Google Pay / card) ──
     if (action === "create-subscription-checkout") {
-      const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      // [BR-TEST] const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      const { amount, currency = "brl", interval = "month", receiverId } = body;
       const normalizedInterval = normalizeInterval(interval);
       const dbFrequency = toDbFrequency(normalizedInterval);
 
@@ -135,19 +135,25 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!connectedAccount) {
-        return new Response(JSON.stringify({
-          error: "The receiving co-parent has not completed their payment setup.",
-          code: "RECEIVER_NOT_ONBOARDED",
-        }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(
+          JSON.stringify({
+            error: "The receiving co-parent has not completed their payment setup.",
+            code: "RECEIVER_NOT_ONBOARDED",
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
 
       if (!connectedAccount.charges_enabled) {
         const liveStatus = await payoutProvider.getAccountStatus(connectedAccount.provider_account_id);
         if (!liveStatus.chargesEnabled) {
-          return new Response(JSON.stringify({
-            error: "The receiving co-parent's payment account is still being verified by Stripe.",
-            code: "RECEIVER_CAPABILITIES_PENDING",
-          }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(
+            JSON.stringify({
+              error: "The receiving co-parent's payment account is still being verified by Stripe.",
+              code: "RECEIVER_CAPABILITIES_PENDING",
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
         }
         await supabase
           .from("connected_accounts")
@@ -204,7 +210,8 @@ serve(async (req) => {
 
     // ── Create subscription (legacy: uses saved card off-session) ──
     if (action === "create-subscription") {
-      const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      // [BR-TEST] const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      const { amount, currency = "brl", interval = "month", receiverId } = body;
       const normalizedInterval = normalizeInterval(interval);
       const dbFrequency = toDbFrequency(normalizedInterval);
 
@@ -245,13 +252,17 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!connectedAccount) {
-        return new Response(JSON.stringify({
-          error: "The receiving co-parent has not completed their payment setup. They need to complete Stripe Connect onboarding before you can set up recurring payments.",
-          code: "RECEIVER_NOT_ONBOARDED",
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({
+            error:
+              "The receiving co-parent has not completed their payment setup. They need to complete Stripe Connect onboarding before you can set up recurring payments.",
+            code: "RECEIVER_NOT_ONBOARDED",
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
 
       // Verify the account actually has transfers capability enabled
@@ -261,13 +272,17 @@ serve(async (req) => {
         logStep("Re-checked receiver account status", liveStatus);
 
         if (!liveStatus.chargesEnabled) {
-          return new Response(JSON.stringify({
-            error: "The receiving co-parent's payment account is still being verified by Stripe. Their account capabilities (transfers) are not yet active. Please try again in a few minutes.",
-            code: "RECEIVER_CAPABILITIES_PENDING",
-          }), {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+          return new Response(
+            JSON.stringify({
+              error:
+                "The receiving co-parent's payment account is still being verified by Stripe. Their account capabilities (transfers) are not yet active. Please try again in a few minutes.",
+              code: "RECEIVER_CAPABILITIES_PENDING",
+            }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            },
+          );
         }
 
         // Update DB since capabilities are now active
@@ -450,13 +465,16 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!receiverAccount) {
-        return new Response(JSON.stringify({
-          error: "Receiver has not completed Stripe Connect onboarding",
-          code: "RECEIVER_NOT_ONBOARDED",
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({
+            error: "Receiver has not completed Stripe Connect onboarding",
+            code: "RECEIVER_NOT_ONBOARDED",
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
 
       // Cancel old subscription in Stripe
@@ -475,14 +493,15 @@ serve(async (req) => {
 
       const priceId = await pricingProvider.createPrice({
         amount: amountInPence,
-        currency: "gbp",
+        // [BR-TEST] currency: "gbp",
+        currency: "brl",
         interval: normalizedInterval,
         productId: MAINTENANCE_PRODUCT_ID,
         metadata: { payer_id: user.id, receiver_id: arrangement.receiver_id },
       });
 
-      const customerId = arrangement.provider_customer_id ||
-        await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
+      const customerId =
+        arrangement.provider_customer_id || (await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!));
 
       const subscription = await recurringProvider.createSubscription({
         customerId,
@@ -525,14 +544,17 @@ serve(async (req) => {
         },
       });
 
-      return new Response(JSON.stringify({
-        success: true,
-        subscription,
-        priceId,
-        arrangementId: arrangement.id,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          subscription,
+          priceId,
+          arrangementId: arrangement.id,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // ── Sync checkout session (fallback when webhook does not fire) ──
@@ -557,9 +579,12 @@ serve(async (req) => {
         });
       }
 
-      const subscription = typeof session.subscription === "string"
-        ? await stripe.subscriptions.retrieve(session.subscription, { expand: ["items.data.price", "latest_invoice"] })
-        : session.subscription as Stripe.Subscription;
+      const subscription =
+        typeof session.subscription === "string"
+          ? await stripe.subscriptions.retrieve(session.subscription, {
+              expand: ["items.data.price", "latest_invoice"],
+            })
+          : (session.subscription as Stripe.Subscription);
 
       const meta = subscription.metadata || {};
       const payerId = meta.collabor8_payer_id;
@@ -597,11 +622,9 @@ serve(async (req) => {
           .eq("is_active", true);
 
         const priceId = subscription.items.data[0]?.price?.id ?? null;
-        const customerId = typeof subscription.customer === "string"
-          ? subscription.customer
-          : subscription.customer.id;
+        const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
         const nextDue = new Date(
-          (subscription.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000
+          (subscription.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000,
         ).toISOString();
 
         const { data: inserted, error: insErr } = await supabase
@@ -646,7 +669,8 @@ serve(async (req) => {
             payer_id: payerId,
             payee_id: receiverId,
             amount: (latestInvoice.amount_paid || 0) / 100,
-            currency: (latestInvoice.currency || "gbp").toUpperCase(),
+            // [BR-TEST] currency: (latestInvoice.currency || "gbp").toUpperCase(),
+            currency: (latestInvoice.currency || "brl").toUpperCase(),
             type: "maintenance",
             status: "completed",
             provider: "stripe",
@@ -659,8 +683,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
