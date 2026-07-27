@@ -6,7 +6,7 @@ import { StripePayoutProvider } from "../_shared/stripe-adapter.ts";
 const payoutProvider = new StripePayoutProvider();
 
 const logStep = (step: string, details?: any) => {
-  console.log(`[STRIPE-CONNECT 2] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
+  console.log(`[STRIPE-CONNECT LOVABLE] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
 serve(async (req) => {
