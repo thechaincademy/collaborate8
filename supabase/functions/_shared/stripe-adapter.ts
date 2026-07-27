@@ -12,6 +12,15 @@ import type {
 function getStripe(): Stripe {
   //const key = Deno.env.get("STRIPE_SECRET_KEY");
   const key = Deno.env.get("STRIPE_SECRET_KEY_BRYAN");
+
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY_BRYAN") || "";
+
+  console.log(`[DEBUG] Chave do Stripe carregada: ${stripeKey.substring(0, 14)}...`);
+
+  if (!stripeKey) {
+    console.error("ERRO CRÍTICO: STRIPE_SECRET_KEY_BRYAN não encontrada nas variáveis de ambiente!");
+  }
+
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 }
