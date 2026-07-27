@@ -5,16 +5,6 @@ import { StripePayoutProvider } from "../_shared/stripe-adapter.ts";
 
 const payoutProvider = new StripePayoutProvider();
 
-const stripeKey = Deno.env.get("STRIPE_SECRET_KEY_BRYAN") || "";
-
-// Imprime apenas os 14 primeiros caracteres (ex: "sk_test_123456...")
-// para segurança, ocultando o resto.
-console.log(`[DEBUG] Chave do Stripe carregada: ${stripeKey.substring(0, 14)}...`);
-
-if (!stripeKey) {
-  console.error("ERRO CRÍTICO: STRIPE_SECRET_KEY_BRYAN não encontrada nas variáveis de ambiente!");
-}
-
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-CONNECT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
