@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
-import {
-  StripePayoutProvider,
-} from "../_shared/stripe-adapter.ts";
+import { StripePayoutProvider } from "../_shared/stripe-adapter.ts";
 
 const payoutProvider = new StripePayoutProvider();
+
+const stripeKey = Deno.env.get("STRIPE_SECRET_KEY_BRYAN") || "";
+
+// Imprime apenas os 14 primeiros caracteres (ex: "sk_test_123456...")
+// para segurança, ocultando o resto.
+console.log(`[DEBUG] Chave do Stripe carregada: ${stripeKey.substring(0, 14)}...`);
+
+if (!stripeKey) {
+  console.error("ERRO CRÍTICO: STRIPE_SECRET_KEY_BRYAN não encontrada nas variáveis de ambiente!");
+}
 
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-CONNECT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -43,10 +51,7 @@ serve(async (req) => {
           (!existingAccount.charges_enabled && !existingAccount.payouts_enabled);
 
         if (needsReplacement) {
-          accountId = await payoutProvider.createConnectedAccount(
-            user.email!,
-            { collabor8_user_id: user.id }
-          );
+          accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
 
           await supabase
             .from("connected_accounts")
@@ -72,10 +77,7 @@ serve(async (req) => {
           logStep("Existing connected account found", { accountId });
         }
       } else {
-        accountId = await payoutProvider.createConnectedAccount(
-          user.email!,
-          { collabor8_user_id: user.id }
-        );
+        accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
         logStep("Created connected account", { accountId });
 
         await supabase.from("connected_accounts").insert({
@@ -91,7 +93,7 @@ serve(async (req) => {
       const onboardingUrl = await payoutProvider.createOnboardingLink(
         accountId,
         `${origin}/profile?stripe-refresh=true`,
-        `${origin}/profile?stripe-return=true`
+        `${origin}/profile?stripe-return=true`,
       );
 
       logStep("Onboarding link created", { accountId });
@@ -121,9 +123,13 @@ serve(async (req) => {
 
       // Only mark as "complete" when transfers capability is actually active
       const capabilitiesActive = status.chargesEnabled || status.payoutsEnabled;
-      const newStatus = status.onboardingComplete && capabilitiesActive ? "complete" : 
-                        status.onboardingComplete ? "pending_capabilities" : "pending";
-      
+      const newStatus =
+        status.onboardingComplete && capabilitiesActive
+          ? "complete"
+          : status.onboardingComplete
+            ? "pending_capabilities"
+            : "pending";
+
       await supabase
         .from("connected_accounts")
         .update({
@@ -133,15 +139,18 @@ serve(async (req) => {
         })
         .eq("id", connected.id);
 
-      return new Response(JSON.stringify({
-        status: newStatus,
-        payoutsEnabled: status.payoutsEnabled,
-        chargesEnabled: status.chargesEnabled,
-        accountId: connected.provider_account_id,
-        detailsSubmitted: status.onboardingComplete,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          status: newStatus,
+          payoutsEnabled: status.payoutsEnabled,
+          chargesEnabled: status.chargesEnabled,
+          accountId: connected.provider_account_id,
+          detailsSubmitted: status.onboardingComplete,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {
