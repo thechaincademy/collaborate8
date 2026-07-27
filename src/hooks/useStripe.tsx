@@ -137,9 +137,20 @@ export const useStripePayments = () => {
           ...params,
         },
       });
-      if (error) throw error;
+      if (error) {
+        const ctx: any = (error as any).context;
+        let serverMsg: string | undefined;
+        try {
+          if (ctx?.json) serverMsg = (await ctx.json())?.error;
+          else if (ctx?.text) serverMsg = JSON.parse(await ctx.text())?.error;
+        } catch {}
+        throw new Error(serverMsg || error.message || "Failed to start checkout");
+      }
+      if (data?.error) throw new Error(data.error);
+      if (!data?.url) throw new Error("No checkout URL returned by Stripe");
       return data as { url: string; sessionId: string; priceId: string };
     } catch (e: any) {
+      console.error("[createSubscriptionCheckout]", e);
       toast.error(e?.message || "Failed to start checkout");
       return null;
     } finally {
