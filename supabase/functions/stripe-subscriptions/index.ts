@@ -22,8 +22,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 const getStripe = () => {
-  //const key = Deno.env.get("STRIPE_SECRET_KEY");
-  const key = Deno.env.get("STRIPE_SECRET_KEY_BRYAN");
+  const key = Deno.env.get("STRIPE_SECRET_KEY");
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 };
@@ -103,8 +102,7 @@ serve(async (req) => {
 
     // ── Create subscription via hosted Checkout (Apple Pay / Google Pay / card) ──
     if (action === "create-subscription-checkout") {
-      // [BR-TEST] const { amount, currency = "gbp", interval = "month", receiverId } = body;
-      const { amount, currency = "brl", interval = "month", receiverId } = body;
+      const { amount, currency = "gbp", interval = "month", receiverId } = body;
       const normalizedInterval = normalizeInterval(interval);
       const dbFrequency = toDbFrequency(normalizedInterval);
 
@@ -210,8 +208,7 @@ serve(async (req) => {
 
     // ── Create subscription (legacy: uses saved card off-session) ──
     if (action === "create-subscription") {
-      // [BR-TEST] const { amount, currency = "gbp", interval = "month", receiverId } = body;
-      const { amount, currency = "brl", interval = "month", receiverId } = body;
+      const { amount, currency = "gbp", interval = "month", receiverId } = body;
       const normalizedInterval = normalizeInterval(interval);
       const dbFrequency = toDbFrequency(normalizedInterval);
 
@@ -493,8 +490,7 @@ serve(async (req) => {
 
       const priceId = await pricingProvider.createPrice({
         amount: amountInPence,
-        // [BR-TEST] currency: "gbp",
-        currency: "brl",
+        currency: "gbp",
         interval: normalizedInterval,
         productId: MAINTENANCE_PRODUCT_ID,
         metadata: { payer_id: user.id, receiver_id: arrangement.receiver_id },
@@ -669,8 +665,7 @@ serve(async (req) => {
             payer_id: payerId,
             payee_id: receiverId,
             amount: (latestInvoice.amount_paid || 0) / 100,
-            // [BR-TEST] currency: (latestInvoice.currency || "gbp").toUpperCase(),
-            currency: (latestInvoice.currency || "brl").toUpperCase(),
+            currency: (latestInvoice.currency || "gbp").toUpperCase(),
             type: "maintenance",
             status: "completed",
             provider: "stripe",
