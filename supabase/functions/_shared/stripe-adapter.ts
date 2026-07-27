@@ -10,15 +10,13 @@ import type {
 } from "./payment-interfaces.ts";
 
 function getStripe(): Stripe {
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  //const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = Deno.env.get("STRIPE_SECRET_KEY_BRYAN");
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 }
 
-function toIsoFromUnixTimestamp(
-  primary?: number | null,
-  fallback?: number | null,
-): string {
+function toIsoFromUnixTimestamp(primary?: number | null, fallback?: number | null): string {
   const unixSeconds = [primary, fallback, Math.floor(Date.now() / 1000)].find(
     (value): value is number => typeof value === "number" && Number.isFinite(value),
   );
@@ -117,10 +115,7 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
     const stripe = getStripe();
     const sub = await stripe.subscriptions.retrieve(subscriptionId);
     const updated = await stripe.subscriptions.update(subscriptionId, {
-      items: [
-        { id: sub.items.data[0].id, deleted: true },
-        { price: newPriceId },
-      ],
+      items: [{ id: sub.items.data[0].id, deleted: true }, { price: newPriceId }],
       proration_behavior: "none",
     });
     return this.mapSubscription(updated);
@@ -150,14 +145,16 @@ export class StripePayoutProvider implements PayoutProvider {
     const stripe = getStripe();
 
     // Check if we're in test mode (test keys start with sk_test_)
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
+    //const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY_BRYAN") || "";
     const isTestMode = stripeKey.startsWith("sk_test_");
 
     const accountParams: Stripe.AccountCreateParams = {
       type: "express",
       business_type: "individual",
       email,
-      country: "GB",
+      // [BR-TEST] country: "GB",
+      country: "BR",
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
@@ -165,7 +162,8 @@ export class StripePayoutProvider implements PayoutProvider {
       business_profile: {
         mcc: "5734",
         url: "https://collabor8.lovable.app",
-        product_description: "Receiving child maintenance payments via Collabor8",
+        // [BR-TEST] product_description: "Receiving child maintenance payments via Collabor8",
+        product_description: "Recebimento de pagamentos de pensão alimentícia via Collabor8",
       },
       metadata: metadata || {},
     };
@@ -173,14 +171,21 @@ export class StripePayoutProvider implements PayoutProvider {
     // In test mode, pre-fill individual details with test tokens to bypass identity verification
     if (isTestMode) {
       accountParams.individual = {
-        first_name: "Test",
-        last_name: "User",
+        // [BR-TEST] first_name: "Test",
+        // [BR-TEST] last_name: "User",
+        first_name: "Teste",
+        last_name: "Usuario",
         dob: { day: 1, month: 1, year: 1901 },
+        id_number: "000.000.001-91", // [BR-TEST] CPF test token for BR
         address: {
           line1: "address_full_match",
-          city: "London",
-          postal_code: "EC1Y 8SY",
-          country: "GB",
+          // [BR-TEST] city: "London",
+          // [BR-TEST] postal_code: "EC1Y 8SY",
+          // [BR-TEST] country: "GB",
+          city: "Santos",
+          state: "SP",
+          postal_code: "11010-000",
+          country: "BR",
         },
         verification: {
           document: {
