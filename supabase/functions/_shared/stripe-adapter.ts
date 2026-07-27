@@ -10,9 +10,7 @@ import type {
 } from "./payment-interfaces.ts";
 
 function getStripe(): Stripe {
-  //const key = Deno.env.get("STRIPE_SECRET_KEY");
-  const key = Deno.env.get("STRIPE_SECRET_KEY_BRYAN");
-
+  const key = Deno.env.get("STRIPE_SECRET_KEY");
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 }
@@ -146,16 +144,14 @@ export class StripePayoutProvider implements PayoutProvider {
     const stripe = getStripe();
 
     // Check if we're in test mode (test keys start with sk_test_)
-    //const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY_BRYAN") || "";
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
     const isTestMode = stripeKey.startsWith("sk_test_");
 
     const accountParams: Stripe.AccountCreateParams = {
       type: "express",
       business_type: "individual",
       email,
-      // [BR-TEST] country: "GB",
-      country: "BR",
+      country: "GB",
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
@@ -163,8 +159,7 @@ export class StripePayoutProvider implements PayoutProvider {
       business_profile: {
         mcc: "5734",
         url: "https://collabor8.lovable.app",
-        // [BR-TEST] product_description: "Receiving child maintenance payments via Collabor8",
-        product_description: "Recebimento de pagamentos de pensão alimentícia via Collabor8",
+        product_description: "Receiving child maintenance payments via Collabor8",
       },
       metadata: metadata || {},
     };
@@ -172,21 +167,14 @@ export class StripePayoutProvider implements PayoutProvider {
     // In test mode, pre-fill individual details with test tokens to bypass identity verification
     if (isTestMode) {
       accountParams.individual = {
-        // [BR-TEST] first_name: "Test",
-        // [BR-TEST] last_name: "User",
-        first_name: "Teste",
-        last_name: "Usuario",
+        first_name: "Test",
+        last_name: "User",
         dob: { day: 1, month: 1, year: 1901 },
-        id_number: "000.000.001-91", // [BR-TEST] CPF test token for BR
         address: {
           line1: "address_full_match",
-          // [BR-TEST] city: "London",
-          // [BR-TEST] postal_code: "EC1Y 8SY",
-          // [BR-TEST] country: "GB",
-          city: "Santos",
-          state: "SP",
-          postal_code: "11010-000",
-          country: "BR",
+          city: "London",
+          postal_code: "EC1Y 8SY",
+          country: "GB",
         },
         verification: {
           document: {
