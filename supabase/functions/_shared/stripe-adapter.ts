@@ -1,4 +1,5 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { logStripeError } from "./stripe-errors.ts";
 import type {
   PaymentMethodProvider,
   RecurringPaymentProvider,
@@ -8,6 +9,15 @@ import type {
   RecurringAgreement,
   ConnectedAccountInfo,
 } from "./payment-interfaces.ts";
+
+async function tryStripe<T>(scope: string, step: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    logStripeError(scope, step, e);
+    throw e;
+  }
+}
 
 function getStripe(): Stripe {
   const key = Deno.env.get("STRIPE_SECRET_KEY");
@@ -101,7 +111,9 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
       };
     }
 
-    const subscription = await stripe.subscriptions.create(subParams);
+    const subscription = await tryStripe("STRIPE-ADAPTER", "subscriptions.create", () =>
+      stripe.subscriptions.create(subParams),
+    );
     return this.mapSubscription(subscription);
   }
 
@@ -184,18 +196,22 @@ export class StripePayoutProvider implements PayoutProvider {
       };
     }
 
-    const account = await stripe.accounts.create(accountParams);
+    const account = await tryStripe("STRIPE-ADAPTER", "accounts.create", () =>
+      stripe.accounts.create(accountParams),
+    );
     return account.id;
   }
 
   async createOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string): Promise<string> {
     const stripe = getStripe();
-    const link = await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: refreshUrl,
-      return_url: returnUrl,
-      type: "account_onboarding",
-    });
+    const link = await tryStripe("STRIPE-ADAPTER", "accountLinks.create", () =>
+      stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: refreshUrl,
+        return_url: returnUrl,
+        type: "account_onboarding",
+      }),
+    );
     return link.url;
   }
 

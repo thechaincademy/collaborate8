@@ -451,7 +451,8 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    logStep("ERROR", { message: error instanceof Error ? error.message : String(error) });
+    const { logStripeError } = await import("../_shared/stripe-errors.ts");
+    logStripeError("STRIPE-WEBHOOKS", "handler", error);
     return new Response(JSON.stringify({ error: "Webhook handler failed" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
