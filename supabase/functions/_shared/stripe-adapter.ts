@@ -111,7 +111,9 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
       };
     }
 
-    const subscription = await stripe.subscriptions.create(subParams);
+    const subscription = await tryStripe("STRIPE-ADAPTER", "subscriptions.create", () =>
+      stripe.subscriptions.create(subParams),
+    );
     return this.mapSubscription(subscription);
   }
 
