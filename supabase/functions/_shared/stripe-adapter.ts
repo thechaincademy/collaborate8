@@ -1,4 +1,5 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { logStripeError } from "./stripe-errors.ts";
 import type {
   PaymentMethodProvider,
   RecurringPaymentProvider,
@@ -8,6 +9,15 @@ import type {
   RecurringAgreement,
   ConnectedAccountInfo,
 } from "./payment-interfaces.ts";
+
+async function tryStripe<T>(scope: string, step: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    logStripeError(scope, step, e);
+    throw e;
+  }
+}
 
 function getStripe(): Stripe {
   const key = Deno.env.get("STRIPE_SECRET_KEY");
