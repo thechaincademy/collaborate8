@@ -148,10 +148,20 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    logStep("ERROR", { message: error instanceof Error ? error.message : String(error) });
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Internal error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const { logStripeError } = await import("../_shared/stripe-errors.ts");
+    const details = logStripeError("STRIPE-CONNECT", "handler", error);
+    return new Response(
+      JSON.stringify({
+        error: details.message || "Internal error",
+        stripe: {
+          type: details.type,
+          code: details.code,
+          param: details.param,
+          requestId: details.requestId,
+          doc_url: details.doc_url,
+        },
+      }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 });
