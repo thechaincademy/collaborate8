@@ -14,8 +14,8 @@ const recurringProvider = new StripeRecurringProvider();
 const pricingProvider = new StripeDynamicPricing();
 const payoutProvider = new StripePayoutProvider();
 
-// Collabor8 maintenance product ID
-const MAINTENANCE_PRODUCT_ID = "prod_U9HZcihClGUNVA";
+// Collabor8 maintenance product ID (live)
+const MAINTENANCE_PRODUCT_ID = "prod_V2EZcZyjIL8IDn";
 
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-SUBSCRIPTIONS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
