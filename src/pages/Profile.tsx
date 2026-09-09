@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, CreditCard, Shield, Users } from "lucide-react";
+import { ArrowLeft, User, Mail, CreditCard, Shield, Users, Copy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
@@ -16,6 +19,8 @@ const Profile = () => {
   const { cards, fetchCards, setupCard, cardsLoading, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus, startOnboarding, loading: connectLoading } = useStripeConnect();
   const [connectStatus, setConnectStatus] = useState<string>("loading");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
 
   useEffect(() => {
     fetchCards();
@@ -66,6 +71,47 @@ const Profile = () => {
   const handleConnectOnboarding = async () => {
     const result = await startOnboarding();
     if (result?.url) window.location.href = result.url;
+  };
+
+  const inviteCode = profile?.invite_code ?? "";
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      if (navigator.share) {
+        await navigator
+          .share({
+            title: "Link with me on Collabor8",
+            text: `Use this code to link with me on Collabor8: ${inviteCode}`,
+          })
+          .catch(() => {});
+      }
+      toast.success("Code copied to clipboard");
+    } catch {
+      toast.error("Could not copy code");
+    }
+  };
+
+  const handleSendInvite = async () => {
+    if (!inviteEmail.trim() || !inviteCode) {
+      toast.error("Please enter your co-parent's email");
+      return;
+    }
+    setSendingInvite(true);
+    const { error } = await supabase.functions.invoke("send-invite-email", {
+      body: {
+        recipientEmail: inviteEmail.trim(),
+        inviteCode,
+        senderName: fullName,
+      },
+    });
+    setSendingInvite(false);
+    if (error) toast.error("Could not send the invite email");
+    else {
+      toast.success("Invite email sent");
+      setInviteEmail("");
+    }
   };
 
   const paymentSection = isManaging
@@ -227,7 +273,64 @@ const Profile = () => {
             </div>
           </motion.div>
         ))}
+
+        {!profile?.coparent_id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="mb-6 rounded-2xl border border-primary/40 bg-primary/10 p-5"
+          >
+            <h3 className="text-sm font-semibold text-foreground">Invite your co-parent</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Share your unique code so they can link with you.
+            </p>
+
+            <button
+              onClick={handleCopyCode}
+              disabled={!inviteCode}
+              className="mt-4 w-full rounded-2xl border border-primary/40 bg-card p-4 text-center transition-colors hover:bg-accent"
+            >
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Your unique code</p>
+              <p className="mt-1 text-3xl font-bold tracking-widest text-foreground">
+                {inviteCode || "------"}
+              </p>
+              <p className="mt-2 text-[11px] text-muted-foreground">Tap to copy</p>
+            </button>
+
+            <Button onClick={handleCopyCode} disabled={!inviteCode} className="mt-3 w-full gap-2">
+              <Copy className="h-4 w-4" />
+              Copy code
+            </Button>
+
+            <div className="mt-4 space-y-2">
+              <label htmlFor="coparent-email" className="text-xs text-muted-foreground">
+                Or send it by email
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  id="coparent-email"
+                  type="email"
+                  inputMode="email"
+                  placeholder="co-parent@email.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleSendInvite}
+                  disabled={sendingInvite || !inviteEmail.trim()}
+                  className="gap-2 shrink-0"
+                >
+                  {sendingInvite ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                  Send
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
+
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
