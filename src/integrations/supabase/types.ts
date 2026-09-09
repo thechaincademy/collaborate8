@@ -633,10 +633,6 @@ export type Database = {
         }
         Returns: number
       }
-      notify_admins_new_signup: {
-        Args: { _email: string; _name?: string; _signed_up_at?: string }
-        Returns: undefined
-      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -644,10 +640,6 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
-      }
-      send_welcome_email: {
-        Args: { _email: string; _name?: string }
-        Returns: undefined
       }
     }
     Enums: {
