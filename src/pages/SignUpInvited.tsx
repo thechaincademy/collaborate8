@@ -31,9 +31,16 @@ const SignUpInvited = () => {
   const [password, setPassword] = useState("");
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordChecks = (pw: string) => ({
+    length: pw.length >= 8,
+    mixed: /[a-z]/.test(pw) && /[A-Z]/.test(pw),
+    number: /\d/.test(pw),
+  });
+  const pwc = passwordChecks(password);
+  const isPasswordValid = pwc.length && pwc.mixed && pwc.number;
   const isCodeValid = inviteCode.length >= 6;
   const isNameValid = firstName.length > 0 && lastName.length > 0;
-  const isCredentialsValid = emailRegex.test(email) && password.length >= 6;
+  const isCredentialsValid = emailRegex.test(email) && isPasswordValid;
 
   const handleBack = () => {
     switch (step) {
