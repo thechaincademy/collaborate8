@@ -330,15 +330,31 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
                 <p className="mt-2 text-[11px] text-muted-foreground">Tap to copy</p>
               </button>
 
+              {!hasSentEmail && (
+                <div className="mt-3 space-y-2">
+                  <label htmlFor="home-coparent-email" className="text-xs text-muted-foreground">
+                    Your co-parent's email
+                  </label>
+                  <Input
+                    id="home-coparent-email"
+                    type="email"
+                    inputMode="email"
+                    placeholder="co-parent@email.com"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
                   onClick={handleResendEmail}
-                  disabled={resending || !coparentEmail}
+                  disabled={resending || (!hasSentEmail && !emailInput.trim())}
                   className="gap-2"
                 >
                   {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Re-send email
+                  {hasSentEmail ? "Re-send email" : "Send email"}
                 </Button>
                 <Button onClick={handleCopyCode} className="gap-2" disabled={!inviteCode}>
                   <Copy className="h-4 w-4" />
