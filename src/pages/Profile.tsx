@@ -72,6 +72,47 @@ const Profile = () => {
     if (result?.url) window.location.href = result.url;
   };
 
+  const inviteCode = profile?.invite_code ?? "";
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      if (navigator.share) {
+        await navigator
+          .share({
+            title: "Link with me on Collabor8",
+            text: `Use this code to link with me on Collabor8: ${inviteCode}`,
+          })
+          .catch(() => {});
+      }
+      toast.success("Code copied to clipboard");
+    } catch {
+      toast.error("Could not copy code");
+    }
+  };
+
+  const handleSendInvite = async () => {
+    if (!inviteEmail.trim() || !inviteCode) {
+      toast.error("Please enter your co-parent's email");
+      return;
+    }
+    setSendingInvite(true);
+    const { error } = await supabase.functions.invoke("send-invite-email", {
+      body: {
+        recipientEmail: inviteEmail.trim(),
+        inviteCode,
+        senderName: fullName,
+      },
+    });
+    setSendingInvite(false);
+    if (error) toast.error("Could not send the invite email");
+    else {
+      toast.success("Invite email sent");
+      setInviteEmail("");
+    }
+  };
+
   const paymentSection = isManaging
     ? {
         title: "Payment Card (Send)",
