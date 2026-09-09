@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, CreditCard, Shield, Users } from "lucide-react";
+import { ArrowLeft, User, Mail, CreditCard, Shield, Users, Copy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
@@ -16,6 +18,8 @@ const Profile = () => {
   const { cards, fetchCards, setupCard, cardsLoading, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus, startOnboarding, loading: connectLoading } = useStripeConnect();
   const [connectStatus, setConnectStatus] = useState<string>("loading");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
 
   useEffect(() => {
     fetchCards();
