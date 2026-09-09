@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import MobileLayout from "@/components/layout/MobileLayout";
@@ -10,10 +10,13 @@ import ExpensesTab from "@/components/dashboard/ExpensesTab";
 import BenefitsTab from "@/components/dashboard/BenefitsTab";
 import ChatTab from "@/components/dashboard/ChatTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
+import ComingSoonOverlay from "@/components/dashboard/ComingSoonOverlay";
 import { useStripePayments } from "@/hooks/useStripe";
 import { trackTab } from "@/lib/analytics";
 
 export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
+
+const COMING_SOON_TABS: DashboardTab[] = ["chat", "benefits", "expenses"];
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("home");
