@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Mail, User, Check, Lock, ArrowRight, ArrowDownLeft, Apple } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, X, Lock, ArrowRight, ArrowDownLeft, Apple } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
