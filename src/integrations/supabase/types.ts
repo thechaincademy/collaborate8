@@ -645,6 +645,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      send_welcome_email: {
+        Args: { _email: string; _name?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
