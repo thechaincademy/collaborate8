@@ -331,39 +331,56 @@ const SignUpInvited = () => {
     </motion.div>
   );
 
-  const renderCredentials = () => (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="flex flex-1 flex-col"
-    >
-      <h1 className="mb-2 text-3xl font-bold text-foreground">Create your account</h1>
-      <p className="mb-8 text-muted-foreground">Enter your email and choose a password.</p>
-
-      <div className="flex flex-col gap-4">
-        <div className="relative">
-          <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
-        </div>
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="password" placeholder="Password (min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
-        </div>
-        <p className="text-xs text-muted-foreground">Use a unique password with letters, numbers & symbols to avoid rejection.</p>
+  const renderCredentials = () => {
+    const Rule = ({ ok, label }: { ok: boolean; label: string }) => (
+      <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${ok ? "bg-clay/10 text-clay" : "bg-destructive/10 text-destructive"}`}>
+        {ok ? <Check className="h-4 w-4 shrink-0" /> : <X className="h-4 w-4 shrink-0" />}
+        {label}
       </div>
+    );
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="flex flex-1 flex-col"
+      >
+        <h1 className="mb-2 text-3xl font-bold text-foreground">Create your account</h1>
+        <p className="mb-6 text-muted-foreground">Your password must meet these three rules before you continue.</p>
 
-      <div className="flex-1" />
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
+              className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`h-14 rounded-2xl border-2 bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground ${password && !isPasswordValid ? "border-destructive" : "border-border"}`}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Rule ok={pwc.length} label="At least 8 characters" />
+            <Rule ok={pwc.mixed} label="Upper and lowercase letters" />
+            <Rule ok={pwc.number} label="At least one number" />
+          </div>
+        </div>
 
-      <div className="pb-8 pt-6">
-        <Button onClick={handleManualSignUp} className="w-full" size="lg" disabled={!isCredentialsValid || isLoading}>
-          {isLoading ? "Creating account..." : "Create Account"}
-        </Button>
-      </div>
-    </motion.div>
-  );
+        <div className="flex-1" />
+
+        <div className="pb-8 pt-6">
+          <Button onClick={handleManualSignUp} className="w-full" size="lg" disabled={!isCredentialsValid || isLoading}>
+            {isLoading ? "Creating account..." : "Create Account"}
+          </Button>
+        </div>
+      </motion.div>
+    );
+  };
 
   const renderVerify = () => (
     <motion.div
