@@ -41,8 +41,9 @@ const TopBanner = () => {
             Money Help
           </Link>
           <Button size="sm" onClick={handleWaitlistClick} className="rounded-full">
-            Join the Waiting List
+            Sign Up
           </Button>
+
         </div>
       </div>
     </nav>
