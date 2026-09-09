@@ -37,8 +37,9 @@ const Landing = () => {
   const formLoadedAt = useRef(Date.now());
 
   const scrollToWaitlist = () => {
-    waitlistRef.current?.scrollIntoView({ behavior: "smooth" });
+    navigate("/splash");
   };
+
 
   const handleWaitlistSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,7 +162,8 @@ const Landing = () => {
               onClick={scrollToWaitlist}
               className="group flex items-center gap-3 rounded-full bg-foreground px-8 py-4 text-sm font-bold text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
             >
-              Join the Waiting List
+              Sign Up
+
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
           </motion.div>
@@ -323,7 +325,7 @@ const Landing = () => {
             className="mt-10 text-center"
           >
             <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
-              Join the Waiting List <ArrowRight className="h-4 w-4" />
+              Sign Up <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>
         </div>
@@ -346,8 +348,9 @@ const Landing = () => {
                 The only app helping co-parents manage payments with ease. Collabor8 gives families the clarity they need to stay on track.
               </p>
               <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
-                Get Early Access <ArrowRight className="h-4 w-4" />
+                Sign Up <ArrowRight className="h-4 w-4" />
               </Button>
+
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -365,7 +368,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Waitlist CTA */}
+      {/* Sign up CTA */}
       <section id="waitlist" ref={waitlistRef} className="py-20 bg-slate-50">
         <div className="mx-auto max-w-5xl px-6 text-center">
           <motion.div
@@ -377,50 +380,17 @@ const Landing = () => {
               Ready to simplify co-parenting?
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Join the waitlist and be the first to know when we launch.
+              Create your account and get started in minutes.
             </p>
-            {!isSignedUp ? (
-              <form onSubmit={handleWaitlistSignup} className="mx-auto mt-8 flex max-w-md gap-3">
-                {/* Honeypot - hidden from real users, bots will fill it */}
-                <input
-                  type="text"
-                  name="website"
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                  className="absolute opacity-0 pointer-events-none h-0 w-0"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                />
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 flex-1 rounded-full border-border bg-card px-5"
-                  required
-                />
-                <Button type="submit" size="default" disabled={isSubmitting}>
-                  {isSubmitting ? "Joining..." : "Join Waitlist"}
-                </Button>
-              </form>
-            ) : (
-              <div className="mt-8 space-y-3">
-                <div className="flex items-center justify-center gap-2 text-foreground">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span className="font-semibold">You're on the waitlist!</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  We'll be in touch soon!
-                </p>
-              </div>
-            )}
-            <p className="mt-4 text-xs text-muted-foreground">
-              No spam. We'll only email you when we're ready to launch.
-            </p>
+            <div className="mt-8">
+              <Button size="lg" onClick={() => navigate("/splash")} className="gap-2">
+                Sign Up <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>
+
 
       {/* Footer */}
       <footer className="border-t border-border py-8 bg-background">

@@ -6,15 +6,9 @@ const TopBanner = () => {
   const location = useLocation();
 
   const handleWaitlistClick = () => {
-    if (location.pathname === "/") {
-      const el = document.getElementById("waitlist");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-        return;
-      }
-    }
-    navigate("/#waitlist");
+    navigate("/splash");
   };
+
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background">
