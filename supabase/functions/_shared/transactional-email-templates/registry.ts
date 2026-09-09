@@ -3,6 +3,7 @@ import { template as coparentInviteTemplate } from './coparent-invite.tsx'
 import { template as userWelcomeTemplate } from './user-welcome.tsx'
 import { template as newSignupAdminAlertTemplate } from './new-signup-admin-alert.tsx'
 import { template as adminWeeklyReportTemplate } from './admin-weekly-report.tsx'
+import { template as productUpdateTemplate } from './product-update.tsx'
 
 
 export interface TemplateEntry {
@@ -27,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'user_welcome': userWelcomeTemplate,
   'new_signup_admin_alert': newSignupAdminAlertTemplate,
   'admin_weekly_report': adminWeeklyReportTemplate,
+  'product_update': productUpdateTemplate,
 }
