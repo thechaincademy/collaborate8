@@ -6,15 +6,9 @@ const TopBanner = () => {
   const location = useLocation();
 
   const handleWaitlistClick = () => {
-    if (location.pathname === "/") {
-      const el = document.getElementById("waitlist");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-        return;
-      }
-    }
-    navigate("/#waitlist");
+    navigate("/splash");
   };
+
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background">
@@ -47,8 +41,9 @@ const TopBanner = () => {
             Money Help
           </Link>
           <Button size="sm" onClick={handleWaitlistClick} className="rounded-full">
-            Join the Waiting List
+            Sign Up
           </Button>
+
         </div>
       </div>
     </nav>
