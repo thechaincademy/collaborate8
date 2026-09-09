@@ -20,6 +20,7 @@ import { format, subMonths } from "date-fns";
 import DashboardHeader from "./DashboardHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   const [statusOpen, setStatusOpen] = useState(false);
   const [invitation, setInvitation] = useState<{ invitee_email: string | null } | null>(null);
   const [resending, setResending] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
 
   useEffect(() => {
     fetchPayments();
@@ -105,7 +107,8 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   const isLoading = profileLoading || paymentsLoading;
   const isLinked = !!profile?.coparent_id;
   const inviteCode = profile?.invite_code ?? "";
-  const coparentEmail = invitation?.invitee_email ?? user?.email ?? "";
+  const coparentEmail = invitation?.invitee_email ?? "";
+  const hasSentEmail = !!coparentEmail;
 
   const handleCopyCode = async () => {
     if (!inviteCode) return;
@@ -124,21 +127,26 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   };
 
   const handleResendEmail = async () => {
-    if (!coparentEmail || !inviteCode) {
-      toast.error("Missing co-parent email");
+    const targetEmail = coparentEmail || emailInput.trim();
+    if (!targetEmail || !inviteCode) {
+      toast.error("Please enter your co-parent's email");
       return;
     }
     setResending(true);
     const { error } = await supabase.functions.invoke("send-invite-email", {
       body: {
-        recipientEmail: coparentEmail,
+        recipientEmail: targetEmail,
         inviteCode,
         senderName: `${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`.trim(),
       },
     });
     setResending(false);
-    if (error) toast.error("Could not resend email");
-    else toast.success("Invite email sent");
+    if (error) toast.error("Could not send the invite email");
+    else {
+      toast.success("Invite email sent");
+      setInvitation({ invitee_email: targetEmail });
+      setEmailInput("");
+    }
   };
 
   return (
@@ -322,15 +330,31 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
                 <p className="mt-2 text-[11px] text-muted-foreground">Tap to copy</p>
               </button>
 
+              {!hasSentEmail && (
+                <div className="mt-3 space-y-2">
+                  <label htmlFor="home-coparent-email" className="text-xs text-muted-foreground">
+                    Your co-parent's email
+                  </label>
+                  <Input
+                    id="home-coparent-email"
+                    type="email"
+                    inputMode="email"
+                    placeholder="co-parent@email.com"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
                   onClick={handleResendEmail}
-                  disabled={resending || !coparentEmail}
+                  disabled={resending || (!hasSentEmail && !emailInput.trim())}
                   className="gap-2"
                 >
                   {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Re-send email
+                  {hasSentEmail ? "Re-send email" : "Send email"}
                 </Button>
                 <Button onClick={handleCopyCode} className="gap-2" disabled={!inviteCode}>
                   <Copy className="h-4 w-4" />
