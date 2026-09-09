@@ -20,6 +20,7 @@ import { format, subMonths } from "date-fns";
 import DashboardHeader from "./DashboardHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   const [statusOpen, setStatusOpen] = useState(false);
   const [invitation, setInvitation] = useState<{ invitee_email: string | null } | null>(null);
   const [resending, setResending] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
 
   useEffect(() => {
     fetchPayments();
