@@ -321,24 +321,30 @@ const SignUp = () => {
 
   const renderPassword = () => {
     const Rule = ({ ok, label }: { ok: boolean; label: string }) => (
-      <div className={`flex items-center gap-2 text-sm ${ok ? "text-clay" : "text-muted-foreground"}`}>
-        <Check className={`h-4 w-4 ${ok ? "opacity-100" : "opacity-30"}`} />
+      <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${ok ? "bg-clay/10 text-clay" : "bg-destructive/10 text-destructive"}`}>
+        {ok ? <Check className="h-4 w-4 shrink-0" /> : <X className="h-4 w-4 shrink-0" />}
         {label}
       </div>
     );
     return (
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
         <h1 className="mb-2 text-3xl font-bold text-foreground">Create a password</h1>
-        <p className="mb-6 text-muted-foreground">Use 8+ characters with a number and mixed case.</p>
+        <p className="mb-6 text-muted-foreground">Your password must meet these three rules before you continue.</p>
         <div className="relative">
           <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="password" placeholder="Enter your password" aria-label="Password" value={password} onChange={(e) => setPassword(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
+          <Input
+            type="password"
+            placeholder="Enter your password"
+            aria-label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={`h-14 rounded-2xl border-2 bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${password && !isPasswordValid ? "border-destructive" : "border-border"}`}
+          />
         </div>
         <div className="mt-4 flex flex-col gap-2">
           <Rule ok={pwc.length} label="At least 8 characters" />
-          <Rule ok={pwc.mixed} label="Mix of upper and lower case" />
-          <Rule ok={pwc.number} label="Contains a number" />
+          <Rule ok={pwc.mixed} label="Upper and lowercase letters" />
+          <Rule ok={pwc.number} label="At least one number" />
         </div>
         <div className="flex-1" />
         <div className="pb-8 pt-6">
