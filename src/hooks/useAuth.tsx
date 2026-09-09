@@ -25,8 +25,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        if (event === "SIGNED_IN" && session) {
+          // Welcome + founder alert emails (no-op if already sent for this user)
+          setTimeout(() => {
+            supabase.functions
+              .invoke("send-signup-emails")
+              .catch((error) => console.error("send-signup-emails failed", error));
+          }, 0);
+        }
       }
     );
+
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
