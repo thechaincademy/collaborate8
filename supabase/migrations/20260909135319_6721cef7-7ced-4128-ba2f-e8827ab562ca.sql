@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.send_welcome_email(text, text) FROM anon, authenticated, PUBLIC;
