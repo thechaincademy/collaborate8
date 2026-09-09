@@ -16,13 +16,15 @@ export const trackEvent = async (eventType: string, options: TrackOptions = {}) 
     const userId = data.session?.user?.id;
     if (!userId) return;
 
-    await supabase.from("usage_events").insert({
-      user_id: userId,
-      event_type: eventType,
-      tab: options.tab ?? null,
-      path: options.path ?? window.location.pathname,
-      metadata: options.metadata ?? null,
-    });
+    await supabase.from("usage_events").insert([
+      {
+        user_id: userId,
+        event_type: eventType,
+        tab: options.tab ?? undefined,
+        path: options.path ?? window.location.pathname,
+        metadata: (options.metadata ?? null) as never,
+      },
+    ]);
   } catch (error) {
     console.warn("usage tracking failed", error);
   }
