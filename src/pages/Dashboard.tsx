@@ -62,6 +62,8 @@ const Dashboard = () => {
     }
   };
 
+  const isComingSoon = COMING_SOON_TABS.includes(activeTab);
+
   return (
     <>
       <Helmet>
@@ -75,8 +77,14 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
+          className="relative"
         >
           {renderContent()}
+          <AnimatePresence>
+            {isComingSoon && (
+              <ComingSoonOverlay tab={activeTab} onBack={() => setActiveTab("home")} />
+            )}
+          </AnimatePresence>
         </motion.div>
       </MobileLayout>
     </>
