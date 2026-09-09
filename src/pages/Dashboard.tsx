@@ -11,6 +11,7 @@ import BenefitsTab from "@/components/dashboard/BenefitsTab";
 import ChatTab from "@/components/dashboard/ChatTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
 import { useStripePayments } from "@/hooks/useStripe";
+import { trackTab } from "@/lib/analytics";
 
 export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
@@ -36,6 +37,10 @@ const Dashboard = () => {
       finalize();
     }
   }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    trackTab(activeTab);
+  }, [activeTab]);
 
   const renderContent = () => {
     switch (activeTab) {

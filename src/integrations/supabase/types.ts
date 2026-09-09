@@ -577,6 +577,36 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          path: string | null
+          tab: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          tab?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          tab?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           created_at: string
@@ -604,6 +634,7 @@ export type Database = {
         Args: { _invite_code: string }
         Returns: undefined
       }
+      admin_usage_summary: { Args: { _days?: number }; Returns: Json }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -624,6 +655,7 @@ export type Database = {
         }[]
       }
       get_user_role: { Args: { _user_id: string }; Returns: string }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
