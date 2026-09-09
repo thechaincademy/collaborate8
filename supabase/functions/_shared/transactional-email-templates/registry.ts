@@ -1,4 +1,8 @@
 import type { ComponentType } from 'npm:react@18.3.1'
+import { template as coparentInviteTemplate } from './coparent-invite.tsx'
+import { template as userWelcomeTemplate } from './user-welcome.tsx'
+import { template as newSignupAdminAlertTemplate } from './new-signup-admin-alert.tsx'
+
 
 export interface TemplateEntry {
   component: ComponentType<any>
