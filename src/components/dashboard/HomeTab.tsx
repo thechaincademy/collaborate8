@@ -107,7 +107,8 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   const isLoading = profileLoading || paymentsLoading;
   const isLinked = !!profile?.coparent_id;
   const inviteCode = profile?.invite_code ?? "";
-  const coparentEmail = invitation?.invitee_email ?? user?.email ?? "";
+  const coparentEmail = invitation?.invitee_email ?? "";
+  const hasSentEmail = !!coparentEmail;
 
   const handleCopyCode = async () => {
     if (!inviteCode) return;
@@ -126,21 +127,26 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   };
 
   const handleResendEmail = async () => {
-    if (!coparentEmail || !inviteCode) {
-      toast.error("Missing co-parent email");
+    const targetEmail = coparentEmail || emailInput.trim();
+    if (!targetEmail || !inviteCode) {
+      toast.error("Please enter your co-parent's email");
       return;
     }
     setResending(true);
     const { error } = await supabase.functions.invoke("send-invite-email", {
       body: {
-        recipientEmail: coparentEmail,
+        recipientEmail: targetEmail,
         inviteCode,
         senderName: `${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`.trim(),
       },
     });
     setResending(false);
-    if (error) toast.error("Could not resend email");
-    else toast.success("Invite email sent");
+    if (error) toast.error("Could not send the invite email");
+    else {
+      toast.success("Invite email sent");
+      setInvitation({ invitee_email: targetEmail });
+      setEmailInput("");
+    }
   };
 
   return (
