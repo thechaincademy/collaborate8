@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.notify_admins_new_signup(text, text, timestamptz) FROM anon, authenticated, PUBLIC;
+GRANT EXECUTE ON FUNCTION public.notify_admins_new_signup(text, text, timestamptz) TO service_role;
