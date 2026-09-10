@@ -71,14 +71,6 @@ const faqSchema = {
     },
     {
       "@type": "Question",
-      name: "Is Collabor8 available outside the UK?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Collabor8 currently operates in the United Kingdom only. The platform is specifically built around the UK Child Support Act 1991 statutory formula and the Child Maintenance Service framework. International expansion to Ireland and Australia is planned from Year 3, as both countries have comparable statutory child maintenance frameworks with the same digital infrastructure gap.",
-      },
-    },
-    {
-      "@type": "Question",
       name: "How is my data protected on Collabor8?",
       acceptedAnswer: {
         "@type": "Answer",
@@ -168,12 +160,6 @@ const sections = [
         question: "Can I use Collabor8 if my co-parent is not on the platform?",
         answer: [
           "Yes. One parent can sign up and use Collabor8 independently. A receiving parent can use the calculator and expense tracker on their own. A paying parent can log payments and build a compliance record without their co-parent being on the platform. When both parents are on Collabor8, they can access the full shared features including the financial chat, shared expense confirmation and real-time payment confirmation.",
-        ],
-      },
-      {
-        question: "Is Collabor8 available outside the UK?",
-        answer: [
-          "Collabor8 currently operates in the United Kingdom only. The platform is specifically built around the UK Child Support Act 1991 statutory formula and the Child Maintenance Service framework. International expansion to Ireland and Australia is planned from Year 3, as both countries have comparable statutory child maintenance frameworks with the same digital infrastructure gap.",
         ],
       },
       {
