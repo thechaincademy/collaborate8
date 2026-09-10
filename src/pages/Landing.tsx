@@ -149,13 +149,11 @@ const Landing = () => {
             </div>
 
             <h1 className="mb-6 max-w-2xl text-4xl font-extrabold tracking-tight text-foreground md:text-6xl lg:leading-[1.1]">
-              Co-parenting finances,{" "}
-              <br className="hidden md:block" />
-              <span className="text-background">made simple.</span>
+              Let's talk finances.
             </h1>
 
             <p className="mb-10 max-w-lg text-lg leading-relaxed text-foreground/80 md:text-xl">
-              Supporting both parents to stay on top of payments and shared expenses, together
+              Collabor8 gives separated parents a dedicated space to discuss money and manage child maintenance - away from everything else.
             </p>
 
             <button
