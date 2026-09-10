@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
+import FAQ from "./pages/FAQ";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import ChildMaintenanceGuideApp from "./pages/ChildMaintenanceGuideApp";
 import SupportAndGuidance from "./pages/SupportAndGuidance";
