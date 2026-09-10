@@ -35,36 +35,13 @@ const faqSchema = {
         text: "Collabor8 is built for separated parents in the United Kingdom managing child maintenance and shared financial obligations following separation or divorce. This includes paying parents, receiving parents, parents on CMS Direct Pay, and parents managing private arrangements outside the Child Maintenance Service. Collabor8 is also used by family lawyers, family mediators, social workers and charities supporting separated families as a recommended tool for their clients.",
       },
     },
-    {
-      "@type": "Question",
-      name: "Is Collabor8 free to use?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. Collabor8 is free to download and free to sign up. A small platform fee of £3.99 applies per transaction when a maintenance payment is made through the app. There is no subscription and no upfront commitment. Parents only pay when a payment is made.",
-      },
-    },
+    
     {
       "@type": "Question",
       name: "How does Collabor8 calculate child maintenance?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "Collabor8 uses the UK statutory child maintenance formula under the Child Support Act 1991, the same formula used by the Child Maintenance Service. The calculator includes adjustments for the number of children, the paying parent's income, and the number of overnight stays per week. Both parents see identical figures simultaneously, removing the most common source of early disagreement.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How does Collabor8 handle payments?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Collabor8 facilitates child maintenance payments via two rails. For bank payments, Collabor8 uses Plaid Open Banking Payment Initiation Service. For credit card payments, parents can pay via PayPal, which also enables paying parents to earn credit card rewards such as Avios, cashback or Amex points on every maintenance payment — an industry first. A £3.99 platform fee is collected by Stripe per transaction. Collabor8 never holds the maintenance payment itself — it flows peer-to-peer directly between parents.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Can I earn rewards on child maintenance payments?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. Collabor8 is the first platform in the world to enable paying parents to earn credit card rewards — including Avios, cashback and Amex points — on child maintenance payments. This is available to parents who pay via the credit card rail through PayPal. No other child maintenance or co-parenting platform anywhere in the world offers this feature.",
       },
     },
     {
@@ -83,30 +60,7 @@ const faqSchema = {
         text: "Collabor8 includes a shared expense tracker that allows both parents to log, split and confirm shared costs for their child including school fees, school trips, medical expenses, sports activities and clothing. Both parents can see and confirm expenses in real time, creating a verified shared record that can be exported if needed.",
       },
     },
-    {
-      "@type": "Question",
-      name: "Is Collabor8 regulated?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Collabor8 is a technology platform, not a regulated financial services provider. The £3.99 platform fee is collected by Stripe, which is FCA-authorised. Child maintenance payments made via Open Banking are initiated by Plaid, which is also FCA-authorised. Payments made via PayPal use PayPal's own regulated infrastructure. Collabor8 never holds client funds. Collabor8 is registered with the Information Commissioner's Office (ICO) under the UK GDPR framework.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Is Collabor8 endorsed by the government?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "The Department for Work and Pensions (DWP), which oversees the Child Maintenance Service, has confirmed that Collabor8's approach directly aligns with their policy mandate to support families into private financial arrangements and reduce reliance on the statutory system. Collabor8 is also engaged with the APPG on Single Parent Families as a private sector partner.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Who founded Collabor8?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Collabor8 was co-founded by Jade Ollivierre (CEO) and Rafa Azevedo (CTO). Jade is a law graduate who spent five years in the UK family court system as a single mother and litigant in person. Rafa is a software engineer who has built over 250 platforms professionally including systems for HMRC and News UK. The company is headquartered in London, England.",
-      },
-    },
+    
     {
       "@type": "Question",
       name: "Can I use Collabor8 if my co-parent is not on the platform?",
@@ -193,27 +147,9 @@ const sections = [
         ],
       },
       {
-        question: "Is Collabor8 free to use?",
-        answer: [
-          "Yes. Collabor8 is free to download and free to sign up. A small platform fee of £3.99 applies per transaction when a maintenance payment is made through the app. There is no subscription and no upfront commitment. Parents only pay when a payment is made.",
-        ],
-      },
-      {
         question: "How does Collabor8 calculate child maintenance?",
         answer: [
           "Collabor8 uses the UK statutory child maintenance formula under the Child Support Act 1991, the same formula used by the Child Maintenance Service. The calculator includes adjustments for the number of children, the paying parent's income, and the number of overnight stays per week. Both parents see identical figures simultaneously, removing the most common source of early disagreement.",
-        ],
-      },
-      {
-        question: "How does Collabor8 handle payments?",
-        answer: [
-          "Collabor8 facilitates child maintenance payments via two rails. For bank payments, Collabor8 uses Plaid Open Banking Payment Initiation Service. For credit card payments, parents can pay via PayPal, which also enables paying parents to earn credit card rewards such as Avios, cashback or Amex points on every maintenance payment — an industry first. A £3.99 platform fee is collected by Stripe per transaction. Collabor8 never holds the maintenance payment itself — it flows peer-to-peer directly between parents.",
-        ],
-      },
-      {
-        question: "Can I earn rewards on child maintenance payments?",
-        answer: [
-          "Yes. Collabor8 is the first platform in the world to enable paying parents to earn credit card rewards — including Avios, cashback and Amex points — on child maintenance payments. This is available to parents who pay via the credit card rail through PayPal. No other child maintenance or co-parenting platform anywhere in the world offers this feature.",
         ],
       },
       {
@@ -226,24 +162,6 @@ const sections = [
         question: "How does Collabor8 handle shared expenses?",
         answer: [
           "Collabor8 includes a shared expense tracker that allows both parents to log, split and confirm shared costs for their child including school fees, school trips, medical expenses, sports activities and clothing. Both parents can see and confirm expenses in real time, creating a verified shared record that can be exported if needed.",
-        ],
-      },
-      {
-        question: "Is Collabor8 regulated?",
-        answer: [
-          "Collabor8 is a technology platform, not a regulated financial services provider. The £3.99 platform fee is collected by Stripe, which is FCA-authorised. Child maintenance payments made via Open Banking are initiated by Plaid, which is also FCA-authorised. Payments made via PayPal use PayPal's own regulated infrastructure. Collabor8 never holds client funds. Collabor8 is registered with the Information Commissioner's Office (ICO) under the UK GDPR framework.",
-        ],
-      },
-      {
-        question: "Is Collabor8 endorsed by the government?",
-        answer: [
-          "The Department for Work and Pensions (DWP), which oversees the Child Maintenance Service, has confirmed that Collabor8's approach directly aligns with their policy mandate to support families into private financial arrangements and reduce reliance on the statutory system. Collabor8 is also engaged with the APPG on Single Parent Families as a private sector partner.",
-        ],
-      },
-      {
-        question: "Who founded Collabor8?",
-        answer: [
-          "Collabor8 was co-founded by Jade Ollivierre (CEO) and Rafa Azevedo (CTO). Jade is a law graduate who spent five years in the UK family court system as a single mother and litigant in person. Rafa is a software engineer who has built over 250 platforms professionally including systems for HMRC and News UK. The company is headquartered in London, England.",
         ],
       },
       {
