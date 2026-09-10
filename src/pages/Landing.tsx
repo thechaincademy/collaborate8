@@ -404,6 +404,7 @@ const Landing = () => {
               <Link to="/child-maintenance-calculator" className="hover:text-foreground">Child Maintenance Calculator</Link>
               <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">Maintenance Guide</Link>
               <Link to="/resources/support-and-guidance" className="hover:text-foreground">Support &amp; Guidance</Link>
+              <Link to="/faq" className="hover:text-foreground">FAQ</Link>
               <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
               <Link to="/cookies" className="hover:text-foreground">Cookie Policy</Link>
               <span>© 2025 collabor8</span>

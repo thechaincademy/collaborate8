@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
+import FAQ from "./pages/FAQ";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import ChildMaintenanceGuideApp from "./pages/ChildMaintenanceGuideApp";
 import SupportAndGuidance from "./pages/SupportAndGuidance";
@@ -56,9 +57,10 @@ const App = () => (
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />
               <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
               <Route path="/statement/:type" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/cookies" element={<CookiePolicy />} />
-              <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/cookies" element={<CookiePolicy />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><ChildMaintenanceGuideApp /></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<Navigate to="/resources/child-maintenance-guide#article-1" replace />} />
               <Route path="/resources/child-maintenance-guide/who-pays" element={<Navigate to="/resources/child-maintenance-guide#article-2" replace />} />
