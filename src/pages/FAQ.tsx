@@ -44,8 +44,6 @@ const faqSchema = {
         text: "Collabor8 uses the UK statutory child maintenance formula under the Child Support Act 1991, the same formula used by the Child Maintenance Service. The calculator includes adjustments for the number of children, the paying parent's income, and the number of overnight stays per week. Both parents see identical figures simultaneously, removing the most common source of early disagreement.",
       },
     },
-    
-    
     {
       "@type": "Question",
       name: "What is the financial chat and how does it work?",
@@ -62,8 +60,6 @@ const faqSchema = {
         text: "Collabor8 includes a shared expense tracker that allows both parents to log, split and confirm shared costs for their child including school fees, school trips, medical expenses, sports activities and clothing. Both parents can see and confirm expenses in real time, creating a verified shared record that can be exported if needed.",
       },
     },
-    
-    
     
     {
       "@type": "Question",
