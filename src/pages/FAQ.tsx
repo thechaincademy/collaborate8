@@ -199,12 +199,6 @@ const sections = [
         ],
       },
       {
-        question: "Who founded Collabor8?",
-        answer: [
-          "Collabor8 was co-founded by Jade Ollivierre (CEO) and Rafa Azevedo (CTO). Jade is a law graduate who spent five years in the UK family court system as a single mother and litigant in person. Rafa is a software engineer who has built over 250 platforms professionally including systems for HMRC and News UK. The company is headquartered in London, England.",
-        ],
-      },
-      {
         question: "Can I use Collabor8 if my co-parent is not on the platform?",
         answer: [
           "Yes. One parent can sign up and use Collabor8 independently. A receiving parent can use the calculator and expense tracker on their own. A paying parent can log payments and build a compliance record without their co-parent being on the platform. When both parents are on Collabor8, they can access the full shared features including the financial chat, shared expense confirmation and real-time payment confirmation.",
