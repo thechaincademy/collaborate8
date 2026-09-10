@@ -57,8 +57,6 @@ const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
           <Link to="/" className="text-white/55 no-underline hover:text-white">Collabor8</Link>
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/55 no-underline hover:text-white">Privacy</Link>
-          {" \u00B7 "}
-          <Link to="/cookies" className="text-white/55 no-underline hover:text-white">Terms</Link>
         </p>
         <p className="mt-1 text-xs">This guide is for informational purposes only and does not constitute legal advice. &copy; 2025 Collabor8.</p>
       </footer>
