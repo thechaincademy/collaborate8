@@ -14,24 +14,9 @@ type Topic = {
 
 const TOPICS: Topic[] = [
   {
-    id: "maintenance",
-    title: "Monthly maintenance",
-    intro: "Agree a fair monthly amount you both feel comfortable with.",
-    prompts: [
-      {
-        parentA: "What amount do you feel is fair to contribute each month, and how did you arrive at that figure?",
-        parentB: "What amount do you feel reflects the child's needs each month, and what costs are you thinking of?",
-      },
-      {
-        parentA: "Which payment date works best around your pay cycle?",
-        parentB: "Which payment date works best for your household bills?",
-      },
-    ],
-  },
-  {
     id: "expenses",
     title: "Shared expenses",
-    intro: "Decide how you'll split one-off costs like school trips, uniforms and clubs.",
+    intro: "If you're a family that shares certain expenses, use this tool to decide how you'll split one-off costs.",
     prompts: [
       {
         parentA: "Which categories of expenses should be shared 50/50?",
