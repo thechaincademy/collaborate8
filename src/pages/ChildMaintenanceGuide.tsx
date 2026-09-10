@@ -366,8 +366,6 @@ const ChildMaintenanceGuide = () => {
           <Link to="/resources/support-and-guidance" className="text-white/60 no-underline hover:text-white">Support &amp; Guidance</Link>
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/60 no-underline hover:text-white">Privacy</Link>
-          {" \u00B7 "}
-          <Link to="/cookies" className="text-white/60 no-underline hover:text-white">Terms</Link>
         </p>
         <p className="mt-2 text-xs">&copy; 2025 Collabor8. This guide is for informational purposes only and does not constitute legal advice.</p>
       </footer>
