@@ -71,14 +71,6 @@ const faqSchema = {
     },
     {
       "@type": "Question",
-      name: "How is my data protected on Collabor8?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Collabor8 is registered with the Information Commissioner's Office (ICO) under the UK GDPR framework. All data in transit is encrypted via TLS. All data at rest is encrypted at the database level. Financial data including card numbers and bank account details is handled entirely by Stripe and PayPal — Collabor8 does not store payment credentials. Data is stored exclusively in UK and EU AWS regions.",
-      },
-    },
-    {
-      "@type": "Question",
       name: "What is child maintenance in the UK?",
       acceptedAnswer: {
         "@type": "Answer",
@@ -160,12 +152,6 @@ const sections = [
         question: "Can I use Collabor8 if my co-parent is not on the platform?",
         answer: [
           "Yes. One parent can sign up and use Collabor8 independently. A receiving parent can use the calculator and expense tracker on their own. A paying parent can log payments and build a compliance record without their co-parent being on the platform. When both parents are on Collabor8, they can access the full shared features including the financial chat, shared expense confirmation and real-time payment confirmation.",
-        ],
-      },
-      {
-        question: "How is my data protected on Collabor8?",
-        answer: [
-          "Collabor8 is registered with the Information Commissioner's Office (ICO) under the UK GDPR framework. All data in transit is encrypted via TLS. All data at rest is encrypted at the database level. Financial data including card numbers and bank account details is handled entirely by Stripe and PayPal — Collabor8 does not store payment credentials. Data is stored exclusively in UK and EU AWS regions.",
         ],
       },
     ],
