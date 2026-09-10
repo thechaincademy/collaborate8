@@ -193,12 +193,6 @@ const sections = [
         ],
       },
       {
-        question: "Is Collabor8 endorsed by the government?",
-        answer: [
-          "The Department for Work and Pensions (DWP), which oversees the Child Maintenance Service, has confirmed that Collabor8's approach directly aligns with their policy mandate to support families into private financial arrangements and reduce reliance on the statutory system. Collabor8 is also engaged with the APPG on Single Parent Families as a private sector partner.",
-        ],
-      },
-      {
         question: "Can I use Collabor8 if my co-parent is not on the platform?",
         answer: [
           "Yes. One parent can sign up and use Collabor8 independently. A receiving parent can use the calculator and expense tracker on their own. A paying parent can log payments and build a compliance record without their co-parent being on the platform. When both parents are on Collabor8, they can access the full shared features including the financial chat, shared expense confirmation and real-time payment confirmation.",
