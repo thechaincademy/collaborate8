@@ -366,23 +366,77 @@ const ChatTab = () => {
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         <ConversationToolBanner onOpen={openTool} />
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-            <UserPlus className="h-6 w-6 text-muted-foreground" />
+        <div className="flex flex-1 flex-col gap-4 pt-2">
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="text-base font-semibold text-foreground">
+              Start your financial conversation.
+            </h2>
+            {pendingLoading ? (
+              <Skeleton className="mt-3 h-24 w-full rounded-xl" />
+            ) : pendingMessage ? (
+              <>
+                <div className="mt-3 rounded-2xl rounded-br-md bg-foreground px-4 py-2.5 text-sm leading-relaxed text-background">
+                  {pendingMessage.body}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Your message is waiting. You will be able to continue the conversation once your
+                  co-parent joins and responds. We have sent them an email letting them know you
+                  have been in touch.
+                </p>
+              </>
+            ) : (
+              <>
+                <Textarea
+                  value={pendingDraft}
+                  onChange={(e) => setPendingDraft(e.target.value)}
+                  placeholder="Write your first message…"
+                  rows={4}
+                  className="mt-3 resize-none rounded-2xl border-border bg-background text-foreground"
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Your co-parent has not yet joined Collabor8. You can write your first message now.
+                  It will be delivered to them as soon as they connect. An email will be sent to
+                  your co-parent letting them know you have reached out.
+                </p>
+                {!savedCoparentEmail && (
+                  <input
+                    type="email"
+                    value={pendingEmail}
+                    onChange={(e) => setPendingEmail(e.target.value)}
+                    placeholder="Your co-parent's email address"
+                    className="mt-3 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  />
+                )}
+                <Button
+                  className="mt-3 w-full"
+                  onClick={sendFirstMessage}
+                  disabled={!pendingDraft.trim() || sendingPending}
+                >
+                  {sendingPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send message"}
+                </Button>
+              </>
+            )}
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Not connected yet</h2>
-          <p className="max-w-xs text-sm text-muted-foreground">
-            Your co-parent has not yet joined Collabor8. Send them an invitation to connect.
-          </p>
-          <Button className="mt-2 w-full max-w-xs" onClick={() => navigate("/profile")}>
-            Send an invitation
-          </Button>
-          {showUnconnectedSuggestion && (
-            <div className="w-full text-left">
-              <ConversationToolSuggestionCard onOpen={openTool} />
+
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <UserPlus className="h-6 w-6 text-muted-foreground" />
             </div>
-          )}
+            <h2 className="text-lg font-semibold text-foreground">Not connected yet</h2>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Your co-parent has not yet joined Collabor8. Send them an invitation to connect.
+            </p>
+            <Button className="w-full max-w-xs" onClick={() => navigate("/profile")}>
+              Send an invitation
+            </Button>
+            {showUnconnectedSuggestion && (
+              <div className="w-full text-left">
+                <ConversationToolSuggestionCard onOpen={openTool} />
+              </div>
+            )}
+          </div>
         </div>
+
         <ConversationToolModal
           open={toolOpen}
           onOpenChange={setToolOpen}
