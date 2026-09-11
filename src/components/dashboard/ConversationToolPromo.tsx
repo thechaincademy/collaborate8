@@ -6,11 +6,156 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const CONVERSATION_TOOL_PRICE = "£29.99";
 
 const isValidEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+const PRIVACY_TEXT =
+  "An automated invitation will be sent to your co-parent on your behalf. A single automated reminder will follow if they have not responded within seven days. A final automated notice will be sent at fourteen days if there is still no response. After this point no further contact will be made. We will not store your co-parent's email address on our system beyond this process. It will be deleted within thirty days if no engagement occurs.";
+
+/**
+ * Shown immediately after payment is confirmed and before the questionnaire begins.
+ * Confirms the saved co-parent email address, or asks for one if none is stored.
+ */
+export const ConversationEmailStep = ({
+  open,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onConfirm: (email: string) => void;
+}) => {
+  const { user } = useAuth();
+  const [savedEmail, setSavedEmail] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<"confirm" | "input">("input");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    setEmail("");
+    setLoading(true);
+
+    (async () => {
+      let found: string | null = null;
+      if (user) {
+        const { data } = await supabase
+          .from("invitations")
+          .select("invitee_email, created_at")
+          .eq("inviter_id", user.id)
+          .not("invitee_email", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        found = (data?.invitee_email as string | null) ?? null;
+      }
+      setSavedEmail(found);
+      setMode(found ? "confirm" : "input");
+      setLoading(false);
+    })();
+  }, [open, user]);
+
+  const submitTyped = () => {
+    const value = email.trim();
+    if (!isValidEmail(value)) {
+      toast.error("Please enter your co-parent's email address");
+      return;
+    }
+    onOpenChange(false);
+    onConfirm(value);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+        <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
+          <h2 className="text-lg font-semibold leading-snug">
+            Your co-parent&apos;s invitation
+          </h2>
+        </div>
+
+        <div className="space-y-4 p-5 text-sm text-foreground">
+          {loading ? (
+            <p className="text-muted-foreground">Loading…</p>
+          ) : mode === "confirm" && savedEmail ? (
+            <>
+              <p>We will send your co-parent&apos;s invitation to the following email address:</p>
+              <p className="break-all rounded-xl border border-border bg-card p-3 font-medium">
+                {savedEmail}
+              </p>
+              <p>Is this correct?</p>
+              <p className="text-xs text-muted-foreground">{PRIVACY_TEXT}</p>
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onConfirm(savedEmail);
+                  }}
+                >
+                  Yes, send to this address
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setMode("input");
+                    setEmail("");
+                  }}
+                >
+                  No, use a different address
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <label htmlFor="conversation-coparent-email" className="text-sm font-medium">
+                  {savedEmail
+                    ? "Enter your co-parent's email address"
+                    : "Where should we send your co-parent's invitation?"}
+                </label>
+                <Input
+                  id="conversation-coparent-email"
+                  type="email"
+                  inputMode="email"
+                  placeholder="co-parent@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                {!savedEmail && (
+                  <p className="text-sm text-muted-foreground">
+                    Please enter the email address your co-parent uses regularly. The invitation
+                    will be sent here on your behalf once you have completed your questions.
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">{PRIVACY_TEXT}</p>
+              </div>
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+                  onClick={submitTyped}
+                >
+                  Continue
+                </Button>
+                {savedEmail && (
+                  <Button variant="ghost" className="w-full" onClick={() => setMode("confirm")}>
+                    Back
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export const ConversationToolModal = ({
   open,
@@ -19,23 +164,13 @@ export const ConversationToolModal = ({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onStart?: (email: string) => void;
+  onStart?: () => void;
 }) => {
-  const [parentBEmail, setParentBEmail] = useState("");
-
-  useEffect(() => {
-    if (!open) setParentBEmail("");
-  }, [open]);
-
   const handleStart = () => {
-    const email = parentBEmail.trim();
-    if (!isValidEmail(email)) {
-      toast.error("Please enter your co-parent's email address");
-      return;
-    }
     onOpenChange(false);
-    onStart?.(email);
+    onStart?.();
   };
+
 
   return (
 
