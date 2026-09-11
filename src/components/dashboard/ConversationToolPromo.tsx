@@ -11,10 +11,13 @@ export const CONVERSATION_TOOL_PRICE = "£29.99";
 export const ConversationToolModal = ({
   open,
   onOpenChange,
+  onStart,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  onStart?: () => void;
 }) => (
+
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
       <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
@@ -66,12 +69,18 @@ export const ConversationToolModal = ({
       <div className="space-y-2 border-t border-border p-5 pt-3">
         <Button
           className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
-          onClick={() =>
-            toast.info("Payment for this tool isn't switched on yet - we'll let you know as soon as it is.")
-          }
+          onClick={() => {
+            onOpenChange(false);
+            if (onStart) {
+              onStart();
+            } else {
+              toast.info("Payment for this tool isn't switched on yet - we'll let you know as soon as it is.");
+            }
+          }}
         >
           Start now - {CONVERSATION_TOOL_PRICE}
         </Button>
+
         <p className="text-center text-xs text-muted-foreground">
           If your co-parent does not respond within 14 days, you will hear from us about next steps.
         </p>
