@@ -227,23 +227,37 @@ const commonSections = (isPayer: boolean): Section[] => [
 
 const NOTE_MAX = 150;
 
+interface CostEntry {
+  amount: string;
+  period: "weekly" | "monthly";
+}
+
+const COST_CATEGORIES: { id: string; label: string; hint: string }[] = [
+  { id: "housing", label: "Housing", hint: "Rent, mortgage or housing costs related to the child" },
+  { id: "transportation", label: "Transportation", hint: "Travel costs related to the child" },
+  { id: "education", label: "Education", hint: "School fees, trips, uniforms, stationery" },
+  { id: "childcare", label: "Childcare", hint: "" },
+  { id: "health", label: "Health", hint: "Medical, dental or optical costs" },
+  { id: "activities", label: "Activities", hint: "Clubs, sports, hobbies or leisure" },
+];
+
 const ConversationQuestionnaire = ({
   isPayer,
   recipientEmail,
-  sharedCosts,
   onClose,
 }: {
   isPayer: boolean;
   recipientEmail?: string;
-  sharedCosts?: Record<string, { amount: string; period: "weekly" | "monthly" }>;
   onClose: () => void;
 }) => {
   const { user } = useAuth();
   const sections = useMemo(() => commonSections(isPayer), [isPayer]);
-  const totalSteps = sections.length + 1; // + optional section 6
+  const totalSteps = sections.length + 2; // + costs (6) + optional note (7)
+  const costsStep = sections.length;
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [costs, setCosts] = useState<Record<string, CostEntry>>({});
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
