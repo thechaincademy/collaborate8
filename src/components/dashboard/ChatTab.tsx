@@ -378,7 +378,14 @@ const ChatTab = () => {
       <p className="-mt-6 mb-3 text-sm text-muted-foreground">{SUBHEADING}</p>
 
       <ConversationToolBanner onOpen={openTool} />
-      <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} onStart={() => setQuestionnaireOpen(true)} />
+      <ConversationToolModal
+        open={toolOpen}
+        onOpenChange={setToolOpen}
+        onStart={(email) => {
+          setToolEmail(email);
+          setQuestionnaireOpen(true);
+        }}
+      />
 
       <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
