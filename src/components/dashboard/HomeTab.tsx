@@ -248,39 +248,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         </div>
       </motion.div>
 
-      {/* Resources section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
-        className="mb-6"
-      >
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Guides and tools
-        </h3>
-        <div className="space-y-3">
-          {resources.map((resource, i) => (
-            <motion.button
-              key={resource.title}
-              onClick={() => navigate(resource.link)}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 + i * 0.04 }}
-              className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <resource.icon className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground">{resource.title}</p>
-                <p className="truncate text-sm text-muted-foreground">{resource.description}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
-
       {/* Next payment card - only shown when active */}
       {(isLoading || activePayment) && (
         <motion.div
