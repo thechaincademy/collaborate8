@@ -8,16 +8,9 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  Shield,
   ArrowRight,
-  Calculator,
-  CreditCard,
-  MessageSquare,
-  Gift,
-  CheckCircle2,
   ChevronDown,
   Trophy,
-  Star,
   BookOpen,
   Infinity
 } from "lucide-react";
