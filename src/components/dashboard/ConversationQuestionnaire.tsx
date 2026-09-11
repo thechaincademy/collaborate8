@@ -375,28 +375,39 @@ const ConversationQuestionnaire = ({
     );
   }
 
+  const stepLabel =
+    step < sections.length ? `Step ${step + 1} of ${totalSteps}` : `Step ${step + 1} of ${totalSteps}`;
+
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="flex-1">
-          <Progress value={progress} className="h-2" />
+      <div className="rounded-2xl bg-navy p-4 text-navy-foreground">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-foreground/15 text-navy-foreground transition-colors hover:bg-navy-foreground/25"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="flex-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-navy-foreground/70">
+              {stepLabel}
+            </p>
+            <Progress
+              value={progress}
+              className="mt-1.5 h-2 bg-navy-foreground/20 [&>div]:bg-gold"
+            />
+          </div>
+          <span className="text-xs font-semibold text-navy-foreground/80">{progress}%</span>
         </div>
-        <span className="text-xs text-muted-foreground">{progress}%</span>
       </div>
 
       {currentSection ? (
         <div className="space-y-6">
-          <div>
+          <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
             <h2 className="text-base font-semibold">{currentSection.title}</h2>
             {currentSection.description && (
-              <p className="mt-1 text-xs text-muted-foreground">{currentSection.description}</p>
+              <p className="mt-1 text-xs text-teal-foreground/80">{currentSection.description}</p>
             )}
           </div>
 
@@ -411,12 +422,14 @@ const ConversationQuestionnaire = ({
                     className={cn(
                       "flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
                       isSelected(q, option)
-                        ? "border-primary bg-primary/10 font-medium"
+                        ? "border-gold bg-gold/20 font-medium"
                         : "border-border bg-card hover:bg-secondary",
                     )}
                   >
                     <span>{option}</span>
-                    {isSelected(q, option) && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                    {isSelected(q, option) && (
+                      <Check className="h-4 w-4 shrink-0 text-teal" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -424,8 +437,92 @@ const ConversationQuestionnaire = ({
           ))}
 
           <Button
-            className="w-full"
+            className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
             disabled={!sectionComplete}
+            onClick={() => setStep((s) => s + 1)}
+          >
+            Continue
+          </Button>
+        </div>
+      ) : step === costsStep ? (
+        <div className="space-y-5">
+          <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
+            <h2 className="text-base font-semibold">
+              Section 6 of 7 - Provide further details on your costs (optional)
+            </h2>
+          </div>
+
+          <p className="text-sm text-muted-foreground">
+            This section is completely optional. If you choose to complete it, the information you
+            enter here will be shared with your co-parent as part of the summary. Your questionnaire
+            answers will remain private and will not be shared. If you do not want this information
+            shared with your co-parent, leave this section blank and click Continue.
+          </p>
+
+          <div className="space-y-3">
+            {COST_CATEGORIES.map((c) => {
+              const entry = costs[c.id] ?? { amount: "", period: "monthly" as const };
+              return (
+                <div key={c.id} className="rounded-xl border border-border bg-card p-3">
+                  <p className="text-sm font-medium">{c.label}</p>
+                  {c.hint && <p className="text-xs text-muted-foreground">{c.hint}</p>}
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                        £
+                      </span>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="pl-7"
+                        value={entry.amount}
+                        onChange={(e) => updateCost(c.id, { amount: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex overflow-hidden rounded-lg border border-border text-xs">
+                      {(["weekly", "monthly"] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => updateCost(c.id, { period: p })}
+                          className={
+                            entry.period === p
+                              ? "bg-teal px-3 py-2 font-medium text-teal-foreground"
+                              : "bg-background px-3 py-2 text-muted-foreground"
+                          }
+                        >
+                          {p === "weekly" ? "Weekly" : "Monthly"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Only complete the categories that are relevant to your situation. You do not need to
+            complete all of them.
+          </p>
+
+          {enteredCosts.length > 0 ? (
+            <p className="text-xs text-teal">
+              The costs you have entered will be shared with your co-parent. Your questionnaire
+              answers will not be shared.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              You have not entered any costs. Nothing from this section will be shared with your
+              co-parent.
+            </p>
+          )}
+
+          <Button
+            className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
             onClick={() => setStep((s) => s + 1)}
           >
             Continue
@@ -433,9 +530,9 @@ const ConversationQuestionnaire = ({
         </div>
       ) : (
         <div className="space-y-5">
-          <div>
-            <h2 className="text-base font-semibold">Section 6 of 7 - Optional</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
+          <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
+            <h2 className="text-base font-semibold">Section 7 of 7 - Comments (optional)</h2>
+            <p className="mt-1 text-xs text-teal-foreground/80">
               This is optional. Whatever you write here will be shared with your co-parent as part
               of the summary.
             </p>
@@ -458,7 +555,11 @@ const ConversationQuestionnaire = ({
             </p>
           </div>
 
-          <Button className="w-full" onClick={finish} disabled={saving}>
+          <Button
+            className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+            onClick={finish}
+            disabled={saving}
+          >
             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Finish
           </Button>
