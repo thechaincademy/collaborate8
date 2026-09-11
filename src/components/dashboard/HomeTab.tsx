@@ -48,7 +48,6 @@ const quickLinks: Array<{
   description: string;
   icon: React.ElementType;
 }> = [
-  { tab: "chat", label: "Chat", description: "Stay in touch with your co-parent", icon: MessageCircle },
   { tab: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
   { tab: "resources", label: "Resources", description: "Guides and tools", icon: BookOpen },
 ];
@@ -217,6 +216,34 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
             <p className="mt-1 text-xl font-bold text-foreground">£{monthlyExpensesTotal.toFixed(2)}</p>
           )}
         </button>
+      </motion.div>
+
+      {/* Financial Chat card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.07 }}
+        className="mb-6 rounded-2xl border border-primary/40 bg-primary/10 p-5"
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <MessageCircle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground">Financial Chat</h3>
+            <p className="mt-1 text-sm leading-relaxed text-foreground/80">
+              A dedicated space to discuss finances with your co-parent - separate from everything else.
+            </p>
+            <Button
+              size="sm"
+              onClick={() => onNavigate("chat")}
+              className="mt-3 gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Open chat
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </motion.div>
 
       {/* Next payment card - only shown when active */}
