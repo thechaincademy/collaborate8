@@ -221,23 +221,8 @@ export const ConversationToolModal = ({
             {CONVERSATION_TOOL_PRICE} - one-off payment. Only one parent pays. Your co-parent participates for free.
           </p>
 
-          <div className="space-y-2">
-            <label htmlFor="parent-b-email" className="text-sm font-medium">
-              Your co-parent&apos;s email
-            </label>
-            <Input
-              id="parent-b-email"
-              type="email"
-              inputMode="email"
-              placeholder="co-parent@email.com"
-              value={parentBEmail}
-              onChange={(e) => setParentBEmail(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              An automated invitation will be sent to your co-parent on your behalf. A single automated reminder will follow if they have not responded within seven days. A final automated notice will be sent at fourteen days if there is still no response. After this point no further contact will be made. We will not store your co-parent&apos;s email address on our system beyond this process. It will be deleted within thirty days if no engagement occurs.
-            </p>
-          </div>
         </div>
+
 
         <div className="space-y-2 border-t border-border p-5 pt-3">
           <Button
