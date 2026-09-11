@@ -453,7 +453,7 @@ const ConversationQuestionnaire = ({
         <div className="space-y-5">
           <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
             <h2 className="text-base font-semibold">
-              Section 6 of 7 - Provide further details on your costs (optional)
+              Section 6 of {totalSteps} - Provide further details on your costs (optional)
             </h2>
           </div>
 
