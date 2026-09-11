@@ -536,7 +536,10 @@ const ConversationQuestionnaire = ({
       ) : (
         <div className="space-y-5">
           <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
-            <h2 className="text-base font-semibold">Section 7 of 7 - Comments (optional)</h2>
+            <h2 className="text-base font-semibold">
+              Section {totalSteps} of {totalSteps} - Comments (optional)
+            </h2>
+
             <p className="mt-1 text-xs text-teal-foreground/80">
               This is optional. Whatever you write here will be shared with your co-parent as part
               of the summary.
