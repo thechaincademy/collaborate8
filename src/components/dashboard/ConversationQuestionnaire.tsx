@@ -224,10 +224,12 @@ const NOTE_MAX = 150;
 const ConversationQuestionnaire = ({
   isPayer,
   recipientEmail,
+  sharedCosts,
   onClose,
 }: {
   isPayer: boolean;
   recipientEmail?: string;
+  sharedCosts?: Record<string, { amount: string; period: "weekly" | "monthly" }>;
   onClose: () => void;
 }) => {
   const { user } = useAuth();
@@ -278,9 +280,13 @@ const ConversationQuestionnaire = ({
   const finish = async () => {
     if (!user) return;
     setSaving(true);
+    const payload: Record<string, unknown> = { ...answers };
+    if (sharedCosts && Object.keys(sharedCosts).length > 0) {
+      payload.shared_costs = sharedCosts;
+    }
     const { error } = await supabase.from("conversation_tool_responses").insert({
       user_id: user.id,
-      answers: answers as never,
+      answers: payload as never,
       note: note.trim() || null,
       completed_at: new Date().toISOString(),
     });

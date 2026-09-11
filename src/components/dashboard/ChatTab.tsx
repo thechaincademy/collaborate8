@@ -16,8 +16,10 @@ import {
   ConversationToolModal,
   ConversationToolSuggestionCard,
   ConversationEmailStep,
+  ConversationCostsStep,
   useConversationToolModal,
 } from "./ConversationToolPromo";
+import type { SharedCosts } from "./ConversationToolPromo";
 
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
 
@@ -86,7 +88,9 @@ const ChatTab = () => {
   const openTool = () => setToolOpen(true);
   const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
   const [emailStepOpen, setEmailStepOpen] = useState(false);
+  const [costsStepOpen, setCostsStepOpen] = useState(false);
   const [toolEmail, setToolEmail] = useState("");
+  const [toolCosts, setToolCosts] = useState<SharedCosts>({});
 
   // First message written before the co-parent has joined
   const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string } | null>(null);
@@ -353,6 +357,7 @@ const ChatTab = () => {
         <ConversationQuestionnaire
           isPayer={profile?.role !== "viewing"}
           recipientEmail={toolEmail}
+          sharedCosts={toolCosts}
           onClose={() => setQuestionnaireOpen(false)}
         />
       </div>
@@ -447,6 +452,14 @@ const ChatTab = () => {
           onOpenChange={setEmailStepOpen}
           onConfirm={(email) => {
             setToolEmail(email);
+            setCostsStepOpen(true);
+          }}
+        />
+        <ConversationCostsStep
+          open={costsStepOpen}
+          onOpenChange={setCostsStepOpen}
+          onContinue={(costs) => {
+            setToolCosts(costs);
             setQuestionnaireOpen(true);
           }}
         />
@@ -546,6 +559,14 @@ const ChatTab = () => {
         onOpenChange={setEmailStepOpen}
         onConfirm={(email) => {
           setToolEmail(email);
+          setCostsStepOpen(true);
+        }}
+      />
+      <ConversationCostsStep
+        open={costsStepOpen}
+        onOpenChange={setCostsStepOpen}
+        onContinue={(costs) => {
+          setToolCosts(costs);
           setQuestionnaireOpen(true);
         }}
       />

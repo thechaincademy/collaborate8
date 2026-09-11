@@ -157,6 +157,153 @@ export const ConversationEmailStep = ({
   );
 };
 
+export interface CostEntry {
+  amount: string;
+  period: "weekly" | "monthly";
+}
+
+export type SharedCosts = Record<string, CostEntry>;
+
+const COST_CATEGORIES: { id: string; label: string; hint: string }[] = [
+  { id: "housing", label: "Housing", hint: "Rent, mortgage or housing costs related to the child" },
+  { id: "transportation", label: "Transportation", hint: "Travel costs related to the child" },
+  { id: "education", label: "Education", hint: "School fees, trips, uniforms, stationery" },
+  { id: "childcare", label: "Childcare", hint: "" },
+  { id: "health", label: "Health", hint: "Medical, dental or optical costs" },
+  { id: "activities", label: "Activities", hint: "Clubs, sports, hobbies or leisure" },
+];
+
+/**
+ * Optional costs step shown after the co-parent email is confirmed and
+ * before the questionnaire begins. Anything entered is shared with the
+ * co-parent as part of the summary; questionnaire answers stay private.
+ */
+export const ConversationCostsStep = ({
+  open,
+  onOpenChange,
+  onContinue,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onContinue: (costs: SharedCosts) => void;
+}) => {
+  const [costs, setCosts] = useState<SharedCosts>({});
+
+  useEffect(() => {
+    if (open) setCosts({});
+  }, [open]);
+
+  const update = (id: string, patch: Partial<CostEntry>) => {
+    setCosts((prev) => ({
+      ...prev,
+      [id]: { amount: "", period: "monthly", ...prev[id], ...patch },
+    }));
+  };
+
+  const entered = COST_CATEGORIES.filter((c) => {
+    const v = parseFloat(costs[c.id]?.amount ?? "");
+    return !Number.isNaN(v) && v > 0;
+  });
+  const hasCosts = entered.length > 0;
+
+  const submit = () => {
+    const cleaned: SharedCosts = {};
+    for (const c of entered) cleaned[c.id] = costs[c.id];
+    onOpenChange(false);
+    onContinue(cleaned);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+        <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
+          <h2 className="text-lg font-semibold leading-snug">
+            Provide further details on your costs (optional)
+          </h2>
+        </div>
+
+        <div className="space-y-4 p-5 text-sm text-foreground">
+          <p className="text-sm text-muted-foreground">
+            This section is completely optional. If you choose to complete it, the information you
+            enter here will be shared with your co-parent as part of the summary. Your questionnaire
+            answers will remain private and will not be shared. If you do not want this information
+            shared with your co-parent, leave this section blank and click Continue.
+          </p>
+
+          <div className="space-y-3">
+            {COST_CATEGORIES.map((c) => {
+              const entry = costs[c.id] ?? { amount: "", period: "monthly" as const };
+              return (
+                <div key={c.id} className="rounded-xl border border-border bg-card p-3">
+                  <p className="text-sm font-medium">{c.label}</p>
+                  {c.hint && <p className="text-xs text-muted-foreground">{c.hint}</p>}
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                        £
+                      </span>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="pl-7"
+                        value={entry.amount}
+                        onChange={(e) => update(c.id, { amount: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex overflow-hidden rounded-lg border border-border text-xs">
+                      {(["weekly", "monthly"] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => update(c.id, { period: p })}
+                          className={
+                            entry.period === p
+                              ? "bg-primary px-3 py-2 font-medium text-primary-foreground"
+                              : "bg-background px-3 py-2 text-muted-foreground"
+                          }
+                        >
+                          {p === "weekly" ? "Weekly" : "Monthly"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Only complete the categories that are relevant to your situation. You do not need to
+            complete all of them.
+          </p>
+
+          {hasCosts ? (
+            <p className="text-xs text-teal">
+              The costs you have entered will be shared with your co-parent. Your questionnaire
+              answers will not be shared.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              You have not entered any costs. Nothing from this section will be shared with your
+              co-parent.
+            </p>
+          )}
+
+          <Button
+            className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+            onClick={submit}
+          >
+            Continue
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export const ConversationToolModal = ({
   open,
   onOpenChange,
