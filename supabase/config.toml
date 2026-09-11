@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.conversation-summary]
 verify_jwt = true
+
+[functions.send-conversation-invite]
+verify_jwt = true
