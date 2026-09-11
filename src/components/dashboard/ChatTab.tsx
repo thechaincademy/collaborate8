@@ -11,6 +11,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  ConversationToolBanner,
+  ConversationToolModal,
+  ConversationToolSuggestionCard,
+  useConversationToolModal,
+} from "./ConversationToolPromo";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface Message {
   id: string;
