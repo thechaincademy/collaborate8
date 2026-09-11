@@ -254,6 +254,7 @@ const ChatTab = () => {
       <div className="mx-auto w-full max-w-md overflow-y-auto px-6 pb-10 pt-12">
         <ConversationQuestionnaire
           isPayer={profile?.role !== "viewing"}
+          recipientEmail={toolEmail}
           onClose={() => setQuestionnaireOpen(false)}
         />
       </div>
