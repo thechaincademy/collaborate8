@@ -223,9 +223,11 @@ const NOTE_MAX = 150;
 
 const ConversationQuestionnaire = ({
   isPayer,
+  recipientEmail,
   onClose,
 }: {
   isPayer: boolean;
+  recipientEmail?: string;
   onClose: () => void;
 }) => {
   const { user } = useAuth();
@@ -238,6 +240,7 @@ const ConversationQuestionnaire = ({
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [summaryReady, setSummaryReady] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   const visible = (q: Question) => {
     if (!q.showIf) return true;
@@ -296,6 +299,18 @@ const ConversationQuestionnaire = ({
       // Summary can be generated later - never block the confirmation screen.
     }
 
+    // Send the invitation email to Parent B if an email was provided.
+    if (recipientEmail) {
+      try {
+        await supabase.functions.invoke("send-conversation-invite", {
+          body: { recipientEmail },
+        });
+        setInviteSent(true);
+      } catch {
+        // The invitation can be re-sent later - never block the confirmation screen.
+      }
+    }
+
     setSaving(false);
     setDone(true);
   };
@@ -306,7 +321,9 @@ const ConversationQuestionnaire = ({
         <p className="text-sm leading-relaxed">
           {summaryReady
             ? "Your answers have been saved. Your co-parent has also completed their questions, so your shared summary has been emailed to you both. Your financial chat is ready."
-            : "Your answers have been saved. An email has been sent to your co-parent inviting them to participate. You will be notified when they have completed the process and your shared summary is ready. This may take up to 14 days."}
+            : inviteSent
+              ? "Your answers have been saved. An email has been sent to your co-parent inviting them to participate. You will be notified when they have completed the process and your shared summary is ready. This may take up to 14 days."
+              : "Your answers have been saved. You will be notified when your co-parent has completed the process and your shared summary is ready. This may take up to 14 days."}
         </p>
         <Button
           className="mt-6 w-full bg-gold text-gold-foreground hover:bg-gold/90"
