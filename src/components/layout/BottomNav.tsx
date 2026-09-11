@@ -1,4 +1,4 @@
-import { Home, PoundSterling, Receipt, Gift, MessageCircle, BookOpen } from "lucide-react";
+import { Home, MessageCircle, PoundSterling, Receipt, Gift, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardTab } from "@/pages/Dashboard";
 
@@ -10,10 +10,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: "Home", tab: "home" },
+  { icon: MessageCircle, label: "Chat", tab: "chat" },
   { icon: PoundSterling, label: "Maintenance", tab: "maintenance" },
   { icon: Receipt, label: "Expenses", tab: "expenses" },
   { icon: Gift, label: "Benefits", tab: "benefits" },
-  { icon: MessageCircle, label: "Chat", tab: "chat" },
   { icon: BookOpen, label: "Resources", tab: "resources" },
 ];
 
