@@ -108,14 +108,14 @@ const commonSections = (isPayer: boolean): Section[] => [
             label:
               "Are you willing to use the CMS statutory formula as the basis for a maintenance calculation?",
             type: "single",
-            options: ["Yes", "I would prefer we agree a different amount", "I am not sure yet"],
+            options: ["Yes", "I would prefer we agree a different amount", "I am not sure yet", INVITED_OPTION],
           },
           {
             id: "share_income",
             label:
               "Are you willing to share your approximate gross annual income to generate a suggested figure?",
             type: "single",
-            options: ["Yes", "No, I would prefer to discuss this directly"],
+            options: ["Yes", "No, I would prefer to discuss this directly", INVITED_OPTION],
             showIf: { id: "cms_formula", values: ["Yes"] },
           },
           {
@@ -129,6 +129,7 @@ const commonSections = (isPayer: boolean): Section[] => [
               "£40,001 to £60,000",
               "£60,001 to £80,000",
               "Over £80,000",
+              INVITED_OPTION,
             ],
             showIf: { id: "share_income", values: ["Yes"] },
           },
@@ -143,6 +144,7 @@ const commonSections = (isPayer: boolean): Section[] => [
               "Yes",
               "I would prefer we agree a different amount",
               "I am not sure yet - I would like to discuss this",
+              INVITED_OPTION,
             ],
           },
         ],
