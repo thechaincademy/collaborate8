@@ -196,26 +196,46 @@ const Landing = () => {
             </p>
           </motion.div>
 
-          <div className="flex items-center justify-center gap-6 md:gap-10">
+          <div className="grid gap-8 md:grid-cols-3">
             {[
-              { src: appScreenshot1, alt: "Payment tracking screen", label: "Track Payments" },
-              { src: appScreenshot2, alt: "Expense management screen", label: "Manage Expenses" },
-              { src: appScreenshot3, alt: "Rewards screen", label: "Claim Rewards" },
+              {
+                src: appScreenshot1,
+                alt: "Financial chat screen",
+                title: "Talking about money can be tough. Get the conversation started",
+                description: "A dedicated space to discuss finances with your co-parent - separate from everything else.",
+              },
+              {
+                src: appScreenshot2,
+                alt: "Child maintenance and expense management screen",
+                title: "Manage child maintenance payments or other expenses",
+                description: "Set up recurring payments, log shared costs, and keep everything in one place.",
+              },
+              {
+                src: appScreenshot3,
+                alt: "Payment flexibility and rewards screen",
+                title: "Payment flexibility - pay by credit card and earn points",
+                description: "Choose how you pay and unlock rewards with every maintenance payment.",
+              },
             ].map((screenshot, i) => (
               <motion.div
-                key={screenshot.label}
+                key={screenshot.title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center text-center"
               >
                 <img
                   src={screenshot.src}
                   alt={screenshot.alt}
-                  className="h-48 w-auto rounded-2xl object-contain shadow-elevated md:h-80"
+                  className="h-48 w-auto rounded-2xl object-contain shadow-elevated md:h-64"
                 />
-                <p className="mt-4 text-sm font-medium text-muted-foreground">{screenshot.label}</p>
+                <h3 className="mt-6 max-w-xs text-lg font-bold leading-snug text-foreground">
+                  {screenshot.title}
+                </h3>
+                <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
+                  {screenshot.description}
+                </p>
               </motion.div>
             ))}
           </div>
