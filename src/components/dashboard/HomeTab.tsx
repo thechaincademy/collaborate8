@@ -48,7 +48,6 @@ const quickLinks: Array<{
   description: string;
   icon: React.ElementType;
 }> = [
-  { tab: "chat", label: "Chat", description: "Stay in touch with your co-parent", icon: MessageCircle },
   { tab: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
   { tab: "resources", label: "Resources", description: "Guides and tools", icon: BookOpen },
 ];
