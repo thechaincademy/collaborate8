@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.send-conversation-invite]
 verify_jwt = true
+
+[functions.send-first-message-notice]
+verify_jwt = true
