@@ -17,6 +17,7 @@ import {
   ConversationToolSuggestionCard,
   useConversationToolModal,
 } from "./ConversationToolPromo";
+import ConversationQuestionnaire from "./ConversationQuestionnaire";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -282,7 +283,7 @@ const ChatTab = () => {
             </div>
           )}
         </div>
-        <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} />
+        <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} onStart={() => setQuestionnaireOpen(true)} />
       </div>
     );
   }
@@ -368,7 +369,7 @@ const ChatTab = () => {
       <p className="-mt-6 mb-3 text-sm text-muted-foreground">{SUBHEADING}</p>
 
       <ConversationToolBanner onOpen={openTool} />
-      <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} />
+      <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} onStart={() => setQuestionnaireOpen(true)} />
 
       <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
