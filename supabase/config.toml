@@ -29,3 +29,6 @@ verify_jwt = true
 
 [functions.send-product-update]
 verify_jwt = false
+
+[functions.conversation-summary]
+verify_jwt = true
