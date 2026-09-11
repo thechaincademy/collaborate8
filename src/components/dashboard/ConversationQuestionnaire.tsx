@@ -280,11 +280,22 @@ const ConversationQuestionnaire = ({
       note: note.trim() || null,
       completed_at: new Date().toISOString(),
     });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("We couldn't save your answers. Please try again.");
       return;
     }
+
+    // If the co-parent has already completed their questions, the shared
+    // summary email goes out to both parents now.
+    try {
+      const { data } = await supabase.functions.invoke("conversation-summary");
+      if (data?.ready) setSummaryReady(true);
+    } catch {
+      // Summary can be generated later - never block the confirmation screen.
+    }
+
+    setSaving(false);
     setDone(true);
   };
 
