@@ -237,6 +237,7 @@ const ConversationQuestionnaire = ({
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [summaryReady, setSummaryReady] = useState(false);
 
   const visible = (q: Question) => {
     if (!q.showIf) return true;
@@ -303,9 +304,9 @@ const ConversationQuestionnaire = ({
     return (
       <div className="flex min-h-[60vh] flex-col justify-center rounded-2xl bg-navy p-6 text-navy-foreground">
         <p className="text-sm leading-relaxed">
-          Your answers have been saved. An email has been sent to your co-parent inviting them to
-          participate. You will be notified when they have completed the process and your shared
-          summary is ready. This may take up to 14 days.
+          {summaryReady
+            ? "Your answers have been saved. Your co-parent has also completed their questions, so your shared summary has been emailed to you both. Your financial chat is ready."
+            : "Your answers have been saved. An email has been sent to your co-parent inviting them to participate. You will be notified when they have completed the process and your shared summary is ready. This may take up to 14 days."}
         </p>
         <Button
           className="mt-6 w-full bg-gold text-gold-foreground hover:bg-gold/90"
