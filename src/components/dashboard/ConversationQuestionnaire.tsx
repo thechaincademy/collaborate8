@@ -297,12 +297,26 @@ const ConversationQuestionnaire = ({
     return q.type === "multi" ? Array.isArray(a) && a.includes(option) : a === option;
   };
 
+  const updateCost = (id: string, patch: Partial<CostEntry>) => {
+    setCosts((prev) => ({
+      ...prev,
+      [id]: { amount: "", period: "monthly", ...prev[id], ...patch },
+    }));
+  };
+
+  const enteredCosts = COST_CATEGORIES.filter((c) => {
+    const v = parseFloat(costs[c.id]?.amount ?? "");
+    return !Number.isNaN(v) && v > 0;
+  });
+
   const finish = async () => {
     if (!user) return;
     setSaving(true);
     const payload: Record<string, unknown> = { ...answers };
-    if (sharedCosts && Object.keys(sharedCosts).length > 0) {
-      payload.shared_costs = sharedCosts;
+    if (enteredCosts.length > 0) {
+      const cleaned: Record<string, CostEntry> = {};
+      for (const c of enteredCosts) cleaned[c.id] = costs[c.id];
+      payload.shared_costs = cleaned;
     }
     const { error } = await supabase.from("conversation_tool_responses").insert({
       user_id: user.id,
