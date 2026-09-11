@@ -79,6 +79,26 @@ const ChatTab = () => {
   const toneScore = useMemo(() => scoreTone(draft), [draft]);
   const tone = toneLabel(toneScore);
 
+  const { open: toolOpen, setOpen: setToolOpen } = useConversationToolModal();
+  const openTool = () => setToolOpen(true);
+
+  // Trigger 1: no co-parent linked 3+ days after signing up
+  const showUnconnectedSuggestion = useMemo(() => {
+    if (coparentId || !profile?.created_at) return false;
+    return Date.now() - new Date(profile.created_at).getTime() > 3 * DAY_MS;
+  }, [coparentId, profile?.created_at]);
+
+  // Trigger 2: co-parent linked but has never replied, 7+ days after my first message
+  const showNoReplySuggestion = useMemo(() => {
+    if (!coparentId || !user || messages.length === 0) return false;
+    const theyReplied = messages.some((m) => m.sender_id === coparentId);
+    if (theyReplied) return false;
+    const mine = messages.filter((m) => m.sender_id === user.id);
+    if (mine.length === 0) return false;
+    const first = new Date(mine[0].created_at).getTime();
+    return Date.now() - first > 7 * DAY_MS;
+  }, [coparentId, user, messages]);
+
   // Load + subscribe
   useEffect(() => {
     if (!user || !coparentId) {
