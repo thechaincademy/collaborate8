@@ -11,6 +11,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  ConversationToolBanner,
+  ConversationToolModal,
+  ConversationToolSuggestionCard,
+  useConversationToolModal,
+} from "./ConversationToolPromo";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface Message {
   id: string;
@@ -70,6 +78,26 @@ const ChatTab = () => {
 
   const toneScore = useMemo(() => scoreTone(draft), [draft]);
   const tone = toneLabel(toneScore);
+
+  const { open: toolOpen, setOpen: setToolOpen } = useConversationToolModal();
+  const openTool = () => setToolOpen(true);
+
+  // Trigger 1: no co-parent linked 3+ days after signing up
+  const showUnconnectedSuggestion = useMemo(() => {
+    if (coparentId || !profile?.created_at) return false;
+    return Date.now() - new Date(profile.created_at).getTime() > 3 * DAY_MS;
+  }, [coparentId, profile?.created_at]);
+
+  // Trigger 2: co-parent linked but has never replied, 7+ days after my first message
+  const showNoReplySuggestion = useMemo(() => {
+    if (!coparentId || !user || messages.length === 0) return false;
+    const theyReplied = messages.some((m) => m.sender_id === coparentId);
+    if (theyReplied) return false;
+    const mine = messages.filter((m) => m.sender_id === user.id);
+    if (mine.length === 0) return false;
+    const first = new Date(mine[0].created_at).getTime();
+    return Date.now() - first > 7 * DAY_MS;
+  }, [coparentId, user, messages]);
 
   // Load + subscribe
   useEffect(() => {
@@ -219,9 +247,10 @@ const ChatTab = () => {
 
   if (!coparentId) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col overflow-y-auto px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
+        <ConversationToolBanner onOpen={openTool} />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
             <UserPlus className="h-6 w-6 text-muted-foreground" />
@@ -233,7 +262,13 @@ const ChatTab = () => {
           <Button className="mt-2 w-full max-w-xs" onClick={() => navigate("/profile")}>
             Send an invitation
           </Button>
+          {showUnconnectedSuggestion && (
+            <div className="w-full text-left">
+              <ConversationToolSuggestionCard onOpen={openTool} />
+            </div>
+          )}
         </div>
+        <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} />
       </div>
     );
   }
@@ -318,6 +353,9 @@ const ChatTab = () => {
 
       <p className="-mt-6 mb-3 text-sm text-muted-foreground">{SUBHEADING}</p>
 
+      <ConversationToolBanner onOpen={openTool} />
+      <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} />
+
       <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p className="text-xs text-foreground/80">
@@ -389,6 +427,7 @@ const ChatTab = () => {
             })}
           </AnimatePresence>
         )}
+        {showNoReplySuggestion && <ConversationToolSuggestionCard onOpen={openTool} />}
       </div>
 
       {/* Tone meter */}

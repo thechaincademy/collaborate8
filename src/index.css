@@ -44,6 +44,14 @@
     --clay-foreground: 0 0% 9%;
     --clay-soft: 45 80% 92%;
 
+    /* Conversation tool accents */
+    --teal: 183 45% 25%;
+    --teal-foreground: 0 0% 100%;
+    --navy: 219 45% 18%;
+    --navy-foreground: 0 0% 100%;
+    --gold: 45 80% 52%;
+    --gold-foreground: 0 0% 9%;
+
 
     /* Custom tokens */
     --shadow-card: 0 1px 3px rgba(0,0,0,0.04);
