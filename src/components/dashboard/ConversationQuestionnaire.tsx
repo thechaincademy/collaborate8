@@ -29,7 +29,7 @@ const INVITED_OPTION = "I am here because I was invited by my co-parent";
 
 const commonSections = (isPayer: boolean): Section[] => [
   {
-    title: "Section 1 of 6 - What brings you here today",
+    title: "Section 1 of 7 - What brings you here today",
     description:
       "Both parents want to feel this process is relevant to their specific situation, whatever stage they are at.",
     questions: [
@@ -73,7 +73,7 @@ const commonSections = (isPayer: boolean): Section[] => [
     ],
   },
   {
-    title: "Section 2 of 6 - What you would like to achieve",
+    title: "Section 2 of 7 - What you would like to achieve",
     questions: [
       {
         id: "outcome",
@@ -100,7 +100,7 @@ const commonSections = (isPayer: boolean): Section[] => [
     ],
   },
   {
-    title: "Section 3 of 6 - The financial picture",
+    title: "Section 3 of 7 - The financial picture",
     questions: isPayer
       ? [
           {
@@ -150,7 +150,7 @@ const commonSections = (isPayer: boolean): Section[] => [
         ],
   },
   {
-    title: "Section 4 of 6 - Shared expenses",
+    title: "Section 4 of 7 - Shared expenses",
     questions: [
       {
         id: "shared_expenses",
@@ -191,7 +191,7 @@ const commonSections = (isPayer: boolean): Section[] => [
     ],
   },
   {
-    title: "Section 5 of 6 - What you can agree on",
+    title: "Section 5 of 7 - What you can agree on",
     questions: [
       {
         id: "agreements",
@@ -406,7 +406,7 @@ const ConversationQuestionnaire = ({
       ) : (
         <div className="space-y-5">
           <div>
-            <h2 className="text-base font-semibold">Section 6 of 6 - Optional</h2>
+            <h2 className="text-base font-semibold">Section 6 of 7 - Optional</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               This is optional. Whatever you write here will be shared with your co-parent as part
               of the summary.
