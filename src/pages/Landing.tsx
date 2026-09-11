@@ -68,29 +68,6 @@ const Landing = () => {
     }
   };
 
-  const features = [
-    {
-      icon: CreditCard,
-      title: "Payment Tracking",
-      description: "Set up and track recurring child maintenance payments with automatic reminders.",
-    },
-    {
-      icon: Calculator,
-      title: "Expense Splitting",
-      description: "Log shared expenses, attach receipts, and request reimbursement, all in one place.",
-    },
-    {
-      icon: MessageSquare,
-      title: "In-App Messaging",
-      description: "Keep communication focused and civil with a dedicated co-parenting chat.",
-    },
-    {
-      icon: Gift,
-      title: "Rewards",
-      description: "Earn Rewards and points for each payment. Unlock milestones.",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
