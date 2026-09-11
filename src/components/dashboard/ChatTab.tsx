@@ -427,6 +427,7 @@ const ChatTab = () => {
             })}
           </AnimatePresence>
         )}
+        {showNoReplySuggestion && <ConversationToolSuggestionCard onOpen={openTool} />}
       </div>
 
       {/* Tone meter */}
