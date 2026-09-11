@@ -25,6 +25,8 @@ interface Section {
   questions: Question[];
 }
 
+const INVITED_OPTION = "I am here because I was invited by my co-parent";
+
 const commonSections = (isPayer: boolean): Section[] => [
   {
     title: "Section 1 of 6 - What brings you here today",
@@ -81,9 +83,8 @@ const commonSections = (isPayer: boolean): Section[] => [
           "Agreeing a maintenance amount",
           "Reviewing an amount that no longer reflects current circumstances",
           "Agreeing how to split a specific expense",
-          "Creating a shared record of what we have agreed",
           "Getting the conversation started in a structured way",
-          "Understanding what I am entitled to or responsible for",
+          INVITED_OPTION,
         ],
       },
       {
@@ -92,9 +93,8 @@ const commonSections = (isPayer: boolean): Section[] => [
         type: "single",
         options: [
           "As soon as possible",
-          "Within the next month",
-          "Within the next three months",
           "No specific timeframe - I want to start when we are both ready",
+          INVITED_OPTION,
         ],
       },
     ],
