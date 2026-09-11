@@ -1,4 +1,4 @@
-import { Home, MessageCircle, PoundSterling, Receipt, Gift, BookOpen } from "lucide-react";
+import { Home, MessageCircle, PoundSterling, Receipt, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardTab } from "@/pages/Dashboard";
 
@@ -14,7 +14,6 @@ const navItems: NavItem[] = [
   { icon: PoundSterling, label: "Maintenance", tab: "maintenance" },
   { icon: Receipt, label: "Expenses", tab: "expenses" },
   { icon: Gift, label: "Benefits", tab: "benefits" },
-  { icon: BookOpen, label: "Resources", tab: "resources" },
 ];
 
 interface BottomNavProps {
