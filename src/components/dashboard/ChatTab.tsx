@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, Loader2, Paperclip, X, FileText, UserPlus } from "lucide-react";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ interface Message {
   recipient_id: string;
   body: string;
   created_at: string;
+  attachment_path?: string | null;
+  attachment_name?: string | null;
 }
 
 const triggers: { pattern: RegExp; score: number }[] = [
@@ -46,7 +49,11 @@ function toneLabel(score: number): { label: string; tone: "calm" | "tense" | "he
   return { label: "Very heated", tone: "very" };
 }
 
+const SUBHEADING =
+  "A dedicated space to discuss finances with your co-parent - separate from everything else.";
+
 const ChatTab = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const coparentId = profile?.coparent_id ?? null;
@@ -54,10 +61,12 @@ const ChatTab = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toneScore = useMemo(() => scoreTone(draft), [draft]);
   const tone = toneLabel(toneScore);
@@ -114,16 +123,52 @@ const ChatTab = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, intercept]);
 
-  const insertMessage = async (body: string, opts?: { original?: string; usedSuggestion?: boolean }) => {
+  const openAttachment = async (path: string, name: string) => {
+    const { data, error } = await supabase.storage
+      .from("chat-attachments")
+      .createSignedUrl(path, 60 * 5);
+    if (error || !data?.signedUrl) {
+      toast.error("Could not open that file");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    void name;
+  };
+
+  const insertMessage = async (
+    body: string,
+    opts?: { original?: string; usedSuggestion?: boolean },
+  ) => {
     if (!user || !coparentId) return;
     setSending(true);
+
+    let attachmentPath: string | null = null;
+    let attachmentName: string | null = null;
+
+    if (file) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${user.id}/${Date.now()}-${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from("chat-attachments")
+        .upload(path, file, { upsert: false });
+      if (uploadError) {
+        setSending(false);
+        toast.error("Could not attach that file");
+        return;
+      }
+      attachmentPath = path;
+      attachmentName = file.name;
+    }
+
     const { error } = await supabase.from("messages").insert({
       sender_id: user.id,
       recipient_id: coparentId,
-      body,
+      body: body || (attachmentName ? `Sent a document: ${attachmentName}` : ""),
       original_body: opts?.original ?? null,
       tone_score: opts?.original ? toneScore : null,
       used_suggestion: opts?.usedSuggestion ?? false,
+      attachment_path: attachmentPath,
+      attachment_name: attachmentName,
     });
     setSending(false);
     if (error) {
@@ -131,13 +176,14 @@ const ChatTab = () => {
       return;
     }
     setDraft("");
+    setFile(null);
     setIntercept(null);
   };
 
   const handleSendClick = async () => {
     const text = draft.trim();
-    if (!text || sending) return;
-    if (toneScore >= 0.6) {
+    if ((!text && !file) || sending) return;
+    if (text && toneScore >= 0.6) {
       setRewriting(true);
       try {
         const { data, error } = await supabase.functions.invoke("chat-rewrite", {
@@ -151,7 +197,7 @@ const ChatTab = () => {
           await insertMessage(text);
         }
       } catch {
-        toast.error("Couldn't fetch a calmer version — sending as-is");
+        toast.error("Couldn't fetch a calmer version - sending as-is");
         await insertMessage(text);
       } finally {
         setRewriting(false);
@@ -164,8 +210,8 @@ const ChatTab = () => {
   // -------- Render branches
   if (profileLoading) {
     return (
-      <div className="flex h-[calc(100vh-6rem)] flex-col px-6 pt-12">
-        <DashboardHeader title="Chat" />
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+        <DashboardHeader title="Financial Chat" />
         <Skeleton className="mt-4 h-full w-full rounded-2xl" />
       </div>
     );
@@ -173,16 +219,20 @@ const ChatTab = () => {
 
   if (!coparentId) {
     return (
-      <div className="flex h-[calc(100vh-6rem)] flex-col px-6 pt-12">
-        <DashboardHeader title="Chat" />
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+        <DashboardHeader title="Financial Chat" />
+        <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-            <Send className="h-6 w-6 text-muted-foreground" />
+            <UserPlus className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground">No co-parent linked</h2>
+          <h2 className="text-lg font-semibold text-foreground">Not connected yet</h2>
           <p className="max-w-xs text-sm text-muted-foreground">
-            Once you've linked with your co-parent, your conversation will appear here.
+            Your co-parent has not yet joined Collabor8. Send them an invitation to connect.
           </p>
+          <Button className="mt-2 w-full max-w-xs" onClick={() => navigate("/profile")}>
+            Send an invitation
+          </Button>
         </div>
       </div>
     );
@@ -190,8 +240,8 @@ const ChatTab = () => {
 
   if (intercept) {
     return (
-      <div className="flex h-[calc(100vh-6rem)] flex-col px-6 pt-12">
-        <DashboardHeader title="Chat" />
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+        <DashboardHeader title="Financial Chat" />
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -221,7 +271,12 @@ const ChatTab = () => {
 
           <div className="mt-5 flex w-full flex-col gap-2">
             <Button
-              onClick={() => insertMessage(intercept.suggestion, { original: intercept.draft, usedSuggestion: true })}
+              onClick={() =>
+                insertMessage(intercept.suggestion, {
+                  original: intercept.draft,
+                  usedSuggestion: true,
+                })
+              }
               disabled={sending}
               className="w-full"
             >
@@ -258,8 +313,10 @@ const ChatTab = () => {
         : "text-destructive";
 
   return (
-    <div className="flex h-[calc(100vh-6rem)] flex-col px-6 pt-12">
-      <DashboardHeader title="Chat" />
+    <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+      <DashboardHeader title="Financial Chat" />
+
+      <p className="-mt-6 mb-3 text-sm text-muted-foreground">{SUBHEADING}</p>
 
       <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -267,8 +324,6 @@ const ChatTab = () => {
           This chat tool uses AI to help co-parents maintain constructive discussions.
         </p>
       </div>
-
-
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto pb-3">
         {loading ? (
@@ -279,9 +334,7 @@ const ChatTab = () => {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <p className="text-sm text-muted-foreground">
-              No messages yet. Say hello.
-            </p>
+            <p className="text-sm text-muted-foreground">No messages yet. Say hello.</p>
           </div>
         ) : (
           <AnimatePresence initial={false}>
@@ -304,6 +357,18 @@ const ChatTab = () => {
                       )}
                     >
                       {m.body}
+                      {m.attachment_path && m.attachment_name && (
+                        <button
+                          onClick={() => openAttachment(m.attachment_path!, m.attachment_name!)}
+                          className={cn(
+                            "mt-2 flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs underline-offset-2 hover:underline",
+                            mine ? "bg-background/15" : "bg-muted",
+                          )}
+                        >
+                          <FileText className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{m.attachment_name}</span>
+                        </button>
+                      )}
                     </div>
                     <p
                       className={cn(
@@ -311,7 +376,9 @@ const ChatTab = () => {
                         mine ? "text-right" : "text-left",
                       )}
                     >
-                      {new Date(m.created_at).toLocaleTimeString([], {
+                      {new Date(m.created_at).toLocaleString([], {
+                        day: "2-digit",
+                        month: "short",
                         hour: "numeric",
                         minute: "2-digit",
                       })}
@@ -345,13 +412,53 @@ const ChatTab = () => {
             {toneScore >= 0.8
               ? "This message might be hard to receive. Take a breath?"
               : toneScore >= 0.6
-                ? "Heads up — this might come across strongly."
+                ? "Heads up - this might come across strongly."
                 : "This might come across a little strongly."}
           </p>
         )}
       </div>
 
+      {file && (
+        <div className="mb-2 flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1 truncate text-xs text-foreground">{file.name}</span>
+          <button
+            aria-label="Remove attachment"
+            onClick={() => setFile(null)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <div className="flex items-end gap-2 pb-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,application/pdf"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0] ?? null;
+            if (f && f.size > 10 * 1024 * 1024) {
+              toast.error("Files must be under 10MB");
+              return;
+            }
+            setFile(f);
+            e.target.value = "";
+          }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label="Attach a receipt or document"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={sending || rewriting}
+          className="h-12 w-12 shrink-0"
+        >
+          <Paperclip className="h-5 w-5" />
+        </Button>
         <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -367,7 +474,7 @@ const ChatTab = () => {
         />
         <Button
           onClick={handleSendClick}
-          disabled={!draft.trim() || sending || rewriting}
+          disabled={(!draft.trim() && !file) || sending || rewriting}
           size="icon"
           className="h-12 w-12 shrink-0"
         >
