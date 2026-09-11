@@ -353,9 +353,10 @@ const FAQ = () => {
               <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">
                 Maintenance Guide
               </Link>
-              <Link to="/resources/support-and-guidance" className="hover:text-foreground">
-                Support &amp; Guidance
+              <Link to="/resources/child-maintenance-guide#money-help" className="hover:text-foreground">
+                Money Help
               </Link>
+
               <Link to="/faq" className="hover:text-foreground">
                 FAQ
               </Link>
