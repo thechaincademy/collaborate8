@@ -357,6 +357,7 @@ const ChatTab = () => {
         <ConversationQuestionnaire
           isPayer={profile?.role !== "viewing"}
           recipientEmail={toolEmail}
+          sharedCosts={toolCosts}
           onClose={() => setQuestionnaireOpen(false)}
         />
       </div>
