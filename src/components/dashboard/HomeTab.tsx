@@ -49,7 +49,27 @@ const quickLinks: Array<{
   icon: React.ElementType;
 }> = [
   { tab: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
-  { tab: "resources", label: "Resources", description: "Guides and tools", icon: BookOpen },
+];
+
+const resources = [
+  {
+    icon: MessageCircle,
+    title: "Let's chat tool",
+    description: "An interactive guide for both parents to reach agreement on key issues",
+    link: "/resources/lets-chat-tool",
+  },
+  {
+    icon: PoundSterling,
+    title: "Child Maintenance Calculator",
+    description: "Work out a fair amount using the UK standard formula",
+    link: "/child-maintenance-calculator",
+  },
+  {
+    icon: BookOpen,
+    title: "Child Maintenance Guide",
+    description: "Everything separated parents need to know",
+    link: "/resources/child-maintenance-guide-app",
+  },
 ];
 
 const HomeTab = ({ onNavigate }: HomeTabProps) => {
