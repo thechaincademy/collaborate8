@@ -321,7 +321,9 @@ const ConversationQuestionnaire = ({
         <p className="text-sm leading-relaxed">
           {summaryReady
             ? "Your answers have been saved. Your co-parent has also completed their questions, so your shared summary has been emailed to you both. Your financial chat is ready."
-            : "Your answers have been saved. An email has been sent to your co-parent inviting them to participate. You will be notified when they have completed the process and your shared summary is ready. This may take up to 14 days."}
+            : inviteSent
+              ? "Your answers have been saved. An email has been sent to your co-parent inviting them to participate. You will be notified when they have completed the process and your shared summary is ready. This may take up to 14 days."
+              : "Your answers have been saved. You will be notified when your co-parent has completed the process and your shared summary is ready. This may take up to 14 days."}
         </p>
         <Button
           className="mt-6 w-full bg-gold text-gold-foreground hover:bg-gold/90"
