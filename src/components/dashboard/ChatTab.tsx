@@ -247,9 +247,10 @@ const ChatTab = () => {
 
   if (!coparentId) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col overflow-y-auto px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
+        <ConversationToolBanner onOpen={openTool} />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
             <UserPlus className="h-6 w-6 text-muted-foreground" />
@@ -261,7 +262,13 @@ const ChatTab = () => {
           <Button className="mt-2 w-full max-w-xs" onClick={() => navigate("/profile")}>
             Send an invitation
           </Button>
+          {showUnconnectedSuggestion && (
+            <div className="w-full text-left">
+              <ConversationToolSuggestionCard onOpen={openTool} />
+            </div>
+          )}
         </div>
+        <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} />
       </div>
     );
   }
