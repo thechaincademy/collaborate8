@@ -8,16 +8,9 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  Shield,
   ArrowRight,
-  Calculator,
-  CreditCard,
-  MessageSquare,
-  Gift,
-  CheckCircle2,
   ChevronDown,
   Trophy,
-  Star,
   BookOpen,
   Infinity
 } from "lucide-react";
@@ -74,29 +67,6 @@ const Landing = () => {
       setIsSignedUp(true);
     }
   };
-
-  const features = [
-    {
-      icon: CreditCard,
-      title: "Payment Tracking",
-      description: "Set up and track recurring child maintenance payments with automatic reminders.",
-    },
-    {
-      icon: Calculator,
-      title: "Expense Splitting",
-      description: "Log shared expenses, attach receipts, and request reimbursement, all in one place.",
-    },
-    {
-      icon: MessageSquare,
-      title: "In-App Messaging",
-      description: "Keep communication focused and civil with a dedicated co-parenting chat.",
-    },
-    {
-      icon: Gift,
-      title: "Rewards",
-      description: "Earn Rewards and points for each payment. Unlock milestones.",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -235,48 +205,6 @@ const Landing = () => {
                 </h3>
                 <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
                   {screenshot.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-20 bg-slate-50">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-14 text-center"
-          >
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-              Everything you need
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              One app to manage all co-parenting finances.
-            </p>
-          </motion.div>
-
-          <div className="grid gap-8 md:grid-cols-2">
-            {features.map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="rounded-2xl border border-border bg-card p-6"
-              >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-foreground">
-                  <feature.icon className="h-5 w-5 text-background" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">
-                  {feature.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {feature.description}
                 </p>
               </motion.div>
             ))}
