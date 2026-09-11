@@ -250,8 +250,12 @@ const ConversationQuestionnaire = ({
 }) => {
   const { user } = useAuth();
   const sections = useMemo(() => commonSections(isPayer), [isPayer]);
-  const totalSteps = sections.length + 2; // + costs (6) + optional note (7)
-  const costsStep = sections.length;
+  // Only the initiating parent (the one who purchased and supplied their
+  // co-parent's email) can submit their expenses.
+  const isInitiator = Boolean(recipientEmail);
+  const totalSteps = sections.length + (isInitiator ? 2 : 1);
+  const costsStep = isInitiator ? sections.length : -1;
+
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
