@@ -299,6 +299,18 @@ const ConversationQuestionnaire = ({
       // Summary can be generated later - never block the confirmation screen.
     }
 
+    // Send the invitation email to Parent B if an email was provided.
+    if (recipientEmail) {
+      try {
+        await supabase.functions.invoke("send-conversation-invite", {
+          body: { recipientEmail },
+        });
+        setInviteSent(true);
+      } catch {
+        // The invitation can be re-sent later - never block the confirmation screen.
+      }
+    }
+
     setSaving(false);
     setDone(true);
   };
