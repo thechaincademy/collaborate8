@@ -88,6 +88,100 @@ const ChatTab = () => {
   const [emailStepOpen, setEmailStepOpen] = useState(false);
   const [toolEmail, setToolEmail] = useState("");
 
+  // First message written before the co-parent has joined
+  const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string } | null>(null);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [pendingDraft, setPendingDraft] = useState("");
+  const [savedCoparentEmail, setSavedCoparentEmail] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [sendingPending, setSendingPending] = useState(false);
+
+  // Load any waiting first message + a saved co-parent email
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      setPendingLoading(true);
+      const [{ data: pending }, { data: invite }] = await Promise.all([
+        supabase
+          .from("pending_first_messages")
+          .select("id, body")
+          .eq("sender_id", user.id)
+          .is("delivered_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("invitations")
+          .select("invitee_email")
+          .eq("inviter_id", user.id)
+          .not("invitee_email", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (!active) return;
+      setPendingMessage(pending ?? null);
+      setSavedCoparentEmail(invite?.invitee_email ?? "");
+      setPendingLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  // Deliver the waiting message once the co-parent connects
+  useEffect(() => {
+    if (!user || !coparentId || !pendingMessage) return;
+    (async () => {
+      const { error } = await supabase.from("messages").insert({
+        sender_id: user.id,
+        recipient_id: coparentId,
+        body: pendingMessage.body,
+      });
+      if (error) return;
+      await supabase
+        .from("pending_first_messages")
+        .update({ delivered_at: new Date().toISOString() })
+        .eq("id", pendingMessage.id);
+      setPendingMessage(null);
+    })();
+  }, [user, coparentId, pendingMessage]);
+
+  const sendFirstMessage = async () => {
+    const text = pendingDraft.trim();
+    const email = (savedCoparentEmail || pendingEmail).trim();
+    if (!user || !text || sendingPending) return;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter your co-parent's email address");
+      return;
+    }
+    setSendingPending(true);
+    const { data, error } = await supabase
+      .from("pending_first_messages")
+      .insert({ sender_id: user.id, body: text, recipient_email: email })
+      .select("id, body")
+      .single();
+    if (error || !data) {
+      setSendingPending(false);
+      toast.error("Could not save your message");
+      return;
+    }
+    try {
+      await supabase.functions.invoke("send-first-message-notice", {
+        body: { recipientEmail: email },
+      });
+    } catch {
+      // message is stored either way
+    }
+    setPendingMessage(data);
+    setPendingDraft("");
+    setSendingPending(false);
+    toast.success("Your message is waiting - we've let your co-parent know");
+  };
+
+
+
 
 
   // Trigger 1: no co-parent linked 3+ days after signing up
