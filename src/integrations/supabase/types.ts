@@ -315,6 +315,8 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_name: string | null
+          attachment_path: string | null
           body: string
           created_at: string
           id: string
@@ -326,6 +328,8 @@ export type Database = {
           used_suggestion: boolean
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_path?: string | null
           body: string
           created_at?: string
           id?: string
@@ -337,6 +341,8 @@ export type Database = {
           used_suggestion?: boolean
         }
         Update: {
+          attachment_name?: string | null
+          attachment_path?: string | null
           body?: string
           created_at?: string
           id?: string

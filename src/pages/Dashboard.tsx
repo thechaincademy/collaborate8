@@ -16,7 +16,7 @@ import { trackTab } from "@/lib/analytics";
 
 export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
-const COMING_SOON_TABS: DashboardTab[] = ["chat", "benefits", "expenses"];
+const COMING_SOON_TABS: DashboardTab[] = ["benefits", "expenses"];
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("home");
