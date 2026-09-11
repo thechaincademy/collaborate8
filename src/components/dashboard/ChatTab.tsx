@@ -83,6 +83,7 @@ const ChatTab = () => {
   const { open: toolOpen, setOpen: setToolOpen } = useConversationToolModal();
   const openTool = () => setToolOpen(true);
   const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
+  const [toolEmail, setToolEmail] = useState("");
 
 
   // Trigger 1: no co-parent linked 3+ days after signing up
