@@ -158,6 +158,36 @@ export type Database = {
           },
         ]
       }
+      conversation_tool_responses: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          created_at: string
+          id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
