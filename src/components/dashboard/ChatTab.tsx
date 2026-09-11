@@ -552,17 +552,10 @@ const ChatTab = () => {
         onOpenChange={setEmailStepOpen}
         onConfirm={(email) => {
           setToolEmail(email);
-          setCostsStepOpen(true);
-        }}
-      />
-      <ConversationCostsStep
-        open={costsStepOpen}
-        onOpenChange={setCostsStepOpen}
-        onContinue={(costs) => {
-          setToolCosts(costs);
           setQuestionnaireOpen(true);
         }}
       />
+
 
 
       <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
