@@ -43,33 +43,15 @@ interface HomeTabProps {
 }
 
 const quickLinks: Array<{
-  tab: DashboardTab;
+  type: "tab" | "route";
+  target: DashboardTab | string;
   label: string;
   description: string;
   icon: React.ElementType;
 }> = [
-  { tab: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
-];
-
-const resources = [
-  {
-    icon: MessageCircle,
-    title: "Let's chat tool",
-    description: "An interactive guide for both parents to reach agreement on key issues",
-    link: "/resources/lets-chat-tool",
-  },
-  {
-    icon: PoundSterling,
-    title: "Child Maintenance Calculator",
-    description: "Work out a fair amount using the UK standard formula",
-    link: "/child-maintenance-calculator",
-  },
-  {
-    icon: BookOpen,
-    title: "Child Maintenance Guide",
-    description: "Everything separated parents need to know",
-    link: "/resources/child-maintenance-guide-app",
-  },
+  { type: "tab", target: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
+  { type: "route", target: "/child-maintenance-calculator", label: "Child Maintenance Calculator", description: "Work out a fair amount using the UK standard formula", icon: PoundSterling },
+  { type: "route", target: "/resources/child-maintenance-guide-app", label: "Child Maintenance Guide", description: "Everything separated parents need to know", icon: BookOpen },
 ];
 
 const HomeTab = ({ onNavigate }: HomeTabProps) => {
