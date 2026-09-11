@@ -15,8 +15,10 @@ import {
   ConversationToolBanner,
   ConversationToolModal,
   ConversationToolSuggestionCard,
+  ConversationEmailStep,
   useConversationToolModal,
 } from "./ConversationToolPromo";
+
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -83,7 +85,9 @@ const ChatTab = () => {
   const { open: toolOpen, setOpen: setToolOpen } = useConversationToolModal();
   const openTool = () => setToolOpen(true);
   const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
+  const [emailStepOpen, setEmailStepOpen] = useState(false);
   const [toolEmail, setToolEmail] = useState("");
+
 
 
   // Trigger 1: no co-parent linked 3+ days after signing up
@@ -288,11 +292,17 @@ const ChatTab = () => {
         <ConversationToolModal
           open={toolOpen}
           onOpenChange={setToolOpen}
-          onStart={(email) => {
+          onStart={() => setEmailStepOpen(true)}
+        />
+        <ConversationEmailStep
+          open={emailStepOpen}
+          onOpenChange={setEmailStepOpen}
+          onConfirm={(email) => {
             setToolEmail(email);
             setQuestionnaireOpen(true);
           }}
         />
+
       </div>
     );
   }
@@ -381,11 +391,17 @@ const ChatTab = () => {
       <ConversationToolModal
         open={toolOpen}
         onOpenChange={setToolOpen}
-        onStart={(email) => {
+        onStart={() => setEmailStepOpen(true)}
+      />
+      <ConversationEmailStep
+        open={emailStepOpen}
+        onOpenChange={setEmailStepOpen}
+        onConfirm={(email) => {
           setToolEmail(email);
           setQuestionnaireOpen(true);
         }}
       />
+
 
       <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
