@@ -312,8 +312,10 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         <div className="space-y-3">
           {quickLinks.map((link, i) => (
             <motion.button
-              key={link.tab}
-              onClick={() => onNavigate(link.tab)}
+              key={link.target}
+              onClick={() =>
+                link.type === "route" ? navigate(link.target) : onNavigate(link.target as DashboardTab)
+              }
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + i * 0.04 }}
