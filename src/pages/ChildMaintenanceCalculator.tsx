@@ -198,9 +198,17 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
 
       <div className="mx-auto max-w-[640px]">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="mb-1.5 text-[26px] font-semibold tracking-tight text-[#1A1A18]">Child maintenance calculator</h1>
-          <p className="text-sm leading-relaxed text-[#6B6B64]">Child maintenance in the UK is calculated using a standard government formula, based on the paying parent's gross weekly income and number of children. This calculator uses the same formula — giving you a baseline both parents can refer to.</p>
+        <div className="mb-6 overflow-hidden rounded-2xl bg-teal p-6 text-teal-foreground shadow-elevated">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-gold-foreground">
+            Free CMS formula
+          </span>
+          <h1 className="mt-3 text-[28px] font-semibold leading-tight tracking-tight">Child maintenance calculator</h1>
+          <p className="mt-2 text-sm leading-relaxed text-teal-foreground/85">Child maintenance in the UK is calculated using a standard government formula, based on the paying parent's gross weekly income and number of children. This calculator uses the same formula - giving you a baseline both parents can refer to.</p>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-medium">
+            <div className="rounded-lg bg-teal-foreground/10 px-2.5 py-2">Instant estimate</div>
+            <div className="rounded-lg bg-teal-foreground/10 px-2.5 py-2">Shared care included</div>
+            <div className="rounded-lg bg-teal-foreground/10 px-2.5 py-2">Downloadable summary</div>
+          </div>
         </div>
 
         {/* Paying parent card */}
