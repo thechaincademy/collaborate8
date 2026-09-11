@@ -285,7 +285,14 @@ const ChatTab = () => {
             </div>
           )}
         </div>
-        <ConversationToolModal open={toolOpen} onOpenChange={setToolOpen} onStart={() => setQuestionnaireOpen(true)} />
+        <ConversationToolModal
+          open={toolOpen}
+          onOpenChange={setToolOpen}
+          onStart={(email) => {
+            setToolEmail(email);
+            setQuestionnaireOpen(true);
+          }}
+        />
       </div>
     );
   }
