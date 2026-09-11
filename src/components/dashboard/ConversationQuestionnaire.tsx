@@ -25,6 +25,8 @@ interface Section {
   questions: Question[];
 }
 
+const INVITED_OPTION = "I am here because I was invited by my co-parent";
+
 const commonSections = (isPayer: boolean): Section[] => [
   {
     title: "Section 1 of 6 - What brings you here today",
@@ -38,10 +40,10 @@ const commonSections = (isPayer: boolean): Section[] => [
         options: [
           "Putting an arrangement in place for the first time",
           "Reviewing an existing arrangement",
-          "Discussing shared expenses",
           "Raising a specific financial issue",
           "All of the above",
           "I am not sure yet - I want to get the conversation started",
+          INVITED_OPTION,
         ],
       },
       {
@@ -53,6 +55,7 @@ const commonSections = (isPayer: boolean): Section[] => [
           "Yes, through the Child Maintenance Service",
           "We had one but it has broken down",
           "No arrangement in place",
+          INVITED_OPTION,
         ],
       },
       {
@@ -62,10 +65,9 @@ const commonSections = (isPayer: boolean): Section[] => [
         type: "single",
         options: [
           "We do not communicate about finances at all",
-          "We communicate but it tends to lead to conflict",
-          "We communicate occasionally but avoid the topic",
           "We communicate but cannot reach agreement",
           "We communicate but would benefit from more structure",
+          INVITED_OPTION,
         ],
       },
     ],
@@ -81,9 +83,8 @@ const commonSections = (isPayer: boolean): Section[] => [
           "Agreeing a maintenance amount",
           "Reviewing an amount that no longer reflects current circumstances",
           "Agreeing how to split a specific expense",
-          "Creating a shared record of what we have agreed",
           "Getting the conversation started in a structured way",
-          "Understanding what I am entitled to or responsible for",
+          INVITED_OPTION,
         ],
       },
       {
@@ -92,9 +93,8 @@ const commonSections = (isPayer: boolean): Section[] => [
         type: "single",
         options: [
           "As soon as possible",
-          "Within the next month",
-          "Within the next three months",
           "No specific timeframe - I want to start when we are both ready",
+          INVITED_OPTION,
         ],
       },
     ],
@@ -108,14 +108,14 @@ const commonSections = (isPayer: boolean): Section[] => [
             label:
               "Are you willing to use the CMS statutory formula as the basis for a maintenance calculation?",
             type: "single",
-            options: ["Yes", "I would prefer we agree a different amount", "I am not sure yet"],
+            options: ["Yes", "I would prefer we agree a different amount", "I am not sure yet", INVITED_OPTION],
           },
           {
             id: "share_income",
             label:
               "Are you willing to share your approximate gross annual income to generate a suggested figure?",
             type: "single",
-            options: ["Yes", "No, I would prefer to discuss this directly"],
+            options: ["Yes", "No, I would prefer to discuss this directly", INVITED_OPTION],
             showIf: { id: "cms_formula", values: ["Yes"] },
           },
           {
@@ -129,6 +129,7 @@ const commonSections = (isPayer: boolean): Section[] => [
               "£40,001 to £60,000",
               "£60,001 to £80,000",
               "Over £80,000",
+              INVITED_OPTION,
             ],
             showIf: { id: "share_income", values: ["Yes"] },
           },
@@ -143,6 +144,7 @@ const commonSections = (isPayer: boolean): Section[] => [
               "Yes",
               "I would prefer we agree a different amount",
               "I am not sure yet - I would like to discuss this",
+              INVITED_OPTION,
             ],
           },
         ],
@@ -154,7 +156,7 @@ const commonSections = (isPayer: boolean): Section[] => [
         id: "shared_expenses",
         label: "Are there shared expenses you would like to discuss?",
         type: "single",
-        options: ["Yes", "No", "Not right now but possibly in future"],
+        options: ["Yes", "No", "Not right now but possibly in future", INVITED_OPTION],
       },
       {
         id: "expense_areas",
@@ -169,6 +171,7 @@ const commonSections = (isPayer: boolean): Section[] => [
           "Holidays",
           "Special occasions",
           "Other",
+          INVITED_OPTION,
         ],
         showIf: { id: "shared_expenses", values: ["Yes"] },
       },
@@ -181,6 +184,7 @@ const commonSections = (isPayer: boolean): Section[] => [
           "Agree a process for raising these costs in future",
           "Understand what each parent currently contributes",
           "Create a shared record of contributions",
+          INVITED_OPTION,
         ],
         showIf: { id: "shared_expenses", values: ["Yes"] },
       },
@@ -200,6 +204,7 @@ const commonSections = (isPayer: boolean): Section[] => [
           "A written record of our agreements would be helpful",
           "A structured space for financial conversations would help us both",
           "We may benefit from additional support to reach agreement",
+          INVITED_OPTION,
         ],
       },
       {
@@ -213,6 +218,7 @@ const commonSections = (isPayer: boolean): Section[] => [
           "Access to professional mediation",
           "Legal advice",
           "Nothing - I am ready to begin",
+          INVITED_OPTION,
         ],
       },
     ],
