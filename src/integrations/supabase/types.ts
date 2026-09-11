@@ -489,6 +489,33 @@ export type Database = {
           },
         ]
       }
+      pending_first_messages: {
+        Row: {
+          body: string
+          created_at: string
+          delivered_at: string | null
+          id: string
+          recipient_email: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          recipient_email?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          recipient_email?: string | null
+          sender_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           coparent_id: string | null

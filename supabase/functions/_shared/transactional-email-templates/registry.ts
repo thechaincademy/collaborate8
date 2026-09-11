@@ -6,6 +6,7 @@ import { template as newSignupAdminAlertTemplate } from './new-signup-admin-aler
 import { template as adminWeeklyReportTemplate } from './admin-weekly-report.tsx'
 import { template as productUpdateTemplate } from './product-update.tsx'
 import { template as conversationSummaryTemplate } from './conversation-summary.tsx'
+import { template as firstMessageNoticeTemplate } from './first-message-notice.tsx'
 
 
 export interface TemplateEntry {
@@ -33,4 +34,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'admin_weekly_report': adminWeeklyReportTemplate,
   'product_update': productUpdateTemplate,
   'conversation_summary': conversationSummaryTemplate,
+  'first_message_notice': firstMessageNoticeTemplate,
 }

@@ -88,6 +88,100 @@ const ChatTab = () => {
   const [emailStepOpen, setEmailStepOpen] = useState(false);
   const [toolEmail, setToolEmail] = useState("");
 
+  // First message written before the co-parent has joined
+  const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string } | null>(null);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [pendingDraft, setPendingDraft] = useState("");
+  const [savedCoparentEmail, setSavedCoparentEmail] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [sendingPending, setSendingPending] = useState(false);
+
+  // Load any waiting first message + a saved co-parent email
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      setPendingLoading(true);
+      const [{ data: pending }, { data: invite }] = await Promise.all([
+        supabase
+          .from("pending_first_messages")
+          .select("id, body")
+          .eq("sender_id", user.id)
+          .is("delivered_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("invitations")
+          .select("invitee_email")
+          .eq("inviter_id", user.id)
+          .not("invitee_email", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (!active) return;
+      setPendingMessage(pending ?? null);
+      setSavedCoparentEmail(invite?.invitee_email ?? "");
+      setPendingLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  // Deliver the waiting message once the co-parent connects
+  useEffect(() => {
+    if (!user || !coparentId || !pendingMessage) return;
+    (async () => {
+      const { error } = await supabase.from("messages").insert({
+        sender_id: user.id,
+        recipient_id: coparentId,
+        body: pendingMessage.body,
+      });
+      if (error) return;
+      await supabase
+        .from("pending_first_messages")
+        .update({ delivered_at: new Date().toISOString() })
+        .eq("id", pendingMessage.id);
+      setPendingMessage(null);
+    })();
+  }, [user, coparentId, pendingMessage]);
+
+  const sendFirstMessage = async () => {
+    const text = pendingDraft.trim();
+    const email = (savedCoparentEmail || pendingEmail).trim();
+    if (!user || !text || sendingPending) return;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter your co-parent's email address");
+      return;
+    }
+    setSendingPending(true);
+    const { data, error } = await supabase
+      .from("pending_first_messages")
+      .insert({ sender_id: user.id, body: text, recipient_email: email })
+      .select("id, body")
+      .single();
+    if (error || !data) {
+      setSendingPending(false);
+      toast.error("Could not save your message");
+      return;
+    }
+    try {
+      await supabase.functions.invoke("send-first-message-notice", {
+        body: { recipientEmail: email },
+      });
+    } catch {
+      // message is stored either way
+    }
+    setPendingMessage(data);
+    setPendingDraft("");
+    setSendingPending(false);
+    toast.success("Your message is waiting - we've let your co-parent know");
+  };
+
+
+
 
 
   // Trigger 1: no co-parent linked 3+ days after signing up
@@ -272,23 +366,77 @@ const ChatTab = () => {
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         <ConversationToolBanner onOpen={openTool} />
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-            <UserPlus className="h-6 w-6 text-muted-foreground" />
+        <div className="flex flex-1 flex-col gap-4 pt-2">
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="text-base font-semibold text-foreground">
+              Start your financial conversation.
+            </h2>
+            {pendingLoading ? (
+              <Skeleton className="mt-3 h-24 w-full rounded-xl" />
+            ) : pendingMessage ? (
+              <>
+                <div className="mt-3 rounded-2xl rounded-br-md bg-foreground px-4 py-2.5 text-sm leading-relaxed text-background">
+                  {pendingMessage.body}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Your message is waiting. You will be able to continue the conversation once your
+                  co-parent joins and responds. We have sent them an email letting them know you
+                  have been in touch.
+                </p>
+              </>
+            ) : (
+              <>
+                <Textarea
+                  value={pendingDraft}
+                  onChange={(e) => setPendingDraft(e.target.value)}
+                  placeholder="Write your first message…"
+                  rows={4}
+                  className="mt-3 resize-none rounded-2xl border-border bg-background text-foreground"
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Your co-parent has not yet joined Collabor8. You can write your first message now.
+                  It will be delivered to them as soon as they connect. An email will be sent to
+                  your co-parent letting them know you have reached out.
+                </p>
+                {!savedCoparentEmail && (
+                  <input
+                    type="email"
+                    value={pendingEmail}
+                    onChange={(e) => setPendingEmail(e.target.value)}
+                    placeholder="Your co-parent's email address"
+                    className="mt-3 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  />
+                )}
+                <Button
+                  className="mt-3 w-full"
+                  onClick={sendFirstMessage}
+                  disabled={!pendingDraft.trim() || sendingPending}
+                >
+                  {sendingPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send message"}
+                </Button>
+              </>
+            )}
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Not connected yet</h2>
-          <p className="max-w-xs text-sm text-muted-foreground">
-            Your co-parent has not yet joined Collabor8. Send them an invitation to connect.
-          </p>
-          <Button className="mt-2 w-full max-w-xs" onClick={() => navigate("/profile")}>
-            Send an invitation
-          </Button>
-          {showUnconnectedSuggestion && (
-            <div className="w-full text-left">
-              <ConversationToolSuggestionCard onOpen={openTool} />
+
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <UserPlus className="h-6 w-6 text-muted-foreground" />
             </div>
-          )}
+            <h2 className="text-lg font-semibold text-foreground">Not connected yet</h2>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Your co-parent has not yet joined Collabor8. Send them an invitation to connect.
+            </p>
+            <Button className="w-full max-w-xs" onClick={() => navigate("/profile")}>
+              Send an invitation
+            </Button>
+            {showUnconnectedSuggestion && (
+              <div className="w-full text-left">
+                <ConversationToolSuggestionCard onOpen={openTool} />
+              </div>
+            )}
+          </div>
         </div>
+
         <ConversationToolModal
           open={toolOpen}
           onOpenChange={setToolOpen}
