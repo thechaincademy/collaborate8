@@ -16,8 +16,10 @@ import {
   ConversationToolModal,
   ConversationToolSuggestionCard,
   ConversationEmailStep,
+  ConversationCostsStep,
   useConversationToolModal,
 } from "./ConversationToolPromo";
+import type { SharedCosts } from "./ConversationToolPromo";
 
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
 
@@ -86,7 +88,9 @@ const ChatTab = () => {
   const openTool = () => setToolOpen(true);
   const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
   const [emailStepOpen, setEmailStepOpen] = useState(false);
+  const [costsStepOpen, setCostsStepOpen] = useState(false);
   const [toolEmail, setToolEmail] = useState("");
+  const [toolCosts, setToolCosts] = useState<SharedCosts>({});
 
   // First message written before the co-parent has joined
   const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string } | null>(null);
