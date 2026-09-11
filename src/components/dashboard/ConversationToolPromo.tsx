@@ -92,9 +92,9 @@ export const ConversationToolModal = ({
 export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => (
   <div className="mb-3 rounded-2xl bg-teal p-4 text-teal-foreground">
     <p className="text-xs leading-relaxed">
-      Want a structured way to start your financial conversation? Unlock the Self-Guided Financial
-      Conversation Tool - both parents answer questions privately, and a shared summary shows where
-      you agree.
+      Sometimes the hardest part of managing finances after separation is knowing where to begin.
+      Unlock the Self-Guided Financial Conversation Tool — both parents answer questions privately,
+      and a shared summary shows where you agree and where further conversation is needed.
     </p>
     <Button
       size="sm"
