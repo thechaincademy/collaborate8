@@ -292,11 +292,17 @@ const ChatTab = () => {
         <ConversationToolModal
           open={toolOpen}
           onOpenChange={setToolOpen}
-          onStart={(email) => {
+          onStart={() => setEmailStepOpen(true)}
+        />
+        <ConversationEmailStep
+          open={emailStepOpen}
+          onOpenChange={setEmailStepOpen}
+          onConfirm={(email) => {
             setToolEmail(email);
             setQuestionnaireOpen(true);
           }}
         />
+
       </div>
     );
   }
