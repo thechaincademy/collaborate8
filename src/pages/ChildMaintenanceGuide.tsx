@@ -51,6 +51,37 @@ const articles = [
   },
 ];
 
+const moneyHelpOrgs = [
+  {
+    name: "MoneyHelper",
+    tag: "Free guidance",
+    desc: "MoneyHelper is a free, government-backed service offering clear and impartial guidance on money. If you need help making sense of your budget, understanding your pension, or getting a clearer picture of your finances after separation, it's a solid starting point.",
+    helps: [
+      "Free and impartial, no products to sell you",
+      "Budgeting tools and practical money guides",
+      "Guidance on benefits, pensions, and financial planning",
+      "Available online, by phone, and via webchat",
+    ],
+    href: "https://www.moneyhelper.org.uk",
+    cta: "Visit MoneyHelper",
+  },
+  {
+    name: "Turn2us",
+    tag: "Benefits & grants",
+    desc: "Turn2us helps people find financial support they didn't know they were entitled to. After separation, your circumstances may have changed in ways that open up new benefits or grants. Their free tools make it easy to check what you might be eligible for, no sign-up needed.",
+    helps: [
+      "Free benefits calculator, takes around 10 minutes",
+      "Grants search covering thousands of charitable funds",
+      "Clear guidance on support available after life changes",
+      "No sign-up required to check eligibility",
+    ],
+    href: "https://www.turn2us.org.uk",
+    cta: "Visit Turn2us",
+  },
+];
+
+
+
 const Callout = ({ children }: { children: React.ReactNode }) => (
   <div className="my-7 rounded-r-[10px] border-l-[3px] border-[#1A1A18] bg-secondary px-5 py-4 text-[0.95rem] italic leading-[1.65] text-[#1A1A18]">
     {children}
