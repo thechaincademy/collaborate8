@@ -213,15 +213,12 @@ const commonSections = (isPayer: boolean): Section[] => [
         label: "What would make this process easier for you?",
         type: "multi",
         options: [
-          "More information about how the CMS calculates maintenance",
-          "A suggested starting figure based on the statutory formula",
           "A written summary of what we have discussed",
-          "Access to professional mediation",
-          "Legal advice",
           "Nothing - I am ready to begin",
           INVITED_OPTION,
         ],
       },
+
     ],
   },
 ];
@@ -253,8 +250,12 @@ const ConversationQuestionnaire = ({
 }) => {
   const { user } = useAuth();
   const sections = useMemo(() => commonSections(isPayer), [isPayer]);
-  const totalSteps = sections.length + 2; // + costs (6) + optional note (7)
-  const costsStep = sections.length;
+  // Only the initiating parent (the one who purchased and supplied their
+  // co-parent's email) can submit their expenses.
+  const isInitiator = Boolean(recipientEmail);
+  const totalSteps = sections.length + (isInitiator ? 2 : 1);
+  const costsStep = isInitiator ? sections.length : -1;
+
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
@@ -406,7 +407,10 @@ const ConversationQuestionnaire = ({
       {currentSection ? (
         <div className="space-y-6">
           <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
-            <h2 className="text-base font-semibold">{currentSection.title}</h2>
+            <h2 className="text-base font-semibold">
+              {currentSection.title.replace("of 7", `of ${totalSteps}`)}
+            </h2>
+
             {currentSection.description && (
               <p className="mt-1 text-xs text-teal-foreground/80">{currentSection.description}</p>
             )}
@@ -449,7 +453,7 @@ const ConversationQuestionnaire = ({
         <div className="space-y-5">
           <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
             <h2 className="text-base font-semibold">
-              Section 6 of 7 - Provide further details on your costs (optional)
+              Section 6 of {totalSteps} - Provide further details on your costs (optional)
             </h2>
           </div>
 
@@ -532,7 +536,10 @@ const ConversationQuestionnaire = ({
       ) : (
         <div className="space-y-5">
           <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
-            <h2 className="text-base font-semibold">Section 7 of 7 - Comments (optional)</h2>
+            <h2 className="text-base font-semibold">
+              Section {totalSteps} of {totalSteps} - Comments (optional)
+            </h2>
+
             <p className="mt-1 text-xs text-teal-foreground/80">
               This is optional. Whatever you write here will be shared with your co-parent as part
               of the summary.
