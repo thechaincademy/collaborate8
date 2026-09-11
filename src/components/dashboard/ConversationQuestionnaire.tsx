@@ -223,9 +223,11 @@ const NOTE_MAX = 150;
 
 const ConversationQuestionnaire = ({
   isPayer,
+  recipientEmail,
   onClose,
 }: {
   isPayer: boolean;
+  recipientEmail?: string;
   onClose: () => void;
 }) => {
   const { user } = useAuth();
@@ -238,6 +240,7 @@ const ConversationQuestionnaire = ({
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [summaryReady, setSummaryReady] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   const visible = (q: Question) => {
     if (!q.showIf) return true;
