@@ -11,10 +11,13 @@ export const CONVERSATION_TOOL_PRICE = "£29.99";
 export const ConversationToolModal = ({
   open,
   onOpenChange,
+  onStart,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  onStart?: () => void;
 }) => (
+
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
       <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
