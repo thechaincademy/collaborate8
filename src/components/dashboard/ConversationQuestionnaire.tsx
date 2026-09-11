@@ -407,7 +407,10 @@ const ConversationQuestionnaire = ({
       {currentSection ? (
         <div className="space-y-6">
           <div className="rounded-2xl bg-teal p-4 text-teal-foreground">
-            <h2 className="text-base font-semibold">{currentSection.title}</h2>
+            <h2 className="text-base font-semibold">
+              {currentSection.title.replace("of 7", `of ${totalSteps}`)}
+            </h2>
+
             {currentSection.description && (
               <p className="mt-1 text-xs text-teal-foreground/80">{currentSection.description}</p>
             )}
