@@ -452,17 +452,10 @@ const ChatTab = () => {
           onOpenChange={setEmailStepOpen}
           onConfirm={(email) => {
             setToolEmail(email);
-            setCostsStepOpen(true);
-          }}
-        />
-        <ConversationCostsStep
-          open={costsStepOpen}
-          onOpenChange={setCostsStepOpen}
-          onContinue={(costs) => {
-            setToolCosts(costs);
             setQuestionnaireOpen(true);
           }}
         />
+
 
       </div>
     );
