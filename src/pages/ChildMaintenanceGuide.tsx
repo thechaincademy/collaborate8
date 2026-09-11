@@ -433,7 +433,7 @@ const ChildMaintenanceGuide = () => {
         <p>
           <Link to="/" className="text-white/60 no-underline hover:text-white">Collabor8</Link>
           {" \u00B7 "}
-          <Link to="/resources/support-and-guidance" className="text-white/60 no-underline hover:text-white">Support &amp; Guidance</Link>
+          <a href="#money-help" className="text-white/60 no-underline hover:text-white">Money Help</a>
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/60 no-underline hover:text-white">Privacy</Link>
         </p>
