@@ -224,10 +224,12 @@ const NOTE_MAX = 150;
 const ConversationQuestionnaire = ({
   isPayer,
   recipientEmail,
+  sharedCosts,
   onClose,
 }: {
   isPayer: boolean;
   recipientEmail?: string;
+  sharedCosts?: Record<string, { amount: string; period: "weekly" | "monthly" }>;
   onClose: () => void;
 }) => {
   const { user } = useAuth();
