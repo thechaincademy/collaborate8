@@ -213,15 +213,12 @@ const commonSections = (isPayer: boolean): Section[] => [
         label: "What would make this process easier for you?",
         type: "multi",
         options: [
-          "More information about how the CMS calculates maintenance",
-          "A suggested starting figure based on the statutory formula",
           "A written summary of what we have discussed",
-          "Access to professional mediation",
-          "Legal advice",
           "Nothing - I am ready to begin",
           INVITED_OPTION,
         ],
       },
+
     ],
   },
 ];
