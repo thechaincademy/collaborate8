@@ -247,8 +247,20 @@ const ChatTab = () => {
     );
   }
 
+  if (questionnaireOpen) {
+    return (
+      <div className="mx-auto w-full max-w-md overflow-y-auto px-6 pb-10 pt-12">
+        <ConversationQuestionnaire
+          isPayer={profile?.role !== "viewing"}
+          onClose={() => setQuestionnaireOpen(false)}
+        />
+      </div>
+    );
+  }
+
   if (!coparentId) {
     return (
+
       <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col overflow-y-auto px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
