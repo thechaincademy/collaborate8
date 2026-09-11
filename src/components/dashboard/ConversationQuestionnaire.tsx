@@ -237,6 +237,7 @@ const ConversationQuestionnaire = ({
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [summaryReady, setSummaryReady] = useState(false);
 
   const visible = (q: Question) => {
     if (!q.showIf) return true;
@@ -280,11 +281,22 @@ const ConversationQuestionnaire = ({
       note: note.trim() || null,
       completed_at: new Date().toISOString(),
     });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("We couldn't save your answers. Please try again.");
       return;
     }
+
+    // If the co-parent has already completed their questions, the shared
+    // summary email goes out to both parents now.
+    try {
+      const { data } = await supabase.functions.invoke("conversation-summary");
+      if (data?.ready) setSummaryReady(true);
+    } catch {
+      // Summary can be generated later - never block the confirmation screen.
+    }
+
+    setSaving(false);
     setDone(true);
   };
 
@@ -292,9 +304,9 @@ const ConversationQuestionnaire = ({
     return (
       <div className="flex min-h-[60vh] flex-col justify-center rounded-2xl bg-navy p-6 text-navy-foreground">
         <p className="text-sm leading-relaxed">
-          Your answers have been saved. An email has been sent to your co-parent inviting them to
-          participate. You will be notified when they have completed the process and your shared
-          summary is ready. This may take up to 14 days.
+          {summaryReady
+            ? "Your answers have been saved. Your co-parent has also completed their questions, so your shared summary has been emailed to you both. Your financial chat is ready."
+            : "Your answers have been saved. An email has been sent to your co-parent inviting them to participate. You will be notified when they have completed the process and your shared summary is ready. This may take up to 14 days."}
         </p>
         <Button
           className="mt-6 w-full bg-gold text-gold-foreground hover:bg-gold/90"
