@@ -38,10 +38,10 @@ const commonSections = (isPayer: boolean): Section[] => [
         options: [
           "Putting an arrangement in place for the first time",
           "Reviewing an existing arrangement",
-          "Discussing shared expenses",
           "Raising a specific financial issue",
           "All of the above",
           "I am not sure yet - I want to get the conversation started",
+          INVITED_OPTION,
         ],
       },
       {
@@ -53,6 +53,7 @@ const commonSections = (isPayer: boolean): Section[] => [
           "Yes, through the Child Maintenance Service",
           "We had one but it has broken down",
           "No arrangement in place",
+          INVITED_OPTION,
         ],
       },
       {
@@ -62,10 +63,9 @@ const commonSections = (isPayer: boolean): Section[] => [
         type: "single",
         options: [
           "We do not communicate about finances at all",
-          "We communicate but it tends to lead to conflict",
-          "We communicate occasionally but avoid the topic",
           "We communicate but cannot reach agreement",
           "We communicate but would benefit from more structure",
+          INVITED_OPTION,
         ],
       },
     ],
