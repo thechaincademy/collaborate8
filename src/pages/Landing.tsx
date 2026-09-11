@@ -403,7 +403,7 @@ const Landing = () => {
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <Link to="/child-maintenance-calculator" className="hover:text-foreground">Child Maintenance Calculator</Link>
               <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">Maintenance Guide</Link>
-              <Link to="/resources/support-and-guidance" className="hover:text-foreground">Support &amp; Guidance</Link>
+              <Link to="/resources/child-maintenance-guide#money-help" className="hover:text-foreground">Money Help</Link>
               <Link to="/faq" className="hover:text-foreground">FAQ</Link>
               <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
               <span>© 2025 collabor8</span>

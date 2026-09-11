@@ -34,12 +34,6 @@ const TopBanner = () => {
           >
             Guide
           </Link>
-          <Link
-            to="/resources/support-and-guidance"
-            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline"
-          >
-            Money Help
-          </Link>
           <Button size="sm" onClick={handleWaitlistClick} className="rounded-full">
             Sign Up
           </Button>

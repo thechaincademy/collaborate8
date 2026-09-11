@@ -22,7 +22,6 @@ import CookiePolicy from "./pages/CookiePolicy";
 import FAQ from "./pages/FAQ";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import ChildMaintenanceGuideApp from "./pages/ChildMaintenanceGuideApp";
-import SupportAndGuidance from "./pages/SupportAndGuidance";
 import ChildMaintenanceCalculator from "./pages/ChildMaintenanceCalculator";
 import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
@@ -67,7 +66,7 @@ const App = () => (
               <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<Navigate to="/resources/child-maintenance-guide#article-3" replace />} />
               <Route path="/resources/child-maintenance-guide/shared-expenses" element={<Navigate to="/resources/child-maintenance-guide#article-4" replace />} />
               <Route path="/resources/child-maintenance-guide/rights-and-responsibilities" element={<Navigate to="/resources/child-maintenance-guide#article-5" replace />} />
-              <Route path="/resources/support-and-guidance" element={<SupportAndGuidance />} />
+              <Route path="/resources/support-and-guidance" element={<Navigate to="/resources/child-maintenance-guide#money-help" replace />} />
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
               <Route path="/resources/lets-chat-tool" element={<ProtectedRoute><LetsChatTool /></ProtectedRoute>} />

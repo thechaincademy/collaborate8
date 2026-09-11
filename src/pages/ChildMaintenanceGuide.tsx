@@ -51,6 +51,37 @@ const articles = [
   },
 ];
 
+const moneyHelpOrgs = [
+  {
+    name: "MoneyHelper",
+    tag: "Free guidance",
+    desc: "MoneyHelper is a free, government-backed service offering clear and impartial guidance on money. If you need help making sense of your budget, understanding your pension, or getting a clearer picture of your finances after separation, it's a solid starting point.",
+    helps: [
+      "Free and impartial, no products to sell you",
+      "Budgeting tools and practical money guides",
+      "Guidance on benefits, pensions, and financial planning",
+      "Available online, by phone, and via webchat",
+    ],
+    href: "https://www.moneyhelper.org.uk",
+    cta: "Visit MoneyHelper",
+  },
+  {
+    name: "Turn2us",
+    tag: "Benefits & grants",
+    desc: "Turn2us helps people find financial support they didn't know they were entitled to. After separation, your circumstances may have changed in ways that open up new benefits or grants. Their free tools make it easy to check what you might be eligible for, no sign-up needed.",
+    helps: [
+      "Free benefits calculator, takes around 10 minutes",
+      "Grants search covering thousands of charitable funds",
+      "Clear guidance on support available after life changes",
+      "No sign-up required to check eligibility",
+    ],
+    href: "https://www.turn2us.org.uk",
+    cta: "Visit Turn2us",
+  },
+];
+
+
+
 const Callout = ({ children }: { children: React.ReactNode }) => (
   <div className="my-7 rounded-r-[10px] border-l-[3px] border-[#1A1A18] bg-secondary px-5 py-4 text-[0.95rem] italic leading-[1.65] text-[#1A1A18]">
     {children}
@@ -338,7 +369,46 @@ const ChildMaintenanceGuide = () => {
         </article>
       </main>
 
+      {/* MONEY HELP */}
+      <section id="money-help" className="border-t border-[#E4E2DA] bg-background px-8 py-16" aria-label="Money help and free support">
+        <div className="mx-auto max-w-[720px]">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-[#1A1A18]">Money help</p>
+          <h2 className="mb-4 text-[clamp(1.8rem,4vw,2.4rem)] font-light leading-tight tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+            Free support with your finances
+          </h2>
+          <p className="mb-10 text-[1rem] font-light leading-[1.8] text-[#6B6B64]">
+            Finances often change significantly after separation, and many parents aren't aware of all the support and benefits they may be entitled to. These free, independent organisations can help.
+          </p>
+
+          {moneyHelpOrgs.map((o) => (
+            <div key={o.name} className="mb-5 rounded-2xl border border-[#E4E2DA] bg-background px-9 py-8 transition-shadow hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-sm:px-6 max-sm:py-6">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+                <h3 className="text-[1.3rem] font-normal leading-[1.2] tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{o.name}</h3>
+                <span className="mt-[3px] flex-shrink-0 self-start whitespace-nowrap rounded-full bg-secondary px-[0.7rem] py-1 text-[0.73rem] font-medium uppercase tracking-[0.06em] text-[#1A1A18]">{o.tag}</span>
+              </div>
+              <p className="mb-[1.1rem] text-[0.98rem] leading-[1.75] text-[#3D3D38]">{o.desc}</p>
+              <ul className="mb-6 flex list-none flex-col gap-[0.35rem] p-0">
+                {o.helps.map((h) => (
+                  <li key={h} className="relative pl-[1.3rem] text-[0.9rem] leading-[1.5] text-[#6B6B64]">
+                    <span className="absolute left-0 top-[0.55em] h-[5px] w-[5px] rounded-full bg-foreground" />
+                    {h}
+                  </li>
+                ))}
+              </ul>
+              <a href={o.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-[0.4rem] rounded-full border border-[#1A1A18] px-[1.1rem] py-2 text-[0.88rem] font-medium text-[#1A1A18] no-underline transition-all hover:bg-foreground hover:text-white">
+                {o.cta} &#8599;
+              </a>
+            </div>
+          ))}
+
+          <p className="border-t border-[#E4E2DA] pt-6 text-[0.83rem] italic leading-[1.65] text-[#AEADA5]">
+            This section is for signposting purposes only. Collabor8 is not a financial adviser or legal service. The organisations listed above are independent and not affiliated with Collabor8. Always seek advice directly from qualified professionals for your specific situation.
+          </p>
+        </div>
+      </section>
+
       {/* CTA */}
+
       <section id="get-started" className="px-8 py-16 text-center bg-slate-50 text-slate-700">
         <h2 className="mb-4 text-[clamp(1.8rem,4vw,2.8rem)] font-light leading-tight tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
           Ready to make things simpler?
@@ -363,7 +433,7 @@ const ChildMaintenanceGuide = () => {
         <p>
           <Link to="/" className="text-white/60 no-underline hover:text-white">Collabor8</Link>
           {" \u00B7 "}
-          <Link to="/resources/support-and-guidance" className="text-white/60 no-underline hover:text-white">Support &amp; Guidance</Link>
+          <a href="#money-help" className="text-white/60 no-underline hover:text-white">Money Help</a>
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/60 no-underline hover:text-white">Privacy</Link>
         </p>
