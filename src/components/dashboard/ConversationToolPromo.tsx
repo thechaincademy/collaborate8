@@ -304,6 +304,36 @@ export const ConversationCostsStep = ({
   );
 };
 
+export const useConversationToolAccess = () => {
+  const { user } = useAuth();
+  const [hasAccess, setHasAccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = async () => {
+    if (!user) {
+      setHasAccess(false);
+      setLoading(false);
+      return false;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke("conversation-tool-access", {
+      body: { action: "status" },
+    });
+    setLoading(false);
+    if (error) return false;
+    const granted = !!data?.hasAccess;
+    setHasAccess(granted);
+    return granted;
+  };
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  return { hasAccess, loading, refresh, setHasAccess };
+};
+
 export const ConversationToolModal = ({
   open,
   onOpenChange,
@@ -313,10 +343,57 @@ export const ConversationToolModal = ({
   onOpenChange: (v: boolean) => void;
   onStart?: () => void;
 }) => {
+  const { hasAccess, loading, refresh } = useConversationToolAccess();
+  const [promo, setPromo] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
+  const [paying, setPaying] = useState(false);
+
   const handleStart = () => {
     onOpenChange(false);
     onStart?.();
   };
+
+  const startCheckout = async () => {
+    setPaying(true);
+    const { data, error } = await supabase.functions.invoke("conversation-tool-access", {
+      body: { action: "create-checkout" },
+    });
+    setPaying(false);
+
+    if (error || data?.error) {
+      toast.error("We could not start the payment. Please try again.");
+      return;
+    }
+    if (data?.hasAccess) {
+      await refresh();
+      handleStart();
+      return;
+    }
+    if (data?.url) window.location.href = data.url as string;
+  };
+
+  const redeem = async () => {
+    const code = promo.trim();
+    if (!code) {
+      toast.error("Please enter your promotional code");
+      return;
+    }
+    setRedeeming(true);
+    const { data, error } = await supabase.functions.invoke("conversation-tool-access", {
+      body: { action: "redeem-promo", code },
+    });
+    setRedeeming(false);
+
+    if (error || data?.error) {
+      toast.error((data?.error as string) || "That promotional code is not valid");
+      return;
+    }
+    await refresh();
+    toast.success("Promotional code applied - you have free access");
+    handleStart();
+  };
+
+
 
 
   return (
@@ -371,13 +448,44 @@ export const ConversationToolModal = ({
         </div>
 
 
-        <div className="space-y-2 border-t border-border p-5 pt-3">
-          <Button
-            className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
-            onClick={handleStart}
-          >
-            Start now - {CONVERSATION_TOOL_PRICE}
-          </Button>
+        <div className="space-y-3 border-t border-border p-5 pt-3">
+          {hasAccess ? (
+            <Button
+              className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+              onClick={handleStart}
+              disabled={loading}
+            >
+              Start now
+            </Button>
+          ) : (
+            <>
+              <Button
+                className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+                onClick={startCheckout}
+                disabled={loading || paying}
+              >
+                {paying ? "Opening payment..." : `Pay ${CONVERSATION_TOOL_PRICE} and start`}
+              </Button>
+
+              <div className="space-y-2">
+                <label htmlFor="conversation-promo" className="text-xs text-muted-foreground">
+                  Have a promotional code?
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="conversation-promo"
+                    placeholder="Enter code"
+                    value={promo}
+                    onChange={(e) => setPromo(e.target.value)}
+                  />
+                  <Button variant="outline" onClick={redeem} disabled={redeeming}>
+                    {redeeming ? "Checking..." : "Apply"}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
 
           <p className="text-center text-xs text-muted-foreground">
             If your co-parent does not respond within 14 days, you will hear from us about next steps.

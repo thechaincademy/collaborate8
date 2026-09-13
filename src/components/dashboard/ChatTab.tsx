@@ -88,6 +88,43 @@ const ChatTab = () => {
   const [emailStepOpen, setEmailStepOpen] = useState(false);
   const [toolEmail, setToolEmail] = useState("");
 
+  // Returning from Stripe Checkout for the conversation tool
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("conversation-tool");
+    if (!result) return;
+
+    const sessionId = params.get("session_id");
+    const clean = () => {
+      params.delete("conversation-tool");
+      params.delete("session_id");
+      const q = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (q ? `?${q}` : ""));
+    };
+
+    if (result === "cancelled") {
+      toast.info("Payment cancelled. You can unlock the tool whenever you are ready.");
+      clean();
+      return;
+    }
+
+    if (result === "success" && sessionId) {
+      (async () => {
+        const { data, error } = await supabase.functions.invoke("conversation-tool-access", {
+          body: { action: "verify-session", sessionId },
+        });
+        clean();
+        if (error || !data?.hasAccess) {
+          toast.error("We could not confirm your payment yet. Please try again in a moment.");
+          return;
+        }
+        toast.success("Payment confirmed - let's get started.");
+        setEmailStepOpen(true);
+      })();
+    }
+  }, []);
+
+
   // First message written before the co-parent has joined
   const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string } | null>(null);
   const [pendingLoading, setPendingLoading] = useState(true);

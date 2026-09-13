@@ -158,6 +158,50 @@ export type Database = {
           },
         ]
       }
+      conversation_tool_access: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          granted_at: string
+          id: string
+          promo_code: string | null
+          provider_session_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          granted_at?: string
+          id?: string
+          promo_code?: string | null
+          provider_session_id?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          granted_at?: string
+          id?: string
+          promo_code?: string | null
+          provider_session_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_tool_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_tool_responses: {
         Row: {
           answers: Json
