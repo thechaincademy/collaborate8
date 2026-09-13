@@ -14,7 +14,7 @@ import {
   BookOpen,
   Infinity
 } from "lucide-react";
-import financePhone from "@/assets/finance-phone.jpg";
+
 import appScreenshot1 from "@/assets/app-screenshot-1.png";
 import appScreenshot2 from "@/assets/app-screenshot-2.png";
 import appScreenshot3 from "@/assets/app-screenshot-3.png";
@@ -233,18 +233,18 @@ const Landing = () => {
             {[
               {
                 icon: Infinity,
-                title: "Unlimited expenses & payments",
-                description: "Track every payment and expense with no limits. Log as many as you need, whenever you need.",
+                title: "Maintain a secure record",
+                description: "Maintain a secure record of everything surrounding your child/ren's finances.",
               },
               {
                 icon: BookOpen,
-                title: "Micro-courses & budgeting tools",
-                description: "Access co-parenting mini-courses and downloadable budgeting templates to keep your finances healthy.",
+                title: "Access support",
+                description: "Access support. Use guided self mediation tools to kick-start conversations.",
               },
               {
                 icon: Trophy,
-                title: "Hundreds of pounds in rewards",
-                description: "Make everyday payments. Get rewards in return.",
+                title: "Get started",
+                description: "Get started. Sign up here.",
               },
             ].map((item, i) => (
               <motion.div
@@ -277,42 +277,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Finance phone image + CTA */}
-      <section className="border-t border-border bg-card py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="grid items-center gap-10 md:grid-cols-2">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="order-2 md:order-1"
-            >
-              <h2 className="mb-4 text-3xl font-bold text-foreground">
-                Your finances, at your fingertips
-              </h2>
-              <p className="mb-6 text-muted-foreground">
-                The only app helping co-parents manage payments with ease. Collabor8 gives families the clarity they need to stay on track.
-              </p>
-              <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
-                Sign Up <ArrowRight className="h-4 w-4" />
-              </Button>
-
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="order-1 md:order-2"
-            >
-              <img
-                src={financePhone}
-                alt="Parent managing finances on phone"
-                className="w-full rounded-3xl object-cover shadow-elevated"
-              />
-            </motion.div>
-          </div>
-        </div>
-      </section>
 
       {/* Sign up CTA */}
       <section id="waitlist" ref={waitlistRef} className="py-20 bg-slate-50">
