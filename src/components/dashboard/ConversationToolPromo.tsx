@@ -448,13 +448,44 @@ export const ConversationToolModal = ({
         </div>
 
 
-        <div className="space-y-2 border-t border-border p-5 pt-3">
-          <Button
-            className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
-            onClick={handleStart}
-          >
-            Start now - {CONVERSATION_TOOL_PRICE}
-          </Button>
+        <div className="space-y-3 border-t border-border p-5 pt-3">
+          {hasAccess ? (
+            <Button
+              className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+              onClick={handleStart}
+              disabled={loading}
+            >
+              Start now
+            </Button>
+          ) : (
+            <>
+              <Button
+                className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+                onClick={startCheckout}
+                disabled={loading || paying}
+              >
+                {paying ? "Opening payment..." : `Pay ${CONVERSATION_TOOL_PRICE} and start`}
+              </Button>
+
+              <div className="space-y-2">
+                <label htmlFor="conversation-promo" className="text-xs text-muted-foreground">
+                  Have a promotional code?
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="conversation-promo"
+                    placeholder="Enter code"
+                    value={promo}
+                    onChange={(e) => setPromo(e.target.value)}
+                  />
+                  <Button variant="outline" onClick={redeem} disabled={redeeming}>
+                    {redeeming ? "Checking..." : "Apply"}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
 
           <p className="text-center text-xs text-muted-foreground">
             If your co-parent does not respond within 14 days, you will hear from us about next steps.
