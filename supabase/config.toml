@@ -38,3 +38,6 @@ verify_jwt = true
 
 [functions.send-first-message-notice]
 verify_jwt = true
+
+[functions.conversation-tool-access]
+verify_jwt = false
