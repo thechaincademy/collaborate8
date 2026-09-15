@@ -17,7 +17,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [appleLoading, setAppleLoading] = useState(false);
+  
 
   useEffect(() => {
     if (user && !loading) {
@@ -42,26 +42,6 @@ const Login = () => {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setAppleLoading(true);
-    const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin,
-    });
-    setAppleLoading(false);
-
-    if (result.error) {
-      toast.error(result.error.message || "Apple sign in failed. Please try again.");
-      return;
-    }
-
-    if (result.redirected) {
-      // Browser is redirecting to Apple; let it happen
-      return;
-    }
-
-    // In popup/iframe flows the session is set via onAuthStateChange and the
-    // useEffect above will redirect once user is available.
-  };
 
   return (
     <>
@@ -98,33 +78,8 @@ const Login = () => {
 
           <h1 className="mb-2 text-center text-3xl font-bold text-foreground">Log in to Collabor8</h1>
           <p className="mb-8 text-center text-muted-foreground">
-            Welcome back. Sign in with Apple or your email to continue.
+            Welcome back. Sign in with your email and password to continue.
           </p>
-
-          {/* Apple sign in */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex flex-col gap-3"
-          >
-            <Button
-              onClick={handleAppleSignIn}
-              className="w-full gap-3 bg-foreground text-background hover:bg-foreground/90"
-              size="lg"
-              disabled={appleLoading}
-            >
-              <Apple className="h-5 w-5" />
-              {appleLoading ? "Redirecting..." : "Sign in with Apple"}
-            </Button>
-          </motion.div>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-sm text-muted-foreground">or continue with email</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
 
           {/* Manual form */}
           <motion.form
