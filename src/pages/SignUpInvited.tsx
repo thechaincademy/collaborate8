@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Mail, User, Check, X, Lock, KeyRound, Apple } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, X, Lock, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+
 import { toast } from "sonner";
 import appScreenshot1 from "@/assets/app-screenshot-1.png";
 import appScreenshot2 from "@/assets/app-screenshot-2.png";
@@ -20,7 +20,7 @@ const SignUpInvited = () => {
   const { signUp, user } = useAuth();
   const [step, setStep] = useState<InvitedStep>("code");
   const [isLoading, setIsLoading] = useState(false);
-  const [appleLoading, setAppleLoading] = useState(false);
+  
   const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
 
   const [inviteCode, setInviteCode] = useState("");
@@ -159,38 +159,6 @@ const SignUpInvited = () => {
     }, 1500);
   };
 
-  const handleAppleSignUp = async () => {
-    if (!invitationData) return;
-    setAppleLoading(true);
-
-    localStorage.setItem("invited_pending_apple", "true");
-
-    const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: `${window.location.origin}/signup/invited`,
-    });
-
-    setAppleLoading(false);
-
-    if (result.error) {
-      toast.error(result.error.message || "Apple sign up failed. Please try again.");
-      localStorage.removeItem("invited_pending_apple");
-      return;
-    }
-
-    if (result.redirected) {
-      return;
-    }
-
-    // Popup flow completed; session will be set via onAuthStateChange
-  };
-
-  // Continue Apple sign-up flow after OAuth redirect
-  useEffect(() => {
-    const pendingApple = localStorage.getItem("invited_pending_apple") === "true";
-    if (user && pendingApple && invitationData) {
-      finishSignUp(user);
-    }
-  }, [user, invitationData]);
 
   const renderProgressBar = () => (
     <div className="flex items-center gap-2">
@@ -289,43 +257,17 @@ const SignUpInvited = () => {
       </div>
 
       <h1 className="mb-2 text-3xl font-bold text-foreground">Create your account</h1>
-      <p className="mb-8 text-muted-foreground">Choose how you would like to sign up.</p>
-
-      <div className="flex flex-col gap-3">
-        <Button
-          onClick={() => setAuthMethod("apple")}
-          className={`w-full gap-3 ${authMethod === "apple" ? "bg-foreground text-background" : "bg-card text-foreground hover:bg-muted"}`}
-          size="lg"
-        >
-          <Apple className="h-5 w-5" />
-          Sign up with Apple
-        </Button>
-
-        <Button
-          onClick={() => setAuthMethod("manual")}
-          className={`w-full ${authMethod === "manual" ? "bg-clay text-clay-foreground" : "bg-card text-foreground hover:bg-muted"}`}
-          size="lg"
-        >
-          Sign up with email
-        </Button>
-      </div>
+      <p className="mb-8 text-muted-foreground">You will sign up with your email address and a password.</p>
 
       <div className="flex-1" />
 
       <div className="pb-8 pt-6">
         <Button
-          onClick={() => {
-            if (authMethod === "apple") {
-              handleAppleSignUp();
-            } else {
-              setStep("credentials");
-            }
-          }}
+          onClick={() => setStep("credentials")}
           className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
           size="lg"
-          disabled={authMethod === "choice" || appleLoading}
         >
-          {appleLoading ? "Redirecting..." : authMethod === "apple" ? "Continue with Apple" : "Continue"}
+          Continue
         </Button>
       </div>
     </motion.div>
