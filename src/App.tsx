@@ -27,6 +27,7 @@ import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
 import PaymentHistory from "./pages/PaymentHistory";
 import Statement from "./pages/Statement";
+import CoparentBankAccount from "./pages/CoparentBankAccount";
 import LetsChatTool from "./pages/LetsChatTool";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />
               <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+              <Route path="/coparent-bank-account" element={<ProtectedRoute><CoparentBankAccount /></ProtectedRoute>} />
               <Route path="/statement/:type" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/cookies" element={<CookiePolicy />} />
