@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.conversation-tool-access]
 verify_jwt = false
+
+[functions.send-manual-payment-reminder]
+verify_jwt = false
