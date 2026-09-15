@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Mail, User, Check, X, Lock, ArrowRight, ArrowDownLeft, Apple } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, X, Lock, ArrowRight, ArrowDownLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+
 import { toast } from "sonner";
 import signupFamily from "@/assets/signup-family.jpg";
 
@@ -38,7 +38,7 @@ const SignUp = () => {
   const [authMethod, setAuthMethod] = useState<AuthMethod>("choice");
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
-  const [appleLoading, setAppleLoading] = useState(false);
+  
 
   // Form state
   const [firstName, setFirstName] = useState("");
@@ -49,18 +49,6 @@ const SignUp = () => {
   const [coparentEmail, setCoparentEmail] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
 
-  // Continue Apple sign-up flow after OAuth redirect
-  useEffect(() => {
-    const pendingApple = localStorage.getItem("signup_pending_apple") === "true";
-    const savedMethod = localStorage.getItem("signup_method") as AuthMethod | null;
-
-    if (user && pendingApple && savedMethod === "apple") {
-      setAuthMethod("apple");
-      setAccountCreated(true);
-      setEmail(user.email ?? "");
-      setStep("name");
-    }
-  }, [user]);
 
   const isNameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
   const isEmailFormatValid = emailRegex.test(email);
@@ -79,33 +67,6 @@ const SignUp = () => {
 
   const getStepIndex = () => STEPS.indexOf(step);
 
-  const handleAppleSignUp = async () => {
-    setAppleLoading(true);
-
-    // Persist signup intent so we can continue after OAuth redirect
-    localStorage.setItem("signup_method", "apple");
-    localStorage.setItem("signup_pending_apple", "true");
-
-    const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: `${window.location.origin}/signup`,
-    });
-
-    setAppleLoading(false);
-
-    if (result.error) {
-      toast.error(result.error.message || "Apple sign up failed. Please try again.");
-      localStorage.removeItem("signup_pending_apple");
-      return;
-    }
-
-    if (result.redirected) {
-      // Browser is redirecting to Apple; let it happen
-      return;
-    }
-
-    // Popup flow completed; session will be set via onAuthStateChange and the
-    // useEffect above will continue the flow.
-  };
 
   // Create the account at the password step so we surface "email exists" inline.
   const handlePasswordContinue = async () => {
@@ -226,16 +187,6 @@ const SignUp = () => {
       </p>
 
       <div className="flex flex-col gap-3">
-        <Button
-          onClick={() => { setAuthMethod("apple"); handleAppleSignUp(); }}
-          className="w-full gap-3 bg-foreground text-background hover:bg-foreground/90"
-          size="lg"
-          disabled={appleLoading}
-        >
-          <Apple className="h-5 w-5" />
-          {appleLoading ? "Redirecting..." : "Sign up with Apple"}
-        </Button>
-
         <Button
           onClick={() => { setAuthMethod("manual"); setStep("name"); }}
           className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
