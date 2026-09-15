@@ -1,25 +1,13 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Apple } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { lovable } from "@/integrations/lovable/index";
 import splashFamily from "@/assets/splash-family.jpg";
 
 const Splash = () => {
   const navigate = useNavigate();
 
-  const handleApple = async () => {
-    const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Could not sign in with Apple");
-      return;
-    }
-    if (result.redirected) return;
-  };
+
 
   return (
     <>
@@ -65,22 +53,6 @@ const Splash = () => {
           </Button>
           <Button onClick={() => navigate("/login")} variant="outline" className="w-full" size="lg">
             Log in
-          </Button>
-
-          <div className="flex items-center gap-3 py-1">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">or</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <Button
-            onClick={handleApple}
-            variant="outline"
-            size="lg"
-            className="w-full gap-2 bg-foreground text-background hover:bg-foreground/90 hover:text-background"
-          >
-            <Apple className="h-5 w-5" />
-            Continue with Apple
           </Button>
         </motion.div>
       </div>
