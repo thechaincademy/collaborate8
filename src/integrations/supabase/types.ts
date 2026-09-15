@@ -235,6 +235,65 @@ export type Database = {
         }
         Relationships: []
       }
+      coparent_bank_accounts: {
+        Row: {
+          account_number: string
+          amount: number | null
+          created_at: string
+          day_of_month: number | null
+          day_of_week: string | null
+          frequency: string
+          holder_name: string
+          id: string
+          last_reminder_sent_at: string | null
+          payment_reference: string | null
+          reminders_enabled: boolean
+          sort_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number: string
+          amount?: number | null
+          created_at?: string
+          day_of_month?: number | null
+          day_of_week?: string | null
+          frequency?: string
+          holder_name: string
+          id?: string
+          last_reminder_sent_at?: string | null
+          payment_reference?: string | null
+          reminders_enabled?: boolean
+          sort_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string
+          amount?: number | null
+          created_at?: string
+          day_of_month?: number | null
+          day_of_week?: string | null
+          frequency?: string
+          holder_name?: string
+          id?: string
+          last_reminder_sent_at?: string | null
+          payment_reference?: string | null
+          reminders_enabled?: boolean
+          sort_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coparent_bank_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -384,6 +443,47 @@ export type Database = {
           {
             foreignKeyName: "invitations_inviter_id_fkey"
             columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manual_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          paid_on: string
+          reference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_on?: string
+          reference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_on?: string
+          reference?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_payments_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
