@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight } from "lucide-react";
+import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -341,6 +341,29 @@ const MaintenanceTab = () => {
           )}
 
         </motion.div>
+      )}
+
+      {/* Alternative when there is no contact with the co-parent */}
+      {!isContentLoading && isManaging && !profile?.coparent_id && (
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          onClick={() => navigate("/coparent-bank-account")}
+          className="mb-6 flex w-full items-start gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <Banknote className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">No contact with your co-parent?</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add their bank details instead. We'll remind you when a payment is due and keep a
+              record of everything you pay.
+            </p>
+          </div>
+          <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+        </motion.button>
       )}
 
 

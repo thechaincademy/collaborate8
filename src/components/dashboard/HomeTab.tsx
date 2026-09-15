@@ -15,6 +15,7 @@ import {
   Copy,
   Mail,
   Loader2,
+  Banknote,
 } from "lucide-react";
 import { format, subMonths } from "date-fns";
 import DashboardHeader from "./DashboardHeader";
@@ -298,6 +299,30 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </motion.button>
+
+      {/* Alternative for parents with no contact with their co-parent */}
+      {!isLinked && (
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          onClick={() => navigate("/coparent-bank-account")}
+          className="mb-8 -mt-4 flex w-full items-start gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <Banknote className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-foreground">Rather not invite your co-parent?</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add their bank details instead, get a reminder when a payment is due and keep your own
+              record of what you have paid.
+            </p>
+          </div>
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+        </motion.button>
+      )}
+
 
       {/* Quick links */}
       <motion.div
