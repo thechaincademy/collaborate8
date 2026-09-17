@@ -50,7 +50,7 @@ export const UserWelcome = ({ name = '' }: UserWelcomeProps) => {
 
 export const template = {
   component: UserWelcome,
-  subject: 'Welcome to Collabor8 - here is how we can help',
+  subject: 'Welcome to Collabor8 — your account is ready',
   displayName: 'Welcome email',
   previewData: { name: 'Alex' },
 } satisfies TemplateEntry
