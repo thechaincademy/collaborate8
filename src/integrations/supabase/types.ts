@@ -532,6 +532,104 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_records: {
+        Row: {
+          amount_gbp_reference: number | null
+          amount_usdc: number
+          arrangement_id: string | null
+          confirmed_at: string | null
+          created_at: string
+          expense_id: string | null
+          id: string
+          network: string
+          payer_id: string
+          payer_wallet: string
+          payment_type: string
+          period: string | null
+          receiver_id: string
+          receiver_wallet: string
+          reference_hash: string
+          salt: string
+          status: string
+          tx_signature: string | null
+          verification_error: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          amount_gbp_reference?: number | null
+          amount_usdc: number
+          arrangement_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          expense_id?: string | null
+          id?: string
+          network?: string
+          payer_id: string
+          payer_wallet: string
+          payment_type?: string
+          period?: string | null
+          receiver_id: string
+          receiver_wallet: string
+          reference_hash: string
+          salt: string
+          status?: string
+          tx_signature?: string | null
+          verification_error?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          amount_gbp_reference?: number | null
+          amount_usdc?: number
+          arrangement_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          expense_id?: string | null
+          id?: string
+          network?: string
+          payer_id?: string
+          payer_wallet?: string
+          payment_type?: string
+          period?: string | null
+          receiver_id?: string
+          receiver_wallet?: string
+          reference_hash?: string
+          salt?: string
+          status?: string
+          tx_signature?: string | null
+          verification_error?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_records_arrangement_id_fkey"
+            columns: ["arrangement_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_payer_id_fkey"
+            columns: ["payer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
