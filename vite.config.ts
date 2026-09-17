@@ -10,9 +10,17 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  define: {
+    // Buffer / global polyfill required by the Solana libraries
+    global: "globalThis",
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      buffer: "buffer",
     },
+  },
+  optimizeDeps: {
+    include: ["buffer"],
   },
 }));
