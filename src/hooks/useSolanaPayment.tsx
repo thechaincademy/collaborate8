@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { useCallback, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
@@ -109,7 +110,7 @@ export const useSolanaPayment = () => {
           new TransactionInstruction({
             keys: [{ pubkey: publicKey, isSigner: true, isWritable: false }],
             programId: new PublicKey(MEMO_PROGRAM_ID),
-            data: new TextEncoder().encode(`${MEMO_PREFIX}${referenceHash}`) as unknown as Buffer,
+            data: Buffer.from(`${MEMO_PREFIX}${referenceHash}`, "utf8"),
           })
         );
 
