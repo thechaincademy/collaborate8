@@ -29,6 +29,8 @@ import PaymentHistory from "./pages/PaymentHistory";
 import Statement from "./pages/Statement";
 import CoparentBankAccount from "./pages/CoparentBankAccount";
 import LetsChatTool from "./pages/LetsChatTool";
+import SolanaProvider from "@/components/solana/SolanaProvider";
+import SolanaPaymentAudit from "./pages/SolanaPaymentAudit";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
