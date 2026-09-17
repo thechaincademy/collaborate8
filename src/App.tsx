@@ -29,6 +29,8 @@ import PaymentHistory from "./pages/PaymentHistory";
 import Statement from "./pages/Statement";
 import CoparentBankAccount from "./pages/CoparentBankAccount";
 import LetsChatTool from "./pages/LetsChatTool";
+import SolanaProvider from "@/components/solana/SolanaProvider";
+import SolanaPaymentAudit from "./pages/SolanaPaymentAudit";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -39,6 +41,7 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <SolanaProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -72,13 +75,16 @@ const App = () => (
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
               <Route path="/resources/lets-chat-tool" element={<ProtectedRoute><LetsChatTool /></ProtectedRoute>} />
+              <Route path="/internal/solana-audit" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
+              <Route path="/internal/solana-audit/:arrangementId" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CookieConsent />
           </BrowserRouter>
-        </TooltipProvider>
+         </TooltipProvider>
+        </SolanaProvider>
       </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
