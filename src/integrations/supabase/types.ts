@@ -384,9 +384,15 @@ export type Database = {
       expense_requests: {
         Row: {
           amount: number
+          applied_at: string | null
+          apply_note: string | null
           created_at: string
+          decided_at: string | null
+          decided_by: string | null
           description: string
           id: string
+          paid_at: string | null
+          provider_invoice_item_id: string | null
           receipt_url: string | null
           status: string
           updated_at: string
@@ -394,9 +400,15 @@ export type Database = {
         }
         Insert: {
           amount: number
+          applied_at?: string | null
+          apply_note?: string | null
           created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
           description: string
           id?: string
+          paid_at?: string | null
+          provider_invoice_item_id?: string | null
           receipt_url?: string | null
           status?: string
           updated_at?: string
@@ -404,15 +416,29 @@ export type Database = {
         }
         Update: {
           amount?: number
+          applied_at?: string | null
+          apply_note?: string | null
           created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
           description?: string
           id?: string
+          paid_at?: string | null
+          provider_invoice_item_id?: string | null
           receipt_url?: string | null
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expense_requests_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invitations: {
         Row: {

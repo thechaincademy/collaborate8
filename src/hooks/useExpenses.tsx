@@ -10,6 +10,12 @@ export interface ExpenseRequest {
   amount: number;
   status: "pending" | "approved" | "paid" | "rejected";
   receipt_url: string | null;
+  decided_by: string | null;
+  decided_at: string | null;
+  provider_invoice_item_id: string | null;
+  applied_at: string | null;
+  paid_at: string | null;
+  apply_note: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -18,6 +24,7 @@ export const useExpenses = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<ExpenseRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deciding, setDeciding] = useState<string | null>(null);
 
   const fetchExpenses = async () => {
     if (!user) {
@@ -33,9 +40,8 @@ export const useExpenses = () => {
 
     if (error) {
       toast.error("Failed to load expenses");
-      toast.error("Failed to load expenses");
     } else {
-      setExpenses((data as ExpenseRequest[]) || []);
+      setExpenses((data as unknown as ExpenseRequest[]) || []);
     }
     setLoading(false);
   };
@@ -61,7 +67,7 @@ export const useExpenses = () => {
       const fileExt = receiptFile.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("receipts")
         .upload(fileName, receiptFile);
 
@@ -90,10 +96,70 @@ export const useExpenses = () => {
       return { error };
     }
 
-    setExpenses((prev) => [data as ExpenseRequest, ...prev]);
-    toast.success("Expense request sent!");
+    setExpenses((prev) => [data as unknown as ExpenseRequest, ...prev]);
+    toast.success("Expense sent to your co-parent for approval");
     return { error: null, data };
   };
 
-  return { expenses, loading, createExpense, refetch: fetchExpenses };
+  /** Approve or decline an expense raised by the co-parent. */
+  const decideExpense = async (expenseId: string, decision: "approve" | "reject") => {
+    setDeciding(expenseId);
+    try {
+      const { data, error } = await supabase.functions.invoke("expense-approvals", {
+        body: { action: "decide", expenseId, decision },
+      });
+
+      if (error) {
+        const ctx: any = (error as any).context;
+        let serverMsg: string | undefined;
+        try {
+          if (ctx?.json) serverMsg = (await ctx.json())?.error;
+          else if (ctx?.text) serverMsg = JSON.parse(await ctx.text())?.error;
+        } catch {}
+        throw new Error(serverMsg || error.message);
+      }
+      if (data?.error) throw new Error(data.error);
+
+      if (decision === "approve") {
+        toast.success(
+          data?.appliedToNextPayment
+            ? "Approved - added to the next recurring payment only"
+            : data?.note || "Expense approved"
+        );
+      } else {
+        toast.success("Expense declined");
+      }
+
+      await fetchExpenses();
+      return { error: null };
+    } catch (e: any) {
+      toast.error(e?.message || "Could not update this expense");
+      return { error: e as Error };
+    } finally {
+      setDeciding(null);
+    }
+  };
+
+  /** Short-lived link so a receipt can be opened privately. */
+  const getReceiptUrl = async (path: string) => {
+    const { data, error } = await supabase.storage
+      .from("receipts")
+      .createSignedUrl(path, 60 * 5);
+
+    if (error || !data?.signedUrl) {
+      toast.error("Could not open the receipt");
+      return null;
+    }
+    return data.signedUrl;
+  };
+
+  return {
+    expenses,
+    loading,
+    deciding,
+    createExpense,
+    decideExpense,
+    getReceiptUrl,
+    refetch: fetchExpenses,
+  };
 };

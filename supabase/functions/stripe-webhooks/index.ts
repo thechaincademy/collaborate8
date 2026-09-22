@@ -152,6 +152,32 @@ serve(async (req) => {
           logStep("Error updating next due date", { error: String(e) });
         }
 
+        // Settle any approved expenses that were added to this invoice as one-off
+        // line items. Once paid they stop affecting future payments (Stripe invoice
+        // items apply to a single invoice), so the arrangement returns to its
+        // original amount automatically.
+        try {
+          const lineItemIds: string[] = (invoice.lines?.data || [])
+            .map((line: any) => line.invoice_item || line.parent?.invoice_item_details?.invoice_item)
+            .filter(Boolean);
+
+          if (lineItemIds.length > 0) {
+            const { error: settleError } = await supabase
+              .from("expense_requests")
+              .update({ status: "paid", paid_at: new Date().toISOString() })
+              .in("provider_invoice_item_id", lineItemIds)
+              .eq("status", "approved");
+
+            if (settleError) {
+              logStep("Error settling expenses", { error: settleError.message });
+            } else {
+              logStep("Expenses settled with invoice", { count: lineItemIds.length });
+            }
+          }
+        } catch (e) {
+          logStep("Error processing invoice expense items", { error: String(e) });
+        }
+
         // Audit
         await supabase.from("audit_events").insert({
           user_id: arrangement.user_id,
