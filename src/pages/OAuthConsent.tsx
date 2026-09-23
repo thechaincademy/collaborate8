@@ -79,7 +79,7 @@ const OAuthConsent = () => {
   const clientName = details?.client?.name ?? "this app";
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 bg-background px-6 py-12">
+    <main className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col justify-center gap-6 bg-background px-6 py-12">
       {error ? (
         <div className="rounded-2xl border border-border bg-card p-6">
           <h1 className="mb-2 text-xl font-bold text-foreground">We could not load this request</h1>

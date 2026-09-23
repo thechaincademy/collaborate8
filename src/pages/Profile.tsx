@@ -33,7 +33,7 @@ const Profile = () => {
 
   if (isContentLoading) {
     return (
-      <div className="mx-auto min-h-screen max-w-md bg-background">
+      <div className="mx-auto min-h-screen max-w-md md:max-w-2xl bg-background">
         <div className="px-6 pt-4">
           <div className="mb-6 flex items-center gap-4">
             <button onClick={() => navigate("/dashboard")} aria-label="Go back" className="flex h-10 w-10 items-center justify-center">
@@ -192,7 +192,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background">
+    <div className="mx-auto min-h-screen max-w-md md:max-w-2xl bg-background">
       <div className="px-6 pt-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}

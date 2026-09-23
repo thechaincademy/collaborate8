@@ -141,7 +141,7 @@ const EditRecurringPayment = () => {
 
   if (!profileLoading && isViewing) {
     return (
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card px-6 pt-12">
+      <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-lg flex-col bg-card px-6 pt-12">
         <button onClick={() => navigate(-1)} className="mb-8">
           <ArrowLeft className="h-6 w-6 text-foreground" />
         </button>
@@ -158,7 +158,7 @@ const EditRecurringPayment = () => {
   const step4Ready = completed[1] && completed[2] && completed[3];
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card">
+    <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-lg flex-col bg-card">
       <div className="px-6 pt-12 pb-24">
         <button onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-6 w-6 text-foreground" />

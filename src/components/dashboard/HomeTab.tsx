@@ -188,7 +188,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="mb-6 grid grid-cols-2 gap-3"
+        className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4"
       >
         <button
           onClick={() => navigate("/statement/maintenance")}

@@ -190,7 +190,7 @@ const CoparentBankAccount = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-md px-6 pb-28 pt-12">
+      <div className="mx-auto max-w-md md:max-w-2xl px-6 pb-28 pt-12">
         <button
           onClick={() => navigate("/dashboard")}
           className="mb-6 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"

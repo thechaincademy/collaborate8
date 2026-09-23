@@ -92,7 +92,7 @@ const AdminDashboard = () => {
 
   if (!isAdmin) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-2xl flex-col items-center justify-center gap-4 px-6 text-center">
         <h1 className="text-xl font-semibold">No access</h1>
         <p className="text-sm text-muted-foreground">
           This dashboard is restricted to the Collabor8 founders.

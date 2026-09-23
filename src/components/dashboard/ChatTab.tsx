@@ -377,7 +377,7 @@ const ChatTab = () => {
   // -------- Render branches
   if (profileLoading) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <Skeleton className="mt-4 h-full w-full rounded-2xl" />
       </div>
@@ -386,7 +386,7 @@ const ChatTab = () => {
 
   if (questionnaireOpen) {
     return (
-      <div className="mx-auto w-full max-w-md overflow-y-auto px-6 pb-10 pt-12">
+      <div className="mx-auto w-full max-w-md md:max-w-3xl lg:max-w-5xl overflow-y-auto px-6 pb-10 pt-12">
         <ConversationQuestionnaire
           isPayer={profile?.role !== "viewing"}
           recipientEmail={toolEmail}
@@ -399,7 +399,7 @@ const ChatTab = () => {
   if (!coparentId) {
     return (
 
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col overflow-y-auto px-6 pt-12">
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col overflow-y-auto px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         <ConversationToolBanner onOpen={openTool} />
@@ -495,7 +495,7 @@ const ChatTab = () => {
 
   if (intercept) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -568,7 +568,7 @@ const ChatTab = () => {
         : "text-destructive";
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col px-6 pt-12">
+    <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12">
       <DashboardHeader title="Financial Chat" />
 
       <p className="-mt-6 mb-3 text-sm text-muted-foreground">{SUBHEADING}</p>
