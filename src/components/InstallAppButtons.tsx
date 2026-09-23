@@ -74,21 +74,33 @@ const InstallAppButtons = () => {
 
   return (
     <>
-      <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+      <div className="flex w-full max-w-md flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <button
           onClick={() => setOpenGuide("ios")}
-          className="group flex flex-1 items-center justify-center gap-3 rounded-full bg-foreground px-7 py-4 text-sm font-bold text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+          aria-label="Download on the App Store"
+          className="flex w-52 items-center gap-3 rounded-xl bg-foreground px-4 py-2.5 text-left text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
         >
-          <Apple className="h-5 w-5" />
-          Get the app on iPhone
+          <Apple className="h-8 w-8 shrink-0" fill="currentColor" />
+          <span className="leading-tight">
+            <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
+              Download on the
+            </span>
+            <span className="block text-lg font-semibold">App Store</span>
+          </span>
         </button>
 
         <button
           onClick={handleAndroid}
-          className="group flex flex-1 items-center justify-center gap-3 rounded-full border border-foreground/20 bg-background/80 px-7 py-4 text-sm font-bold text-foreground backdrop-blur-sm transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+          aria-label="Get it on Google Play"
+          className="flex w-52 items-center gap-3 rounded-xl bg-foreground px-4 py-2.5 text-left text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
         >
-          <Smartphone className="h-5 w-5" />
-          Get the app on Android
+          <GooglePlayIcon className="h-7 w-7 shrink-0" />
+          <span className="leading-tight">
+            <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
+              Get it on
+            </span>
+            <span className="block text-lg font-semibold">Google Play</span>
+          </span>
         </button>
       </div>
 
