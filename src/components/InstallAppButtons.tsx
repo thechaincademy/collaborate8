@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Apple, Share, Plus, Smartphone, Download } from "lucide-react";
+import { Apple, Share, Plus, Download } from "lucide-react";
+
+const GooglePlayIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path fill="#00D2FF" d="M3.6 1.8 13.7 12 3.6 22.2c-.4-.3-.6-.9-.6-1.6V3.4c0-.7.2-1.3.6-1.6Z" />
+    <path fill="#FFCE00" d="m17.4 8.3-3.7 3.7L3.6 1.8c.3-.2.8-.3 1.3 0l12.5 7.2v-.7Z" />
+    <path fill="#FF3A44" d="M17.4 15.7 4.9 22.9c-.5.3-1 .2-1.3 0l10.1-10.2 3.7 3Z" />
+    <path fill="#00F076" d="M17.4 8.3 21 10.3c1.7 1 1.7 2.5 0 3.4l-3.6 2-4-3.7 4-3.7Z" />
+  </svg>
+);
 import {
   Dialog,
   DialogContent,
