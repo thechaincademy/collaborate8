@@ -99,7 +99,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             <Bell className="h-5 w-5 text-foreground" />
             {unreadCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                {unreadCount}
+                {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </button>
@@ -124,9 +124,11 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             ) : (
               <div>
                 {notifications.map((notification) => (
-                  <div
+                  <button
+                    type="button"
                     key={notification.id}
-                    className={`flex gap-3 border-b border-border p-4 last:border-0 ${
+                    onClick={() => openNotification(notification)}
+                    className={`flex w-full gap-3 text-left border-b border-border p-4 last:border-0 ${
                       !notification.read ? "bg-accent/50" : ""
                     }`}
                   >
@@ -140,7 +142,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{notification.time}</p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -148,7 +150,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
 
           {notifications.length > 0 && (
             <div className="border-t border-border p-3">
-              <Button variant="ghost" className="w-full text-sm">
+              <Button variant="ghost" className="w-full text-sm" onClick={markAllRead} disabled={unreadCount === 0}>
                 Mark all as read
               </Button>
             </div>
