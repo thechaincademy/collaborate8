@@ -372,30 +372,6 @@ export const ConversationToolModal = ({
     if (data?.url) window.location.href = data.url as string;
   };
 
-  const redeem = async () => {
-    const code = promo.trim();
-    if (!code) {
-      toast.error("Please enter your promotional code");
-      return;
-    }
-    setRedeeming(true);
-    const { data, error } = await supabase.functions.invoke("conversation-tool-access", {
-      body: { action: "redeem-promo", code },
-    });
-    setRedeeming(false);
-
-    if (error || data?.error) {
-      toast.error((data?.error as string) || "That promotional code is not valid");
-      return;
-    }
-    await refresh();
-    toast.success("Promotional code applied - you have free access");
-    handleStart();
-  };
-
-
-
-
   return (
 
     <Dialog open={open} onOpenChange={onOpenChange}>
