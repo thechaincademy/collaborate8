@@ -125,7 +125,7 @@ const LetsChatTool = () => {
         <title>Let's chat tool - Collabor8</title>
         <meta name="description" content="An interactive guide for co-parents to discuss and reach agreement on key financial and parenting issues together." />
       </Helmet>
-      <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col bg-background">
         <div className="px-6 pt-4">
           <button onClick={goBack} aria-label="Go back" className="mb-4 flex h-10 w-10 items-center justify-center">
             <ArrowLeft className="h-5 w-5 text-foreground" />

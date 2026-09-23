@@ -104,7 +104,7 @@ const Statement = () => {
       <Helmet>
         <title>{title} statement - Collabor8</title>
       </Helmet>
-      <div className="mx-auto min-h-screen max-w-md bg-background px-6 pb-24 pt-12">
+      <div className="mx-auto min-h-screen max-w-md md:max-w-2xl bg-background px-6 pb-24 pt-12">
         <button
           onClick={() => navigate("/dashboard")}
           className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground"

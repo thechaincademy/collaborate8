@@ -40,7 +40,7 @@ const AdminLogin = () => {
         <title>Admin access - Collabor8</title>
         <meta name="robots" content="noindex" />
       </Helmet>
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col justify-center px-6">
         <h1 className="mb-2 text-2xl font-semibold">Admin access</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Enter your founder email and we'll send you a secure sign-in link.

@@ -16,7 +16,7 @@ const MobileLayout = ({
   onTabChange 
 }: MobileLayoutProps) => {
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background">
+    <div className="mx-auto min-h-screen max-w-md md:max-w-3xl lg:max-w-5xl bg-background">
       <main className={showNav ? "pb-24" : ""}>
         {children}
       </main>

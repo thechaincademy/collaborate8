@@ -42,7 +42,7 @@ const Settings = () => {
   ];
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background">
+    <div className="mx-auto min-h-screen max-w-md md:max-w-2xl bg-background">
       {/* Header */}
       <div className="px-6 pt-4">
         <motion.div

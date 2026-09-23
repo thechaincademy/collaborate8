@@ -16,7 +16,7 @@ const Splash = () => {
         <meta name="description" content="Create your account or log in to Collabor8. The app helping co-parents manage child maintenance payments with ease." />
         <link rel="canonical" href="https://collaborate8.com/splash" />
       </Helmet>
-      <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-6">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col bg-background px-6">
         <div className="flex flex-1 flex-col items-center justify-center pt-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}

@@ -44,7 +44,7 @@ const ForgotPassword = () => {
         <meta name="description" content="Reset your Collabor8 password. Enter your email to receive a secure password reset link." />
         <link rel="canonical" href="https://collaborate8.com/forgot-password" />
       </Helmet>
-      <div className="mx-auto min-h-screen max-w-md bg-background">
+      <div className="mx-auto min-h-screen max-w-md md:max-w-lg bg-background">
       <AnimatePresence mode="wait">
         {!isSubmitted ? (
           <motion.div

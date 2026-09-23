@@ -166,7 +166,7 @@ const ChildMaintenanceGuideApp = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background pb-12">
+    <div className="mx-auto min-h-screen max-w-md md:max-w-2xl bg-background pb-12">
       {/* Header */}
       <div className="flex items-center gap-3 px-6 pt-12">
         <button
