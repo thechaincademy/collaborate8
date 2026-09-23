@@ -177,7 +177,7 @@ const Profile = () => {
         },
       ],
     },
-    paymentSection,
+    ...(!profile?.coparent_id ? [paymentSection] : []),
     {
       title: "Account",
       items: [
