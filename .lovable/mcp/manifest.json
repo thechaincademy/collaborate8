@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "sdk_version": "3.0.2",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://eycpkzbjylzzynkfggis.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "medi8-your-connection-hub",
+      "version": "0.1.0",
+      "title": "Medi8: Your Connection Hub"
+    },
+    "tools": [
+      {
+        "name": "get_my_profile",
+        "title": "Get my Collabor8 profile",
+        "description": "Return the signed-in parent's Collabor8 profile: name, role (managing or viewing parent), invite code and whether a co-parent is linked.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_maintenance_arrangements",
+        "title": "List child maintenance arrangements",
+        "description": "List the signed-in parent's recurring child maintenance arrangements, with amount in GBP, frequency, next due date and whether the arrangement is active.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_payments",
+        "title": "List payments",
+        "description": "List the signed-in parent's Collabor8 payment history (maintenance and expense payments), newest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "description": "How many payments to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_expenses",
+        "title": "List shared expenses",
+        "description": "List shared one-off expense requests visible to the signed-in parent, with amount, status (pending, approved, rejected, paid) and who raised it.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected",
+                "paid"
+              ],
+              "description": "Only return expenses with this status."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "description": "How many expenses to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_expense",
+        "title": "Raise a shared expense",
+        "description": "Raise a one-off shared expense for the co-parent to approve or decline. Receipts can only be attached inside the Collabor8 app.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "What the expense is for."
+            },
+            "amountGbp": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100000,
+              "description": "Amount in GBP."
+            }
+          },
+          "required": [
+            "description",
+            "amountGbp"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_manual_payments",
+        "title": "List manually recorded payments",
+        "description": "List payments the signed-in parent has recorded as sent from their own bank, outside Collabor8, with a running total.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "description": "How many records to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "record_manual_payment",
+        "title": "Record a payment sent from your own bank",
+        "description": "Record a maintenance payment the signed-in parent has already sent from their own bank account. Collabor8 does not move the money; this only keeps the record.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "amountGbp": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100000,
+              "description": "Amount sent, in GBP."
+            },
+            "paidOn": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Date the payment was sent, as YYYY-MM-DD. Defaults to today."
+            },
+            "reference": {
+              "type": "string",
+              "maxLength": 120,
+              "description": "Payment reference used."
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 300,
+              "description": "Optional note about the payment."
+            }
+          },
+          "required": [
+            "amountGbp"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_chat_messages",
+        "title": "List financial chat messages",
+        "description": "List recent messages in the financial chat between the signed-in parent and their co-parent, newest last.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 30,
+              "description": "How many messages to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "send_chat_message",
+        "title": "Send a financial chat message",
+        "description": "Send a text message to the signed-in parent's linked co-parent in the financial chat. Requires a linked co-parent.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "body": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "The message text to send."
+            }
+          },
+          "required": [
+            "body"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

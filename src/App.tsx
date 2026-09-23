@@ -33,6 +33,7 @@ import SolanaProvider from "@/components/solana/SolanaProvider";
 import SolanaPaymentAudit from "./pages/SolanaPaymentAudit";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/internal/solana-audit" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
               <Route path="/internal/solana-audit/:arrangementId" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

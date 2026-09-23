@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -13,17 +13,21 @@ import appScreenshot3 from "@/assets/app-screenshot-3.png";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn, user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  // Same-origin relative path only, so an external "next" can never be used.
+  const rawNext = searchParams.get("next") ?? "";
+  const nextPath = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
 
   useEffect(() => {
     if (user && !loading) {
-      navigate("/dashboard");
+      navigate(nextPath);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, nextPath]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +42,7 @@ const Login = () => {
       toast.error(error.message || "Failed to log in");
     } else {
       toast.success("Welcome back!");
-      navigate("/dashboard");
+      navigate(nextPath);
     }
   };
 
