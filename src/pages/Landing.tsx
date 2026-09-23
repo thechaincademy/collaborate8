@@ -19,6 +19,7 @@ import appScreenshot1 from "@/assets/app-screenshot-1.png";
 import appScreenshot2 from "@/assets/app-screenshot-2.png";
 import appScreenshot3 from "@/assets/app-screenshot-3.png";
 import TopBanner from "@/components/TopBanner";
+import InstallAppButtons from "@/components/InstallAppButtons";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -126,12 +127,13 @@ const Landing = () => {
               Collabor8 gives separated parents a dedicated space to discuss money and manage child maintenance - away from everything else.
             </p>
 
+            <InstallAppButtons />
+
             <button
               onClick={scrollToWaitlist}
-              className="group flex items-center gap-3 rounded-full bg-foreground px-8 py-4 text-sm font-bold text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+              className="group mt-6 flex items-center gap-2 text-sm font-semibold text-foreground/80 underline-offset-4 transition-colors hover:text-foreground hover:underline"
             >
-              Sign Up
-
+              Or continue in your browser
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
           </motion.div>
