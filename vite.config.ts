@@ -30,7 +30,8 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: ({ url, request }: { url: URL; request: Request }) =>
-              url.origin === self.location.origin && ["script", "style", "worker"].includes(request.destination),
+              url.origin === (globalThis as { location?: { origin: string } }).location?.origin &&
+              ["script", "style", "worker"].includes(request.destination),
             handler: "CacheFirst",
             options: { cacheName: "c8-assets" },
           },
