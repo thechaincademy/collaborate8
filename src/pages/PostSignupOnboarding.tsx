@@ -236,7 +236,7 @@ const PostSignupOnboarding = () => {
 
   if (profileLoading) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col items-center justify-center bg-background px-6">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col items-center justify-center bg-background px-6">
         <Helmet>
           <title>Getting Started - Collabor8</title>
           <meta name="description" content="Set up your Collabor8 account. Connect your payment method and configure child maintenance arrangements." />
@@ -254,7 +254,7 @@ const PostSignupOnboarding = () => {
         <meta name="description" content="Set up your Collabor8 account. Connect your payment method and configure child maintenance arrangements." />
         <link rel="canonical" href="https://collaborate8.com/post-signup" />
       </Helmet>
-      <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col bg-background px-6">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col bg-background px-6">
         {showBackButton && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-12">
             <button onClick={handleBack} aria-label="Go back" className="mb-6 flex h-10 w-10 items-center justify-center">

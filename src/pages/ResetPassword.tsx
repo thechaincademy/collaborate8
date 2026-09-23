@@ -72,7 +72,7 @@ const ResetPassword = () => {
         <title>Set a new password - Collabor8</title>
         <meta name="description" content="Choose a new password for your Collabor8 account." />
       </Helmet>
-      <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col bg-background px-6">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col bg-background px-6">
         <div className="pt-12">
           <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-clay-soft">
             <ShieldCheck className="h-8 w-8 text-clay" />
