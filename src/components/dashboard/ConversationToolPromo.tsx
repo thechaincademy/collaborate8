@@ -344,8 +344,6 @@ export const ConversationToolModal = ({
   onStart?: () => void;
 }) => {
   const { hasAccess, loading, refresh } = useConversationToolAccess();
-  const [promo, setPromo] = useState("");
-  const [redeeming, setRedeeming] = useState(false);
   const [paying, setPaying] = useState(false);
 
   const handleStart = () => {
