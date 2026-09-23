@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,9 +87,7 @@ const MaintenanceTab = () => {
   // For receiver, show co-parent's arrangement
   const displayArrangement = isViewing ? coparentArrangement : activePayment;
   const amount = displayArrangement?.amount ?? 0;
-  const nextDueDate = displayArrangement?.next_due_date
-    ? new Date(displayArrangement.next_due_date)
-    : null;
+  const nextDueDate = getUpcomingDueDate(displayArrangement);
   const isStripe = displayArrangement?.provider === "stripe";
   const subscriptionStatus = isStripe ? "active" : displayArrangement?.is_active ? "active" : "inactive";
   const isContentLoading = loading || profileLoading || cardsLoading || coparentArrangementLoading || connectStatus === "loading";
