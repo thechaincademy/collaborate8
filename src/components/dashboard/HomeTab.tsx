@@ -38,6 +38,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { useExpenses } from "@/hooks/useExpenses";
 import { DashboardTab } from "@/pages/Dashboard";
 import familyImage from "@/assets/home-family.jpg";
+import { getUpcomingDueDate } from "@/lib/nextDueDate";
 
 interface HomeTabProps {
   onNavigate: (tab: DashboardTab) => void;
@@ -85,7 +86,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   }, [user]);
 
   const activePayment = getActivePayment();
-  const nextDueDate = activePayment?.next_due_date ? new Date(activePayment.next_due_date) : null;
+  const nextDueDate = getUpcomingDueDate(activePayment);
 
   const firstName = profile?.first_name?.trim();
   const greeting = firstName ? `Hi, ${firstName}` : "Welcome back";
