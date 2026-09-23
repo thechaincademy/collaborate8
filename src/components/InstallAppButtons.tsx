@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Apple, Share, Plus, Smartphone, Download } from "lucide-react";
+import { Apple, Share, Plus, Download } from "lucide-react";
+
+const GooglePlayIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path fill="#00D2FF" d="M3.6 1.8 13.7 12 3.6 22.2c-.4-.3-.6-.9-.6-1.6V3.4c0-.7.2-1.3.6-1.6Z" />
+    <path fill="#FFCE00" d="m17.4 8.3-3.7 3.7L3.6 1.8c.3-.2.8-.3 1.3 0l12.5 7.2v-.7Z" />
+    <path fill="#FF3A44" d="M17.4 15.7 4.9 22.9c-.5.3-1 .2-1.3 0l10.1-10.2 3.7 3Z" />
+    <path fill="#00F076" d="M17.4 8.3 21 10.3c1.7 1 1.7 2.5 0 3.4l-3.6 2-4-3.7 4-3.7Z" />
+  </svg>
+);
 import {
   Dialog,
   DialogContent,
@@ -65,21 +74,33 @@ const InstallAppButtons = () => {
 
   return (
     <>
-      <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+      <div className="flex w-full max-w-md flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <button
           onClick={() => setOpenGuide("ios")}
-          className="group flex flex-1 items-center justify-center gap-3 rounded-full bg-foreground px-7 py-4 text-sm font-bold text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+          aria-label="Download on the App Store"
+          className="flex w-52 items-center gap-3 rounded-xl bg-foreground px-4 py-2.5 text-left text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
         >
-          <Apple className="h-5 w-5" />
-          Get the app on iPhone
+          <Apple className="h-8 w-8 shrink-0" fill="currentColor" />
+          <span className="leading-tight">
+            <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
+              Download on the
+            </span>
+            <span className="block text-lg font-semibold">App Store</span>
+          </span>
         </button>
 
         <button
           onClick={handleAndroid}
-          className="group flex flex-1 items-center justify-center gap-3 rounded-full border border-foreground/20 bg-background/80 px-7 py-4 text-sm font-bold text-foreground backdrop-blur-sm transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+          aria-label="Get it on Google Play"
+          className="flex w-52 items-center gap-3 rounded-xl bg-foreground px-4 py-2.5 text-left text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
         >
-          <Smartphone className="h-5 w-5" />
-          Get the app on Android
+          <GooglePlayIcon className="h-7 w-7 shrink-0" />
+          <span className="leading-tight">
+            <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
+              Get it on
+            </span>
+            <span className="block text-lg font-semibold">Google Play</span>
+          </span>
         </button>
       </div>
 
