@@ -42,6 +42,15 @@ const Dashboard = () => {
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {
+    const tab = searchParams.get("tab") as DashboardTab | null;
+    if (tab && ["home", "maintenance", "expenses", "benefits", "chat", "resources"].includes(tab)) {
+      setActiveTab(tab);
+      searchParams.delete("tab");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
     trackTab(activeTab);
   }, [activeTab]);
 

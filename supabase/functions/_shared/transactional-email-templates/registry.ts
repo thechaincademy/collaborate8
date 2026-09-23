@@ -8,6 +8,7 @@ import { template as productUpdateTemplate } from './product-update.tsx'
 import { template as conversationSummaryTemplate } from './conversation-summary.tsx'
 import { template as firstMessageNoticeTemplate } from './first-message-notice.tsx'
 import { template as manualPaymentReminderTemplate } from './manual-payment-reminder.tsx'
+import { template as coparentNotificationTemplate } from './coparent-notification.tsx'
 
 
 export interface TemplateEntry {
@@ -37,4 +38,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'conversation_summary': conversationSummaryTemplate,
   'first_message_notice': firstMessageNoticeTemplate,
   'manual_payment_reminder': manualPaymentReminderTemplate,
+  'coparent_notification': coparentNotificationTemplate,
 }

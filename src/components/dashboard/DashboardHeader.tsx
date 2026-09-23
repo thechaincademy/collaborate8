@@ -18,16 +18,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: "payment" | "reminder" | "system";
-}
-
-const notifications: Notification[] = [];
+import { useNotifications } from "@/hooks/useNotifications";
+import { formatDistanceToNow } from "date-fns";
 
 interface DashboardHeaderProps {
   title: string;
@@ -35,9 +27,14 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { items, unreadCount, markAllRead, markRead } = useNotifications();
+  const notifications = items.map((n) => ({
+    ...n,
+    read: !!n.read_at,
+    time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+  }));
 
   const handleLogout = async () => {
     await signOut();
@@ -45,11 +42,18 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
     navigate("/");
   };
 
-  const getNotificationIcon = (type: Notification["type"]) => {
+  const openNotification = (n: { id: string; link: string | null }) => {
+    markRead(n.id);
+    setNotificationOpen(false);
+    if (n.link) navigate(n.link);
+  };
+
+  const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "payment":
+      case "maintenance":
+      case "payment_method":
         return <CreditCard className="h-4 w-4" />;
-      case "reminder":
+      case "due":
         return <Clock className="h-4 w-4" />;
       default:
         return <Bell className="h-4 w-4" />;
@@ -95,7 +99,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             <Bell className="h-5 w-5 text-foreground" />
             {unreadCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                {unreadCount}
+                {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </button>
@@ -120,9 +124,11 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             ) : (
               <div>
                 {notifications.map((notification) => (
-                  <div
+                  <button
+                    type="button"
                     key={notification.id}
-                    className={`flex gap-3 border-b border-border p-4 last:border-0 ${
+                    onClick={() => openNotification(notification)}
+                    className={`flex w-full gap-3 text-left border-b border-border p-4 last:border-0 ${
                       !notification.read ? "bg-accent/50" : ""
                     }`}
                   >
@@ -136,7 +142,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{notification.time}</p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -144,7 +150,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
 
           {notifications.length > 0 && (
             <div className="border-t border-border p-3">
-              <Button variant="ghost" className="w-full text-sm">
+              <Button variant="ghost" className="w-full text-sm" onClick={markAllRead} disabled={unreadCount === 0}>
                 Mark all as read
               </Button>
             </div>

@@ -44,3 +44,9 @@ verify_jwt = false
 
 [functions.send-manual-payment-reminder]
 verify_jwt = false
+
+[functions.send-notification-email]
+verify_jwt = false
+
+[functions.payment-due-reminders]
+verify_jwt = false

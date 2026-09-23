@@ -558,6 +558,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          dedupe_key: string | null
+          email_sent_at: string | null
+          id: string
+          link: string | null
+          message: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key?: string | null
+          email_sent_at?: string | null
+          id?: string
+          link?: string | null
+          message: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string | null
+          email_sent_at?: string | null
+          id?: string
+          link?: string | null
+          message?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_records: {
         Row: {
           amount_gbp_reference: number | null
@@ -969,6 +1008,18 @@ export type Database = {
         Returns: undefined
       }
       admin_usage_summary: { Args: { _days?: number }; Returns: Json }
+      create_due_tomorrow_notifications: { Args: never; Returns: number }
+      create_notification: {
+        Args: {
+          _dedupe?: string
+          _link: string
+          _message: string
+          _title: string
+          _type: string
+          _user: string
+        }
+        Returns: undefined
+      }
       get_coparent_id: { Args: { _user_id: string }; Returns: string }
       get_invitation_by_code: {
         Args: { _invite_code: string }
