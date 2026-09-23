@@ -467,22 +467,6 @@ export const ConversationToolModal = ({
                 {paying ? "Opening payment..." : `Pay ${CONVERSATION_TOOL_PRICE} and start`}
               </Button>
 
-              <div className="space-y-2">
-                <label htmlFor="conversation-promo" className="text-xs text-muted-foreground">
-                  Have a promotional code?
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    id="conversation-promo"
-                    placeholder="Enter code"
-                    value={promo}
-                    onChange={(e) => setPromo(e.target.value)}
-                  />
-                  <Button variant="outline" onClick={redeem} disabled={redeeming}>
-                    {redeeming ? "Checking..." : "Apply"}
-                  </Button>
-                </div>
-              </div>
             </>
           )}
 
