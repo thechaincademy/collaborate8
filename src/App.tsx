@@ -33,6 +33,7 @@ import SolanaProvider from "@/components/solana/SolanaProvider";
 import SolanaPaymentAudit from "./pages/SolanaPaymentAudit";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
