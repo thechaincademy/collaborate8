@@ -362,7 +362,7 @@ const SignUpInvited = () => {
         <meta name="description" content="Join Collabor8 with your invite code. Create your account to start managing child maintenance payments with your co-parent." />
         <link rel="canonical" href="https://collaborate8.com/signup/invited" />
       </Helmet>
-      <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col bg-background">
+      <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col bg-background">
         <div className="px-6 pt-4">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             {step !== "verify" && (
