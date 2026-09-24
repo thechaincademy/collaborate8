@@ -33,5 +33,7 @@ Disallow: /edit-payment
 Disallow: /payment-history
 Disallow: /post-signup
 Disallow: /resources/child-maintenance-guide-app
+Disallow: /admin
+Disallow: /internal/
 
 Sitemap: https://collaborate8.com/sitemap.xml
