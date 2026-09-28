@@ -43,20 +43,6 @@ const blocks = [
   },
 ];
 
-const founders = [
-  {
-    name: "Jade Ollivierre",
-    role: "Co-Founder and CEO",
-    initials: "JO",
-    bio: "Single mother, law graduate and five years in the UK family court system. Built Collabor8 because the tools she needed simply did not exist.",
-  },
-  {
-    name: "Rafa Azevedo",
-    role: "Co-Founder and CTO",
-    initials: "RA",
-    bio: "Software engineer with over 250 platforms built professionally including systems for HMRC and News UK. Built every part of Collabor8 from the ground up.",
-  },
-];
 
 const section = "px-6 py-10 md:py-20";
 
@@ -132,28 +118,8 @@ const About = () => (
       </motion.div>
     </section>
 
-    {/* Founders */}
-    <section className={`bg-navy ${section}`}>
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 md:gap-16">
-        {founders.map((f) => (
-          <motion.div key={f.name} {...fade} className="flex flex-col items-center rounded-3xl bg-navy-foreground p-8 text-center md:p-10">
-            <div className="relative mb-6">
-              <div aria-hidden className="absolute -right-4 -top-3 h-24 w-24 rounded-full bg-gold/30" />
-              <div aria-hidden className="absolute -bottom-2 -left-4 h-12 w-12 rounded-full bg-gold/50" />
-              <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-4 border-gold bg-mist">
-                <span className="text-3xl font-bold text-navy">{f.initials}</span>
-              </div>
-            </div>
-            <h2 className="text-2xl font-bold text-navy md:text-3xl">{f.name}</h2>
-            <p className="mt-1 font-semibold text-teal">{f.role}</p>
-            <p className="mt-4 text-base leading-[1.7] text-body-ink">{f.bio}</p>
-          </motion.div>
-        ))}
-      </div>
-    </section>
-
     {/* CTA */}
-    <section className={`border-t border-navy-foreground/10 bg-navy text-center ${section}`}>
+    <section className={`bg-navy text-center ${section}`}>
       <motion.div {...fade}>
         <h2 className="text-3xl font-bold text-navy-foreground md:text-5xl">Ready to start the conversation?</h2>
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
