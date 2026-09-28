@@ -17,7 +17,7 @@ const resources = [
     title: "Child Maintenance Calculator",
     description: "Work out a fair amount using the UK standard formula",
     category: "Tool",
-    link: "/child-maintenance-calculator"
+    link: "/app/child-maintenance-calculator"
   },
   {
     icon: BookOpen,

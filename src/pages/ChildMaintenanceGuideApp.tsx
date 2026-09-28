@@ -208,7 +208,7 @@ const ChildMaintenanceGuideApp = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              onClick={() => navigate("/child-maintenance-calculator")}
+              onClick={() => navigate("/app/child-maintenance-calculator")}
               className="mx-6 mt-4 flex w-[calc(100%-3rem)] items-center gap-4 rounded-2xl bg-card p-4 text-left"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">

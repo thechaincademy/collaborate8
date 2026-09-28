@@ -1,0 +1,27 @@
+import { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import BottomNav from "./BottomNav";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+
+interface InAppShellProps {
+  children: ReactNode;
+  title?: string;
+}
+
+/** Keeps the app's top menu (optional) and bottom menu on pages opened from inside the app. */
+const InAppShell = ({ children, title }: InAppShellProps) => {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-background">
+      {title && (
+        <div className="mx-auto max-w-md px-6 pt-6 md:max-w-3xl lg:max-w-5xl">
+          <DashboardHeader title={title} />
+        </div>
+      )}
+      <main className="pb-24">{children}</main>
+      <BottomNav activeTab={"" as never} onTabChange={(tab) => navigate(`/dashboard?tab=${tab}`)} />
+    </div>
+  );
+};
+
+export default InAppShell;
