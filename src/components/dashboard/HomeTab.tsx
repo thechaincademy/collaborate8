@@ -38,6 +38,9 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { DashboardTab } from "@/pages/Dashboard";
 import familyImage from "@/assets/home-family-wide.jpg";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
+import CoparentStatus from "./CoparentStatus";
+import WelcomeChecklist from "./WelcomeChecklist";
+import HealthScore from "./HealthScore";
 
 interface HomeTabProps {
   onNavigate: (tab: DashboardTab) => void;
@@ -52,6 +55,7 @@ const quickLinks: Array<{
 }> = [
   { type: "tab", target: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
   { type: "route", target: "/child-maintenance-calculator", label: "Child Maintenance Calculator", description: "Work out a fair amount using the UK standard formula", icon: PoundSterling },
+  { type: "route", target: "/communication-guide", label: "Communication guide", description: "Practical words for difficult conversations", icon: MessageCircle },
   { type: "route", target: "/resources/child-maintenance-guide-app", label: "Child Maintenance Guide", description: "Everything separated parents need to know", icon: BookOpen },
 ];
 
@@ -164,6 +168,15 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         <h2 className="text-2xl font-bold text-foreground">{greeting}</h2>
         <p className="text-sm text-muted-foreground">A snapshot of your activity in the last month.</p>
       </motion.div>
+
+      {!isLoading && (
+        <WelcomeChecklist
+          userId={user?.id}
+          invited={isLinked || !!invitation}
+          hasPayment={!!activePayment}
+          hasExpense={expenses.some((e) => e.user_id === user?.id)}
+        />
+      )}
 
       {/* Family image */}
       <motion.div
@@ -296,11 +309,14 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           <p className="font-semibold text-foreground">
             {isLinked ? "Co-parent linked" : "Waiting for co-parent to link"}
           </p>
+          <CoparentStatus isLinked={isLinked} hasInvite={!!invitation} />
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </motion.button>
 
 
+
+      <HealthScore userId={user?.id} payments={payments as any} expenses={expenses} />
 
       {/* Quick links */}
       <motion.div
