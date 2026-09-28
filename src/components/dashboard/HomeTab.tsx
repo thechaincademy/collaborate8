@@ -15,7 +15,6 @@ import {
   Copy,
   Mail,
   Loader2,
-  Banknote,
 } from "lucide-react";
 import { format, subMonths } from "date-fns";
 import DashboardHeader from "./DashboardHeader";
