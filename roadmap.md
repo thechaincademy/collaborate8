@@ -10,5 +10,5 @@
 
 # Decision Threads (stages)
 - [x] Stage 1: decision threads, thread detail, delivery status, structured replies, Rewrite calmly (3 tones), linked expenses/files/photos, dashboard "Needs your response"
-- [ ] Stage 2: notification centre by type + web push + email per type + preferences
-- [ ] Stage 3: privacy & account settings (retention, data download, delete, cancel)
+- [x] Stage 2: notification centre by type + web push + email per type + preferences
+- [x] Stage 3: privacy & account settings (retention, data download, delete, cancel)

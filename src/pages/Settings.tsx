@@ -182,8 +182,8 @@ const Settings = () => {
         <Section title="Support">
           {[
             { icon: HelpCircle, label: "Help Centre", to: "/faq" },
-            { icon: FileText, label: "Cookie Policy", to: "/cookie-policy" },
-            { icon: Shield, label: "Privacy Policy", to: "/privacy-policy" },
+            { icon: FileText, label: "Cookie Policy", to: "/cookies" },
+            { icon: Shield, label: "Privacy Policy", to: "/privacy" },
           ].map((it, i) => (
             <button key={it.label} onClick={() => navigate(it.to)} className={`flex w-full items-center justify-between p-4 text-left hover:bg-muted/50 ${i < 2 ? "border-b border-border" : ""}`}>
               <span className="flex items-center gap-3"><it.icon className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">{it.label}</span></span>
