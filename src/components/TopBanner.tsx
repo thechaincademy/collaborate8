@@ -23,6 +23,12 @@ const TopBanner = () => {
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
+            to="/about"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            About Us
+          </Link>
+          <Link
             to="/child-maintenance-calculator"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -33,12 +39,6 @@ const TopBanner = () => {
             className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
           >
             Guide
-          </Link>
-          <Link
-            to="/about"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            About Us
           </Link>
           <Button size="sm" onClick={handleWaitlistClick} className="rounded-full">
             Sign Up
