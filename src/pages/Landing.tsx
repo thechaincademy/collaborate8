@@ -112,12 +112,6 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="relative z-10 flex flex-col items-center px-6 py-20 text-center md:px-8 md:py-28"
           >
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background/20 px-4 py-1.5 backdrop-blur-sm">
-              <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-foreground" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
-                Launching Soon
-              </span>
-            </div>
 
             <h1 className="mb-6 max-w-2xl text-4xl font-extrabold tracking-tight text-foreground md:text-6xl lg:leading-[1.1]">
               Let's talk finances.
