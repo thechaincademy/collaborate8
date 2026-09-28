@@ -455,7 +455,7 @@ export const ConversationToolModal = ({
 };
 
 export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => (
-  <div className="mb-3 rounded-2xl bg-teal p-4 text-teal-foreground">
+  <div className="mb-3 rounded-xl border border-border border-l-4 border-l-primary bg-card p-4 text-foreground shadow-card">
     <p className="text-xs leading-relaxed">
       Sometimes the hardest part of managing finances after separation is knowing where to begin.
       Unlock the Self-Guided Financial Conversation Tool - both parents answer questions privately,
@@ -464,7 +464,7 @@ export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => (
     <Button
       size="sm"
       onClick={onOpen}
-      className="mt-3 bg-gold text-gold-foreground hover:bg-gold/90"
+      className="mt-3"
     >
       Find out more
     </Button>
