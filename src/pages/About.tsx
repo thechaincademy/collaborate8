@@ -68,34 +68,43 @@ const About = () => (
     <TopBanner />
 
     {/* Hero */}
-    <section className="relative w-full overflow-hidden bg-primary">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 20%, rgba(250, 248, 243, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(26, 26, 22, 0.1) 0%, transparent 50%)",
-        }}
-      />
+    <section className="relative w-full overflow-hidden bg-background">
+      <div className="pointer-events-none absolute -right-16 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 mx-auto grid w-full max-w-5xl gap-10 px-6 py-16 md:grid-cols-2 md:px-8 md:py-24"
+        className="relative z-10 mx-auto grid w-full max-w-5xl gap-12 px-6 pb-16 pt-8 md:grid-cols-2 md:items-center md:gap-16 md:px-8 md:py-24"
       >
-        <div className="flex flex-col justify-center">
-          <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-foreground md:text-5xl">About Us</h1>
-          <p className="max-w-xl text-base leading-relaxed text-foreground/80 md:text-lg">
-            Built from personal experience. Built for you.
-          </p>
+        <div className="flex flex-col items-start">
+          <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
+            Our Story
+          </div>
+          <h1 className="text-6xl font-extrabold italic leading-[0.9] tracking-tighter text-foreground md:text-7xl">
+            About
+            <br />
+            <span className="not-italic text-primary">Us.</span>
+          </h1>
+          <div className="mt-6 flex items-center gap-4">
+            <div className="h-px w-8 shrink-0 bg-primary" />
+            <p className="text-lg font-medium leading-tight text-foreground/90 md:text-xl">
+              Built from personal experience.
+              <br />
+              <span className="text-primary">Built for you.</span>
+            </p>
+          </div>
         </div>
-        <div className="overflow-hidden rounded-2xl shadow-elevated">
-          <img
-            src={heroImg}
-            alt="Illustration of two parents walking hand in hand with their child"
-            width={1920}
-            height={1440}
-            className="h-full w-full object-cover"
-          />
+        <div className="relative mt-2 md:mt-0">
+          <div className="absolute -bottom-4 -left-4 z-0 h-32 w-32 -rotate-6 rounded-[2.5rem] bg-primary" />
+          <div className="relative z-10 overflow-hidden rounded-[2.5rem] border border-white bg-card p-3 shadow-elevated">
+            <img
+              src={heroImg}
+              alt="Illustration of two parents walking hand in hand with their child"
+              width={1920}
+              height={1440}
+              className="aspect-[4/5] w-full rounded-[1.8rem] object-cover md:aspect-[4/3]"
+            />
+          </div>
         </div>
       </motion.div>
     </section>
