@@ -37,7 +37,7 @@ import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { usePayments } from "@/hooks/usePayments";
 import { useExpenses } from "@/hooks/useExpenses";
 import { DashboardTab } from "@/pages/Dashboard";
-import familyImage from "@/assets/home-family.jpg";
+import familyImage from "@/assets/home-family-hd.jpg";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
 
 interface HomeTabProps {
@@ -176,8 +176,8 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         <img
           src={familyImage}
           alt="Family illustration"
-          width={1024}
-          height={1024}
+          width={1920}
+          height={1920}
           loading="lazy"
           className="h-40 w-full object-cover"
         />
