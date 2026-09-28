@@ -341,7 +341,7 @@ const Profile = () => {
         <Button onClick={handleSignOut} variant="outline" className="mb-3 w-full">
           Sign Out
         </Button>
-        <Button variant="ghost" className="w-full text-destructive hover:text-destructive">
+        <Button variant="ghost" onClick={() => navigate("/settings#account")} className="w-full text-destructive hover:text-destructive">
           Delete Account
         </Button>
       </motion.div>

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+import { categoryMeta, categoryOf } from "@/lib/notificationTypes";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 
@@ -29,8 +30,10 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [nFilter, setNFilter] = useState<"all" | "action" | "messages" | "agreements" | "money">("all");
   const { items, unreadCount, markAllRead, markRead } = useNotifications();
-  const notifications = items.map((n) => ({
+  const FILTERS = { all: [], action: ["ack_required", "deadline_soon", "deadline_missed", "proposal"], messages: ["message"], agreements: ["confirmed", "calendar"], money: ["money"] } as Record<string, string[]>;
+  const notifications = items.filter((n) => nFilter === "all" || FILTERS[nFilter].includes(categoryOf(n.type))).map((n) => ({
     ...n,
     read: !!n.read_at,
     time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
@@ -49,15 +52,8 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   };
 
   const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "maintenance":
-      case "payment_method":
-        return <CreditCard className="h-4 w-4" />;
-      case "due":
-        return <Clock className="h-4 w-4" />;
-      default:
-        return <Bell className="h-4 w-4" />;
-    }
+    const M = categoryMeta(type);
+    return <M.icon className="h-4 w-4" />;
   };
 
   return (
@@ -123,6 +119,11 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             </button>
           </div>
           
+          <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
+            {([["all", "All"], ["action", "Needs action"], ["messages", "Messages"], ["agreements", "Agreements"], ["money", "Money"]] as const).map(([k, l]) => (
+              <button key={k} onClick={() => setNFilter(k)} className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${nFilter === k ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}>{l}</button>
+            ))}
+          </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center">
@@ -140,12 +141,11 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
                       !notification.read ? "bg-accent/50" : ""
                     }`}
                   >
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                      !notification.read ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                    }`}>
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${categoryMeta(notification.type).cls}`}>
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{categoryMeta(notification.type).label}</p>
                       <p className="text-sm font-medium text-foreground">{notification.title}</p>
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{notification.time}</p>
@@ -156,9 +156,12 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             )}
           </div>
 
-          {notifications.length > 0 && (
-            <div className="border-t border-border p-3">
-              <Button variant="ghost" className="w-full text-sm" onClick={markAllRead} disabled={unreadCount === 0}>
+          {true && (
+            <div className="flex gap-2 border-t border-border p-3">
+              <Button variant="ghost" className="flex-1 text-sm" onClick={() => { setNotificationOpen(false); navigate("/settings#notifications"); }}>
+                Alert settings
+              </Button>
+              <Button variant="ghost" className="flex-1 text-sm" onClick={markAllRead} disabled={unreadCount === 0}>
                 Mark all as read
               </Button>
             </div>
