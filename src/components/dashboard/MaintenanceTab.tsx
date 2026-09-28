@@ -134,7 +134,7 @@ const MaintenanceTab = () => {
     </div>
   );
 
-  // Role selection gate — shown once, before the arrangement UI is unlocked.
+  // Role selection gate - shown once, before the arrangement UI is unlocked.
   if (!profileLoading && profile && !roleConfirmed) {
     return (
       <div className="px-6 pt-12">
@@ -157,7 +157,7 @@ const MaintenanceTab = () => {
             Will you be making payments or receiving them?
           </h2>
           <p className="mb-6 text-sm text-muted-foreground">
-            Please select the correct answer — this unlocks your ability to set up an arrangement.
+            Please select the correct answer - this unlocks your ability to set up an arrangement.
           </p>
           <div className="space-y-3">
             <button
