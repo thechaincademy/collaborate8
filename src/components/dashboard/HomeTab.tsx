@@ -188,7 +188,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           width={1920}
           height={640}
           loading="lazy"
-          className="h-40 w-full object-cover md:h-64"
+          className="h-auto w-full object-contain"
         />
       </motion.div>
 
