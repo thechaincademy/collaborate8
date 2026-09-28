@@ -21,8 +21,8 @@ const resources = [
   },
   {
     icon: BookOpen,
-    title: "Child Maintenance Guide",
-    description: "Everything separated parents need to know",
+    title: "Family Finances Guide",
+    description: "Child maintenance, communication, tax and benefits",
     category: "Guide",
     link: "/resources/child-maintenance-guide-app"
   },

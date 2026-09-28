@@ -82,17 +82,13 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/communication-guide")} className="cursor-pointer">
+          <DropdownMenuItem onClick={() => navigate("/resources/child-maintenance-guide-app")} className="cursor-pointer">
             <MessageSquare className="mr-2 h-4 w-4" />
-            Communication guide
+            Family Finances Guide
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/cost-of-conflict")} className="cursor-pointer">
             <Scale className="mr-2 h-4 w-4" />
             Cost of conflict
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/tax-and-benefits")} className="cursor-pointer">
-            <Landmark className="mr-2 h-4 w-4" />
-            Tax and benefits
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">

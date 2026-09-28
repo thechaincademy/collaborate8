@@ -1,56 +1,38 @@
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   userId?: string;
   invited: boolean;
-  hasPayment: boolean;
-  hasExpense: boolean;
 }
 
 const DONE_KEY = "c8_checklist_done";
 
-/** Onboarding checklist - ticks itself off from real activity, hides once complete. */
-const WelcomeChecklist = ({ userId, invited, hasPayment, hasExpense }: Props) => {
-  const [hasMessage, setHasMessage] = useState<boolean | null>(null);
+/** Onboarding checklist - steps unlock in order and tick off from real activity. */
+const WelcomeChecklist = ({ invited }: Props) => {
   const [alreadyDone] = useState(() => localStorage.getItem(DONE_KEY) === "1");
-  const calcRun = typeof window !== "undefined" && localStorage.getItem("c8_calc_run") === "1";
+  const chatOpened = localStorage.getItem("c8_chat_opened") === "1";
+  const maintenanceOpened = localStorage.getItem("c8_maintenance_opened") === "1";
 
-  useEffect(() => {
-    if (!userId) return;
-    supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("sender_id", userId)
-      .then(({ count }) => setHasMessage((count ?? 0) > 0));
-  }, [userId]);
-
+  const s1 = invited;
+  const s2 = s1 && chatOpened;
+  const s3 = s2 && maintenanceOpened;
   const steps = [
-    { label: "Invite your co-parent", done: invited },
-    { label: "Run the child maintenance calculator", done: calcRun },
-    { label: "Set up a maintenance payment", done: hasPayment },
-    { label: "Log your first shared expense", done: hasExpense },
-    { label: "Send your first message in the financial chat", done: !!hasMessage },
+    { title: "Add your co-parent", desc: "Invite your co-parent to join Collabor8 and connect your accounts.", done: s1, unlocked: true },
+    { title: "Explore the financial chat", desc: "Your dedicated space to discuss finances with your co-parent, away from everything else.", done: s2, unlocked: s1 },
+    { title: "Explore child maintenance", desc: "Use the calculator to understand what maintenance should look like for your family.", done: s3, unlocked: s2 },
+    { title: "Your profile is complete", desc: "You are all set. Your financial space is ready.", done: s3, unlocked: s3 },
   ];
   const completed = steps.filter((s) => s.done).length;
   const pct = Math.round((completed / steps.length) * 100);
-  const allDone = completed === steps.length;
+  const allDone = s3;
 
   useEffect(() => {
     if (allDone) localStorage.setItem(DONE_KEY, "1");
   }, [allDone]);
 
-  if (alreadyDone || hasMessage === null) return null;
-
-  if (allDone) {
-    return (
-      <div className="mb-6 rounded-2xl bg-primary p-5 text-primary-foreground">
-        <p className="font-semibold">You are all set. Your financial space is ready.</p>
-      </div>
-    );
-  }
+  if (alreadyDone) return null;
 
   return (
     <div className="mb-6 overflow-hidden rounded-2xl border border-border bg-card">
@@ -58,21 +40,32 @@ const WelcomeChecklist = ({ userId, invited, hasPayment, hasExpense }: Props) =>
         <p className="font-semibold">Get started with Collabor8</p>
       </div>
       <div className="p-5">
+        {allDone && (
+          <div className="mb-4 rounded-xl bg-primary p-4 text-primary-foreground">
+            <p className="font-semibold">Welcome to Collabor8. Your financial space is ready.</p>
+          </div>
+        )}
         <div className="mb-4 flex items-center gap-3">
           <Progress value={pct} className="h-2 flex-1" />
           <span className="text-xs font-medium text-muted-foreground">{pct}%</span>
         </div>
-        <ul className="space-y-3">
-          {steps.map((s) => (
-            <li key={s.label} className="flex items-center gap-3 text-sm">
+        <ul className="space-y-4">
+          {steps.map((s, i) => (
+            <li key={s.title} className={`flex items-start gap-3 ${s.unlocked ? "" : "opacity-40"}`}>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                {i + 1}
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-foreground">{s.title}</p>
+                <p className="text-xs text-muted-foreground">{s.desc}</p>
+              </div>
               <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
-                  s.done ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                  s.done ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted text-muted-foreground"
                 }`}
               >
-                {s.done && <Check className="h-3.5 w-3.5" />}
+                <Check className="h-3.5 w-3.5" />
               </span>
-              <span className={s.done ? "text-muted-foreground line-through" : "text-foreground"}>{s.label}</span>
             </li>
           ))}
         </ul>
