@@ -319,7 +319,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
 
 
 
-      <HealthScore userId={user?.id} payments={payments as any} expenses={expenses} />
 
       {/* Quick links */}
       <motion.div
