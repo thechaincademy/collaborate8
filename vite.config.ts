@@ -22,6 +22,11 @@ export default defineConfig(({ mode }) => ({
       devOptions: { enabled: false },
       workbox: {
         navigateFallback: null,
+        // Never precache HTML: stale pages point at old picture files that no longer exist.
+        globPatterns: ["**/*.{js,css}"],
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
