@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2, Paperclip, X, FileText, UserPlus, Download } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, Loader2, Paperclip, X, FileText, UserPlus, Download, Check } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chatPdf";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,7 +144,7 @@ const ChatTab = () => {
 
 
   // First message written before the co-parent has joined
-  const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string } | null>(null);
+  const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string; recipient_email?: string | null } | null>(null);
   const [pendingLoading, setPendingLoading] = useState(true);
   const [pendingDraft, setPendingDraft] = useState("");
   const [savedCoparentEmail, setSavedCoparentEmail] = useState("");
