@@ -21,6 +21,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import FAQ from "./pages/FAQ";
 import CommunicationGuide from "./pages/CommunicationGuide";
+import CostOfConflict from "./pages/CostOfConflict";
+import TaxAndBenefits from "./pages/TaxAndBenefits";
 import About from "./pages/About";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import ChildMaintenanceGuideApp from "./pages/ChildMaintenanceGuideApp";
@@ -61,6 +63,8 @@ const App = () => (
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/cost-of-conflict" element={<ProtectedRoute><CostOfConflict /></ProtectedRoute>} />
+              <Route path="/tax-and-benefits" element={<ProtectedRoute><TaxAndBenefits /></ProtectedRoute>} />
               <Route path="/communication-guide" element={<ProtectedRoute><CommunicationGuide /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />

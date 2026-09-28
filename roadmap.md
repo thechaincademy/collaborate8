@@ -5,4 +5,5 @@
 - [x] 4 Financial health score
 - [x] 5 Download chat record PDF
 - [x] 6 Communication guide
-- [ ] 7, 8 - waiting on user to send
+- [x] 7 Cost of conflict
+- [x] 8 Tax and benefits
