@@ -138,7 +138,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{categoryMeta(notification.type).label}</p>
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${categoryMeta(notification.type).cls}`}>{categoryMeta(notification.type).label}</span>
                       <p className="text-sm font-medium text-foreground">{notification.title}</p>
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{notification.time}</p>
