@@ -121,15 +121,28 @@ const Landing = () => {
               Collabor8 gives separated parents a dedicated space to discuss money and manage child maintenance - away from everything else.
             </p>
 
-            <InstallAppButtons />
+            <div className="flex w-full max-w-md flex-col items-center">
+              <button
+                onClick={scrollToWaitlist}
+                className="w-full rounded-xl bg-teal-700 px-6 py-4 text-lg font-bold text-white shadow-elevated transition-all hover:scale-[1.02] hover:bg-teal-800 active:scale-95"
+              >
+                Use Collabor8 online now →
+              </button>
 
-            <button
-              onClick={scrollToWaitlist}
-              className="group mt-6 flex items-center gap-2 text-sm font-semibold text-foreground/80 underline-offset-4 transition-colors hover:text-foreground hover:underline"
-            >
-              Or continue in your browser
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
+              <div className="mt-4 flex w-full items-center gap-3">
+                <span className="h-px flex-1 bg-foreground/20" />
+                <span className="text-xs font-medium text-foreground/70">or</span>
+                <span className="h-px flex-1 bg-foreground/20" />
+              </div>
+
+              <div className="mt-4">
+                <InstallAppButtons />
+              </div>
+
+              <p className="mt-3 text-center text-[0.8rem] font-medium text-foreground/80">
+                The full Collabor8 experience is available online now while we launch on mobile.
+              </p>
+            </div>
           </motion.div>
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
