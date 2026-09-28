@@ -31,6 +31,10 @@
     --accent-foreground: 0 0% 9%;
 
     --destructive: 0 70% 45%;
+    --status-awaiting: 214 70% 48%;
+    --status-soon: 36 92% 45%;
+    --status-ok: 145 55% 34%;
+    --status-overdue: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 40 20% 88%;
