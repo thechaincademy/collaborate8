@@ -8,7 +8,10 @@ export interface ExpenseRequest {
   user_id: string;
   description: string;
   amount: number;
-  status: "pending" | "approved" | "paid" | "rejected";
+  status: "pending" | "approved" | "paid" | "rejected" | "agreed";
+  kind?: "expense" | "split_request";
+  category?: string | null;
+  note?: string | null;
   receipt_url: string | null;
   decided_by: string | null;
   decided_at: string | null;
@@ -140,6 +143,47 @@ export const useExpenses = () => {
     }
   };
 
+  /** Ask the co-parent to agree to split a cost (not added to payments). */
+  const requestSplit = async (description: string, amount: number, category: string, note?: string) => {
+    if (!user) return { error: new Error("Not authenticated") };
+    const { data, error } = await supabase
+      .from("expense_requests")
+      .insert({ user_id: user.id, description, amount, kind: "split_request", category, note: note || null } as any)
+      .select()
+      .single();
+    if (error) {
+      toast.error("Could not send the request");
+      return { error };
+    }
+    setExpenses((prev) => [data as unknown as ExpenseRequest, ...prev]);
+    toast.success("Request sent to your co-parent");
+    return { error: null };
+  };
+
+  /** Agree or decline a split request. Declining opens a chat thread. */
+  const decideSplit = async (e: ExpenseRequest, agree: boolean) => {
+    if (!user) return;
+    setDeciding(e.id);
+    const { error } = await supabase
+      .from("expense_requests")
+      .update({ status: agree ? "agreed" : "rejected", decided_by: user.id, decided_at: new Date().toISOString() })
+      .eq("id", e.id);
+    if (error) {
+      toast.error("Could not update this request");
+    } else {
+      if (!agree) {
+        await supabase.from("messages").insert({
+          sender_id: user.id,
+          recipient_id: e.user_id,
+          body: `Re: shared expense request "${e.description}" - £${Number(e.amount).toFixed(2)}. I've declined this for now - can we talk it through here?`,
+        });
+      }
+      toast.success(agree ? "Agreed - logged for you both" : "Declined - a chat thread has been opened");
+      await fetchExpenses();
+    }
+    setDeciding(null);
+  };
+
   /** Short-lived link so a receipt can be opened privately. */
   const getReceiptUrl = async (path: string) => {
     const { data, error } = await supabase.storage
@@ -159,6 +203,8 @@ export const useExpenses = () => {
     deciding,
     createExpense,
     decideExpense,
+    requestSplit,
+    decideSplit,
     getReceiptUrl,
     refetch: fetchExpenses,
   };
