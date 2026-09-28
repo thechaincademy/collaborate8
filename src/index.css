@@ -51,6 +51,9 @@
     --navy-foreground: 0 0% 100%;
     --gold: 45 80% 52%;
     --gold-foreground: 0 0% 9%;
+    --mist: 210 57% 97%;       /* #F4F8FC */
+    --cream: 39 100% 96%;      /* #FFF8EC */
+    --body-ink: 0 0% 20%;      /* #333333 */
 
 
     /* Custom tokens */
