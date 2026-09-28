@@ -62,10 +62,10 @@ const EnvelopeDetails = () => {
           className="px-6 pb-12"
         >
           <h1 className="mb-3 text-3xl font-bold text-foreground">
-            {successType === "topup" ? "Successful top-up!" : "Withdrawal complete!"}
+            {successType === "topup" ? "Top-up successful" : "Withdrawal complete"}
           </h1>
           <p className="mb-8 text-muted-foreground">
-            Ac ut vitae a amet donec etiam lorem at neque. Risus morbi nec facilisis elementum congue.
+            Your transaction has been processed. It may take a few days to appear in your account.
           </p>
           <Button className="w-full" size="lg" onClick={() => navigate("/dashboard")}>
             Done

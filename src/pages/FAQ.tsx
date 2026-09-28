@@ -24,7 +24,7 @@ const faqSchema = {
       name: "What is Collabor8?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Collabor8 is the United Kingdom's first shared financial platform for separated parents. It gives separated parents a dedicated, neutral space to discuss finances, calculate and manage child maintenance, split shared expenses and communicate about money — away from everything else. Collabor8 is based in London, England, and is free to download and sign up.",
+        text: "Collabor8 is the United Kingdom's first shared financial platform for separated parents. It gives separated parents a dedicated, neutral space to discuss finances, calculate and manage child maintenance, split shared expenses and communicate about money - away from everything else. Collabor8 is based in London, England, and is free to download and sign up.",
       },
     },
     {
@@ -49,7 +49,7 @@ const faqSchema = {
       name: "What is the financial chat and how does it work?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "The Collabor8 financial chat is a dedicated, structured messaging space for separated parents to discuss child maintenance and shared finances. It is completely separate from any other communication channel — no WhatsApp, no text messages, no emails. Every conversation is timestamped and documented, creating a verified record of financial agreements between parents. The chat includes AI support to keep conversations measured and focused on the financial topic at hand.",
+        text: "The Collabor8 financial chat is a dedicated, structured messaging space for separated parents to discuss child maintenance and shared finances. It is completely separate from any other communication channel - no WhatsApp, no text messages, no emails. Every conversation is timestamped and documented, creating a verified record of financial agreements between parents. The chat includes AI support to keep conversations measured and focused on the financial topic at hand.",
       },
     },
     {
@@ -119,7 +119,7 @@ const sections = [
       {
         question: "What is Collabor8?",
         answer: [
-          "Collabor8 is the United Kingdom's first shared financial platform for separated parents. It gives separated parents a dedicated, neutral space to discuss finances, calculate and manage child maintenance, split shared expenses and communicate about money — away from everything else.",
+          "Collabor8 is the United Kingdom's first shared financial platform for separated parents. It gives separated parents a dedicated, neutral space to discuss finances, calculate and manage child maintenance, split shared expenses and communicate about money - away from everything else.",
           "Collabor8 is based in London, England, and is free to download and sign up.",
         ],
       },
@@ -139,7 +139,7 @@ const sections = [
       {
         question: "What is the financial chat and how does it work?",
         answer: [
-          "The Collabor8 financial chat is a dedicated, structured messaging space for separated parents to discuss child maintenance and shared finances. It is completely separate from any other communication channel — no WhatsApp, no text messages, no emails. Every conversation is timestamped and documented, creating a verified record of financial agreements between parents. The chat includes AI support to keep conversations measured and focused on the financial topic at hand.",
+          "The Collabor8 financial chat is a dedicated, structured messaging space for separated parents to discuss child maintenance and shared finances. It is completely separate from any other communication channel - no WhatsApp, no text messages, no emails. Every conversation is timestamped and documented, creating a verified record of financial agreements between parents. The chat includes AI support to keep conversations measured and focused on the financial topic at hand.",
         ],
       },
       {
@@ -214,16 +214,16 @@ const FAQ = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Frequently Asked Questions — Collabor8</title>
+        <title>Frequently Asked Questions - Collabor8</title>
         <meta
           name="description"
-          content="Everything you need to know about Collabor8 — the UK's first shared financial platform for separated parents managing child maintenance, shared expenses and post-separation finances."
+          content="Everything you need to know about Collabor8 - the UK's first shared financial platform for separated parents managing child maintenance, shared expenses and post-separation finances."
         />
         <link rel="canonical" href="https://collaborate8.com/faq" />
-        <meta property="og:title" content="Frequently Asked Questions — Collabor8" />
+        <meta property="og:title" content="Frequently Asked Questions - Collabor8" />
         <meta
           property="og:description"
-          content="Everything you need to know about Collabor8 — child maintenance, shared expenses, payments and launch."
+          content="Everything you need to know about Collabor8 - child maintenance, shared expenses, payments and launch."
         />
         <meta property="og:url" content="https://collaborate8.com/faq" />
         <meta property="og:type" content="website" />
@@ -254,7 +254,7 @@ const FAQ = () => {
               Frequently asked questions
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-foreground/80 md:text-lg">
-              Everything you need to know about Collabor8 — the UK's first shared
+              Everything you need to know about Collabor8 - the UK's first shared
               financial platform for separated parents managing child maintenance
               and finances after separation.
             </p>
