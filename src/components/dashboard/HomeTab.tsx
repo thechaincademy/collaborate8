@@ -55,6 +55,8 @@ const quickLinks: Array<{
 }> = [
   { type: "tab", target: "benefits", label: "Benefits", description: "Rewards for subscribers", icon: Gift },
   { type: "route", target: "/child-maintenance-calculator", label: "Child Maintenance Calculator", description: "Work out a fair amount using the UK standard formula", icon: PoundSterling },
+  { type: "route", target: "/cost-of-conflict", label: "Cost of conflict", description: "See what disputes could cost you", icon: PoundSterling },
+  { type: "route", target: "/tax-and-benefits", label: "Tax and benefits", description: "How maintenance affects tax and benefits", icon: BookOpen },
   { type: "route", target: "/communication-guide", label: "Communication guide", description: "Practical words for difficult conversations", icon: MessageCircle },
   { type: "route", target: "/resources/child-maintenance-guide-app", label: "Child Maintenance Guide", description: "Everything separated parents need to know", icon: BookOpen },
 ];
