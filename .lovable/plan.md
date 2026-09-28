@@ -1,17 +1,18 @@
-# Add Apple and Google sign-in
+# Inline login on the second screen
 
 ## What will change
-- Add reusable, officially styled Apple and Google sign-in controls to the Login page beneath the email and password fields, before Log In.
-- Add the same controls to the Create Account password step beneath the existing password field, before Continue.
-- Enable both managed sign-in providers and connect both controls through the existing authentication service.
-- Send successful email, Apple, and Google sign-ins directly to `/dashboard`, removing the obsolete post-signup route from the app.
+- Keep the `/splash` screen as the single choice screen with its existing Create account and Log in options.
+- When Log in is selected, keep the user on that screen and reveal email and password fields plus a Log in submit button directly beneath it.
+- Keep Log in visibly selected while the form is open and de-emphasise, but do not hide or change the behaviour of, Create account.
+- After valid credentials are accepted, take the user directly to the dashboard.
 
-## Technical details
-- Keep the current email/password fields, validation, copy, and account setup steps unchanged.
-- Use semantic Apple/Google button tokens so official brand colours are isolated to these two controls.
-- Use a same-origin public OAuth return and immediately resolve authenticated users to the dashboard after session restoration.
-- Preserve the current profile records and automatic profile creation already used by the app.
+## Scope
+- Change only the second screen (`/splash`).
+- Reuse the existing email/password authentication and error messages.
+- Keep Create account navigating to the current account creation flow.
+- Do not add Apple or Google sign-in and do not alter the separate login page or any other flow.
 
 ## Verification
-- Confirm both pages show the divider and two full-width controls in the requested order.
-- Confirm the app builds cleanly and successful authentication targets the dashboard without the old intermediate route.
+- Check the default and expanded states on mobile and desktop.
+- Confirm Create account still behaves exactly as before.
+- Confirm inline login succeeds to the dashboard and invalid details show an error without leaving the screen.
