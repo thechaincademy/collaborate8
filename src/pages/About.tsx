@@ -106,6 +106,8 @@ const About = () => (
       </motion.blockquote>
     </section>
 
+    <Rule />
+    <Block b={blocks[2]} />
 
     {/* CTA */}
     <section className={`bg-navy text-center ${section}`}>
