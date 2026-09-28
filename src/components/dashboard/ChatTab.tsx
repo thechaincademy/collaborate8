@@ -14,7 +14,6 @@ import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
-  ConversationToolBanner,
   ConversationToolModal,
   ConversationToolSuggestionCard,
   ConversationEmailStep,
@@ -433,7 +432,6 @@ const ChatTab = () => {
       <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col overflow-y-auto px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
-        <ConversationToolBanner onOpen={openTool} />
         <div className="flex flex-1 flex-col gap-4 pt-2">
           <div className="rounded-2xl border border-border bg-card p-4">
             <h2 className="text-base font-semibold text-foreground">
@@ -624,8 +622,8 @@ const ChatTab = () => {
         </Button>
       </div>
 
-      <ConversationToolBanner onOpen={openTool} />
       <ConversationToolModal
+
         open={toolOpen}
         onOpenChange={setToolOpen}
         onStart={() => setEmailStepOpen(true)}
