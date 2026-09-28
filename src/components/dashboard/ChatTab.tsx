@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -159,7 +160,7 @@ const ChatTab = () => {
       const [{ data: pending }, { data: invite }] = await Promise.all([
         supabase
           .from("pending_first_messages")
-          .select("id, body")
+          .select("id, body, recipient_email")
           .eq("sender_id", user.id)
           .is("delivered_at", null)
           .order("created_at", { ascending: false })
@@ -176,11 +177,14 @@ const ChatTab = () => {
       ]);
       if (!active) return;
       setPendingMessage(pending ?? null);
-      setSavedCoparentEmail(invite?.invitee_email ?? "");
+      setSavedCoparentEmail(invite?.invitee_email ?? pending?.recipient_email ?? "");
       setPendingLoading(false);
     })();
+    const onInvite = (e: Event) => setSavedCoparentEmail((e as CustomEvent<string>).detail);
+    window.addEventListener(INVITE_EVENT, onInvite);
     return () => {
       active = false;
+      window.removeEventListener(INVITE_EVENT, onInvite);
     };
   }, [user]);
 
@@ -229,6 +233,7 @@ const ChatTab = () => {
       // message is stored either way
     }
     setPendingMessage(data);
+    setSavedCoparentEmail(email);
     setPendingDraft("");
     setSendingPending(false);
     toast.success("Your message is waiting - we've let your co-parent know");
@@ -437,6 +442,17 @@ const ChatTab = () => {
                   co-parent joins and responds. We have sent them an email letting them know you
                   have been in touch.
                 </p>
+                {savedCoparentEmail && (
+                  <>
+                    <div className="mt-3 flex items-start gap-2 rounded-xl bg-primary px-3 py-2.5 text-sm text-primary-foreground">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0" />
+                      <p>
+                        Invitation sent to <span className="font-bold break-all">{savedCoparentEmail}</span>. We will let you know when they join.
+                      </p>
+                    </div>
+                    <ResendInviteLink email={savedCoparentEmail} className="mt-2" />
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -452,6 +468,17 @@ const ChatTab = () => {
                   It will be delivered to them as soon as they connect. An email will be sent to
                   your co-parent letting them know you have reached out.
                 </p>
+                {savedCoparentEmail && (
+                  <>
+                    <div className="mt-3 flex items-start gap-2 rounded-xl bg-primary px-3 py-2.5 text-sm text-primary-foreground">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0" />
+                      <p>
+                        Invitation sent to <span className="font-bold break-all">{savedCoparentEmail}</span>. We will let you know when they join.
+                      </p>
+                    </div>
+                    <ResendInviteLink email={savedCoparentEmail} className="mt-2" />
+                  </>
+                )}
                 {!savedCoparentEmail && (
                   <input
                     type="email"

@@ -6,10 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 interface Props {
   isLinked: boolean;
   hasInvite: boolean;
+  inviteEmail?: string | null;
 }
 
 /** Subtle relative-activity indicator shown beneath the co-parent status. */
-const CoparentStatus = ({ isLinked, hasInvite }: Props) => {
+const CoparentStatus = ({ isLinked, hasInvite, inviteEmail }: Props) => {
   const [lastActive, setLastActive] = useState<Date | null | undefined>(undefined);
 
   useEffect(() => {
@@ -20,6 +21,13 @@ const CoparentStatus = ({ isLinked, hasInvite }: Props) => {
   }, [isLinked]);
 
   if (!isLinked) {
+    if (inviteEmail) {
+      return (
+        <span className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Invitation sent to <span className="font-semibold">{inviteEmail}</span></span>
+        </span>
+      );
+    }
     if (hasInvite) {
       return (
         <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-primary">

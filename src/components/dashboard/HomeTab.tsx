@@ -40,6 +40,7 @@ import familyImage from "@/assets/home-family-wide.jpg";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import CoparentStatus from "./CoparentStatus";
 import WelcomeChecklist from "./WelcomeChecklist";
+import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import HealthScore from "./HealthScore";
 
 interface HomeTabProps {
@@ -86,6 +87,9 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => setInvitation(data ?? null));
+    const onInvite = (e: Event) => setInvitation({ invitee_email: (e as CustomEvent<string>).detail });
+    window.addEventListener(INVITE_EVENT, onInvite);
+    return () => window.removeEventListener(INVITE_EVENT, onInvite);
   }, [user]);
 
   const activePayment = getActivePayment();
@@ -307,10 +311,15 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           <p className="font-semibold text-foreground">
             {isLinked ? "Co-parent linked" : "Waiting for co-parent to link"}
           </p>
-          <CoparentStatus isLinked={isLinked} hasInvite={!!invitation} />
+          <CoparentStatus isLinked={isLinked} hasInvite={!!invitation} inviteEmail={invitation?.invitee_email} />
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </motion.button>
+      {!isLinked && invitation?.invitee_email && (
+        <div className="-mt-6 mb-8 px-1">
+          <ResendInviteLink email={invitation.invitee_email} />
+        </div>
+      )}
 
 
 
