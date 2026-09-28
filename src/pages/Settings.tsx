@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notificationTypes";
 import { disablePush, enablePush, pushState } from "@/lib/push";
+import CoparentLinkSettings from "@/components/settings/CoparentLinkSettings";
 
 type Prefs = Record<string, { push?: boolean; email?: boolean }>;
 
@@ -112,6 +113,10 @@ const Settings = () => {
       </div>
 
       <div className="px-6">
+        <Section title="Co-parent and payments" id="coparent">
+          <CoparentLinkSettings />
+        </Section>
+
         <Section title="Notifications" id="notifications">
           <div className="flex items-center justify-between gap-3 border-b border-border p-4">
             <div className="flex items-start gap-3">
