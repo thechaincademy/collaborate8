@@ -1,1 +1,1 @@
-- [ ] Replace the second screen Login navigation with an inline email/password form; leave Create Account and all other flows unchanged.
+- [x] Replace the second screen Login navigation with an inline email/password form; leave Create Account and all other flows unchanged.

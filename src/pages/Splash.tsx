@@ -1,11 +1,106 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Lock, Mail } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 import splashFamily from "@/assets/splash-family-hd.jpg";
 
 const Splash = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!email || !password) {
+      toast.error("Please enter email and password");
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await signIn(email, password);
+    setIsLoading(false);
+
+    if (error) {
+      toast.error(error.message || "Failed to log in");
+      return;
+    }
+
+    toast.success("Welcome back!");
+    navigate("/dashboard");
+  };
+
+  const renderAccountActions = () => (
+    <div className="space-y-3">
+      <Button
+        onClick={() => navigate("/signup")}
+        className={`w-full ${showLogin ? "opacity-60" : ""}`}
+        size="lg"
+      >
+        Create account
+      </Button>
+      <Button
+        onClick={() => setShowLogin(true)}
+        variant={showLogin ? "default" : "outline"}
+        className="w-full"
+        size="lg"
+        aria-expanded={showLogin}
+        aria-controls="inline-login-form"
+      >
+        Log in
+      </Button>
+
+      <AnimatePresence initial={false}>
+        {showLogin && (
+          <motion.form
+            id="inline-login-form"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            onSubmit={handleLogin}
+            className="space-y-3 overflow-hidden pt-1"
+          >
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="Email"
+                aria-label="Email address"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
+              />
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="password"
+                placeholder="Password"
+                aria-label="Password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
+              />
+            </div>
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Log in"}
+            </Button>
+          </motion.form>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <>
@@ -57,14 +152,7 @@ const Splash = () => {
                 className="h-72 w-full object-cover lg:h-96"
               />
             </div>
-            <div className="mt-8 space-y-3">
-              <Button onClick={() => navigate("/signup")} className="w-full" size="lg">
-                Create account
-              </Button>
-              <Button onClick={() => navigate("/login")} variant="outline" className="w-full" size="lg">
-                Log in
-              </Button>
-            </div>
+            <div className="mt-8">{renderAccountActions()}</div>
           </motion.div>
         </div>
 
@@ -72,14 +160,9 @@ const Splash = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="space-y-3 pb-8 pt-8 md:hidden"
+          className="pb-8 pt-8 md:hidden"
         >
-          <Button onClick={() => navigate("/signup")} className="w-full" size="lg">
-            Create account
-          </Button>
-          <Button onClick={() => navigate("/login")} variant="outline" className="w-full" size="lg">
-            Log in
-          </Button>
+          {renderAccountActions()}
         </motion.div>
       </div>
     </>
