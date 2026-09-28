@@ -1,22 +1,80 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import TopBanner from "@/components/TopBanner";
+import heroImg from "@/assets/about-hero.jpg";
 
-const paragraphs = [
-  "Collabor8 was built from personal experience.",
-  "I am Jade, a single mother who spent five years navigating the UK family court system. Throughout that time, one thing became clear. The hardest conversation I faced was not the legal process. It was money. What one parent owed the other. How shared costs would be managed. How to even begin that conversation without spending thousands in mediation or solicitor fees, without it becoming something else entirely.",
-  "I looked for somewhere to have it. A neutral space. Somewhere separate from the parenting conversation, the legal conversation and everything else. Somewhere that was just for the money. It did not exist.",
-  "So Rafa and I built it.",
-  "Rafa is my co-founder and the technical mind behind Collabor8. A software engineer who has built over 250 platforms professionally, he built every part of this product from the ground up. Between us we bring the lived experience and the technical expertise that this problem deserves.",
-  "Our mission is simple. We want to make it easier for separated parents to talk about money. Not because it is easy. It is one of the hardest conversations parents face. But because when parents can discuss finances openly and constructively, children benefit. Less conflict at home. More stability. A better environment for children to grow up in.",
-  "Collabor8 gives separated parents a dedicated space to discuss finances, manage child maintenance and sort shared expenses away from everything else in their lives. Whether you are newly separated or have been managing things for years, Collabor8 gives you somewhere to start.",
-  "We built this because we believe separated parents deserve better tools. And their children deserve parents who have somewhere proper to have this conversation.",
+const fade = {
+  initial: { opacity: 0, y: 12 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.15 },
+  transition: { duration: 0.3 },
+};
+
+const blocks = [
+  {
+    n: "01",
+    label: "The problem",
+    bg: "bg-background",
+    paras: [
+      "Collabor8 was built from personal experience.",
+      "I am Jade, a single mother who spent five years navigating the UK family court system. Throughout that time, one thing became clear. The hardest conversation I faced was not the legal process. It was money. What one parent owed the other. How shared costs would be managed. How to even begin that conversation without spending thousands in mediation or solicitor fees, without it becoming something else entirely.",
+      "I looked for somewhere to have it. A neutral space. Somewhere separate from the parenting conversation, the legal conversation and everything else. Somewhere that was just for the money. It did not exist.",
+    ],
+  },
+  {
+    n: "02",
+    label: "The solution",
+    bg: "bg-mist",
+    paras: [
+      "So Rafa and I built it.",
+      "Rafa is my co-founder and the technical mind behind Collabor8. A software engineer who has built over 250 platforms professionally, he built every part of this product from the ground up. Between us we bring the lived experience and the technical expertise that this problem deserves.",
+    ],
+  },
+  {
+    n: "03",
+    label: "The mission",
+    bg: "bg-background",
+    paras: [
+      "Our mission is simple. We want to make it easier for separated parents to talk about money. Not because it is easy. It is one of the hardest conversations parents face. But because when parents can discuss finances openly and constructively, children benefit. Less conflict at home. More stability. A better environment for children to grow up in.",
+      "Collabor8 gives separated parents a dedicated space to discuss finances, manage child maintenance and sort shared expenses away from everything else in their lives. Whether you are newly separated or have been managing things for years, Collabor8 gives you somewhere to start.",
+      "We built this because we believe separated parents deserve better tools. And their children deserve parents who have somewhere proper to have this conversation.",
+    ],
+  },
 ];
 
 const founders = [
-  { name: "Jade Ollivierre", role: "Co-Founder and CEO", initials: "JO" },
-  { name: "Rafa Azevedo", role: "Co-Founder and CTO", initials: "RA" },
+  {
+    name: "Jade Ollivierre",
+    role: "Co-Founder and CEO",
+    initials: "JO",
+    bio: "Single mother, law graduate and five years in the UK family court system. Built Collabor8 because the tools she needed simply did not exist.",
+  },
+  {
+    name: "Rafa Azevedo",
+    role: "Co-Founder and CTO",
+    initials: "RA",
+    bio: "Software engineer with over 250 platforms built professionally including systems for HMRC and News UK. Built every part of Collabor8 from the ground up.",
+  },
 ];
+
+const section = "px-6 py-10 md:py-20";
+
+const Block = ({ b }: { b: (typeof blocks)[number] }) => (
+  <section className={`${b.bg} ${section}`}>
+    <motion.div {...fade} className="mx-auto flex max-w-4xl flex-col gap-6 md:flex-row md:gap-12">
+      <div className="shrink-0 md:w-32">
+        <span className="block text-6xl font-bold leading-none text-gold md:text-7xl">{b.n}</span>
+        <span className="mt-2 block text-xs font-semibold uppercase tracking-widest text-teal">{b.label}</span>
+      </div>
+      <div className="space-y-5 text-base leading-[1.7] text-body-ink">
+        {b.paras.map((p, i) => <p key={i}>{p}</p>)}
+      </div>
+    </motion.div>
+  </section>
+);
+
+const Rule = () => <div className="mx-auto h-px w-full max-w-4xl bg-teal/60" />;
 
 const About = () => (
   <div className="min-h-screen bg-background">
@@ -27,41 +85,87 @@ const About = () => (
     </Helmet>
     <TopBanner />
 
-    <section className="w-full bg-navy px-6 py-20 text-center md:py-28">
-      <h1 className="text-4xl font-bold text-navy-foreground md:text-5xl">About Us.</h1>
-      <p className="mt-4 text-lg text-teal md:text-xl" style={{ filter: "brightness(1.8)" }}>
-        Built from personal experience. Built for you.
-      </p>
-    </section>
-
-    <section className="w-full bg-background px-6 py-16 md:py-24">
-      <div className="mx-auto max-w-[780px] space-y-6 text-base leading-relaxed text-foreground md:text-lg">
-        {paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+    {/* Hero */}
+    <section className="grid w-full bg-navy md:grid-cols-2">
+      <motion.div {...fade} className="flex flex-col justify-center px-6 py-10 md:px-16 md:py-20">
+        <h1 className="text-5xl font-bold text-navy-foreground md:text-7xl">About Us</h1>
+        <p className="mt-5 text-xl font-medium text-teal brightness-[1.8] md:text-2xl">
+          Built from personal experience. Built for you.
+        </p>
+      </motion.div>
+      <div className="relative min-h-[280px] md:min-h-[480px]">
+        <img
+          src={heroImg}
+          alt="Illustration of two parents walking hand in hand with their child"
+          width={1920}
+          height={1440}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       </div>
     </section>
 
-    <section className="w-full bg-navy px-6 py-16 md:py-20">
-      <div className="mx-auto grid max-w-3xl grid-cols-1 gap-10 md:grid-cols-2">
+    {/* Story */}
+    <Block b={blocks[0]} />
+    <Rule />
+    <Block b={blocks[1]} />
+
+    {/* Pull quote */}
+    <section className={`bg-cream ${section}`}>
+      <motion.blockquote {...fade} className="relative mx-auto max-w-3xl text-center">
+        <span aria-hidden className="block font-serif text-8xl leading-none text-teal md:text-9xl">&ldquo;</span>
+        <p className="-mt-6 text-[1.4rem] font-medium italic leading-relaxed text-navy md:-mt-10">
+          Money after separation is one of the most taboo conversations parents face. We built Collabor8 because we believe it does not have to be.
+        </p>
+        <span aria-hidden className="mt-2 block font-serif text-8xl leading-[0.5] text-teal md:text-9xl">&rdquo;</span>
+      </motion.blockquote>
+    </section>
+
+    <Rule />
+    <Block b={blocks[2]} />
+
+    {/* Mission strip */}
+    <section className={`bg-teal text-center ${section}`}>
+      <motion.div {...fade} className="mx-auto max-w-3xl space-y-2 text-2xl font-bold leading-snug text-teal-foreground md:text-4xl">
+        <p>Our mission is simple.</p>
+        <p>Give separated parents somewhere to talk about money.</p>
+        <p>Because their children deserve better.</p>
+      </motion.div>
+    </section>
+
+    {/* Founders */}
+    <section className={`bg-navy ${section}`}>
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 md:gap-16">
         {founders.map((f) => (
-          <div key={f.name} className="flex flex-col items-center text-center">
-            <div className="flex h-32 w-32 items-center justify-center rounded-full border-2 border-teal bg-navy-foreground/10">
-              <span className="text-2xl font-bold text-navy-foreground">{f.initials}</span>
+          <motion.div key={f.name} {...fade} className="flex flex-col items-center rounded-3xl bg-navy-foreground p-8 text-center md:p-10">
+            <div className="relative mb-6">
+              <div aria-hidden className="absolute -right-4 -top-3 h-24 w-24 rounded-full bg-gold/30" />
+              <div aria-hidden className="absolute -bottom-2 -left-4 h-12 w-12 rounded-full bg-gold/50" />
+              <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-4 border-gold bg-mist">
+                <span className="text-3xl font-bold text-navy">{f.initials}</span>
+              </div>
             </div>
-            <h2 className="mt-5 text-xl font-bold text-navy-foreground">{f.name}</h2>
-            <p className="mt-1 text-teal" style={{ filter: "brightness(1.8)" }}>{f.role}</p>
-          </div>
+            <h2 className="text-2xl font-bold text-navy md:text-3xl">{f.name}</h2>
+            <p className="mt-1 font-semibold text-teal">{f.role}</p>
+            <p className="mt-4 text-base leading-[1.7] text-body-ink">{f.bio}</p>
+          </motion.div>
         ))}
       </div>
     </section>
 
-    <section className="w-full bg-teal px-6 py-16 text-center md:py-20">
-      <h2 className="text-3xl font-bold text-teal-foreground md:text-4xl">Ready to start the conversation?</h2>
-      <Link
-        to="/#download"
-        className="mt-8 inline-flex items-center justify-center rounded-full bg-gold px-8 py-3 text-base font-semibold text-navy transition-opacity hover:opacity-90"
-      >
-        Download Collabor8
-      </Link>
+    {/* CTA */}
+    <section className={`border-t border-navy-foreground/10 bg-navy text-center ${section}`}>
+      <motion.div {...fade}>
+        <h2 className="text-3xl font-bold text-navy-foreground md:text-5xl">Ready to start the conversation?</h2>
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <Link to="/#download" className="inline-flex w-64 items-center justify-center rounded-full bg-gold px-6 py-3 font-semibold text-navy transition-opacity hover:opacity-90">
+            Download on the App Store
+          </Link>
+          <Link to="/#download" className="inline-flex w-64 items-center justify-center rounded-full border-2 border-navy-foreground px-6 py-3 font-semibold text-navy-foreground transition-colors hover:bg-navy-foreground/10">
+            Get it on Google Play
+          </Link>
+        </div>
+        <p className="mt-6 text-sm text-navy-foreground/80">Free to download. Low cost to use. Built for you.</p>
+      </motion.div>
     </section>
   </div>
 );
