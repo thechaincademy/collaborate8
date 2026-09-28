@@ -40,6 +40,27 @@ export const useProfile = () => {
     };
 
     fetchProfile();
+
+    // Keep co-parent status in sync across the whole app
+    const refresh = async () => {
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (data) setProfile(data as Profile);
+    };
+    const onEvent = () => refresh();
+    window.addEventListener("c8-profile-refresh", onEvent);
+    window.addEventListener("focus", onEvent);
+    const channel = supabase
+      .channel(`profile-${user.id}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+        (payload) => setProfile(payload.new as Profile))
+      .subscribe();
+    const poll = setInterval(refresh, 20000);
+    return () => {
+      window.removeEventListener("c8-profile-refresh", onEvent);
+      window.removeEventListener("focus", onEvent);
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+    };
   }, [user]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -52,6 +73,7 @@ export const useProfile = () => {
 
     if (!error) {
       setProfile((prev) => prev ? { ...prev, ...updates } : null);
+      window.dispatchEvent(new Event("c8-profile-refresh"));
     }
     return { error };
   };
