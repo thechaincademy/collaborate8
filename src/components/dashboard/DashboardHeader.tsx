@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-import { categoryMeta, categoryOf } from "@/lib/notificationTypes";
+import { categoryMeta } from "@/lib/notificationTypes";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 
@@ -30,10 +30,8 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [nFilter, setNFilter] = useState<"all" | "action" | "messages" | "agreements" | "money">("all");
   const { items, unreadCount, markAllRead, markRead } = useNotifications();
-  const FILTERS = { all: [], action: ["ack_required", "deadline_soon", "deadline_missed", "proposal"], messages: ["message"], agreements: ["confirmed", "calendar"], money: ["money"] } as Record<string, string[]>;
-  const notifications = items.filter((n) => nFilter === "all" || FILTERS[nFilter].includes(categoryOf(n.type))).map((n) => ({
+  const notifications = items.map((n) => ({
     ...n,
     read: !!n.read_at,
     time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
@@ -119,12 +117,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             </button>
           </div>
           
-          <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
-            {([["all", "All"], ["action", "Needs action"], ["messages", "Messages"], ["agreements", "Agreements"], ["money", "Money"]] as const).map(([k, l]) => (
-              <button key={k} onClick={() => setNFilter(k)} className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${nFilter === k ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}>{l}</button>
-            ))}
-          </div>
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center">
                 <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
@@ -145,7 +138,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{categoryMeta(notification.type).label}</p>
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${categoryMeta(notification.type).cls}`}>{categoryMeta(notification.type).label}</span>
                       <p className="text-sm font-medium text-foreground">{notification.title}</p>
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{notification.time}</p>
