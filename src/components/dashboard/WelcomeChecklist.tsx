@@ -7,7 +7,7 @@ interface Props {
   invited: boolean;
 }
 
-const DONE_KEY = "c8_checklist_done";
+const DONE_KEY = "c8_checklist_v2_done";
 
 /** Onboarding checklist - steps unlock in order and tick off from real activity. */
 const WelcomeChecklist = ({ invited }: Props) => {
