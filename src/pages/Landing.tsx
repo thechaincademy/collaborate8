@@ -15,9 +15,9 @@ import {
   Infinity
 } from "lucide-react";
 
-import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
-import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
-import appScreenshot3 from "@/assets/app-screenshot-3-hd.png";
+import appScreenshot1 from "@/assets/app-real-1.jpg";
+import appScreenshot2 from "@/assets/app-real-2.jpg";
+import appScreenshot3 from "@/assets/app-real-3.jpg";
 import TopBanner from "@/components/TopBanner";
 import InstallAppButtons from "@/components/InstallAppButtons";
 
