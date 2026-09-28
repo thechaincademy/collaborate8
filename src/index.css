@@ -135,3 +135,36 @@
     box-shadow: var(--shadow-elevated);
   }
 }
+
+/* Logged-in app modernisation (scoped to app screens only) */
+@layer components {
+  .app-ui { font-size: 1rem; }
+  .app-ui img { object-fit: cover; max-width: 100%; }
+  .app-ui button.inline-flex:not([role="tab"]):not([role="switch"]),
+  .app-ui a.inline-flex.bg-primary { border-radius: 0.75rem; transition: all 200ms ease; }
+  .app-ui button.inline-flex:active:not(:disabled) { transform: scale(0.98); }
+  .app-ui button.bg-primary { box-shadow: 0 2px 8px hsl(var(--primary) / 0.3); }
+  .app-ui button.bg-primary:hover:not(:disabled) { box-shadow: 0 4px 14px hsl(var(--primary) / 0.35); }
+  .app-ui .rounded-lg.border.bg-card,
+  .app-ui .rounded-xl.border.bg-card,
+  .app-ui .rounded-2xl.border.bg-card {
+    border-radius: 1rem; border-color: transparent;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+  .app-ui input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+  .app-ui textarea, .app-ui select {
+    border-radius: 0.5rem; border-color: #D1D5DB; font-size: 1rem;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .app-ui input:focus-visible, .app-ui textarea:focus-visible, .app-ui select:focus-visible {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2); outline: none;
+    --tw-ring-shadow: 0 0 #0000; --tw-ring-offset-shadow: 0 0 #0000;
+  }
+  .app-ui label { font-size: max(0.875rem, 1em); }
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
+    background-size: 200% 100%; animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+}
