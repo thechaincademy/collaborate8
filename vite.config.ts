@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => ({
       devOptions: { enabled: false },
       workbox: {
         navigateFallback: null,
+        importScripts: ["/push-sw.js"],
         // Never precache HTML: stale pages point at old picture files that no longer exist.
         globPatterns: ["**/*.{js,css}"],
         skipWaiting: true,
