@@ -52,6 +52,12 @@ export default {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
+        status: {
+          awaiting: "hsl(var(--status-awaiting))",
+          soon: "hsl(var(--status-soon))",
+          ok: "hsl(var(--status-ok))",
+          overdue: "hsl(var(--status-overdue))",
+        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
