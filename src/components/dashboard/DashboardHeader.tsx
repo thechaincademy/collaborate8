@@ -30,10 +30,8 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [nFilter, setNFilter] = useState<"all" | "action" | "messages" | "agreements" | "money">("all");
   const { items, unreadCount, markAllRead, markRead } = useNotifications();
-  const FILTERS = { all: [], action: ["ack_required", "deadline_soon", "deadline_missed", "proposal"], messages: ["message"], agreements: ["confirmed", "calendar"], money: ["money"] } as Record<string, string[]>;
-  const notifications = items.filter((n) => nFilter === "all" || FILTERS[nFilter].includes(categoryOf(n.type))).map((n) => ({
+  const notifications = items.map((n) => ({
     ...n,
     read: !!n.read_at,
     time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
