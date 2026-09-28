@@ -294,6 +294,69 @@ export type Database = {
           },
         ]
       }
+      decision_threads: {
+        Row: {
+          acknowledged_at: string | null
+          category: string
+          children: string[]
+          coparent_id: string
+          created_at: string
+          creator_id: string
+          current_proposal: string | null
+          deadline: string | null
+          final_outcome: string | null
+          id: string
+          next_action: string | null
+          original_request: string
+          priority: string
+          require_ack: boolean
+          resolved_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          category?: string
+          children?: string[]
+          coparent_id: string
+          created_at?: string
+          creator_id: string
+          current_proposal?: string | null
+          deadline?: string | null
+          final_outcome?: string | null
+          id?: string
+          next_action?: string | null
+          original_request: string
+          priority?: string
+          require_ack?: boolean
+          resolved_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          category?: string
+          children?: string[]
+          coparent_id?: string
+          created_at?: string
+          creator_id?: string
+          current_proposal?: string | null
+          deadline?: string | null
+          final_outcome?: string | null
+          id?: string
+          next_action?: string | null
+          original_request?: string
+          priority?: string
+          require_ack?: boolean
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -958,6 +1021,50 @@ export type Database = {
           reason?: string
         }
         Relationships: []
+      }
+      thread_events: {
+        Row: {
+          actor_id: string
+          attachment_name: string | null
+          attachment_path: string | null
+          body: string | null
+          created_at: string
+          expense_id: string | null
+          id: string
+          kind: string
+          thread_id: string
+        }
+        Insert: {
+          actor_id: string
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body?: string | null
+          created_at?: string
+          expense_id?: string | null
+          id?: string
+          kind: string
+          thread_id: string
+        }
+        Update: {
+          actor_id?: string
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body?: string | null
+          created_at?: string
+          expense_id?: string | null
+          id?: string
+          kind?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_events_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "decision_threads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       usage_events: {
         Row: {
