@@ -40,7 +40,6 @@ import familyImage from "@/assets/home-family-wide.jpg";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import CoparentStatus from "./CoparentStatus";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
-import HealthScore from "./HealthScore";
 import NeedsResponse from "./NeedsResponse";
 
 interface HomeTabProps {
@@ -319,7 +318,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
 
 
 
-      <HealthScore userId={user?.id} payments={payments as any} expenses={expenses} />
 
       {/* Quick links */}
       <motion.div
