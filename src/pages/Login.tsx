@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import appScreenshot1 from "@/assets/app-screenshot-1.png";
-import appScreenshot2 from "@/assets/app-screenshot-2.png";
-import appScreenshot3 from "@/assets/app-screenshot-3.png";
+import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
+import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
+import appScreenshot3 from "@/assets/app-screenshot-3-hd.png";
 
 const Login = () => {
   const navigate = useNavigate();

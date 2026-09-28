@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import splashFamily from "@/assets/splash-family.jpg";
+import splashFamily from "@/assets/splash-family-hd.jpg";
 
 const Splash = () => {
   const navigate = useNavigate();
@@ -35,8 +35,8 @@ const Splash = () => {
               <img
                 src={splashFamily}
                 alt="A parent and child sharing a warm moment together"
-                width={1024}
-                height={1024}
+                width={1920}
+                height={1920}
                 className="h-52 w-full object-cover"
               />
             </div>
@@ -52,8 +52,8 @@ const Splash = () => {
               <img
                 src={splashFamily}
                 alt="A parent and child sharing a warm moment together"
-                width={1024}
-                height={1024}
+                width={1920}
+                height={1920}
                 className="h-72 w-full object-cover lg:h-96"
               />
             </div>

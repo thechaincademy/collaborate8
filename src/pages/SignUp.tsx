@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
-import signupFamily from "@/assets/signup-family.jpg";
+import signupFamily from "@/assets/signup-family-hd.jpg";
 
 type SignUpStep = "welcome" | "name" | "email" | "password" | "coparent" | "verify";
 type AuthMethod = "choice" | "apple" | "manual";
@@ -175,8 +175,8 @@ const SignUp = () => {
         <img
           src={signupFamily}
           alt="A parent and child at home in a warm, welcoming moment"
-          width={1024}
-          height={1024}
+          width={1920}
+          height={1920}
           className="h-full w-full object-cover"
         />
       </div>
