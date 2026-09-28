@@ -39,7 +39,6 @@ import { DashboardTab } from "@/pages/Dashboard";
 import familyImage from "@/assets/home-family-wide.jpg";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import CoparentStatus from "./CoparentStatus";
-import WelcomeChecklist from "./WelcomeChecklist";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import HealthScore from "./HealthScore";
 import NeedsResponse from "./NeedsResponse";
