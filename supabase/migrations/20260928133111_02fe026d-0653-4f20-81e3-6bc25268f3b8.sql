@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.get_coparent_last_active() FROM PUBLIC, anon;

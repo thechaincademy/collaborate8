@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2, Paperclip, X, FileText, UserPlus } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, Loader2, Paperclip, X, FileText, UserPlus, Download } from "lucide-react";
+import { downloadChatPdf } from "@/lib/chatPdf";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,22 @@ const ChatTab = () => {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDownload = async () => {
+    if (!user || !coparentId) return;
+    const [{ data: cp }, { data: exp }] = await Promise.all([
+      supabase.from("profiles").select("first_name, last_name").eq("id", coparentId).maybeSingle(),
+      supabase.from("expense_requests").select("description, amount, status, created_at, kind").eq("kind", "split_request").in("status", ["agreed", "rejected"]).order("created_at"),
+    ]);
+    const nm = (a?: string | null, b?: string | null, f = "") => `${a ?? ""} ${b ?? ""}`.trim() || f;
+    downloadChatPdf({
+      myId: user.id,
+      myName: nm(profile?.first_name, profile?.last_name, "You"),
+      coparentName: nm(cp?.first_name, cp?.last_name, "Co-parent"),
+      messages,
+      agreements: (exp ?? []) as any,
+    });
+  };
 
   const toneScore = useMemo(() => scoreTone(draft), [draft]);
   const tone = toneLabel(toneScore);
@@ -571,7 +588,13 @@ const ChatTab = () => {
     <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12">
       <DashboardHeader title="Financial Chat" />
 
-      <p className="-mt-6 mb-3 text-sm text-muted-foreground">{SUBHEADING}</p>
+      <div className="-mt-6 mb-3 flex items-start justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{SUBHEADING}</p>
+        <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={handleDownload}>
+          <Download className="h-4 w-4" />
+          Download chat record
+        </Button>
+      </div>
 
       <ConversationToolBanner onOpen={openTool} />
       <ConversationToolModal

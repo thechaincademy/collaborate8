@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Settings, LogOut, X, CreditCard, Clock } from "lucide-react";
+import { User, Bell, Settings, LogOut, X, CreditCard, Clock, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +81,10 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
           <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/communication-guide")} className="cursor-pointer">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Communication guide
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
