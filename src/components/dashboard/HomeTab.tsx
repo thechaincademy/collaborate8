@@ -42,6 +42,7 @@ import CoparentStatus from "./CoparentStatus";
 import WelcomeChecklist from "./WelcomeChecklist";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import HealthScore from "./HealthScore";
+import NeedsResponse from "./NeedsResponse";
 
 interface HomeTabProps {
   onNavigate: (tab: DashboardTab) => void;
@@ -179,6 +180,8 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           invited={isLinked || !!invitation}
         />
       )}
+
+      {isLinked && <NeedsResponse userId={user?.id} />}
 
       {/* Family image */}
       <motion.div
