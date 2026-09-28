@@ -139,9 +139,6 @@ const Landing = () => {
                 <InstallAppButtons />
               </div>
 
-              <p className="mt-3 text-center text-[0.8rem] font-medium text-foreground/80">
-                The full Collabor8 experience is available online now while we launch on mobile.
-              </p>
             </div>
           </motion.div>
 
