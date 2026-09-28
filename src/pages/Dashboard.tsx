@@ -52,6 +52,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     trackTab(activeTab);
+    if (activeTab === "chat") localStorage.setItem("c8_chat_opened", "1");
+    if (activeTab === "maintenance") localStorage.setItem("c8_maintenance_opened", "1");
   }, [activeTab]);
 
   const renderContent = () => {

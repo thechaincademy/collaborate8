@@ -7,6 +7,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { CommunicationGuideContent } from "./CommunicationGuide";
+import { TaxAndBenefitsContent } from "./TaxAndBenefits";
 
 const articles = [
   {
@@ -176,78 +178,98 @@ const ChildMaintenanceGuideApp = () => {
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
-        <h1 className="text-lg font-semibold text-foreground">Guide</h1>
+        <h1 className="text-lg font-semibold text-foreground">Family Finances Guide</h1>
       </div>
 
-      {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-6 mt-6 rounded-3xl bg-primary p-6 text-primary-foreground"
-      >
-        <span className="mb-3 inline-block rounded-full bg-background/20 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-wider">
-          UK guide
-        </span>
-        <h2 className="mb-2 text-2xl font-bold leading-tight">
-          Child maintenance made simple
-        </h2>
-        <p className="text-sm text-primary-foreground/80">
-          Everything you need to know about your responsibilities, your
-          options, and how to manage it without the stress.
-        </p>
-      </motion.div>
-
-      {/* Calculator CTA */}
-      <motion.button
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        onClick={() => navigate("/child-maintenance-calculator")}
-        className="mx-6 mt-4 flex w-[calc(100%-3rem)] items-center gap-4 rounded-2xl bg-card p-4 text-left"
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-          <Calculator className="h-6 w-6 text-foreground" />
-        </div>
-        <div className="flex-1">
-          <p className="font-semibold text-foreground">Work out a figure</p>
-          <p className="text-sm text-muted-foreground">
-            Use the calculator with the UK standard formula
-          </p>
-        </div>
-      </motion.button>
-
-      {/* Articles */}
-      <div className="px-6 pt-8">
-        <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          In this guide
-        </h3>
-        <Accordion type="single" collapsible className="space-y-3">
-          {articles.map((a) => (
-            <AccordionItem
-              key={a.id}
-              value={a.id}
-              className="overflow-hidden rounded-2xl border border-border bg-card px-4"
+      <Accordion type="multiple" defaultValue={["child-maintenance"]} className="mt-6 space-y-4 px-6">
+        <AccordionItem value="child-maintenance" className="border-0">
+          <AccordionTrigger className="rounded-2xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:no-underline">Child Maintenance</AccordionTrigger>
+          <AccordionContent className="-mx-6 pb-0">
+            {/* Hero */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-6 mt-4 rounded-3xl bg-primary p-6 text-primary-foreground"
             >
-              <AccordionTrigger className="py-4 hover:no-underline">
-                <div className="flex items-start gap-3 text-left">
-                  <span className="mt-0.5 text-xs font-medium text-muted-foreground">
-                    {a.num}
-                  </span>
-                  <div>
-                    <p className="font-semibold text-foreground">{a.title}</p>
-                    <p className="mt-0.5 text-sm font-normal text-muted-foreground">
-                      {a.summary}
-                    </p>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-3 pb-5 text-sm leading-relaxed text-muted-foreground">
-                {a.body}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
+              <span className="mb-3 inline-block rounded-full bg-background/20 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-wider">
+                UK guide
+              </span>
+              <h2 className="mb-2 text-2xl font-bold leading-tight">
+                Child maintenance made simple
+              </h2>
+              <p className="text-sm text-primary-foreground/80">
+                Everything you need to know about your responsibilities, your
+                options, and how to manage it without the stress.
+              </p>
+            </motion.div>
+
+            {/* Calculator CTA */}
+            <motion.button
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              onClick={() => navigate("/child-maintenance-calculator")}
+              className="mx-6 mt-4 flex w-[calc(100%-3rem)] items-center gap-4 rounded-2xl bg-card p-4 text-left"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+                <Calculator className="h-6 w-6 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">Work out a figure</p>
+                <p className="text-sm text-muted-foreground">
+                  Use the calculator with the UK standard formula
+                </p>
+              </div>
+            </motion.button>
+
+            {/* Articles */}
+            <div className="px-6 pt-8">
+              <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                In this guide
+              </h3>
+              <Accordion type="single" collapsible className="space-y-3">
+                {articles.map((a) => (
+                  <AccordionItem
+                    key={a.id}
+                    value={a.id}
+                    className="overflow-hidden rounded-2xl border border-border bg-card px-4"
+                  >
+                    <AccordionTrigger className="py-4 hover:no-underline">
+                      <div className="flex items-start gap-3 text-left">
+                        <span className="mt-0.5 text-xs font-medium text-muted-foreground">
+                          {a.num}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-foreground">{a.title}</p>
+                          <p className="mt-0.5 text-sm font-normal text-muted-foreground">
+                            {a.summary}
+                          </p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-3 pb-5 text-sm leading-relaxed text-muted-foreground">
+                      {a.body}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="communication-guide" className="border-0">
+          <AccordionTrigger className="rounded-2xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:no-underline">Communication Guide</AccordionTrigger>
+          <AccordionContent className="pt-4">
+            <p className="mb-4 text-sm text-muted-foreground">Short, practical tips for difficult conversations.</p>
+            <CommunicationGuideContent />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="tax-and-benefits" className="border-0">
+          <AccordionTrigger className="rounded-2xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:no-underline">Tax and Benefits</AccordionTrigger>
+          <AccordionContent className="pt-4">
+            <TaxAndBenefitsContent />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Footer link */}
       <div className="mt-8 px-6 text-center">

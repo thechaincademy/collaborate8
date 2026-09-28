@@ -32,6 +32,34 @@ const topics = [
   },
 ];
 
+export const TaxAndBenefitsContent = () => (
+  <>
+    <p className="mb-4 text-xs text-muted-foreground">
+      This information is for general guidance only. For advice specific to your circumstances please contact HMRC, the DWP or Citizens Advice.
+    </p>
+    <Accordion type="single" collapsible className="space-y-3">
+      {topics.map((t) => (
+        <AccordionItem key={t.title} value={t.title} className="overflow-hidden rounded-2xl border border-border bg-card">
+          <AccordionTrigger className="gap-3 bg-primary/10 px-4 py-4 text-left text-sm font-semibold text-foreground hover:no-underline">
+            <span className="flex items-center gap-3">
+              <Landmark className="h-4 w-4 shrink-0 text-primary" />
+              {t.title}
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="bg-card px-4 pb-4 pt-3">
+            <p className="text-sm leading-relaxed text-foreground/80">{t.body}</p>
+            <Button asChild size="sm" className="mt-3 gap-1.5">
+              <a href={t.url} target="_blank" rel="noopener noreferrer">
+                Find out more on GOV.UK <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </Button>
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  </>
+);
+
 const TaxAndBenefits = () => {
   const navigate = useNavigate();
   return (

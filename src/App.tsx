@@ -64,8 +64,8 @@ const App = () => (
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/cost-of-conflict" element={<ProtectedRoute><CostOfConflict /></ProtectedRoute>} />
-              <Route path="/tax-and-benefits" element={<ProtectedRoute><TaxAndBenefits /></ProtectedRoute>} />
-              <Route path="/communication-guide" element={<ProtectedRoute><CommunicationGuide /></ProtectedRoute>} />
+              <Route path="/tax-and-benefits" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
+              <Route path="/communication-guide" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />
               <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />

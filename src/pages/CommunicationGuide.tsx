@@ -51,6 +51,26 @@ const topics = [
   },
 ];
 
+export const CommunicationGuideContent = () => (
+  <Accordion type="single" collapsible className="space-y-3">
+    {topics.map((t) => (
+      <AccordionItem key={t.title} value={t.title} className="overflow-hidden rounded-2xl border border-border bg-card">
+        <AccordionTrigger className="gap-3 bg-primary/10 px-4 py-4 text-left text-sm font-semibold text-foreground hover:no-underline">
+          <span className="flex items-center gap-3">
+            <MessageSquare className="h-4 w-4 shrink-0 text-primary" />
+            {t.title}
+          </span>
+        </AccordionTrigger>
+        <AccordionContent className="bg-card px-4 pb-4 pt-3">
+          <ul className="list-disc space-y-2 pl-5 text-sm text-foreground/80">
+            {t.points.map((p) => <li key={p}>{p}</li>)}
+          </ul>
+        </AccordionContent>
+      </AccordionItem>
+    ))}
+  </Accordion>
+);
+
 const CommunicationGuide = () => {
   const navigate = useNavigate();
   return (
