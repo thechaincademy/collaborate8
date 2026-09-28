@@ -14,6 +14,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const CATEGORIES = ["School", "Activities", "Clothing", "Health", "Transport", "Other"];
 import DashboardHeader from "./DashboardHeader";
 import { useExpenses, type ExpenseRequest } from "@/hooks/useExpenses";
 import { useProfile } from "@/hooks/useProfile";
@@ -27,6 +36,8 @@ const statusLabel = (e: ExpenseRequest) => {
       return "Paid";
     case "rejected":
       return "Declined";
+    case "agreed":
+      return "Agreed split";
     default:
       return "Awaiting approval";
   }
@@ -37,6 +48,7 @@ const statusClass = (status: ExpenseRequest["status"]) => {
     case "approved":
       return "text-primary";
     case "paid":
+    case "agreed":
       return "text-emerald-600";
     case "rejected":
       return "text-destructive";
@@ -53,8 +65,33 @@ const ExpensesTab = () => {
     deciding,
     createExpense,
     decideExpense,
+    requestSplit,
+    decideSplit,
     getReceiptUrl,
   } = useExpenses();
+
+  const [showSplit, setShowSplit] = useState(false);
+  const [splitDesc, setSplitDesc] = useState("");
+  const [splitAmount, setSplitAmount] = useState("");
+  const [splitCategory, setSplitCategory] = useState("");
+  const [splitNote, setSplitNote] = useState("");
+
+  const submitSplit = async () => {
+    const value = Number(splitAmount);
+    if (!splitDesc.trim()) return toast.error("Say what the expense is");
+    if (!value || value <= 0) return toast.error("Add an estimated amount");
+    if (!splitCategory) return toast.error("Choose a category");
+    setSaving(true);
+    const { error } = await requestSplit(splitDesc.trim(), value, splitCategory, splitNote.trim());
+    setSaving(false);
+    if (!error) {
+      setSplitDesc("");
+      setSplitAmount("");
+      setSplitCategory("");
+      setSplitNote("");
+      setShowSplit(false);
+    }
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [description, setDescription] = useState("");
@@ -102,7 +139,9 @@ const ExpensesTab = () => {
           <p className="truncate font-medium text-foreground">{e.description}</p>
           <p className="text-xs text-muted-foreground">
             {format(new Date(e.created_at), "d MMM yyyy")}
+            {e.kind === "split_request" && ` · Split request${e.category ? ` · ${e.category}` : ""}`}
           </p>
+          {e.note && <p className="mt-1 text-xs text-muted-foreground">{e.note}</p>}
         </div>
         <div className="text-right">
           <p className="font-semibold text-foreground">£{Number(e.amount).toFixed(2)}</p>
@@ -124,7 +163,20 @@ const ExpensesTab = () => {
         <p className="mt-2 text-xs text-muted-foreground">{e.apply_note}</p>
       )}
 
-      {canDecide && e.status === "pending" && (
+      {canDecide && e.status === "pending" && e.kind === "split_request" && (
+        <div className="mt-4 flex gap-2">
+          <Button size="sm" className="flex-1" disabled={deciding === e.id} onClick={() => decideSplit(e, true)}>
+            <Check className="mr-1 h-4 w-4" />
+            Agree and Split
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1" disabled={deciding === e.id} onClick={() => decideSplit(e, false)}>
+            <X className="mr-1 h-4 w-4" />
+            Decline
+          </Button>
+        </div>
+      )}
+
+      {canDecide && e.status === "pending" && e.kind !== "split_request" && (
         <div className="mt-4 flex gap-2">
           <Button
             size="sm"
@@ -203,11 +255,45 @@ const ExpensesTab = () => {
           <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
             Link your co-parent first. Expenses need both parents so one can approve what the other adds.
           </div>
+        ) : showSplit ? (
+          <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
+            <p className="font-medium text-foreground">Request expense split</p>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">What is the expense?</label>
+              <Input value={splitDesc} maxLength={100} onChange={(ev) => setSplitDesc(ev.target.value)} placeholder="School trip, football boots..." />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Estimated amount (£)</label>
+              <Input type="number" inputMode="decimal" min="0" step="0.01" value={splitAmount} onChange={(ev) => setSplitAmount(ev.target.value)} placeholder="0.00" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Category</label>
+              <Select value={splitCategory} onValueChange={setSplitCategory}>
+                <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Optional note</label>
+              <Textarea value={splitNote} maxLength={150} rows={2} onChange={(ev) => setSplitNote(ev.target.value)} />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button className="flex-1" disabled={saving} onClick={submitSplit}>{saving ? "Sending..." : "Send request"}</Button>
+              <Button variant="outline" className="flex-1" disabled={saving} onClick={() => setShowSplit(false)}>Cancel</Button>
+            </div>
+          </div>
         ) : !showForm ? (
-          <Button className="w-full" onClick={() => setShowForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add an expense
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button className="w-full" onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add an expense
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setShowSplit(true)}>
+              Request expense split
+            </Button>
+          </div>
         ) : (
           <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
             <div>
