@@ -106,17 +106,6 @@ const About = () => (
       </motion.blockquote>
     </section>
 
-    <Rule />
-    <Block b={blocks[2]} />
-
-    {/* Mission strip */}
-    <section className={`bg-teal text-center ${section}`}>
-      <motion.div {...fade} className="mx-auto max-w-3xl space-y-2 text-2xl font-bold leading-snug text-teal-foreground md:text-4xl">
-        <p>Our mission is simple.</p>
-        <p>Give separated parents somewhere to talk about money.</p>
-        <p>Because their children deserve better.</p>
-      </motion.div>
-    </section>
 
     {/* CTA */}
     <section className={`bg-navy text-center ${section}`}>
