@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
-import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, Banknote } from "lucide-react";
+import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, ArrowLeft, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -138,6 +138,15 @@ const MaintenanceTab = () => {
   if (!profileLoading && profile && !roleConfirmed) {
     return (
       <div className="px-6 pt-12">
+        <div className="mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
+        </div>
         <DashboardHeader title="Child Maintenance" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -189,7 +198,24 @@ const MaintenanceTab = () => {
 
   return (
     <div className="px-6 pt-12">
+      <div className="mb-2">
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+      </div>
       <DashboardHeader title="Child Maintenance" />
+
+      {!profileLoading && (isManaging || isViewing) && (
+        <div className="-mt-6 mb-6">
+          <span className="inline-flex items-center rounded-full bg-teal px-4 py-1.5 text-sm font-medium text-teal-foreground">
+            {isManaging ? "You are the paying parent." : "You are the receiving parent."}
+          </span>
+        </div>
+      )}
 
 
       {/* Status Card */}
