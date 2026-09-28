@@ -29,7 +29,7 @@ function getNightsPct(nights: number) {
 const fmt = (n: number) => "£" + n.toFixed(2);
 const fmtW = (n: number) => "£" + n.toFixed(2) + "/wk";
 
-const ChildMaintenanceCalculator = () => {
+const ChildMaintenanceCalculator = ({ embedded = false }: { embedded?: boolean }) => {
   const navigate = useNavigate();
   const [income, setIncome] = useState("");
   const [incomePeriod, setIncomePeriod] = useState("annual");
@@ -187,7 +187,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background bg-background" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <TopBanner />
+      {!embedded && <TopBanner />}
       <div className="px-4 py-10 bg-background">
       <Helmet>
         <title>Child Maintenance Calculator UK 2025 | Collabor8</title>
@@ -412,8 +412,8 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
           <section>
             <h2 className="mb-2 text-lg font-semibold text-[#1A1A18]">Related resources</h2>
             <ul className="ml-5 list-disc space-y-1">
-              <li><Link to="/resources/child-maintenance-guide" className="underline hover:text-[#1A1A18]">Child Maintenance Made Simple - Full Guide</Link></li>
-              <li><Link to="/resources/financial-coparenting-tips" className="underline hover:text-[#1A1A18]">Financial Co-parenting Tips</Link></li>
+              <li><Link to={embedded ? "/resources/child-maintenance-guide-app" : "/resources/child-maintenance-guide"} className="underline hover:text-[#1A1A18]">Child Maintenance Made Simple - Full Guide</Link></li>
+              {!embedded && <li><Link to="/resources/financial-coparenting-tips" className="underline hover:text-[#1A1A18]">Financial Co-parenting Tips</Link></li>}
             </ul>
           </section>
         </div>

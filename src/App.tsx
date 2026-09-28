@@ -39,6 +39,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import OAuthConsent from "./pages/OAuthConsent";
 import ResetPassword from "./pages/ResetPassword";
+import InAppShell from "@/components/layout/InAppShell";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,7 +64,7 @@ const App = () => (
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/cost-of-conflict" element={<ProtectedRoute><CostOfConflict /></ProtectedRoute>} />
+              <Route path="/cost-of-conflict" element={<ProtectedRoute><InAppShell><CostOfConflict /></InAppShell></ProtectedRoute>} />
               <Route path="/tax-and-benefits" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
               <Route path="/communication-guide" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -76,16 +77,17 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
-              <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><ChildMaintenanceGuideApp /></ProtectedRoute>} />
+              <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><InAppShell><ChildMaintenanceGuideApp /></InAppShell></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<Navigate to="/resources/child-maintenance-guide#article-1" replace />} />
               <Route path="/resources/child-maintenance-guide/who-pays" element={<Navigate to="/resources/child-maintenance-guide#article-2" replace />} />
               <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<Navigate to="/resources/child-maintenance-guide#article-3" replace />} />
               <Route path="/resources/child-maintenance-guide/shared-expenses" element={<Navigate to="/resources/child-maintenance-guide#article-4" replace />} />
               <Route path="/resources/child-maintenance-guide/rights-and-responsibilities" element={<Navigate to="/resources/child-maintenance-guide#article-5" replace />} />
               <Route path="/resources/support-and-guidance" element={<Navigate to="/resources/child-maintenance-guide#money-help" replace />} />
+              <Route path="/app/child-maintenance-calculator" element={<ProtectedRoute><InAppShell title="Calculator"><ChildMaintenanceCalculator embedded /></InAppShell></ProtectedRoute>} />
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
-              <Route path="/resources/lets-chat-tool" element={<ProtectedRoute><LetsChatTool /></ProtectedRoute>} />
+              <Route path="/resources/lets-chat-tool" element={<ProtectedRoute><InAppShell><LetsChatTool /></InAppShell></ProtectedRoute>} />
               <Route path="/internal/solana-audit" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
               <Route path="/internal/solana-audit/:arrangementId" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
