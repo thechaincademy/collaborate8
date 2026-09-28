@@ -386,11 +386,14 @@ export type Database = {
           amount: number
           applied_at: string | null
           apply_note: string | null
+          category: string | null
           created_at: string
           decided_at: string | null
           decided_by: string | null
           description: string
           id: string
+          kind: string
+          note: string | null
           paid_at: string | null
           provider_invoice_item_id: string | null
           receipt_url: string | null
@@ -402,11 +405,14 @@ export type Database = {
           amount: number
           applied_at?: string | null
           apply_note?: string | null
+          category?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           description: string
           id?: string
+          kind?: string
+          note?: string | null
           paid_at?: string | null
           provider_invoice_item_id?: string | null
           receipt_url?: string | null
@@ -418,11 +424,14 @@ export type Database = {
           amount?: number
           applied_at?: string | null
           apply_note?: string | null
+          category?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           description?: string
           id?: string
+          kind?: string
+          note?: string | null
           paid_at?: string | null
           provider_invoice_item_id?: string | null
           receipt_url?: string | null
@@ -1021,6 +1030,7 @@ export type Database = {
         Returns: undefined
       }
       get_coparent_id: { Args: { _user_id: string }; Returns: string }
+      get_coparent_last_active: { Args: never; Returns: string }
       get_invitation_by_code: {
         Args: { _invite_code: string }
         Returns: {
