@@ -211,6 +211,17 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
           </div>
         </div>
 
+        {/* Introduction */}
+        <div className="mx-auto max-w-[680px] px-4 py-8">
+          <p className="text-[1.1rem] font-semibold leading-relaxed text-navy">
+            Many parents do not know where to start, and the child maintenance calculator can be a good starting point.
+          </p>
+          <p className="mt-3 text-base leading-[1.7] text-[#333333]">
+            Child maintenance in the UK is calculated using a standard government formula, based on the paying parent's gross weekly income and the number of children. This calculator uses the same formula, giving you a baseline that both parents can refer to.
+          </p>
+          <hr className="mt-7 border-t border-teal/60" />
+        </div>
+
         {/* Paying parent card */}
         <div className="mb-4 rounded-2xl border border-[#E4E2DA] bg-background p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="mb-5 flex items-center gap-2.5">
