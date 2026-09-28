@@ -20,6 +20,7 @@ import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
 import FAQ from "./pages/FAQ";
+import About from "./pages/About";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import ChildMaintenanceGuideApp from "./pages/ChildMaintenanceGuideApp";
 import ChildMaintenanceCalculator from "./pages/ChildMaintenanceCalculator";
@@ -67,6 +68,7 @@ const App = () => (
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/cookies" element={<CookiePolicy />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/about" element={<About />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><ChildMaintenanceGuideApp /></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<Navigate to="/resources/child-maintenance-guide#article-1" replace />} />

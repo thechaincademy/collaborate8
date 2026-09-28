@@ -34,6 +34,12 @@ const TopBanner = () => {
           >
             Guide
           </Link>
+          <Link
+            to="/about"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            About Us
+          </Link>
           <Button size="sm" onClick={handleWaitlistClick} className="rounded-full">
             Sign Up
           </Button>
