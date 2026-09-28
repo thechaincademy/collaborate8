@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-import { categoryMeta, categoryOf } from "@/lib/notificationTypes";
+import { categoryMeta } from "@/lib/notificationTypes";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 
