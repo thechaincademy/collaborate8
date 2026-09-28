@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { ArrowLeft, Download, Info, Calculator } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -37,6 +37,11 @@ const ChildMaintenanceCalculator = () => {
   const [otherKids, setOtherKids] = useState("0");
   const [kids, setKids] = useState("1");
   const [childNights, setChildNights] = useState<number[]>([0]);
+  useEffect(() => {
+    if (Number(income) > 0) {
+      try { localStorage.setItem("c8_calc_run", "1"); } catch {}
+    }
+  }, [income]);
 
   const kidsNum = parseInt(kids);
 
