@@ -117,12 +117,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             </button>
           </div>
           
-          <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
-            {([["all", "All"], ["action", "Needs action"], ["messages", "Messages"], ["agreements", "Agreements"], ["money", "Money"]] as const).map(([k, l]) => (
-              <button key={k} onClick={() => setNFilter(k)} className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${nFilter === k ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}>{l}</button>
-            ))}
-          </div>
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center">
                 <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
