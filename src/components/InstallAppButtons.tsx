@@ -83,7 +83,7 @@ const InstallAppButtons = () => {
           <Apple className="h-8 w-8 shrink-0" fill="currentColor" />
           <span className="leading-tight">
             <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
-              Download on the
+              COMING SOON ON THE
             </span>
             <span className="block text-lg font-semibold">App Store</span>
           </span>
@@ -97,7 +97,7 @@ const InstallAppButtons = () => {
           <GooglePlayIcon className="h-7 w-7 shrink-0" />
           <span className="leading-tight">
             <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
-              Get it on
+              COMING SOON ON
             </span>
             <span className="block text-lg font-semibold">Google Play</span>
           </span>
