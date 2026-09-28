@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.apply_thread_event() FROM PUBLIC, anon, authenticated;
