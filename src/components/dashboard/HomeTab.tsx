@@ -174,12 +174,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         <p className="text-sm text-muted-foreground">A snapshot of your activity in the last month.</p>
       </motion.div>
 
-      {!isLoading && (
-        <WelcomeChecklist
-          userId={user?.id}
-          invited={isLinked || !!invitation}
-        />
-      )}
 
       {isLinked && <NeedsResponse userId={user?.id} />}
 
