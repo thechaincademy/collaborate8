@@ -286,35 +286,6 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         </motion.div>
       )}
 
-      {/* Co-parent status tab */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        onClick={() => setStatusOpen(true)}
-        className="mb-8 flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
-      >
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-            isLinked ? "bg-emerald-500/15 text-emerald-600" : "bg-primary/15 text-primary"
-          }`}
-        >
-          {isLinked ? <Check className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted-foreground">Status</p>
-          <p className="font-semibold text-foreground">
-            {isLinked ? "Co-parent linked" : "Waiting for co-parent to link"}
-          </p>
-          <CoparentStatus isLinked={isLinked} hasInvite={!!invitation} inviteEmail={invitation?.invitee_email} />
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-      </motion.button>
-      {!isLinked && invitation?.invitee_email && (
-        <div className="-mt-6 mb-8 px-1">
-          <ResendInviteLink email={invitation.invitee_email} />
-        </div>
-      )}
 
 
 
