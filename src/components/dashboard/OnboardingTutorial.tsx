@@ -117,17 +117,17 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-end justify-center bg-foreground/40 p-4 sm:items-center"
+          className="fixed inset-0 z-[60] flex flex-col bg-background"
+          role="dialog"
+          aria-label="Getting started tutorial"
         >
           <motion.div
             key={state.index}
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-card p-6 shadow-xl"
-            role="dialog"
-            aria-label="Getting started tutorial"
+            className="mx-auto flex w-full max-w-md flex-1 flex-col overflow-y-auto px-5 py-6"
           >
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">
                 Step {state.index + 1} of {ONBOARDING_STEPS.length}
               </span>
@@ -138,7 +138,7 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
                 Skip tutorial
               </button>
             </div>
-            <div className="mb-4 flex gap-1.5">
+            <div className="mb-10 flex gap-1.5">
               {ONBOARDING_STEPS.map((_, i) => (
                 <div
                   key={i}
@@ -146,24 +146,26 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
                 />
               ))}
             </div>
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-              <step.icon className="h-6 w-6" />
-            </div>
-            <h2 className="mb-2 text-xl font-bold text-foreground">{step.title}</h2>
-            <p className="mb-6 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-            <div className="space-y-2">
-              <Button size="lg" className="w-full gap-2" onClick={handleSetup}>
-                {step.cta}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-muted-foreground"
-                onClick={() => next(state.index + 1)}
-              >
-                {isLast ? "Skip and finish" : "Skip this step"}
-              </Button>
+            <div className="flex flex-1 flex-col justify-center pb-6">
+              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                <step.icon className="h-8 w-8" />
+              </div>
+              <h2 className="mb-3 text-2xl font-bold text-foreground">{step.title}</h2>
+              <p className="mb-10 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+              <div className="space-y-3">
+                <Button size="lg" className="w-full gap-2" onClick={handleSetup}>
+                  {step.cta}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-muted-foreground"
+                  onClick={() => next(state.index + 1)}
+                >
+                  {isLast ? "Skip and finish" : "Skip this step"}
+                </Button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
