@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, PoundSterling, Receipt, MessageCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardTab } from "@/pages/Dashboard";
+import { useAuth } from "@/hooks/useAuth";
 
-const KEY = "c8_tutorial_v1";
+// Progress is stored per account, so every new account gets the tutorial
+const keyFor = (userId: string) => `c8_tutorial_v1_${userId}`;
 
 type Saved = { index: number; done: boolean };
 
@@ -47,9 +49,9 @@ const steps: Array<{
   },
 ];
 
-const load = (): Saved => {
+const load = (userId: string): Saved => {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(keyFor(userId));
     if (raw) return JSON.parse(raw);
   } catch {}
   return { index: 0, done: false };
@@ -62,20 +64,27 @@ interface Props {
 
 const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
   const navigate = useNavigate();
-  const [state, setState] = useState<Saved>(load);
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [state, setState] = useState<Saved | null>(null);
   // "open" = showing the step card; false while the user is doing a step
   const [open, setOpen] = useState(true);
 
+  // Load this account's progress once we know who is signed in
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  }, [state]);
+    if (userId) setState(load(userId));
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId && state) localStorage.setItem(keyFor(userId), JSON.stringify(state));
+  }, [userId, state]);
 
   // Coming back to Home after doing a step shows the next one
   useEffect(() => {
     if (activeTab === "home") setOpen(true);
   }, [activeTab]);
 
-  if (state.done || state.index >= steps.length) return null;
+  if (!state || state.done || state.index >= steps.length) return null;
 
   const step = steps[state.index];
   const isLast = state.index === steps.length - 1;
