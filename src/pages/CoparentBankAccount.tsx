@@ -145,7 +145,7 @@ const CoparentBankAccount = () => {
         user_id: user.id,
         amount: value,
         paid_on: logDate,
-        reference: reference.trim() || null,
+        reference: null,
         note: logNote.trim() || null,
       })
       .select("id, amount, paid_on, reference, note")
