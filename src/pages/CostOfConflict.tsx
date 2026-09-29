@@ -15,7 +15,7 @@ const CostOfConflict = () => {
   const [hours, setHours] = useState(10);
 
   const total = sessions * MEDIATION + hours * HOURLY;
-  const collab = Math.max(months, 1) * COLLABOR8_MONTHLY;
+  const collab = 6 * COLLABOR8_MONTHLY;
   const pct = total > 0 ? Math.max(0, Math.round(((total - collab) / total) * 100)) : 0;
   const fmt = (n: number) => `£${n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
