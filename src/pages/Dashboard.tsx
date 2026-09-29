@@ -43,9 +43,9 @@ const Dashboard = () => {
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {
-    const tab = searchParams.get("tab") as DashboardTab | null;
+    const tab = searchParams.get("tab");
     if (tab && ["home", "maintenance", "expenses", "benefits", "chat", "documents", "resources"].includes(tab)) {
-      setActiveTab(tab === "documents" ? "chat" : tab);
+      setActiveTab(tab === "documents" ? "chat" : tab as DashboardTab);
       searchParams.delete("tab");
       setSearchParams(searchParams, { replace: true });
     }
