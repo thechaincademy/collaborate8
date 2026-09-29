@@ -230,45 +230,11 @@ const ExpensesTab = () => {
           <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
             Link your co-parent first. Expenses need both parents so one can approve what the other adds.
           </div>
-        ) : showSplit ? (
-          <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
-            <p className="font-medium text-foreground">Request expense split</p>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">What is the expense?</label>
-              <Input value={splitDesc} maxLength={100} onChange={(ev) => setSplitDesc(ev.target.value)} placeholder="School trip, football boots..." />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Estimated amount (£)</label>
-              <Input type="number" inputMode="decimal" min="0" step="0.01" value={splitAmount} onChange={(ev) => setSplitAmount(ev.target.value)} placeholder="0.00" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Category</label>
-              <Select value={splitCategory} onValueChange={setSplitCategory}>
-                <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Optional note</label>
-              <Textarea value={splitNote} maxLength={150} rows={2} onChange={(ev) => setSplitNote(ev.target.value)} />
-            </div>
-            <div className="flex gap-2 pt-1">
-              <Button className="flex-1" disabled={saving} onClick={submitSplit}>{saving ? "Sending..." : "Send request"}</Button>
-              <Button variant="outline" className="flex-1" disabled={saving} onClick={() => setShowSplit(false)}>Cancel</Button>
-            </div>
-          </div>
         ) : !showForm ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Button className="w-full" onClick={() => setShowForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add an expense
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => setShowSplit(true)}>
-              Request expense split
-            </Button>
-          </div>
+          <Button className="w-full" onClick={() => setShowForm(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add an expense
+          </Button>
         ) : (
           <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
             <div>
