@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Banknote, Check, Loader2, Plus, Trash2, Bell, Info } from "lucide-react";
+import { ArrowLeft, Banknote, Check, Loader2, Plus, Trash2, Info } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -18,8 +17,6 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-
-type Frequency = "monthly" | "weekly";
 
 interface BankAccount {
   id: string;
@@ -41,8 +38,6 @@ interface ManualPayment {
   reference: string | null;
   note: string | null;
 }
-
-const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 const formatSortCode = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 6);
