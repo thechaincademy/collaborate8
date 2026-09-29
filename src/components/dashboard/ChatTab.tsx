@@ -26,6 +26,15 @@ import DocumentsTab from "./DocumentsTab";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+const CONVERSATION_STARTERS = [
+  { label: "Check in", text: "Hi, I hope you're well. Do you have a few minutes this week to talk about the children's costs?" },
+  { label: "Upcoming expense", text: "There's an upcoming expense for the children I wanted to let you know about. Could we agree how to split it?" },
+  { label: "Payment question", text: "I had a quick question about this month's maintenance payment. Could you let me know when you have a moment?" },
+  { label: "School costs", text: "School costs are coming up (uniform, trips and supplies). Can we plan how we'll cover these?" },
+  { label: "Schedule change", text: "I'd like to talk about a possible change to the schedule. What times would suit you to discuss it?" },
+  { label: "Say thank you", text: "Thank you for sorting that out - I really appreciate it." },
+];
+
 interface Message {
   id: string;
   sender_id: string;
@@ -80,6 +89,7 @@ const ChatTab = () => {
   const [sending, setSending] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"chat" | "documents">("chat");
+  const [startersOpen, setStartersOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const sectionTabs = (
@@ -655,7 +665,7 @@ const ChatTab = () => {
       <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p className="text-xs text-foreground/80">
-          Use Decisions for anything that needs an answer. "Rewrite calmly" is an optional, private writing aid - not legal advice.
+          "AI prompts" and "Rewrite calmly" are optional, private writing aids - not legal advice.
         </p>
       </div>
 
@@ -754,12 +764,29 @@ const ChatTab = () => {
           )}
         </Button>
       </div>
-      <div className="-mt-2 mb-3 flex justify-end">
+      <div className="-mt-2 mb-2 flex items-center justify-between">
+        <button onClick={() => setStartersOpen((o) => !o)}
+          className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+          <MessageCircle className="h-3.5 w-3.5 text-primary" /> {startersOpen ? "Hide AI prompts" : "AI prompts"}
+        </button>
         <button disabled={!draft.trim()} onClick={() => setRewriteOpen(true)}
           className="inline-flex items-center gap-1 text-xs font-medium text-foreground disabled:opacity-40">
           <Sparkles className="h-3.5 w-3.5 text-primary" /> Rewrite calmly
         </button>
       </div>
+      {startersOpen && (
+        <div className="mb-3 rounded-2xl border border-border bg-card p-3">
+          <p className="mb-2 text-xs text-muted-foreground">Tap a prompt to start your message. You can edit it before sending.</p>
+          <div className="flex flex-wrap gap-2">
+            {CONVERSATION_STARTERS.map((s) => (
+              <button key={s.label} onClick={() => { setDraft(s.text); setStartersOpen(false); }}
+                className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-primary/20">
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <RewriteComposer open={rewriteOpen} draft={draft} onOpenChange={setRewriteOpen} onUse={setDraft} />
       </>)}
     </div>
