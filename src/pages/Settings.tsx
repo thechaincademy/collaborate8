@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, PoundSterling, Smartphone } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, PoundSterling } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -11,11 +9,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { NOTIFICATION_CATEGORIES } from "@/lib/notificationTypes";
-import { disablePush, enablePush, pushState } from "@/lib/push";
 import CoparentLinkSettings from "@/components/settings/CoparentLinkSettings";
 
-type Prefs = Record<string, { push?: boolean; email?: boolean }>;
 
 const Section = ({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) => (
   <motion.section id={id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-7">
@@ -27,42 +22,14 @@ const Section = ({ title, children, id }: { title: string; children: React.React
 const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [prefs, setPrefs] = useState<Prefs>({});
-  const [push, setPush] = useState<"on" | "off" | "denied" | "unsupported">("off");
-  const [pushBusy, setPushBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    pushState().then(setPush);
-    if (!user) return;
-    supabase.from("notification_preferences" as any).select("prefs").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => setPrefs(((data as any)?.prefs ?? {}) as Prefs));
-  }, [user]);
-
-  useEffect(() => {
     if (window.location.hash) document.querySelector(window.location.hash)?.scrollIntoView();
   }, []);
 
-  const setPref = async (key: string, channel: "push" | "email", value: boolean) => {
-    if (!user) return;
-    const next = { ...prefs, [key]: { ...prefs[key], [channel]: value } };
-    setPrefs(next);
-    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
-    if (error) toast.error("Could not save that setting");
-  };
-
-  const togglePush = async () => {
-    if (!user) return;
-    setPushBusy(true);
-    try {
-      if (push === "on") { await disablePush(); setPush("off"); toast.success("Push alerts turned off on this device"); }
-      else { const s = await enablePush(user.id); setPush(s); if (s === "on") toast.success("Push alerts turned on for this device"); else if (s === "denied") toast.error("Alerts are blocked in your browser settings"); }
-    } catch (e) {
-      toast.error((e as Error).message || "Could not turn on push alerts");
-    } finally { setPushBusy(false); }
-  };
 
   const exportData = async () => {
     if (!user) return;

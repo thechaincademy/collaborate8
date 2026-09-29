@@ -72,9 +72,14 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             <User className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/notifications")} className="cursor-pointer">
+            <Bell className="mr-2 h-4 w-4" />
+            Notifications
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             Settings
+
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/resources/child-maintenance-guide-app")} className="cursor-pointer">
             <MessageSquare className="mr-2 h-4 w-4" />
@@ -151,8 +156,9 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
 
           {true && (
             <div className="flex gap-2 border-t border-border p-3">
-              <Button variant="ghost" className="flex-1 text-sm" onClick={() => { setNotificationOpen(false); navigate("/settings#notifications"); }}>
+              <Button variant="ghost" className="flex-1 text-sm" onClick={() => { setNotificationOpen(false); navigate("/notifications"); }}>
                 Alert settings
+
               </Button>
               <Button variant="ghost" className="flex-1 text-sm" onClick={markAllRead} disabled={unreadCount === 0}>
                 Mark all as read
