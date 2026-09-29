@@ -16,7 +16,11 @@ interface SharedDocument {
   attachment_name: string;
 }
 
-const DocumentsTab = () => {
+interface DocumentsTabProps {
+  embedded?: boolean;
+}
+
+const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const coparentId = profile?.coparent_id ?? null;
@@ -90,7 +94,7 @@ const DocumentsTab = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <DashboardHeader title="Documents" />
+      {!embedded && <DashboardHeader title="Documents" />}
       <p className="mb-4 text-sm text-muted-foreground">
         Upload and share documents with your co-parent - receipts, letters and paperwork, all in one place.
       </p>

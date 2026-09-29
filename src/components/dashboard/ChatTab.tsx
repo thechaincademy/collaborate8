@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check, MessageCircle, FolderOpen } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chatPdf";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,7 @@ import {
 
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
 import RewriteComposer from "./RewriteComposer";
+import DocumentsTab from "./DocumentsTab";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -78,7 +79,35 @@ const ChatTab = () => {
   const [rewriting, setRewriting] = useState(false);
   const [sending, setSending] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<"chat" | "documents">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const sectionTabs = (
+    <div className="mb-4 grid grid-cols-2 rounded-xl border border-border bg-muted/40 p-1" role="tablist" aria-label="Financial Chat sections">
+      <Button
+        type="button"
+        role="tab"
+        aria-selected={activeSection === "chat"}
+        variant={activeSection === "chat" ? "default" : "ghost"}
+        className="gap-2 rounded-lg"
+        onClick={() => setActiveSection("chat")}
+      >
+        <MessageCircle className="h-4 w-4" />
+        Chat
+      </Button>
+      <Button
+        type="button"
+        role="tab"
+        aria-selected={activeSection === "documents"}
+        variant={activeSection === "documents" ? "default" : "ghost"}
+        className="gap-2 rounded-lg"
+        onClick={() => setActiveSection("documents")}
+      >
+        <FolderOpen className="h-4 w-4" />
+        Documents
+      </Button>
+    </div>
+  );
 
   const handleDownload = async () => {
     if (!user || !coparentId) return;
@@ -396,12 +425,24 @@ const ChatTab = () => {
     );
   }
 
+  if (activeSection === "documents") {
+    return (
+      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col overflow-y-auto px-6 pt-12 md:max-w-3xl lg:max-w-5xl">
+        <DashboardHeader title="Financial Chat" />
+        <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
+        {sectionTabs}
+        <DocumentsTab embedded />
+      </div>
+    );
+  }
+
   if (!coparentId) {
     return (
 
       <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col overflow-y-auto px-6 pt-12">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
+        {sectionTabs}
         <div className="flex flex-1 flex-col gap-4 pt-2">
           <div className="rounded-2xl border border-border bg-card p-4">
             <h2 className="text-base font-semibold text-foreground">
@@ -591,6 +632,8 @@ const ChatTab = () => {
           Download chat record
         </Button>
       </div>
+
+      {sectionTabs}
 
       <ConversationToolModal
 
