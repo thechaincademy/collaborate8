@@ -11,7 +11,7 @@ const keyFor = (userId: string) => `c8_tutorial_v1_${userId}`;
 
 type Saved = { index: number; done: boolean };
 
-const steps: Array<{
+export const ONBOARDING_STEPS: Array<{
   title: string;
   body: string;
   cta: string;
@@ -49,13 +49,19 @@ const steps: Array<{
   },
 ];
 
-const load = (userId: string): Saved => {
+export const readTutorialState = (userId: string): Saved => {
   try {
     const raw = localStorage.getItem(keyFor(userId));
     if (raw) return JSON.parse(raw);
   } catch {}
   return { index: 0, done: false };
 };
+
+export const writeTutorialState = (userId: string, state: Saved) => {
+  localStorage.setItem(keyFor(userId), JSON.stringify(state));
+};
+
+const load = readTutorialState;
 
 interface Props {
   activeTab: DashboardTab;
