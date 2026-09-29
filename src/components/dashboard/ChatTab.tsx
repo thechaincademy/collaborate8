@@ -685,47 +685,7 @@ const ChatTab = () => {
         {showNoReplySuggestion && <ConversationToolSuggestionCard onOpen={openTool} />}
       </div>
 
-      {file && (
-        <div className="mb-2 flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
-          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="flex-1 truncate text-xs text-foreground">{file.name}</span>
-          <button
-            aria-label="Remove attachment"
-            onClick={() => setFile(null)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
       <div className="flex items-end gap-2 pb-4">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,application/pdf"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0] ?? null;
-            if (f && f.size > 10 * 1024 * 1024) {
-              toast.error("Files must be under 10MB");
-              return;
-            }
-            setFile(f);
-            e.target.value = "";
-          }}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          aria-label="Attach a receipt or document"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={sending || rewriting}
-          className="h-12 w-12 shrink-0"
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
         <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -741,7 +701,7 @@ const ChatTab = () => {
         />
         <Button
           onClick={handleSendClick}
-          disabled={(!draft.trim() && !file) || sending || rewriting}
+          disabled={!draft.trim() || sending || rewriting}
           size="icon"
           className="h-12 w-12 shrink-0"
         >
