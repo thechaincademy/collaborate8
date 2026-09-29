@@ -42,6 +42,7 @@ const CoparentLinkSettings = () => {
     toast.success("Invitation sent");
     setInviteEmail(next);
     setEmailInput("");
+    setEmailRowOpen(false);
     window.dispatchEvent(new CustomEvent(INVITE_EVENT, { detail: next }));
   };
 
