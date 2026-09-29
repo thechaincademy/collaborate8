@@ -41,11 +41,23 @@ const NotificationSettings = () => {
     if (error) toast.error("Could not save that setting");
   };
 
+  const turnOffAll = async () => {
+    if (!user) return;
+    await disablePush();
+    const next: Prefs = {};
+    for (const c of NOTIFICATION_CATEGORIES) next[c.key] = { push: false, email: false };
+    setPrefs(next);
+    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
+    if (error) { toast.error("Could not save that setting"); return; }
+    setPush("off");
+    toast.success("All notifications turned off");
+  };
+
   const togglePush = async () => {
     if (!user) return;
     setPushBusy(true);
     try {
-      if (push === "on") { await disablePush(); setPush("off"); toast.success("Push alerts turned off on this device"); }
+      if (push === "on") { await turnOffAll(); }
       else { const s = await enablePush(user.id); setPush(s); if (s === "on") toast.success("Push alerts turned on for this device"); else if (s === "denied") toast.error("Alerts are blocked in your browser settings"); }
     } catch (e) {
       toast.error((e as Error).message || "Could not turn on push alerts");
