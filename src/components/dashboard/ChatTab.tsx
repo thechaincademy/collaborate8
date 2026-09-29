@@ -79,7 +79,6 @@ const ChatTab = () => {
   const [sending, setSending] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownload = async () => {
     if (!user || !coparentId) return;
