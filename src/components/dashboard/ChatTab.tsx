@@ -21,7 +21,6 @@ import {
 } from "./ConversationToolPromo";
 
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
-import DecisionThreads from "./DecisionThreads";
 import RewriteComposer from "./RewriteComposer";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -79,13 +78,7 @@ const ChatTab = () => {
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
   const [sending, setSending] = useState(false);
-  const [chatView, setChatView] = useState<"threads" | "general">(() => (new URLSearchParams(window.location.search).get("thread") ? "threads" : "threads"));
   const [rewriteOpen, setRewriteOpen] = useState(false);
-  const [coparentName, setCoparentName] = useState("Your co-parent");
-  useEffect(() => {
-    if (!coparentId) return;
-    supabase.from("profiles").select("first_name").eq("id", coparentId).maybeSingle().then(({ data }) => data?.first_name && setCoparentName(data.first_name));
-  }, [coparentId]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -646,18 +639,7 @@ const ChatTab = () => {
         </p>
       </div>
 
-      <div className="mb-3 inline-flex self-start rounded-full border border-border bg-card p-0.5 text-sm">
-        {(["threads", "general"] as const).map((v) => (
-          <button key={v} onClick={() => setChatView(v)}
-            className={cn("rounded-full px-4 py-1.5", chatView === v ? "bg-foreground text-background" : "text-muted-foreground")}>
-            {v === "threads" ? "Decisions" : "General chat"}
-          </button>
-        ))}
-      </div>
-
-      {chatView === "threads" && user && coparentId ? (
-        <DecisionThreads userId={user.id} coparentId={coparentId} coparentName={coparentName} />
-      ) : (<>
+      {user && coparentId && (<>
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto pb-3">
         {loading ? (
           <div className="space-y-3">
