@@ -80,12 +80,6 @@ const CoparentBankAccount = () => {
       setHolderName(acc.holder_name ?? "");
       setSortCode(acc.sort_code ?? "");
       setAccountNumber(acc.account_number ?? "");
-      setReference(acc.payment_reference ?? "");
-      setAmount(acc.amount != null ? String(acc.amount) : "");
-      setFrequency((acc.frequency as Frequency) === "weekly" ? "weekly" : "monthly");
-      setDayOfMonth(acc.day_of_month != null ? String(acc.day_of_month) : "1");
-      setDayOfWeek(acc.day_of_week ?? "monday");
-      setReminders(acc.reminders_enabled ?? true);
     }
     setPayments((logs ?? []) as ManualPayment[]);
     setLoading(false);
