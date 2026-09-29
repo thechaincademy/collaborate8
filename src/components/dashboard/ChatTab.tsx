@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check, MessageCircle, FolderOpen } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check, MessageCircle, FolderOpen, Paperclip } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chatPdf";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,6 +90,39 @@ const ChatTab = () => {
   const [rewriteOpen, setRewriteOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"chat" | "documents">("chat");
   const [startersOpen, setStartersOpen] = useState(false);
+  const [attaching, setAttaching] = useState(false);
+  const attachInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAttach = async (file: File) => {
+    if (!user || !coparentId || attaching) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Files must be under 10MB");
+      return;
+    }
+    setAttaching(true);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${user.id}/${Date.now()}-${safeName}`;
+    const { error: upErr } = await supabase.storage.from("chat-attachments").upload(path, file, { upsert: false });
+    if (upErr) {
+      setAttaching(false);
+      toast.error("Could not upload that file");
+      return;
+    }
+    const body = draft.trim() || `Sent a document: ${file.name}`;
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ sender_id: user.id, recipient_id: coparentId, body, attachment_path: path, attachment_name: file.name })
+      .select()
+      .single();
+    setAttaching(false);
+    if (error) {
+      toast.error("Could not send that attachment");
+      return;
+    }
+    if (draft.trim()) setDraft("");
+    if (data) setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data as Message]));
+    toast.success("Attachment sent and saved to Documents");
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const sectionTabs = (
@@ -738,6 +771,28 @@ const ChatTab = () => {
       </div>
 
       <div className="flex items-end gap-2 pb-4">
+        <input
+          ref={attachInputRef}
+          type="file"
+          accept="image/*,application/pdf"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) void handleAttach(f);
+          }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label="Add attachment"
+          disabled={attaching}
+          onClick={() => attachInputRef.current?.click()}
+          className="h-12 w-12 shrink-0"
+        >
+          {attaching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
+        </Button>
         <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
