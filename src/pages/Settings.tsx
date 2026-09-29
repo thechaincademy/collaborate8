@@ -66,9 +66,8 @@ const Settings = () => {
     navigate("/");
   };
 
-  const pushLabel = push === "on" ? "On for this device" : push === "denied" ? "Blocked in browser settings" : push === "unsupported" ? "Open collaborate8.com on your phone (added to home screen on iPhone)" : "Off";
-
   return (
+
     <div className="mx-auto min-h-screen max-w-md bg-background pb-24 md:max-w-2xl">
       <div className="px-6 pt-4">
         <div className="mb-6 flex items-center gap-4">
