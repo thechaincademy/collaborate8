@@ -46,16 +46,18 @@ const Splash = () => {
       >
         Create account
       </Button>
-      <Button
-        onClick={() => setShowLogin(true)}
-        variant={showLogin ? "default" : "outline"}
-        className="w-full"
-        size="lg"
-        aria-expanded={showLogin}
-        aria-controls="inline-login-form"
-      >
-        Log in
-      </Button>
+      {!showLogin && (
+        <Button
+          onClick={() => setShowLogin(true)}
+          variant="outline"
+          className="w-full"
+          size="lg"
+          aria-expanded={showLogin}
+          aria-controls="inline-login-form"
+        >
+          Log in
+        </Button>
+      )}
 
       <AnimatePresence initial={false}>
         {showLogin && (
