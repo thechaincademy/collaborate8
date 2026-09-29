@@ -108,12 +108,12 @@ const CoparentBankAccount = () => {
       holder_name: holderName.trim(),
       sort_code: formatSortCode(sortCode),
       account_number: accountNumber.replace(/\D/g, ""),
-      payment_reference: reference.trim() || null,
-      amount: amount ? Number(amount) : null,
-      frequency,
-      day_of_month: frequency === "monthly" ? Number(dayOfMonth) || 1 : null,
-      day_of_week: frequency === "weekly" ? dayOfWeek : null,
-      reminders_enabled: reminders,
+      payment_reference: null,
+      amount: null,
+      frequency: "monthly",
+      day_of_month: null,
+      day_of_week: null,
+      reminders_enabled: false,
     };
 
     const { data, error } = await supabase
