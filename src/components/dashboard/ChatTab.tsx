@@ -781,6 +781,11 @@ const ChatTab = () => {
                         hour: "numeric",
                         minute: "2-digit",
                       })}
+                      {mine && (
+                        <span className={cn("ml-1.5 font-medium", m.read_at ? "text-primary" : "")}>
+                          · {m.read_at ? "Read" : "Delivered - unread"}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </motion.div>
