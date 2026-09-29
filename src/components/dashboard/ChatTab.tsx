@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2, Paperclip, X, FileText, UserPlus, Download, Check } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chatPdf";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,13 +74,11 @@ const ChatTab = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
   const [sending, setSending] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownload = async () => {
     if (!user || !coparentId) return;
@@ -332,33 +330,13 @@ const ChatTab = () => {
     if (!user || !coparentId) return;
     setSending(true);
 
-    let attachmentPath: string | null = null;
-    let attachmentName: string | null = null;
-
-    if (file) {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${user.id}/${Date.now()}-${safeName}`;
-      const { error: uploadError } = await supabase.storage
-        .from("chat-attachments")
-        .upload(path, file, { upsert: false });
-      if (uploadError) {
-        setSending(false);
-        toast.error("Could not attach that file");
-        return;
-      }
-      attachmentPath = path;
-      attachmentName = file.name;
-    }
-
     const { error } = await supabase.from("messages").insert({
       sender_id: user.id,
       recipient_id: coparentId,
-      body: body || (attachmentName ? `Sent a document: ${attachmentName}` : ""),
+      body,
       original_body: opts?.original ?? null,
       tone_score: opts?.original ? toneScore : null,
       used_suggestion: opts?.usedSuggestion ?? false,
-      attachment_path: attachmentPath,
-      attachment_name: attachmentName,
     });
     setSending(false);
     if (error) {
@@ -366,13 +344,12 @@ const ChatTab = () => {
       return;
     }
     setDraft("");
-    setFile(null);
     setIntercept(null);
   };
 
   const handleSendClick = async () => {
     const text = draft.trim();
-    if ((!text && !file) || sending) return;
+    if (!text || sending) return;
     if (false) {
       setRewriting(true);
       try {
@@ -707,47 +684,7 @@ const ChatTab = () => {
         {showNoReplySuggestion && <ConversationToolSuggestionCard onOpen={openTool} />}
       </div>
 
-      {file && (
-        <div className="mb-2 flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
-          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="flex-1 truncate text-xs text-foreground">{file.name}</span>
-          <button
-            aria-label="Remove attachment"
-            onClick={() => setFile(null)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
       <div className="flex items-end gap-2 pb-4">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,application/pdf"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0] ?? null;
-            if (f && f.size > 10 * 1024 * 1024) {
-              toast.error("Files must be under 10MB");
-              return;
-            }
-            setFile(f);
-            e.target.value = "";
-          }}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          aria-label="Attach a receipt or document"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={sending || rewriting}
-          className="h-12 w-12 shrink-0"
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
         <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -763,7 +700,7 @@ const ChatTab = () => {
         />
         <Button
           onClick={handleSendClick}
-          disabled={(!draft.trim() && !file) || sending || rewriting}
+          disabled={!draft.trim() || sending || rewriting}
           size="icon"
           className="h-12 w-12 shrink-0"
         >
