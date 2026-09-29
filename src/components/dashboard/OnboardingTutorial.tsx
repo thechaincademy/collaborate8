@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, PoundSterling, Receipt, MessageCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardTab } from "@/pages/Dashboard";
+import { useAuth } from "@/hooks/useAuth";
 
-const KEY = "c8_tutorial_v1";
+// Progress is stored per account, so every new account gets the tutorial
+const keyFor = (userId: string) => `c8_tutorial_v1_${userId}`;
 
 type Saved = { index: number; done: boolean };
 
