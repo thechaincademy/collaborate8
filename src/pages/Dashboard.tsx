@@ -9,14 +9,13 @@ import MaintenanceTab from "@/components/dashboard/MaintenanceTab";
 import ExpensesTab from "@/components/dashboard/ExpensesTab";
 import BenefitsTab from "@/components/dashboard/BenefitsTab";
 import ChatTab from "@/components/dashboard/ChatTab";
-import DocumentsTab from "@/components/dashboard/DocumentsTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
 import ComingSoonOverlay from "@/components/dashboard/ComingSoonOverlay";
 import OnboardingTutorial from "@/components/dashboard/OnboardingTutorial";
 import { useStripePayments } from "@/hooks/useStripe";
 import { trackTab } from "@/lib/analytics";
 
-export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "documents" | "resources";
+export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
 const COMING_SOON_TABS: DashboardTab[] = ["benefits"];
 
@@ -46,7 +45,7 @@ const Dashboard = () => {
   useEffect(() => {
     const tab = searchParams.get("tab") as DashboardTab | null;
     if (tab && ["home", "maintenance", "expenses", "benefits", "chat", "documents", "resources"].includes(tab)) {
-      setActiveTab(tab);
+      setActiveTab(tab === "documents" ? "chat" : tab);
       searchParams.delete("tab");
       setSearchParams(searchParams, { replace: true });
     }
@@ -70,8 +69,6 @@ const Dashboard = () => {
         return <BenefitsTab />;
       case "chat":
         return <ChatTab />;
-      case "documents":
-        return <DocumentsTab />;
       case "resources":
         return <ResourcesTab />;
     }
