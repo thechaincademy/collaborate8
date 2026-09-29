@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const CATEGORIES = ["School", "Activities", "Clothing", "Health", "Transport", "Other"];
 import DashboardHeader from "./DashboardHeader";
 import { useExpenses, type ExpenseRequest } from "@/hooks/useExpenses";
 import { useProfile } from "@/hooks/useProfile";
@@ -65,33 +64,9 @@ const ExpensesTab = () => {
     deciding,
     createExpense,
     decideExpense,
-    requestSplit,
     decideSplit,
     getReceiptUrl,
   } = useExpenses();
-
-  const [showSplit, setShowSplit] = useState(false);
-  const [splitDesc, setSplitDesc] = useState("");
-  const [splitAmount, setSplitAmount] = useState("");
-  const [splitCategory, setSplitCategory] = useState("");
-  const [splitNote, setSplitNote] = useState("");
-
-  const submitSplit = async () => {
-    const value = Number(splitAmount);
-    if (!splitDesc.trim()) return toast.error("Say what the expense is");
-    if (!value || value <= 0) return toast.error("Add an estimated amount");
-    if (!splitCategory) return toast.error("Choose a category");
-    setSaving(true);
-    const { error } = await requestSplit(splitDesc.trim(), value, splitCategory, splitNote.trim());
-    setSaving(false);
-    if (!error) {
-      setSplitDesc("");
-      setSplitAmount("");
-      setSplitCategory("");
-      setSplitNote("");
-      setShowSplit(false);
-    }
-  };
 
   const [showForm, setShowForm] = useState(false);
   const [description, setDescription] = useState("");
