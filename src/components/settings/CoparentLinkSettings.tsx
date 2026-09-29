@@ -16,6 +16,7 @@ const CoparentLinkSettings = () => {
   const [inviteEmail, setInviteEmail] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [emailRowOpen, setEmailRowOpen] = useState(false);
   const isLinked = !!profile?.coparent_id;
   const code = profile?.invite_code ?? "";
 
