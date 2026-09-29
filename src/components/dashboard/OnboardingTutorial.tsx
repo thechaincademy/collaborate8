@@ -11,7 +11,7 @@ const keyFor = (userId: string) => `c8_tutorial_v1_${userId}`;
 
 type Saved = { index: number; done: boolean };
 
-const steps: Array<{
+export const ONBOARDING_STEPS: Array<{
   title: string;
   body: string;
   cta: string;
@@ -49,13 +49,19 @@ const steps: Array<{
   },
 ];
 
-const load = (userId: string): Saved => {
+export const readTutorialState = (userId: string): Saved => {
   try {
     const raw = localStorage.getItem(keyFor(userId));
     if (raw) return JSON.parse(raw);
   } catch {}
   return { index: 0, done: false };
 };
+
+export const writeTutorialState = (userId: string, state: Saved) => {
+  localStorage.setItem(keyFor(userId), JSON.stringify(state));
+};
+
+const load = readTutorialState;
 
 interface Props {
   activeTab: DashboardTab;
@@ -84,12 +90,12 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
     if (activeTab === "home") setOpen(true);
   }, [activeTab]);
 
-  if (!state || state.done || state.index >= steps.length) return null;
+  if (!state || state.done || state.index >= ONBOARDING_STEPS.length) return null;
 
-  const step = steps[state.index];
-  const isLast = state.index === steps.length - 1;
+  const step = ONBOARDING_STEPS[state.index];
+  const isLast = state.index === ONBOARDING_STEPS.length - 1;
   const next = (i: number) =>
-    setState(i >= steps.length ? { index: i, done: true } : { index: i, done: false });
+    setState(i >= ONBOARDING_STEPS.length ? { index: i, done: true } : { index: i, done: false });
 
   const handleSetup = () => {
     const doing = state.index;
@@ -97,11 +103,11 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
     if (step.route) navigate(step.route);
     else if (step.tab) {
       onNavigate(step.tab);
-      setOpen(doing + 1 >= steps.length);
+      setOpen(doing + 1 >= ONBOARDING_STEPS.length);
     }
   };
 
-  const skipAll = () => setState({ index: steps.length, done: true });
+  const skipAll = () => setState({ index: ONBOARDING_STEPS.length, done: true });
 
   return (
     <AnimatePresence>
@@ -123,7 +129,7 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
           >
             <div className="mb-4 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">
-                Step {state.index + 1} of {steps.length}
+                Step {state.index + 1} of {ONBOARDING_STEPS.length}
               </span>
               <button
                 onClick={skipAll}
@@ -133,7 +139,7 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
               </button>
             </div>
             <div className="mb-4 flex gap-1.5">
-              {steps.map((_, i) => (
+              {ONBOARDING_STEPS.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1 flex-1 rounded-full ${i <= state.index ? "bg-primary" : "bg-muted"}`}
@@ -170,7 +176,7 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
           onClick={() => setOpen(true)}
           className="fixed bottom-24 left-1/2 z-[55] flex -translate-x-1/2 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg"
         >
-          Done? Next step ({state.index + 1} of {steps.length})
+          Done? Next step ({state.index + 1} of {ONBOARDING_STEPS.length})
           <ArrowRight className="h-4 w-4" />
         </motion.button>
       )}
