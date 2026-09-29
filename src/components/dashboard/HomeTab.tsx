@@ -95,7 +95,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   const nextDueDate = getUpcomingDueDate(activePayment);
 
   const firstName = profile?.first_name?.trim();
-  const greeting = firstName ? `Hi, ${firstName}` : "Welcome back";
+  const greeting = firstName ? `Hi, ${firstName}` : "Hi there";
 
   const oneMonthAgo = useMemo(() => subMonths(new Date(), 1), []);
   const monthlyPaymentsTotal = useMemo(

@@ -34,7 +34,6 @@ const Splash = () => {
       return;
     }
 
-    toast.success("Welcome back!");
     navigate("/dashboard");
   };
 
