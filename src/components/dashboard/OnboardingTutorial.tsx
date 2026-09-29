@@ -103,7 +103,7 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
     if (step.route) navigate(step.route);
     else if (step.tab) {
       onNavigate(step.tab);
-      setOpen(doing + 1 >= steps.length);
+      setOpen(doing + 1 >= ONBOARDING_STEPS.length);
     }
   };
 
