@@ -346,7 +346,9 @@ const SignUp = () => {
           <p className="mb-2 text-sm text-muted-foreground">Your invite code:</p>
           <p className="text-3xl font-bold tracking-widest text-clay">{generatedCode}</p>
           <p className="mt-3 text-sm text-muted-foreground">
-            An invite code has been shared with your co-parent. This is the code they'll use to create their account. You may want to send a copy to them.
+            {coparentEmail
+              ? "An invite has been sent to your co-parent. This is the code they'll use to create their account."
+              : "This invite code can be shared with your co-parent whenever you're ready. They'll use it to create their account and connect with you. You can find it again anytime in Settings."}
           </p>
         </div>
       )}
