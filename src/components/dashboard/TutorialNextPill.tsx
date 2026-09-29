@@ -19,7 +19,7 @@ const TutorialNextPill = () => {
   return (
     <button
       onClick={next}
-      className="fixed bottom-24 right-4 z-40 flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-lg transition-transform active:scale-95"
+      className="fixed bottom-28 right-4 z-[60] flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-lg transition-transform active:scale-95"
     >
       Done? Next step ({state.index + 1} of {ONBOARDING_STEPS.length})
       <ArrowRight className="h-3.5 w-3.5" />
