@@ -14,6 +14,7 @@ const labels: Record<DashboardTab, string> = {
   expenses: "Expenses",
   benefits: "Benefits",
   chat: "Chat",
+  documents: "Documents",
   resources: "Resources",
 };
 
