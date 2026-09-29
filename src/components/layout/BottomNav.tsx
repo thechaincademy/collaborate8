@@ -10,9 +10,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: "Home", tab: "home" },
-  { icon: MessageCircle, label: "Chat", tab: "chat" },
   { icon: PoundSterling, label: "Maintenance", tab: "maintenance" },
   { icon: Receipt, label: "Expenses", tab: "expenses" },
+  { icon: MessageCircle, label: "Chat", tab: "chat" },
   { icon: Gift, label: "Benefits", tab: "benefits" },
 ];
 
