@@ -87,10 +87,27 @@ const CoparentLinkSettings = () => {
           </div>
         )}
       </div>
-      <button onClick={() => navigate("/profile")} className={row}>
-        <span className="flex items-center gap-3"><CreditCard className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Update payment option</span></span>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      <button onClick={() => { setEmailRowOpen((o) => !o); setEmailInput(inviteEmail ?? ""); }} className={row}>
+        <span className="flex items-center gap-3">
+          <Mail className="h-5 w-5 text-muted-foreground" />
+          <span className="min-w-0 text-left">
+            <span className="block text-foreground">Update co-parent email</span>
+            {inviteEmail && <span className="block truncate text-xs text-muted-foreground">{inviteEmail}</span>}
+          </span>
+        </span>
+        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${emailRowOpen ? "rotate-90" : ""}`} />
       </button>
+      {emailRowOpen && (
+        <div className="border-b border-border bg-muted/30 p-4">
+          <div className="flex gap-2">
+            <Input type="email" inputMode="email" placeholder="co-parent@email.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
+            <Button onClick={send} disabled={sending || !emailInput.trim()} className="gap-2">
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />} Update
+            </Button>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">This is the email address your co-parent invitation is sent to.</p>
+        </div>
+      )}
       <button onClick={() => navigate("/coparent-bank-account")} className={row.replace("border-b border-border ", "")}>
         <span className="flex items-center gap-3"><Landmark className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Update co-parent bank account</span></span>
         <ChevronRight className="h-4 w-4 text-muted-foreground" />
