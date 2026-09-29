@@ -43,6 +43,7 @@ interface Message {
   created_at: string;
   attachment_path?: string | null;
   attachment_name?: string | null;
+  read_at?: string | null;
 }
 
 const triggers: { pattern: RegExp; score: number }[] = [
@@ -371,6 +372,14 @@ const ChatTab = () => {
           }
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => prev.map((p) => (p.id === m.id ? { ...p, read_at: m.read_at } : p)));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -378,6 +387,18 @@ const ChatTab = () => {
       supabase.removeChannel(channel);
     };
   }, [user, coparentId]);
+
+  // Mark incoming messages as read while the chat is open
+  useEffect(() => {
+    if (!user || !coparentId || activeSection !== "chat") return;
+    const unread = messages.filter((m) => m.recipient_id === user.id && !m.read_at).map((m) => m.id);
+    if (unread.length === 0) return;
+    const now = new Date().toISOString();
+    setMessages((prev) => prev.map((p) => (unread.includes(p.id) ? { ...p, read_at: now } : p)));
+    void supabase.from("messages").update({ read_at: now }).in("id", unread).then(({ error }) => {
+      if (error) console.error("Could not mark messages read", error);
+    });
+  }, [messages, user, coparentId, activeSection]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
