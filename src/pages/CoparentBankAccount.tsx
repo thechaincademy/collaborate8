@@ -1,19 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Banknote, Check, Loader2, Plus, Trash2, Info } from "lucide-react";
-import { format } from "date-fns";
+import { ArrowLeft, Banknote, Check, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,14 +23,6 @@ interface BankAccount {
   reminders_enabled: boolean;
 }
 
-interface ManualPayment {
-  id: string;
-  amount: number;
-  paid_on: string;
-  reference: string | null;
-  note: string | null;
-}
-
 const formatSortCode = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 6);
   return digits.replace(/(\d{2})(?=\d)/g, "$1-");
@@ -51,29 +35,18 @@ const CoparentBankAccount = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [account, setAccount] = useState<BankAccount | null>(null);
-  const [payments, setPayments] = useState<ManualPayment[]>([]);
 
   const [holderName, setHolderName] = useState("");
   const [sortCode, setSortCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
 
-  const [logOpen, setLogOpen] = useState(false);
-  const [logAmount, setLogAmount] = useState("");
-  const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [logNote, setLogNote] = useState("");
-  const [logging, setLogging] = useState(false);
-
   const load = async () => {
     if (!user) return;
-    const [{ data: acc }, { data: logs }] = await Promise.all([
-      supabase.from("coparent_bank_accounts").select("*").eq("user_id", user.id).maybeSingle(),
-      supabase
-        .from("manual_payments")
-        .select("id, amount, paid_on, reference, note")
-        .eq("user_id", user.id)
-        .order("paid_on", { ascending: false })
-        .limit(30),
-    ]);
+    const { data: acc } = await supabase
+      .from("coparent_bank_accounts")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
     if (acc) {
       setAccount(acc as BankAccount);
@@ -81,7 +54,6 @@ const CoparentBankAccount = () => {
       setSortCode(acc.sort_code ?? "");
       setAccountNumber(acc.account_number ?? "");
     }
-    setPayments((logs ?? []) as ManualPayment[]);
     setLoading(false);
   };
 
@@ -94,11 +66,6 @@ const CoparentBankAccount = () => {
     holderName.trim().length > 1 &&
     sortCodeDigits.length === 6 &&
     accountNumber.replace(/\D/g, "").length === 8;
-
-  const total = useMemo(
-    () => payments.reduce((sum, p) => sum + Number(p.amount), 0),
-    [payments]
-  );
 
   const handleSave = async () => {
     if (!user || !canSave) return;
@@ -129,46 +96,6 @@ const CoparentBankAccount = () => {
     }
     setAccount(data as BankAccount);
     toast.success("Co-parent bank details saved");
-  };
-
-  const handleLogPayment = async () => {
-    if (!user) return;
-    const value = Number(logAmount);
-    if (!value || value <= 0) {
-      toast.error("Please enter the amount you paid");
-      return;
-    }
-    setLogging(true);
-    const { data, error } = await supabase
-      .from("manual_payments")
-      .insert({
-        user_id: user.id,
-        amount: value,
-        paid_on: logDate,
-        reference: null,
-        note: logNote.trim() || null,
-      })
-      .select("id, amount, paid_on, reference, note")
-      .maybeSingle();
-    setLogging(false);
-    if (error) {
-      toast.error("Could not record this payment");
-      return;
-    }
-    setPayments((prev) => [data as ManualPayment, ...prev]);
-    setLogAmount("");
-    setLogNote("");
-    setLogOpen(false);
-    toast.success("Payment recorded");
-  };
-
-  const handleDeletePayment = async (id: string) => {
-    const { error } = await supabase.from("manual_payments").delete().eq("id", id);
-    if (error) {
-      toast.error("Could not remove this record");
-      return;
-    }
-    setPayments((prev) => prev.filter((p) => p.id !== id));
   };
 
   return (
@@ -205,151 +132,58 @@ const CoparentBankAccount = () => {
             <Skeleton className="h-12 w-full rounded-2xl" />
           </div>
         ) : (
-          <>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 space-y-4 rounded-3xl border border-border bg-card p-5"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Banknote className="h-5 w-5" />
-                </div>
-                <p className="font-semibold text-foreground">Where you send the money</p>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4 rounded-3xl border border-border bg-card p-5"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <Banknote className="h-5 w-5" />
               </div>
+              <p className="font-semibold text-foreground">Where you send the money</p>
+            </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="holder">Account holder name</Label>
+              <Input
+                id="holder"
+                value={holderName}
+                onChange={(e) => setHolderName(e.target.value)}
+                placeholder="J Smith"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="holder">Account holder name</Label>
+                <Label htmlFor="sort">Sort code</Label>
                 <Input
-                  id="holder"
-                  value={holderName}
-                  onChange={(e) => setHolderName(e.target.value)}
-                  placeholder="J Smith"
+                  id="sort"
+                  inputMode="numeric"
+                  value={sortCode}
+                  onChange={(e) => setSortCode(formatSortCode(e.target.value))}
+                  placeholder="20-00-00"
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="sort">Sort code</Label>
-                  <Input
-                    id="sort"
-                    inputMode="numeric"
-                    value={sortCode}
-                    onChange={(e) => setSortCode(formatSortCode(e.target.value))}
-                    placeholder="20-00-00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="accnum">Account number</Label>
-                  <Input
-                    id="accnum"
-                    inputMode="numeric"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                    placeholder="12345678"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="accnum">Account number</Label>
+                <Input
+                  id="accnum"
+                  inputMode="numeric"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                  placeholder="12345678"
+                />
               </div>
+            </div>
 
-              <Button onClick={handleSave} disabled={!canSave || saving} className="w-full gap-2" size="lg">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                {account ? "Save changes" : "Save bank details"}
-              </Button>
-            </motion.div>
-
-            {/* Records */}
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">Your payment record</h2>
-                <Button size="sm" variant="outline" className="gap-1" onClick={() => setLogOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  Record
-                </Button>
-              </div>
-
-              {payments.length === 0 ? (
-                <p className="rounded-2xl border border-border bg-card p-5 text-center text-sm text-muted-foreground">
-                  No payments recorded yet.
-                </p>
-              ) : (
-                <>
-                  <p className="mb-3 text-sm text-muted-foreground">
-                    Total recorded: <span className="font-semibold text-foreground">£{total.toFixed(2)}</span>
-                  </p>
-                  <div className="space-y-3">
-                    {payments.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center justify-between rounded-2xl border border-border bg-card p-4"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-semibold text-foreground">£{Number(p.amount).toFixed(2)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(p.paid_on), "d MMM yyyy")}
-                            {p.note ? ` - ${p.note}` : ""}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDeletePayment(p.id)}
-                          aria-label="Remove record"
-                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </>
+            <Button onClick={handleSave} disabled={!canSave || saving} className="w-full gap-2" size="lg">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {account ? "Save changes" : "Save bank details"}
+            </Button>
+          </motion.div>
         )}
       </div>
-
-      <Dialog open={logOpen} onOpenChange={setLogOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Record a payment</DialogTitle>
-            <DialogDescription>
-              Add a payment you have already sent from your own bank.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="log-amount">Amount</Label>
-              <Input
-                id="log-amount"
-                inputMode="decimal"
-                value={logAmount}
-                onChange={(e) => setLogAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-                placeholder="250.00"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="log-date">Date paid</Label>
-              <Input
-                id="log-date"
-                type="date"
-                value={logDate}
-                onChange={(e) => setLogDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="log-note">Note (optional)</Label>
-              <Input
-                id="log-note"
-                value={logNote}
-                onChange={(e) => setLogNote(e.target.value.slice(0, 80))}
-                placeholder="September maintenance"
-              />
-            </div>
-            <Button onClick={handleLogPayment} disabled={logging} className="w-full gap-2">
-              {logging ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              Save record
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
