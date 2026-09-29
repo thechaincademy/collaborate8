@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Banknote, Check, Loader2, Plus, Trash2, Bell, Info } from "lucide-react";
+import { ArrowLeft, Banknote, Check, Loader2, Plus, Trash2, Info } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -18,8 +17,6 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-
-type Frequency = "monthly" | "weekly";
 
 interface BankAccount {
   id: string;
@@ -42,8 +39,6 @@ interface ManualPayment {
   note: string | null;
 }
 
-const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-
 const formatSortCode = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 6);
   return digits.replace(/(\d{2})(?=\d)/g, "$1-");
@@ -61,12 +56,6 @@ const CoparentBankAccount = () => {
   const [holderName, setHolderName] = useState("");
   const [sortCode, setSortCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
-  const [reference, setReference] = useState("");
-  const [amount, setAmount] = useState("");
-  const [frequency, setFrequency] = useState<Frequency>("monthly");
-  const [dayOfMonth, setDayOfMonth] = useState("1");
-  const [dayOfWeek, setDayOfWeek] = useState("monday");
-  const [reminders, setReminders] = useState(true);
 
   const [logOpen, setLogOpen] = useState(false);
   const [logAmount, setLogAmount] = useState("");
@@ -91,12 +80,6 @@ const CoparentBankAccount = () => {
       setHolderName(acc.holder_name ?? "");
       setSortCode(acc.sort_code ?? "");
       setAccountNumber(acc.account_number ?? "");
-      setReference(acc.payment_reference ?? "");
-      setAmount(acc.amount != null ? String(acc.amount) : "");
-      setFrequency((acc.frequency as Frequency) === "weekly" ? "weekly" : "monthly");
-      setDayOfMonth(acc.day_of_month != null ? String(acc.day_of_month) : "1");
-      setDayOfWeek(acc.day_of_week ?? "monday");
-      setReminders(acc.reminders_enabled ?? true);
     }
     setPayments((logs ?? []) as ManualPayment[]);
     setLoading(false);
@@ -125,12 +108,12 @@ const CoparentBankAccount = () => {
       holder_name: holderName.trim(),
       sort_code: formatSortCode(sortCode),
       account_number: accountNumber.replace(/\D/g, ""),
-      payment_reference: reference.trim() || null,
-      amount: amount ? Number(amount) : null,
-      frequency,
-      day_of_month: frequency === "monthly" ? Number(dayOfMonth) || 1 : null,
-      day_of_week: frequency === "weekly" ? dayOfWeek : null,
-      reminders_enabled: reminders,
+      payment_reference: null,
+      amount: null,
+      frequency: "monthly",
+      day_of_month: null,
+      day_of_week: null,
+      reminders_enabled: false,
     };
 
     const { data, error } = await supabase
@@ -162,7 +145,7 @@ const CoparentBankAccount = () => {
         user_id: user.id,
         amount: value,
         paid_on: logDate,
-        reference: reference.trim() || null,
+        reference: null,
         note: logNote.trim() || null,
       })
       .select("id, amount, paid_on, reference, note")
@@ -210,8 +193,8 @@ const CoparentBankAccount = () => {
         <div className="mb-6 flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Collabor8 does not move this money. You send it from your own bank, and we remind you and
-            keep the record so it appears in your statements.
+            Collabor8 does not move this money. You send it from your own bank, and we keep the
+            record so it appears in your statements.
           </p>
         </div>
 
@@ -266,99 +249,6 @@ const CoparentBankAccount = () => {
                     placeholder="12345678"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ref">Payment reference</Label>
-                <Input
-                  id="ref"
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value.slice(0, 18))}
-                  placeholder="Maintenance"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Use the same reference each time so payments are easy to trace.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount (optional)</Label>
-                <Input
-                  id="amount"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-                  placeholder="250.00"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>How often</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["monthly", "weekly"] as Frequency[]).map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setFrequency(f)}
-                      className={`rounded-xl border-2 p-3 text-sm font-medium capitalize transition-colors ${
-                        frequency === f
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border bg-background text-muted-foreground"
-                      }`}
-                    >
-                      {f}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {frequency === "monthly" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="dom">Day of the month</Label>
-                  <Input
-                    id="dom"
-                    inputMode="numeric"
-                    value={dayOfMonth}
-                    onChange={(e) => {
-                      const n = e.target.value.replace(/\D/g, "").slice(0, 2);
-                      setDayOfMonth(n);
-                    }}
-                    placeholder="1"
-                  />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>Day of the week</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {WEEKDAYS.map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setDayOfWeek(d)}
-                        className={`rounded-full border px-3 py-1.5 text-xs capitalize transition-colors ${
-                          dayOfWeek === d
-                            ? "border-primary bg-primary/10 text-foreground"
-                            : "border-border bg-background text-muted-foreground"
-                        }`}
-                      >
-                        {d.slice(0, 3)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between rounded-2xl border border-border bg-background p-4">
-                <div className="flex items-start gap-3">
-                  <Bell className="mt-0.5 h-4 w-4 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Payment reminders</p>
-                    <p className="text-xs text-muted-foreground">
-                      We email you on the day the payment is due.
-                    </p>
-                  </div>
-                </div>
-                <Switch checked={reminders} onCheckedChange={setReminders} />
               </div>
 
               <Button onClick={handleSave} disabled={!canSave || saving} className="w-full gap-2" size="lg">
@@ -432,7 +322,7 @@ const CoparentBankAccount = () => {
                 inputMode="decimal"
                 value={logAmount}
                 onChange={(e) => setLogAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-                placeholder={amount || "250.00"}
+                placeholder="250.00"
               />
             </div>
             <div className="space-y-2">
