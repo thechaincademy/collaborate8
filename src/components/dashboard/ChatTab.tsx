@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2, Paperclip, X, FileText, UserPlus, Download, Check } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chatPdf";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,7 +74,6 @@ const ChatTab = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
   const [sending, setSending] = useState(false);
@@ -332,33 +331,13 @@ const ChatTab = () => {
     if (!user || !coparentId) return;
     setSending(true);
 
-    let attachmentPath: string | null = null;
-    let attachmentName: string | null = null;
-
-    if (file) {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${user.id}/${Date.now()}-${safeName}`;
-      const { error: uploadError } = await supabase.storage
-        .from("chat-attachments")
-        .upload(path, file, { upsert: false });
-      if (uploadError) {
-        setSending(false);
-        toast.error("Could not attach that file");
-        return;
-      }
-      attachmentPath = path;
-      attachmentName = file.name;
-    }
-
     const { error } = await supabase.from("messages").insert({
       sender_id: user.id,
       recipient_id: coparentId,
-      body: body || (attachmentName ? `Sent a document: ${attachmentName}` : ""),
+      body,
       original_body: opts?.original ?? null,
       tone_score: opts?.original ? toneScore : null,
       used_suggestion: opts?.usedSuggestion ?? false,
-      attachment_path: attachmentPath,
-      attachment_name: attachmentName,
     });
     setSending(false);
     if (error) {
@@ -366,13 +345,12 @@ const ChatTab = () => {
       return;
     }
     setDraft("");
-    setFile(null);
     setIntercept(null);
   };
 
   const handleSendClick = async () => {
     const text = draft.trim();
-    if ((!text && !file) || sending) return;
+    if (!text || sending) return;
     if (false) {
       setRewriting(true);
       try {
