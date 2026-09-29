@@ -41,7 +41,6 @@ const Login = () => {
     if (error) {
       toast.error(error.message || "Failed to log in");
     } else {
-      toast.success("Welcome back!");
       navigate(nextPath);
     }
   };
