@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, PoundSterling, Smartphone } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, PoundSterling } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -11,11 +9,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { NOTIFICATION_CATEGORIES } from "@/lib/notificationTypes";
-import { disablePush, enablePush, pushState } from "@/lib/push";
 import CoparentLinkSettings from "@/components/settings/CoparentLinkSettings";
 
-type Prefs = Record<string, { push?: boolean; email?: boolean }>;
 
 const Section = ({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) => (
   <motion.section id={id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-7">
@@ -27,42 +22,14 @@ const Section = ({ title, children, id }: { title: string; children: React.React
 const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [prefs, setPrefs] = useState<Prefs>({});
-  const [push, setPush] = useState<"on" | "off" | "denied" | "unsupported">("off");
-  const [pushBusy, setPushBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    pushState().then(setPush);
-    if (!user) return;
-    supabase.from("notification_preferences" as any).select("prefs").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => setPrefs(((data as any)?.prefs ?? {}) as Prefs));
-  }, [user]);
-
-  useEffect(() => {
     if (window.location.hash) document.querySelector(window.location.hash)?.scrollIntoView();
   }, []);
 
-  const setPref = async (key: string, channel: "push" | "email", value: boolean) => {
-    if (!user) return;
-    const next = { ...prefs, [key]: { ...prefs[key], [channel]: value } };
-    setPrefs(next);
-    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
-    if (error) toast.error("Could not save that setting");
-  };
-
-  const togglePush = async () => {
-    if (!user) return;
-    setPushBusy(true);
-    try {
-      if (push === "on") { await disablePush(); setPush("off"); toast.success("Push alerts turned off on this device"); }
-      else { const s = await enablePush(user.id); setPush(s); if (s === "on") toast.success("Push alerts turned on for this device"); else if (s === "denied") toast.error("Alerts are blocked in your browser settings"); }
-    } catch (e) {
-      toast.error((e as Error).message || "Could not turn on push alerts");
-    } finally { setPushBusy(false); }
-  };
 
   const exportData = async () => {
     if (!user) return;
@@ -99,9 +66,8 @@ const Settings = () => {
     navigate("/");
   };
 
-  const pushLabel = push === "on" ? "On for this device" : push === "denied" ? "Blocked in browser settings" : push === "unsupported" ? "Open collaborate8.com on your phone (added to home screen on iPhone)" : "Off";
-
   return (
+
     <div className="mx-auto min-h-screen max-w-md bg-background pb-24 md:max-w-2xl">
       <div className="px-6 pt-4">
         <div className="mb-6 flex items-center gap-4">
@@ -117,39 +83,13 @@ const Settings = () => {
           <CoparentLinkSettings />
         </Section>
 
-        <Section title="Notifications" id="notifications">
-          <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-            <div className="flex items-start gap-3">
-              <Smartphone className="mt-0.5 h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-foreground">Push alerts on this device</p>
-                <p className="text-xs text-muted-foreground">{pushLabel}</p>
-              </div>
-            </div>
-            <Button size="sm" variant={push === "on" ? "outline" : "default"} onClick={togglePush} disabled={pushBusy || push === "unsupported"}>
-              {pushBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : push === "on" ? "Turn off" : "Turn on"}
-            </Button>
-          </div>
-          <div className="grid grid-cols-[1fr_52px_52px] items-center gap-2 border-b border-border px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            <span>Alert</span><span className="text-center">Push</span><span className="text-center">Email</span>
-          </div>
-          {NOTIFICATION_CATEGORIES.map((c, i) => (
-            <div key={c.key} className={`grid grid-cols-[1fr_52px_52px] items-center gap-2 px-4 py-3 ${i < NOTIFICATION_CATEGORIES.length - 1 ? "border-b border-border" : ""}`}>
-              <div className="flex min-w-0 items-start gap-2.5">
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${c.cls}`}><c.icon className="h-3.5 w-3.5" /></span>
-                <div className="min-w-0">
-                  <p className="text-sm text-foreground">{c.label}</p>
-                  <p className="text-xs text-muted-foreground">{c.desc}</p>
-                </div>
-              </div>
-              <div className="flex justify-center"><Switch aria-label={`${c.label} push`} checked={prefs[c.key]?.push !== false} onCheckedChange={(v) => setPref(c.key, "push", v)} /></div>
-              <div className="flex justify-center"><Switch aria-label={`${c.label} email`} checked={prefs[c.key]?.email !== false} onCheckedChange={(v) => setPref(c.key, "email", v)} /></div>
-            </div>
-          ))}
-          <p className="border-t border-border bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
-            Every alert also appears under the bell in the app. Email is the backup if push can't reach you.
-          </p>
+        <Section title="Notifications">
+          <button onClick={() => navigate("/notifications")} className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50">
+            <span className="flex items-center gap-3"><Bell className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Manage notifications</span></span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
         </Section>
+
 
         <Section title="Privacy and your data" id="privacy">
           <div className="space-y-3 border-b border-border p-4 text-sm">

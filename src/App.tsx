@@ -16,6 +16,8 @@ import PostSignupOnboarding from "./pages/PostSignupOnboarding";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import NotificationSettings from "./pages/NotificationSettings";
+
 import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
@@ -68,6 +70,8 @@ const App = () => (
               <Route path="/tax-and-benefits" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
               <Route path="/communication-guide" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
+
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />
               <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
               <Route path="/coparent-bank-account" element={<ProtectedRoute><CoparentBankAccount /></ProtectedRoute>} />
