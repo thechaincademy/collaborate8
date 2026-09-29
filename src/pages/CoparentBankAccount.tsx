@@ -193,8 +193,8 @@ const CoparentBankAccount = () => {
         <div className="mb-6 flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Collabor8 does not move this money. You send it from your own bank, and we remind you and
-            keep the record so it appears in your statements.
+            Collabor8 does not move this money. You send it from your own bank, and we keep the
+            record so it appears in your statements.
           </p>
         </div>
 
