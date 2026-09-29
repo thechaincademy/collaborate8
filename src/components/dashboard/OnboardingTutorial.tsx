@@ -84,7 +84,7 @@ const OnboardingTutorial = ({ activeTab, onNavigate }: Props) => {
     if (activeTab === "home") setOpen(true);
   }, [activeTab]);
 
-  if (state.done || state.index >= steps.length) return null;
+  if (!state || state.done || state.index >= steps.length) return null;
 
   const step = steps[state.index];
   const isLast = state.index === steps.length - 1;
