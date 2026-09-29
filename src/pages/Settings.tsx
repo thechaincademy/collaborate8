@@ -117,39 +117,13 @@ const Settings = () => {
           <CoparentLinkSettings />
         </Section>
 
-        <Section title="Notifications" id="notifications">
-          <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-            <div className="flex items-start gap-3">
-              <Smartphone className="mt-0.5 h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-foreground">Push alerts on this device</p>
-                <p className="text-xs text-muted-foreground">{pushLabel}</p>
-              </div>
-            </div>
-            <Button size="sm" variant={push === "on" ? "outline" : "default"} onClick={togglePush} disabled={pushBusy || push === "unsupported"}>
-              {pushBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : push === "on" ? "Turn off" : "Turn on"}
-            </Button>
-          </div>
-          <div className="grid grid-cols-[1fr_52px_52px] items-center gap-2 border-b border-border px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            <span>Alert</span><span className="text-center">Push</span><span className="text-center">Email</span>
-          </div>
-          {NOTIFICATION_CATEGORIES.map((c, i) => (
-            <div key={c.key} className={`grid grid-cols-[1fr_52px_52px] items-center gap-2 px-4 py-3 ${i < NOTIFICATION_CATEGORIES.length - 1 ? "border-b border-border" : ""}`}>
-              <div className="flex min-w-0 items-start gap-2.5">
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${c.cls}`}><c.icon className="h-3.5 w-3.5" /></span>
-                <div className="min-w-0">
-                  <p className="text-sm text-foreground">{c.label}</p>
-                  <p className="text-xs text-muted-foreground">{c.desc}</p>
-                </div>
-              </div>
-              <div className="flex justify-center"><Switch aria-label={`${c.label} push`} checked={prefs[c.key]?.push !== false} onCheckedChange={(v) => setPref(c.key, "push", v)} /></div>
-              <div className="flex justify-center"><Switch aria-label={`${c.label} email`} checked={prefs[c.key]?.email !== false} onCheckedChange={(v) => setPref(c.key, "email", v)} /></div>
-            </div>
-          ))}
-          <p className="border-t border-border bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
-            Every alert also appears under the bell in the app. Email is the backup if push can't reach you.
-          </p>
+        <Section title="Notifications">
+          <button onClick={() => navigate("/notifications")} className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50">
+            <span className="flex items-center gap-3"><Bell className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Manage notifications</span></span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
         </Section>
+
 
         <Section title="Privacy and your data" id="privacy">
           <div className="space-y-3 border-b border-border p-4 text-sm">
