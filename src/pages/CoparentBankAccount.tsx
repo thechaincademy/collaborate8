@@ -56,12 +56,6 @@ const CoparentBankAccount = () => {
   const [holderName, setHolderName] = useState("");
   const [sortCode, setSortCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
-  const [reference, setReference] = useState("");
-  const [amount, setAmount] = useState("");
-  const [frequency, setFrequency] = useState<Frequency>("monthly");
-  const [dayOfMonth, setDayOfMonth] = useState("1");
-  const [dayOfWeek, setDayOfWeek] = useState("monday");
-  const [reminders, setReminders] = useState(true);
 
   const [logOpen, setLogOpen] = useState(false);
   const [logAmount, setLogAmount] = useState("");
