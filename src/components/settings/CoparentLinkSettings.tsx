@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Clock, Copy, CreditCard, Landmark, ChevronRight, Loader2, Mail } from "lucide-react";
+import { Check, Clock, Copy, ChevronRight, Loader2, Mail, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
