@@ -28,4 +28,4 @@ export function categoryOf(type: string): NotificationCategory {
 export const categoryMeta = (type: string) =>
   NOTIFICATION_CATEGORIES.find((c) => c.key === categoryOf(type)) ?? { key: "money", label: "Update", icon: Bell, cls: "bg-muted text-foreground", desc: "" };
 
-export const VAPID_PUBLIC_KEY = "BKY6fhKM0N_Ca_ppKBJwnLpt-JVYcdDXsPNK4zBlE9f6PZspEosZnAuWEi_axQnaGUm4_T0oEkd5UFI_qqeUEHw";
+export const VAPID_PUBLIC_KEY = "BC0bOe6AKbGVAOc6jHAAd63AIubcwSZgOAhDmzCUfWYSbXArODpkx1708OrpswV1WZd0NfiEMvTUk-t9Sc32Vhw";
