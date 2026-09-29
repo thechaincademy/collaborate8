@@ -322,7 +322,7 @@ const CoparentBankAccount = () => {
                 inputMode="decimal"
                 value={logAmount}
                 onChange={(e) => setLogAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-                placeholder={amount || "250.00"}
+                placeholder="250.00"
               />
             </div>
             <div className="space-y-2">
