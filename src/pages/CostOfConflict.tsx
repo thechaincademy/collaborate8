@@ -3,32 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Slider } from "@/components/ui/slider";
-import { useProfile } from "@/hooks/useProfile";
 
 const MEDIATION = 140;
 const HOURLY = 13.5;
-const WEEKS_PER_MONTH = 52 / 12;
 const COLLABOR8_MONTHLY = 7.99;
 
 const CostOfConflict = () => {
   const navigate = useNavigate();
-  const { profile } = useProfile();
-  const isReceiver = profile?.role === "viewing";
-  const weeklyFee = isReceiver ? 3.25 : 2.6;
 
   const [sessions, setSessions] = useState(3);
-  const [months, setMonths] = useState(6);
   const [hours, setHours] = useState(10);
 
-  const total = sessions * MEDIATION + months * WEEKS_PER_MONTH * weeklyFee + hours * HOURLY;
-  const collab = Math.max(months, 1) * COLLABOR8_MONTHLY;
+  const total = sessions * MEDIATION + hours * HOURLY;
+  const collab = 6 * COLLABOR8_MONTHLY;
   const pct = total > 0 ? Math.max(0, Math.round(((total - collab) / total) * 100)) : 0;
   const fmt = (n: number) => `£${n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const rows = [
-    { label: "Mediation sessions", value: sessions, set: setSessions, max: 10, suffix: "" },
-    { label: "Months using CMS Collect and Pay", value: months, set: setMonths, max: 24, suffix: "" },
-    { label: "Hours spent managing disputes without a dedicated tool", value: hours, set: setHours, max: 50, suffix: "" },
+    { label: "Mediation sessions", value: sessions, set: setSessions, max: 10 },
+    { label: "Hours spent chasing, calling and managing disputes without a dedicated tool (0 to 50)", value: hours, set: setHours, max: 50 },
   ];
 
   return (
