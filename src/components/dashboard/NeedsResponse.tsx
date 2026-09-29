@@ -23,6 +23,7 @@ const NeedsResponse = ({ userId }: { userId?: string }) => {
   }, [threads, events, userId]);
 
   if (loading || threads.length === 0) return null;
+  if (needs.length === 0 && upcoming.length === 0) return null;
   const open = (id: string) => navigate(`/dashboard?tab=chat&thread=${id}`);
 
   return (
