@@ -3,18 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Slider } from "@/components/ui/slider";
-import { useProfile } from "@/hooks/useProfile";
 
 const MEDIATION = 140;
 const HOURLY = 13.5;
-const WEEKS_PER_MONTH = 52 / 12;
 const COLLABOR8_MONTHLY = 7.99;
 
 const CostOfConflict = () => {
   const navigate = useNavigate();
-  const { profile } = useProfile();
-  const isReceiver = profile?.role === "viewing";
-  const weeklyFee = isReceiver ? 3.25 : 2.6;
 
   const [sessions, setSessions] = useState(3);
   const [hours, setHours] = useState(10);
