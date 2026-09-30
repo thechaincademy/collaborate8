@@ -90,6 +90,20 @@ serve(async (req) => {
       });
     }
 
+    // ── Stripe Customer Portal (manage / cancel subscriptions) ──
+    if (action === "customer-portal") {
+      const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
+      const origin = req.headers.get("origin") || "https://collaborate8.com";
+      const portal = await getStripe().billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${origin}/settings?portal=return`,
+      });
+      logStep("Portal session created", { customerId });
+      return new Response(JSON.stringify({ url: portal.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ── List payment methods ──
     if (action === "list-cards") {
       const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
