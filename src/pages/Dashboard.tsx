@@ -11,7 +11,6 @@ import BenefitsTab from "@/components/dashboard/BenefitsTab";
 import ChatTab from "@/components/dashboard/ChatTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
 import ComingSoonOverlay from "@/components/dashboard/ComingSoonOverlay";
-import OnboardingTutorial from "@/components/dashboard/OnboardingTutorial";
 import { useStripePayments } from "@/hooks/useStripe";
 import { trackTab } from "@/lib/analytics";
 
@@ -98,7 +97,6 @@ const Dashboard = () => {
             )}
           </AnimatePresence>
         </motion.div>
-        <OnboardingTutorial activeTab={activeTab} onNavigate={setActiveTab} />
       </MobileLayout>
     </>
   );
