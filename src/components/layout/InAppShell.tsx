@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import BottomNav from "./BottomNav";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import TutorialNextPill from "@/components/dashboard/TutorialNextPill";
 
 interface InAppShellProps {
   children: ReactNode;
@@ -28,7 +27,6 @@ const InAppShell = ({ children, title }: InAppShellProps) => {
         </div>
       )}
       <main className="pb-24">{children}</main>
-      <TutorialNextPill />
       <BottomNav activeTab={"" as never} onTabChange={(tab) => navigate(`/dashboard?tab=${tab}`)} />
     </div>
   );
