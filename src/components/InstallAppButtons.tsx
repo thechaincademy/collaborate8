@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
-import { Apple, Share, Plus, Download } from "lucide-react";
-
-const GooglePlayIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-    <path fill="#00D2FF" d="M3.6 1.8 13.7 12 3.6 22.2c-.4-.3-.6-.9-.6-1.6V3.4c0-.7.2-1.3.6-1.6Z" />
-    <path fill="#FFCE00" d="m17.4 8.3-3.7 3.7L3.6 1.8c.3-.2.8-.3 1.3 0l12.5 7.2v-.7Z" />
-    <path fill="#FF3A44" d="M17.4 15.7 4.9 22.9c-.5.3-1 .2-1.3 0l10.1-10.2 3.7 3Z" />
-    <path fill="#00F076" d="M17.4 8.3 21 10.3c1.7 1 1.7 2.5 0 3.4l-3.6 2-4-3.7 4-3.7Z" />
-  </svg>
-);
+import { Share, Plus, Download } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -53,14 +46,10 @@ const InstallAppButtons = () => {
     };
   }, []);
 
-  const handleAndroid = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
-      return;
-    }
-    setOpenGuide("android");
+  const openHomeScreenGuide = () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    setOpenGuide(isIOS ? "ios" : "android");
   };
 
   if (installed) {
@@ -75,33 +64,12 @@ const InstallAppButtons = () => {
   return (
     <>
       <div className="flex w-full max-w-md flex-col items-center gap-3 sm:flex-row sm:justify-center">
-        <button
-          onClick={() => setOpenGuide("ios")}
-          aria-label="Download on the App Store"
-          className="flex w-52 items-center gap-3 rounded-xl bg-foreground px-4 py-2.5 text-left text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
-        >
-          <Apple className="h-8 w-8 shrink-0" fill="currentColor" />
-          <span className="leading-tight">
-            <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
-              AVAILABLE ON THE
-            </span>
-            <span className="block text-lg font-semibold">App Store</span>
-          </span>
-        </button>
-
-        <button
-          onClick={handleAndroid}
-          aria-label="Get it on Google Play"
-          className="flex w-52 items-center gap-3 rounded-xl bg-foreground px-4 py-2.5 text-left text-background transition-all hover:scale-105 hover:shadow-lg active:scale-95"
-        >
-          <GooglePlayIcon className="h-7 w-7 shrink-0" />
-          <span className="leading-tight">
-            <span className="block text-[10px] font-medium uppercase tracking-wide opacity-80">
-              AVAILABLE ON
-            </span>
-            <span className="block text-lg font-semibold">Google Play</span>
-          </span>
-        </button>
+        <Button asChild className="w-full sm:w-auto">
+          <Link to="/splash">Use Collabor8 online</Link>
+        </Button>
+        <Button variant="outline" onClick={openHomeScreenGuide} className="w-full sm:w-auto">
+          <Plus className="h-4 w-4" /> Add to home screen
+        </Button>
       </div>
 
       <Dialog open={openGuide !== null} onOpenChange={(open) => !open && setOpenGuide(null)}>
@@ -114,6 +82,11 @@ const InstallAppButtons = () => {
               It takes a few seconds and works just like an app on your home screen.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex gap-2">
+            <Button size="sm" variant={openGuide === "ios" ? "default" : "outline"} onClick={() => setOpenGuide("ios")}>iPhone / iPad</Button>
+            <Button size="sm" variant={openGuide === "android" ? "default" : "outline"} onClick={() => setOpenGuide("android")}>Android</Button>
+          </div>
 
           {openGuide === "ios" ? (
             <ol className="space-y-4 text-sm text-foreground">
@@ -161,6 +134,13 @@ const InstallAppButtons = () => {
                 <span>Choose Install app or Add to Home screen.</span>
               </li>
             </ol>
+          )}
+          {openGuide === "android" && deferredPrompt && (
+            <Button onClick={async () => {
+              await deferredPrompt.prompt();
+              await deferredPrompt.userChoice;
+              setDeferredPrompt(null);
+            }}>Add to home screen</Button>
           )}
         </DialogContent>
       </Dialog>
