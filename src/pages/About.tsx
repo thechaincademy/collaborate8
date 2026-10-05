@@ -165,6 +165,9 @@ const About = () => (
             <Link to="/child-maintenance-calculator" className="hover:text-foreground">
               Child Maintenance Calculator
             </Link>
+            <Link to="/podcast" className="hover:text-foreground">
+              Podcast
+            </Link>
             <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">
               Maintenance Guide
             </Link>

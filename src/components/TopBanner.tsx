@@ -29,6 +29,12 @@ const TopBanner = () => {
             About Us
           </Link>
           <Link
+            to="/podcast"
+            className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Podcast
+          </Link>
+          <Link
             to="/child-maintenance-calculator"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
