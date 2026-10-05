@@ -1,9 +1,9 @@
+import FooterContact from "@/components/FooterContact";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import InstallAppButtons from "@/components/InstallAppButtons";
 import TopBanner from "@/components/TopBanner";
-import { Button } from "@/components/ui/button";
 import heroImg from "@/assets/about-hero.jpg";
 
 const fade = {
@@ -138,14 +138,7 @@ const About = () => (
         >
           <h2 className="text-2xl font-bold text-foreground md:text-3xl">Ready to start the conversation?</h2>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button asChild size="lg" className="w-64 gap-2 rounded-full">
-              <Link to="/#download">
-                Download on the App Store <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="w-64 rounded-full">
-              <Link to="/#download">Get it on Google Play</Link>
-            </Button>
+            <InstallAppButtons />
           </div>
           <p className="mt-6 text-sm text-muted-foreground">Free to download. Low cost to use. Built for you.</p>
         </motion.div>
@@ -159,7 +152,7 @@ const About = () => (
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
               <span className="text-xs font-bold text-background">C8</span>
             </div>
-            <span className="text-sm font-semibold text-foreground">collabor8</span>
+            <span className="text-sm font-semibold text-foreground">Collabor8</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
             <Link to="/child-maintenance-calculator" className="hover:text-foreground">
@@ -180,10 +173,11 @@ const About = () => (
             <Link to="/privacy" className="hover:text-foreground">
               Privacy Policy
             </Link>
-            <span>© 2025 collabor8</span>
+            <span>© {new Date().getFullYear()} Collabor8</span>
           </div>
         </div>
       </div>
+    <FooterContact />
     </footer>
   </div>
 );

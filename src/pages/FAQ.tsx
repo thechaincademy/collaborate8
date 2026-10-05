@@ -1,3 +1,4 @@
+import FooterContact from "@/components/FooterContact";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -106,7 +107,7 @@ const faqSchema = {
       name: "When does Collabor8 launch?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Collabor8 is launching in September 2026 on the Apple App Store and Google Play. It is currently in formal beta testing with an early access cohort. Sign up to the waitlist at collaborate8.com for free access for life.",
+        text: "Collabor8 is live now. Use it in your browser or add it to your home screen.",
       },
     },
   ],
@@ -194,7 +195,7 @@ const sections = [
       {
         question: "When does Collabor8 launch?",
         answer: [
-          "Collabor8 is launching in September 2026 on the Apple App Store and Google Play. It is currently in formal beta testing with an early access cohort. Sign up to the waitlist at collaborate8.com for free access for life.",
+          "Collabor8 is live now. Use it in your browser or add it to your home screen.",
         ],
       },
     ],
@@ -324,8 +325,7 @@ const FAQ = () => {
           className="rounded-2xl border-l-4 border-primary bg-card p-6 md:p-8"
         >
           <p className="mb-4 text-foreground">
-            Collabor8 is launching in September 2026. Sign up to the waitlist now
-            for free access for life.
+            Collabor8 is live now. Use it in your browser or add it to your home screen.
           </p>
           <Button
             size="lg"
@@ -344,7 +344,7 @@ const FAQ = () => {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
                 <span className="text-xs font-bold text-background">C8</span>
               </div>
-              <span className="text-sm font-semibold text-foreground">collabor8</span>
+              <span className="text-sm font-semibold text-foreground">Collabor8</span>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
               <Link to="/child-maintenance-calculator" className="hover:text-foreground">
@@ -363,10 +363,11 @@ const FAQ = () => {
               <Link to="/privacy" className="hover:text-foreground">
                 Privacy Policy
               </Link>
-              <span>© 2025 collabor8</span>
+              <span>© {new Date().getFullYear()} Collabor8</span>
             </div>
           </div>
         </div>
+      <FooterContact />
       </footer>
     </div>
   );

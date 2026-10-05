@@ -83,7 +83,7 @@ const NewEnvelope = () => {
 
           <div className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-card p-4">
             <div>
-              <p className="font-semibold text-foreground">Medi8 Account</p>
+              <p className="font-semibold text-foreground">Collabor8 Account</p>
               <p className="text-sm text-muted-foreground">£ 1,546.00</p>
             </div>
             <p className="text-lg font-semibold text-foreground">£ {amount}</p>

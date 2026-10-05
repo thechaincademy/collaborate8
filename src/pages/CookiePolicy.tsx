@@ -68,7 +68,7 @@ const CookiePolicy = () => {
 
           <section>
             <h2 className="mb-2 text-lg font-semibold text-foreground">Contact</h2>
-            <p>For questions about our use of cookies, contact us at <span className="text-foreground font-medium">privacy@medi8.app</span>.</p>
+            <p>For questions about our use of cookies, contact us at <span className="text-foreground font-medium">privacy@collaborate8.com</span>.</p>
           </section>
         </div>
       </div>

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/drawer";
 
 const accounts = [
-  { name: "Medi8 Account", available: 1546.00 },
+  { name: "Collabor8 Account", available: 1546.00 },
   { name: "Moneybox", available: 400.00 },
 ];
 
@@ -202,7 +202,7 @@ const EnvelopeDetails = () => {
             </div>
             <div className="text-left">
               <p className="font-medium text-foreground">
-                Receiving from <span className="font-semibold">my Medi8 account</span>
+                Receiving from <span className="font-semibold">my Collabor8 account</span>
               </p>
               <p className="text-sm text-muted-foreground">£ 50.00 Monthly on 1</p>
             </div>

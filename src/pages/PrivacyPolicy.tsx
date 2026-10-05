@@ -496,13 +496,14 @@ const PrivacyPolicy = () => {
       <footer className="flex flex-wrap items-center justify-between gap-4 bg-foreground px-[5vw] py-10">
         <div>
           <span className="text-[1.1rem] text-white/70" style={{ fontFamily: "'Fraunces', serif" }}>Collabor8</span>
-          <p className="mt-1 text-[0.8rem] text-white/35">&copy; 2026 Collaborate Technologies Ltd. All rights reserved.</p>
+          <p className="mt-1 text-[0.8rem] text-white/35">&copy; {new Date().getFullYear()} Collaborate Technologies Ltd. All rights reserved.</p>
         </div>
         <div className="text-right text-[0.8rem] text-white/35">
           <a href="/terms" className="text-white/50 hover:text-white/80">Terms of Service</a>
           {" · "}
           <a href="/privacy" className="text-white/50 hover:text-white/80">Privacy Policy</a>
-          <span className="mt-1 block">86-90 Paul Street, London EC2A 4NE</span>
+          <span className="mt-1 block">Collaborate Technologies Ltd, 86-90 Paul Street, London EC2A 4NE</span>
+          <a href="mailto:privacy@collaborate8.com" className="mt-1 block break-all text-background/70 hover:underline">privacy@collaborate8.com</a>
         </div>
       </footer>
     </div>

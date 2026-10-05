@@ -1,3 +1,4 @@
+import FooterContact from "@/components/FooterContact";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Play, Youtube } from "lucide-react";
@@ -205,7 +206,7 @@ const Podcast = () => (
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
               <span className="text-xs font-bold text-background">C8</span>
             </div>
-            <span className="text-sm font-semibold text-foreground">collabor8</span>
+            <span className="text-sm font-semibold text-foreground">Collabor8</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
             <Link to="/child-maintenance-calculator" className="hover:text-foreground">
@@ -223,10 +224,11 @@ const Podcast = () => (
             <Link to="/privacy" className="hover:text-foreground">
               Privacy Policy
             </Link>
-            <span>© 2025 collabor8</span>
+            <span>© {new Date().getFullYear()} Collabor8</span>
           </div>
         </div>
       </div>
+    <FooterContact />
     </footer>
   </div>
 );
