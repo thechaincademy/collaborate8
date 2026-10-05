@@ -13,7 +13,7 @@ const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unse
 
 export default defineMcp({
   name: "medi8-your-connection-hub",
-  title: "Medi8: Your Connection Hub",
+  title: "Collabor8: Your Connection Hub",
   version: "0.1.0",
   instructions:
     "Tools for Collabor8, a co-parenting finance app. Acts as the signed-in parent: read their profile and co-parent link status, read child maintenance arrangements and payment history, list and raise shared expenses, record payments sent from their own bank, and read or send messages in the financial chat. All amounts are in GBP.",
