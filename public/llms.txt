@@ -5,6 +5,8 @@
 ## Pages
 
 - [/](/): Home - Learn how Collabor8 helps co-parents manage payments, track shared expenses, and stay on top of child maintenance.
+- [/about](/about): About Collabor8 - our story and mission.
+- [/podcast](/podcast): The Collabor8 Podcast - practical conversations about UK child maintenance for separated parents.
 - [/splash](/splash): App entry point for returning users.
 - [/signup](/signup): Create a Collabor8 account - choose whether you're the parent managing payments or the parent viewing them.
 - [/login](/login): Sign in to your Collabor8 account.

@@ -26,6 +26,7 @@ import CommunicationGuide from "./pages/CommunicationGuide";
 import CostOfConflict from "./pages/CostOfConflict";
 import TaxAndBenefits from "./pages/TaxAndBenefits";
 import About from "./pages/About";
+import Podcast from "./pages/Podcast";
 import ChildMaintenanceGuide from "./pages/ChildMaintenanceGuide";
 import ChildMaintenanceGuideApp from "./pages/ChildMaintenanceGuideApp";
 import ChildMaintenanceCalculator from "./pages/ChildMaintenanceCalculator";
@@ -80,6 +81,7 @@ const App = () => (
           <Route path="/cookies" element={<CookiePolicy />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
+          <Route path="/podcast" element={<Podcast />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><InAppShell><ChildMaintenanceGuideApp /></InAppShell></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<Navigate to="/resources/child-maintenance-guide#article-1" replace />} />

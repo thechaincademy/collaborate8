@@ -12,7 +12,7 @@ const TopBanner = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
             <span className="text-sm font-bold text-background">C8</span>
@@ -21,12 +21,18 @@ const TopBanner = () => {
             collabor8
           </span>
         </Link>
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <Link
             to="/about"
-            className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="hidden whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline"
           >
             About Us
+          </Link>
+          <Link
+            to="/podcast"
+            className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Podcast
           </Link>
           <Link
             to="/child-maintenance-calculator"
@@ -36,7 +42,7 @@ const TopBanner = () => {
           </Link>
           <Link
             to="/resources/child-maintenance-guide"
-            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
+            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground lg:inline"
           >
             Guide
           </Link>
