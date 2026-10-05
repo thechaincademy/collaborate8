@@ -17,7 +17,7 @@ const TransactionDetails = () => {
         <div className="mb-8 flex items-start justify-between">
           <div>
             <p className="mb-1 text-sm text-muted-foreground">
-              {isReceiving ? "Top-up from your" : "Sent to"} <span className="font-semibold text-foreground">Medi8 Account</span>
+              {isReceiving ? "Top-up from your" : "Sent to"} <span className="font-semibold text-foreground">Collabor8 Account</span>
             </p>
             <h1 className={`text-4xl font-bold ${isReceiving ? "text-foreground" : "text-foreground"}`}>
               {isReceiving ? "+ £ 400.00" : "- £ 300.00"}

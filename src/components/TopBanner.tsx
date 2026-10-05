@@ -18,7 +18,7 @@ const TopBanner = () => {
             <span className="text-sm font-bold text-background">C8</span>
           </div>
           <span className="text-lg font-semibold tracking-tight text-foreground">
-            collabor8
+            Collabor8
           </span>
         </Link>
         <div className="flex items-center gap-3 sm:gap-6">

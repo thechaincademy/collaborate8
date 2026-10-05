@@ -1,3 +1,4 @@
+import FooterContact from "@/components/FooterContact";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -316,7 +317,7 @@ const Landing = () => {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground">
                 <span className="text-xs font-bold text-background">C8</span>
               </div>
-              <span className="text-sm font-semibold text-foreground">collabor8</span>
+              <span className="text-sm font-semibold text-foreground">Collabor8</span>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <Link to="/child-maintenance-calculator" className="hover:text-foreground">Child Maintenance Calculator</Link>
@@ -325,10 +326,11 @@ const Landing = () => {
               <Link to="/resources/child-maintenance-guide#money-help" className="hover:text-foreground">Money Help</Link>
               <Link to="/faq" className="hover:text-foreground">FAQ</Link>
               <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
-              <span>© 2025 collabor8</span>
+              <span>© {new Date().getFullYear()} Collabor8</span>
             </div>
           </div>
         </div>
+      <FooterContact />
       </footer>
     </div>
   );
