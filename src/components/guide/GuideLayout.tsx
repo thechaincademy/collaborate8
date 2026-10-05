@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import FooterContact from "@/components/FooterContact";
 
 interface GuideLayoutProps {
   children: React.ReactNode;
@@ -58,7 +59,8 @@ const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/55 no-underline hover:text-white">Privacy</Link>
         </p>
-        <p className="mt-1 text-xs">This guide is for informational purposes only and does not constitute legal advice. &copy; 2025 Collabor8.</p>
+        <p className="mt-1 text-xs">This guide is for informational purposes only and does not constitute legal advice. &copy; {new Date().getFullYear()} Collabor8.</p>
+        <FooterContact onDark />
       </footer>
     </div>
   );

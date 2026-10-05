@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import TopBanner from "@/components/TopBanner";
+import FooterContact from "@/components/FooterContact";
 
 const articles = [
   {
@@ -437,7 +438,8 @@ const ChildMaintenanceGuide = () => {
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/60 no-underline hover:text-white">Privacy</Link>
         </p>
-        <p className="mt-2 text-xs">&copy; 2025 Collabor8. This guide is for informational purposes only and does not constitute legal advice.</p>
+        <p className="mt-2 text-xs">&copy; {new Date().getFullYear()} Collabor8. This guide is for informational purposes only and does not constitute legal advice.</p>
+        <FooterContact onDark />
       </footer>
     </div>
   );
