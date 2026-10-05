@@ -24,7 +24,7 @@ const TopBanner = () => {
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
             to="/about"
-            className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="hidden whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline"
           >
             About Us
           </Link>
@@ -42,7 +42,7 @@ const TopBanner = () => {
           </Link>
           <Link
             to="/resources/child-maintenance-guide"
-            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
+            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground lg:inline"
           >
             Guide
           </Link>
