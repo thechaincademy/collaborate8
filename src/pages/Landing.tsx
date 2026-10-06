@@ -21,9 +21,11 @@ import appScreenshot2 from "@/assets/app-real-2.jpg";
 import appScreenshot3 from "@/assets/app-real-3.jpg";
 import TopBanner from "@/components/TopBanner";
 import InstallAppButtons from "@/components/InstallAppButtons";
+import { useAppCtaHref } from "@/hooks/useAppCta";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const ctaHref = useAppCtaHref("/splash");
   const [email, setEmail] = useState("");
   const [honeypot, setHoneypot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +34,7 @@ const Landing = () => {
   const formLoadedAt = useRef(Date.now());
 
   const scrollToWaitlist = () => {
-    navigate("/splash");
+    navigate(ctaHref);
   };
 
 
@@ -300,7 +302,7 @@ const Landing = () => {
               Create your account and get started in minutes.
             </p>
             <div className="mt-8">
-              <Button size="lg" onClick={() => navigate("/splash")} className="gap-2">
+              <Button size="lg" onClick={() => navigate(ctaHref)} className="gap-2">
                 Sign Up <ArrowRight className="h-4 w-4" />
               </Button>
             </div>

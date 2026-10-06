@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import TopBanner from "@/components/TopBanner";
 import FooterContact from "@/components/FooterContact";
+import { useAppCtaHref } from "@/hooks/useAppCta";
 
 const articles = [
   {
@@ -112,6 +113,7 @@ const BList = ({ items }: { items: React.ReactNode[] }) => (
 
 const ChildMaintenanceGuide = () => {
   const [active, setActive] = useState(0);
+  const ctaHref = useAppCtaHref("/signup");
   const refs = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => {
@@ -417,7 +419,7 @@ const ChildMaintenanceGuide = () => {
         <p className="mx-auto mb-8 max-w-[480px] text-[1.05rem] font-light text-slate-800">
           Join thousands of co-parents managing maintenance clearly, fairly, and without the stress.
         </p>
-        <Link to="/signup" className="inline-block rounded-full px-8 py-[0.85rem] text-[0.95rem] font-medium text-[#1A1A18] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] bg-gray-200">
+        <Link to={ctaHref} className="inline-block rounded-full px-8 py-[0.85rem] text-[0.95rem] font-medium text-[#1A1A18] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] bg-gray-200">
           Get started with Collabor8, it's free
         </Link>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-10">

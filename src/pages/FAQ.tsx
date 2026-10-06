@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import TopBanner from "@/components/TopBanner";
+import { useAppCtaHref } from "@/hooks/useAppCta";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -211,6 +212,7 @@ const stats = [
 
 const FAQ = () => {
   const navigate = useNavigate();
+  const ctaHref = useAppCtaHref("/splash");
 
   return (
     <div className="min-h-screen bg-background">
@@ -329,7 +331,7 @@ const FAQ = () => {
           </p>
           <Button
             size="lg"
-            onClick={() => navigate("/splash")}
+            onClick={() => navigate(ctaHref)}
             className="gap-2 rounded-full"
           >
             Sign Up <ArrowRight className="h-4 w-4" />

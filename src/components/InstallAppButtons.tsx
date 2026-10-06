@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Share, Plus, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAppCtaHref } from "@/hooks/useAppCta";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ const isStandalone = () =>
 
 const InstallAppButtons = () => {
   const [installed, setInstalled] = useState(false);
+  const ctaHref = useAppCtaHref("/splash");
   const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null);
   const [openGuide, setOpenGuide] = useState<"ios" | "android" | null>(null);
 
@@ -65,7 +67,7 @@ const InstallAppButtons = () => {
     <>
       <div className="flex w-full max-w-md flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button asChild className="w-full sm:w-auto">
-          <Link to="/splash">Use Collabor8 online</Link>
+          <Link to={ctaHref}>Use Collabor8 online</Link>
         </Button>
         <Button variant="outline" onClick={openHomeScreenGuide} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" /> Add to home screen
