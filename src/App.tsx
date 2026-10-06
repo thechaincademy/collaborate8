@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -47,7 +47,17 @@ import NotFound from "./pages/NotFound";
 
 const DashboardTabRedirect = () => {
   const { tab } = useParams();
-  return <Navigate to={`/dashboard?tab=${tab ?? "home"}`} replace />;
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  params.set("tab", tab ?? "home");
+  return <Navigate to={`/dashboard?${params.toString()}`} replace />;
+};
+
+// Redirect that preserves the query string (e.g. ?utm_source=...) across the jump.
+const QueryRedirect = ({ to }: { to: string }) => {
+  const { search } = useLocation();
+  const [path, hash] = to.split("#");
+  return <Navigate to={`${path}${search}${hash ? `#${hash}` : ""}`} replace />;
 };
 
 const queryClient = new QueryClient();
