@@ -15,10 +15,12 @@ const FinancialCoparentingTips = () => {
         <meta name="description" content="Practical financial co-parenting tips for separated parents in the UK. Manage child maintenance payments, shared expenses, and communication with Collabor8." />
         <meta name="keywords" content="co-parenting tips uk, financial co-parenting, child maintenance tips, separated parents finances uk, co-parenting communication" />
         <link rel="canonical" href="https://collaborate8.com/resources/financial-coparenting-tips" />
-        <meta property="og:title" content="Co-parenting Finance Tips | Collabor8" />
-        <meta property="og:description" content="Practical financial co-parenting tips for separated parents in the UK." />
-        <meta property="og:type" content="article" />
+        <meta property="og:title" content="Co-parenting Finance Tips UK | Collabor8" />
+        <meta property="og:description" content="Practical financial co-parenting tips for separated parents in the UK. Manage child maintenance payments, shared expenses, and communication with Collabor8." />
         <meta property="og:url" content="https://collaborate8.com/resources/financial-coparenting-tips" />
+        <meta name="twitter:title" content="Co-parenting Finance Tips UK | Collabor8" />
+        <meta name="twitter:description" content="Practical financial co-parenting tips for separated parents in the UK. Manage child maintenance payments, shared expenses, and communication with Collabor8." />
+        <meta property="og:type" content="article" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Article",

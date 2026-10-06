@@ -64,6 +64,11 @@ const About = () => (
       <title>About Us | Collabor8</title>
       <meta name="description" content="Collabor8 was built from personal experience by co-founders Jade and Rafa to help separated parents talk about money." />
       <link rel="canonical" href="https://collaborate8.com/about" />
+        <meta property="og:title" content="About Us | Collabor8" />
+        <meta property="og:description" content="Collabor8 was built from personal experience by co-founders Jade and Rafa to help separated parents talk about money." />
+        <meta property="og:url" content="https://collaborate8.com/about" />
+        <meta name="twitter:title" content="About Us | Collabor8" />
+        <meta name="twitter:description" content="Collabor8 was built from personal experience by co-founders Jade and Rafa to help separated parents talk about money." />
     </Helmet>
     <TopBanner />
 
