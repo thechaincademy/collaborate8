@@ -51,6 +51,8 @@ import ChildMaintenanceAgreement from "./pages/resources/ChildMaintenanceAgreeme
 import HowLongDoYouPayChildMaintenance from "./pages/resources/HowLongDoYouPayChildMaintenance";
 import FinancesAfterSeparation from "./pages/resources/FinancesAfterSeparation";
 import IsMyChildMaintenanceFair from "./pages/resources/IsMyChildMaintenanceFair";
+import ParentalConflictAndChildren from "./pages/resources/ParentalConflictAndChildren";
+import TalkingToYourExAboutMoney from "./pages/resources/TalkingToYourExAboutMoney";
 
 const DashboardTabRedirect = () => {
   const { tab } = useParams();
@@ -107,6 +109,8 @@ const App = () => (
           <Route path="/resources/how-long-do-you-pay-child-maintenance" element={<HowLongDoYouPayChildMaintenance />} />
           <Route path="/resources/finances-after-separation" element={<FinancesAfterSeparation />} />
           <Route path="/resources/is-my-child-maintenance-fair" element={<IsMyChildMaintenanceFair />} />
+          <Route path="/resources/parental-conflict-and-children" element={<ParentalConflictAndChildren />} />
+          <Route path="/resources/talking-to-your-ex-about-money" element={<TalkingToYourExAboutMoney />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><InAppShell><ChildMaintenanceGuideApp /></InAppShell></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<QueryRedirect to="/resources/child-maintenance-guide#article-1" />} />
