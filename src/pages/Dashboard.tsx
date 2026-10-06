@@ -21,19 +21,22 @@ const COMING_SOON_TABS: DashboardTab[] = ["benefits"];
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTabState] = useState<DashboardTab>(() => {
-    const t = searchParams.get("tab");
-    if (t === "documents") return "chat";
-    return t && (VALID_TABS as string[]).includes(t) ? (t as DashboardTab) : "home";
-  });
+  // URL is the single source of truth for the active tab.
+  const rawTab = searchParams.get("tab");
+  const isValidRaw = rawTab === "documents" || (rawTab !== null && (VALID_TABS as string[]).includes(rawTab));
+  const activeTab: DashboardTab =
+    rawTab === "documents" ? "chat" : isValidRaw ? (rawTab as DashboardTab) : "home";
+
+  // User tab clicks push a history entry, only when the tab actually changes.
   const setActiveTab = (tab: DashboardTab) => {
-    setActiveTabState(tab);
+    if (tab === activeTab && rawTab !== "documents") return;
+    if (tab === "chat" && rawTab === "documents") return;
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       if (tab === "home") next.delete("tab");
       else next.set("tab", tab);
       return next;
-    }, { replace: true });
+    });
   };
   const { syncCheckoutSession } = useStripePayments();
 
@@ -46,22 +49,27 @@ const Dashboard = () => {
           await syncCheckoutSession(sessionId);
         }
         toast.success("Recurring payment set up successfully!");
-        setActiveTab("maintenance");
-        searchParams.delete("subscription-checkout");
-        searchParams.delete("session_id");
-        setSearchParams(searchParams, { replace: true });
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("subscription-checkout");
+          next.delete("session_id");
+          next.set("tab", "maintenance");
+          return next;
+        }, { replace: true });
       };
       finalize();
     }
   }, [searchParams, setSearchParams]);
 
+  // Normalise invalid or redundant ?tab= values with replace (only for invalid values).
   useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab && ["home", "maintenance", "expenses", "benefits", "chat", "documents", "resources"].includes(tab)) {
-      const next = tab === "documents" ? "chat" : (tab as DashboardTab);
-      if (next !== activeTab) setActiveTabState(next);
-    }
-  }, [searchParams, setSearchParams]);
+    if (rawTab === null || isValidRaw && rawTab !== "home") return;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("tab");
+      return next;
+    }, { replace: true });
+  }, [rawTab, isValidRaw, setSearchParams]);
 
   useEffect(() => {
     trackTab(activeTab);
@@ -80,7 +88,7 @@ const Dashboard = () => {
       case "benefits":
         return <BenefitsTab />;
       case "chat":
-        return <ChatTab />;
+        return <ChatTab key={rawTab ?? "chat"} initialSection={rawTab === "documents" ? "documents" : "chat"} />;
       case "resources":
         return <ResourcesTab />;
     }

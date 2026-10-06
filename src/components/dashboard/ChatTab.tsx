@@ -76,7 +76,7 @@ function toneLabel(score: number): { label: string; tone: "calm" | "tense" | "he
 const SUBHEADING =
   "A dedicated space to discuss finances with your co-parent - separate from everything else.";
 
-const ChatTab = () => {
+const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "documents" } = {}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
@@ -89,7 +89,7 @@ const ChatTab = () => {
   const [rewriting, setRewriting] = useState(false);
   const [sending, setSending] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<"chat" | "documents">("chat");
+  const [activeSection, setActiveSection] = useState<"chat" | "documents">(initialSection);
   const [startersOpen, setStartersOpen] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const attachInputRef = useRef<HTMLInputElement>(null);
