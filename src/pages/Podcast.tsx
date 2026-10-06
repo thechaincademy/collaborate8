@@ -5,6 +5,7 @@ import { Play, Youtube } from "lucide-react";
 import TopBanner from "@/components/TopBanner";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAppCtaHref } from "@/hooks/useAppCta";
 
 const fade = {
   initial: { opacity: 0, y: 20 },
@@ -115,7 +116,10 @@ const EpisodeCard = ({ ep }: { ep: Episode }) => (
   </motion.article>
 );
 
-const Podcast = () => (
+const Podcast = () => {
+  const ctaHref = useAppCtaHref("/splash");
+
+  return (
   <div className="min-h-screen bg-background">
     <Helmet>
       <title>Podcast | Collabor8</title>
@@ -186,7 +190,7 @@ const Podcast = () => (
           </h2>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button asChild size="lg" className="w-64 gap-2 rounded-full">
-              <Link to="/splash">Get started</Link>
+              <Link to={ctaHref}>Get started</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="w-64 rounded-full">
               <Link to="/child-maintenance-calculator">Try the calculator</Link>
@@ -231,6 +235,7 @@ const Podcast = () => (
     <FooterContact />
     </footer>
   </div>
-);
+  );
+};
 
 export default Podcast;

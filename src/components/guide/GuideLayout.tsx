@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import FooterContact from "@/components/FooterContact";
+import { useAppCtaHref } from "@/hooks/useAppCta";
 
 interface GuideLayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface GuideLayoutProps {
 
 const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
   const navigate = useNavigate();
+  const ctaHref = useAppCtaHref("/signup");
 
   return (
     <div className="min-h-screen bg-background text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -16,7 +18,7 @@ const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
         <Link to="/" className="text-xl font-semibold tracking-tight text-[#1E6B5E]" style={{ fontFamily: "'Georgia', serif" }}>
           Collabor8
         </Link>
-        <Link to="/signup" className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-primary">
+        <Link to={ctaHref} className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-primary">
           Get started free
         </Link>
       </nav>
@@ -40,7 +42,7 @@ const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
         <p className="mx-auto mb-8 max-w-[480px] text-[1.05rem] font-light text-white/70">
           Join thousands of co-parents managing maintenance clearly, fairly, and without the stress.
         </p>
-        <Link to="/signup" className="inline-block rounded-full bg-background px-9 py-3.5 text-[0.95rem] font-medium text-[#134840] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+        <Link to={ctaHref} className="inline-block rounded-full bg-background px-9 py-3.5 text-[0.95rem] font-medium text-[#134840] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
           Get started with Collabor8 - it's free
         </Link>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-10">
