@@ -78,6 +78,11 @@ const Landing = () => {
         <title>Collabor8 - Child Maintenance App for UK Parents</title>
         <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free CMS calculator based on the official UK formula." />
         <link rel="canonical" href="https://collaborate8.com/" />
+        <meta property="og:title" content="Collabor8 - Child Maintenance App for UK Parents" />
+        <meta property="og:description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free CMS calculator based on the official UK formula." />
+        <meta property="og:url" content="https://collaborate8.com/" />
+        <meta name="twitter:title" content="Collabor8 - Child Maintenance App for UK Parents" />
+        <meta name="twitter:description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free CMS calculator based on the official UK formula." />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",

@@ -128,6 +128,11 @@ const Podcast = () => {
         content="Practical conversations about child maintenance in the UK - CMS, arrangements, calculating contributions and common questions for separated parents."
       />
       <link rel="canonical" href="https://collaborate8.com/podcast" />
+        <meta property="og:title" content="Podcast | Collabor8" />
+        <meta property="og:description" content="Practical conversations about child maintenance in the UK - CMS, arrangements, calculating contributions and common questions for separated parents." />
+        <meta property="og:url" content="https://collaborate8.com/podcast" />
+        <meta name="twitter:title" content="Podcast | Collabor8" />
+        <meta name="twitter:description" content="Practical conversations about child maintenance in the UK - CMS, arrangements, calculating contributions and common questions for separated parents." />
     </Helmet>
     <TopBanner />
 

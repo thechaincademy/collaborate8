@@ -224,11 +224,10 @@ const FAQ = () => {
         />
         <link rel="canonical" href="https://collaborate8.com/faq" />
         <meta property="og:title" content="Frequently Asked Questions - Collabor8" />
-        <meta
-          property="og:description"
-          content="Everything you need to know about Collabor8 - child maintenance, shared expenses, payments and launch."
-        />
+        <meta property="og:description" content="Everything you need to know about Collabor8 - the UK's first shared financial platform for separated parents managing child maintenance, shared expenses and post-separation finances." />
         <meta property="og:url" content="https://collaborate8.com/faq" />
+        <meta name="twitter:title" content="Frequently Asked Questions - Collabor8" />
+        <meta name="twitter:description" content="Everything you need to know about Collabor8 - the UK's first shared financial platform for separated parents managing child maintenance, shared expenses and post-separation finances." />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
       </Helmet>
