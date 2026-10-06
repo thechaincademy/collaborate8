@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -45,6 +45,11 @@ import ResetPassword from "./pages/ResetPassword";
 import InAppShell from "@/components/layout/InAppShell";
 import NotFound from "./pages/NotFound";
 
+const DashboardTabRedirect = () => {
+  const { tab } = useParams();
+  return <Navigate to={`/dashboard?tab=${tab ?? "home"}`} replace />;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -66,6 +71,10 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              {["maintenance", "expenses", "chat", "benefits", "resources", "documents"].map((t) => (
+                <Route key={t} path={`/${t}`} element={<Navigate to={`/dashboard?tab=${t}`} replace />} />
+              ))}
+              <Route path="/dashboard/:tab" element={<DashboardTabRedirect />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/cost-of-conflict" element={<ProtectedRoute><InAppShell><CostOfConflict /></InAppShell></ProtectedRoute>} />
               <Route path="/tax-and-benefits" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />

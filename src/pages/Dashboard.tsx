@@ -16,11 +16,25 @@ import { trackTab } from "@/lib/analytics";
 
 export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
+const VALID_TABS: DashboardTab[] = ["home", "maintenance", "expenses", "benefits", "chat", "resources"];
 const COMING_SOON_TABS: DashboardTab[] = ["benefits"];
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState<DashboardTab>("home");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTabState] = useState<DashboardTab>(() => {
+    const t = searchParams.get("tab");
+    if (t === "documents") return "chat";
+    return t && (VALID_TABS as string[]).includes(t) ? (t as DashboardTab) : "home";
+  });
+  const setActiveTab = (tab: DashboardTab) => {
+    setActiveTabState(tab);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (tab === "home") next.delete("tab");
+      else next.set("tab", tab);
+      return next;
+    }, { replace: true });
+  };
   const { syncCheckoutSession } = useStripePayments();
 
   useEffect(() => {
@@ -44,9 +58,8 @@ const Dashboard = () => {
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab && ["home", "maintenance", "expenses", "benefits", "chat", "documents", "resources"].includes(tab)) {
-      setActiveTab(tab === "documents" ? "chat" : tab as DashboardTab);
-      searchParams.delete("tab");
-      setSearchParams(searchParams, { replace: true });
+      const next = tab === "documents" ? "chat" : (tab as DashboardTab);
+      if (next !== activeTab) setActiveTabState(next);
     }
   }, [searchParams, setSearchParams]);
 
