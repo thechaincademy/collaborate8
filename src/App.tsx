@@ -47,6 +47,8 @@ import NotFound from "./pages/NotFound";
 import QueryRedirect from "@/components/QueryRedirect";
 import ResourcesIndex from "./pages/ResourcesIndex";
 import WhatDoesChildMaintenanceCover from "./pages/resources/WhatDoesChildMaintenanceCover";
+import ChildMaintenanceAgreement from "./pages/resources/ChildMaintenanceAgreement";
+import HowLongDoYouPayChildMaintenance from "./pages/resources/HowLongDoYouPayChildMaintenance";
 
 const DashboardTabRedirect = () => {
   const { tab } = useParams();
@@ -99,6 +101,8 @@ const App = () => (
           <Route path="/podcast" element={<Podcast />} />
           <Route path="/resources" element={<ResourcesIndex />} />
           <Route path="/resources/what-does-child-maintenance-cover" element={<WhatDoesChildMaintenanceCover />} />
+          <Route path="/resources/child-maintenance-agreement" element={<ChildMaintenanceAgreement />} />
+          <Route path="/resources/how-long-do-you-pay-child-maintenance" element={<HowLongDoYouPayChildMaintenance />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><InAppShell><ChildMaintenanceGuideApp /></InAppShell></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<QueryRedirect to="/resources/child-maintenance-guide#article-1" />} />
