@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -47,7 +47,23 @@ import NotFound from "./pages/NotFound";
 
 const DashboardTabRedirect = () => {
   const { tab } = useParams();
-  return <Navigate to={`/dashboard?tab=${tab ?? "home"}`} replace />;
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  params.set("tab", tab ?? "home");
+  return <Navigate to={`/dashboard?${params.toString()}`} replace />;
+};
+
+// Redirect that preserves the query string (e.g. ?utm_source=...) across the jump.
+const QueryRedirect = ({ to }: { to: string }) => {
+  const { search } = useLocation();
+  const [pathAndQuery, hash] = to.split("#");
+  const [path, query] = pathAndQuery.split("?");
+  const params = new URLSearchParams(query ?? "");
+  new URLSearchParams(search).forEach((v, k) => {
+    if (!params.has(k)) params.set(k, v);
+  });
+  const qs = params.toString();
+  return <Navigate to={`${path}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`} replace />;
 };
 
 const queryClient = new QueryClient();
@@ -72,13 +88,13 @@ const App = () => (
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               {["maintenance", "expenses", "chat", "benefits", "resources", "documents"].map((t) => (
-                <Route key={t} path={`/${t}`} element={<Navigate to={`/dashboard?tab=${t}`} replace />} />
+                <Route key={t} path={`/${t}`} element={<QueryRedirect to={`/dashboard?tab=${t}`} />} />
               ))}
               <Route path="/dashboard/:tab" element={<DashboardTabRedirect />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/cost-of-conflict" element={<ProtectedRoute><InAppShell><CostOfConflict /></InAppShell></ProtectedRoute>} />
-              <Route path="/tax-and-benefits" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
-              <Route path="/communication-guide" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
+              <Route path="/tax-and-benefits" element={<QueryRedirect to="/resources/child-maintenance-guide-app" />} />
+              <Route path="/communication-guide" element={<QueryRedirect to="/resources/child-maintenance-guide-app" />} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
 
@@ -93,12 +109,12 @@ const App = () => (
           <Route path="/podcast" element={<Podcast />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><InAppShell><ChildMaintenanceGuideApp /></InAppShell></ProtectedRoute>} />
-              <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<Navigate to="/resources/child-maintenance-guide#article-1" replace />} />
-              <Route path="/resources/child-maintenance-guide/who-pays" element={<Navigate to="/resources/child-maintenance-guide#article-2" replace />} />
-              <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<Navigate to="/resources/child-maintenance-guide#article-3" replace />} />
-              <Route path="/resources/child-maintenance-guide/shared-expenses" element={<Navigate to="/resources/child-maintenance-guide#article-4" replace />} />
-              <Route path="/resources/child-maintenance-guide/rights-and-responsibilities" element={<Navigate to="/resources/child-maintenance-guide#article-5" replace />} />
-              <Route path="/resources/support-and-guidance" element={<Navigate to="/resources/child-maintenance-guide#money-help" replace />} />
+              <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<QueryRedirect to="/resources/child-maintenance-guide#article-1" />} />
+              <Route path="/resources/child-maintenance-guide/who-pays" element={<QueryRedirect to="/resources/child-maintenance-guide#article-2" />} />
+              <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<QueryRedirect to="/resources/child-maintenance-guide#article-3" />} />
+              <Route path="/resources/child-maintenance-guide/shared-expenses" element={<QueryRedirect to="/resources/child-maintenance-guide#article-4" />} />
+              <Route path="/resources/child-maintenance-guide/rights-and-responsibilities" element={<QueryRedirect to="/resources/child-maintenance-guide#article-5" />} />
+              <Route path="/resources/support-and-guidance" element={<QueryRedirect to="/resources/child-maintenance-guide#money-help" />} />
               <Route path="/app/child-maintenance-calculator" element={<ProtectedRoute><InAppShell title="Calculator"><ChildMaintenanceCalculator embedded /></InAppShell></ProtectedRoute>} />
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />

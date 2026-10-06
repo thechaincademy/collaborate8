@@ -136,6 +136,16 @@ const ChildMaintenanceGuide = () => {
     refs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // Scroll to the hash section on first load and after a redirect lands here.
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const t = window.setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
     <div className="min-h-screen text-[#1A1A18] bg-background" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.75 }}>
       <Helmet>
