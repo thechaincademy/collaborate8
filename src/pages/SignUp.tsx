@@ -100,8 +100,6 @@ const SignUp = () => {
 
   const finishSignUp = async () => {
     setIsLoading(true);
-    // Profile may take a moment to be created by the trigger
-    await new Promise((r) => setTimeout(r, 800));
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setIsLoading(false);
@@ -110,29 +108,31 @@ const SignUp = () => {
       return;
     }
     const code = generateInviteCode();
-    await supabase
-      .from("profiles")
-      .update({
-        first_name: firstName,
-        last_name: lastName,
+    const [profileRes, inviteRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .update({ first_name: firstName, last_name: lastName, invite_code: code })
+        .eq("id", user.id),
+      supabase.from("invitations").insert({
+        inviter_id: user.id,
         invite_code: code,
-      })
-      .eq("id", user.id);
-
-    await supabase.from("invitations").insert({
-      inviter_id: user.id,
-      invite_code: code,
-      invitee_email: coparentEmail || null,
-    });
+        invitee_email: coparentEmail || null,
+      }),
+    ]);
+    if (profileRes.error || inviteRes.error) {
+      console.error("finishSignUp write failed", profileRes.error ?? inviteRes.error);
+      setIsLoading(false);
+      toast.error("Something went wrong saving your details. Please try again.");
+      return;
+    }
 
     if (coparentEmail) {
-      await supabase.functions.invoke("send-invite-email", {
-        body: {
-          recipientEmail: coparentEmail,
-          inviteCode: code,
-          senderName: `${firstName} ${lastName}`,
-        },
-      });
+      supabase.functions
+        .invoke("send-invite-email", {
+          body: { recipientEmail: coparentEmail, inviteCode: code, senderName: `${firstName} ${lastName}` },
+        })
+        .then(({ error }) => { if (error) console.error("send-invite-email failed", error); })
+        .catch((error) => console.error("send-invite-email failed", error));
     }
 
     setGeneratedCode(code);
