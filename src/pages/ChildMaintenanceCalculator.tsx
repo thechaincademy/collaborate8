@@ -383,6 +383,16 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
           </div>
         </div>
 
+        {/* Common questions */}
+        <div className="mb-6 rounded-xl border border-[#E4E2DA] bg-background p-4">
+          <h2 className="mb-2 text-sm font-semibold text-[#1A1A18]">Common questions</h2>
+          <ul className="space-y-1.5 text-sm">
+            <li><Link to="/resources/is-my-child-maintenance-fair" className="text-foreground underline underline-offset-2 hover:text-primary">Is my child maintenance fair?</Link></li>
+            <li><Link to="/resources/how-long-do-you-pay-child-maintenance" className="text-foreground underline underline-offset-2 hover:text-primary">How long do you pay child maintenance for?</Link></li>
+            <li><Link to="/resources/what-does-child-maintenance-cover" className="text-foreground underline underline-offset-2 hover:text-primary">What does child maintenance cover?</Link></li>
+          </ul>
+        </div>
+
         {/* Notice */}
         <div className="mb-6 rounded-xl border border-[#E4E2DA] bg-background p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="flex gap-2.5">

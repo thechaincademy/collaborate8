@@ -1,3 +1,4 @@
+import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
@@ -237,7 +238,8 @@ const Podcast = () => {
           </div>
         </div>
       </div>
-    <FooterContact />
+    <FooterResources />
+        <FooterContact />
     </footer>
   </div>
   );

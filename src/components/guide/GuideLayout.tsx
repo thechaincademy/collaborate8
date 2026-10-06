@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { useAppCtaHref } from "@/hooks/useAppCta";
 
@@ -86,6 +87,7 @@ const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
           <Link to="/privacy" className="text-white/55 no-underline hover:text-white">Privacy</Link>
         </p>
         <p className="mt-1 text-xs">This guide is for informational purposes only and does not constitute legal advice. &copy; {new Date().getFullYear()} Collabor8.</p>
+        <FooterResources onDark />
         <FooterContact onDark />
       </footer>
     </div>

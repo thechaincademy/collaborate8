@@ -1,3 +1,4 @@
+import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
@@ -368,7 +369,8 @@ const FAQ = () => {
             </div>
           </div>
         </div>
-      <FooterContact />
+      <FooterResources />
+        <FooterContact />
       </footer>
     </div>
   );

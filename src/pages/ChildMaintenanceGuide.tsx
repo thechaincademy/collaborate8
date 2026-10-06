@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import TopBanner from "@/components/TopBanner";
+import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { useAppCtaHref } from "@/hooks/useAppCta";
 
@@ -270,6 +271,7 @@ const ChildMaintenanceGuide = () => {
           <Callout><strong className="not-italic font-medium">Collabor8 tip:</strong> Family-based arrangement or CMS, it doesn't matter. Collabor8 works with any arrangement, giving both parents a clear, shared record and removing the day-to-day stress of managing it manually.</Callout>
           <ArticleH3>What if there's already a court order?</ArticleH3>
           <P>If a court has set the maintenance amount, that figure is your starting point. Collabor8 works alongside court orders too, set up the ordered amount as a recurring payment, and the app handles the tracking, reminders, and receipts from there.</P>
+          <p className="mt-8 text-[0.95rem] text-muted-foreground">Related question: <Link to="/resources/what-does-child-maintenance-cover" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">What does child maintenance cover?</Link></p>
         </article>
 
         {/* Article 2 */}
@@ -310,6 +312,7 @@ const ChildMaintenanceGuide = () => {
           <ArticleH3>What if income changes?</ArticleH3>
           <P>Life doesn't stay still. Jobs change, hours vary, new children arrive. If the paying parent's income shifts significantly, it makes sense to revisit the amount. Collabor8 makes it easy to update your payment schedule and keep both parents informed, no difficult conversations needed, just a quick update in the app.</P>
           <Callout><strong className="not-italic font-medium">Collabor8 tip:</strong> However you land on your number, calculator, formula, or a conversation over a cup of tea, Collabor8 is where you manage it from. Set it up once, and the app takes care of the rest.</Callout>
+          <p className="mt-8 text-[0.95rem] text-muted-foreground">Related question: <Link to="/resources/is-my-child-maintenance-fair" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">Is my child maintenance fair?</Link></p>
         </article>
 
         {/* Article 3 */}
@@ -332,6 +335,7 @@ const ChildMaintenanceGuide = () => {
           <ArticleH3>What about missed payments?</ArticleH3>
           <P>The honest answer: missed payments are far less likely when both parents have full visibility. Collabor8 sends automatic reminders before payments are due and flags anything overdue. Most of the time, that's enough. In serious cases where payments are persistently withheld and communication has completely broken down, formal enforcement routes remain an option, but for the vast majority of families, a clear and transparent arrangement is all you need.</P>
           <Callout><strong className="not-italic font-medium">Collabor8 tip:</strong> Set up your recurring payment once, and Collabor8 handles the rest, reminders, receipts, and records, all automatic. It takes about two minutes to get started.</Callout>
+          <p className="mt-8 text-[0.95rem] text-muted-foreground">Related question: <Link to="/resources/child-maintenance-agreement" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">How to write a child maintenance agreement</Link></p>
         </article>
 
         {/* Article 4 */}
@@ -355,6 +359,7 @@ const ChildMaintenanceGuide = () => {
           <Callout><strong className="not-italic font-medium">Collabor8 tip:</strong> You can earn rewards for logging and responding to expense requests promptly. Good co-parenting admin has its perks.</Callout>
           <ArticleH3>What if you disagree on an expense?</ArticleH3>
           <P>Sometimes one parent wants to fund something the other thinks is unnecessary. A sensible rule of thumb: the parent who wants the extra covers it. For genuinely essential costs, medical expenses, compulsory school items, these should always be shared. If disagreements become a pattern, a simple co-parenting agreement or a session with a family mediator can help you reach a workable approach.</P>
+          <p className="mt-8 text-[0.95rem] text-muted-foreground">Related question: <Link to="/resources/finances-after-separation" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">Finances after separation: where to start</Link></p>
         </article>
 
         {/* Article 5 */}
@@ -381,6 +386,7 @@ const ChildMaintenanceGuide = () => {
           <ArticleH3>When to get professional advice</ArticleH3>
           <P>For most families, a clear private arrangement managed through Collabor8 is all you need. But if your situation is genuinely complex, a high-earning paying parent, international elements, significant assets, or a very difficult separation, it's worth speaking to a family law solicitor. Many offer a free initial consultation and can help you understand your options clearly.</P>
           <Callout><strong className="not-italic font-medium">Collabor8 tip:</strong> Collabor8 doesn't enforce payments, that's not what it's for. What it does is make non-payment far less likely, by giving both parents complete visibility and removing every excuse for confusion.</Callout>
+          <p className="mt-8 text-[0.95rem] text-muted-foreground">Related questions: <Link to="/resources/is-my-child-maintenance-fair" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">Is my child maintenance fair?</Link> and <Link to="/resources/how-long-do-you-pay-child-maintenance" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">How long do you pay child maintenance for?</Link></p>
         </article>
       </main>
 
@@ -453,6 +459,7 @@ const ChildMaintenanceGuide = () => {
           <Link to="/privacy" className="text-white/60 no-underline hover:text-white">Privacy</Link>
         </p>
         <p className="mt-2 text-xs">&copy; {new Date().getFullYear()} Collabor8. This guide is for informational purposes only and does not constitute legal advice.</p>
+        <FooterResources onDark />
         <FooterContact onDark />
       </footer>
     </div>
