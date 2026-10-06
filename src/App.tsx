@@ -44,6 +44,9 @@ import OAuthConsent from "./pages/OAuthConsent";
 import ResetPassword from "./pages/ResetPassword";
 import InAppShell from "@/components/layout/InAppShell";
 import NotFound from "./pages/NotFound";
+import QueryRedirect from "@/components/QueryRedirect";
+import ResourcesIndex from "./pages/ResourcesIndex";
+import WhatDoesChildMaintenanceCover from "./pages/resources/WhatDoesChildMaintenanceCover";
 
 const DashboardTabRedirect = () => {
   const { tab } = useParams();
@@ -51,19 +54,6 @@ const DashboardTabRedirect = () => {
   const params = new URLSearchParams(search);
   params.set("tab", tab ?? "home");
   return <Navigate to={`/dashboard?${params.toString()}`} replace />;
-};
-
-// Redirect that preserves the query string (e.g. ?utm_source=...) across the jump.
-const QueryRedirect = ({ to }: { to: string }) => {
-  const { search } = useLocation();
-  const [pathAndQuery, hash] = to.split("#");
-  const [path, query] = pathAndQuery.split("?");
-  const params = new URLSearchParams(query ?? "");
-  new URLSearchParams(search).forEach((v, k) => {
-    if (!params.has(k)) params.set(k, v);
-  });
-  const qs = params.toString();
-  return <Navigate to={`${path}${qs ? `?${qs}` : ""}${hash ? `#${hash}` : ""}`} replace />;
 };
 
 const queryClient = new QueryClient();
@@ -87,7 +77,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              {["maintenance", "expenses", "chat", "benefits", "resources", "documents"].map((t) => (
+              {["maintenance", "expenses", "chat", "benefits", "documents"].map((t) => (
                 <Route key={t} path={`/${t}`} element={<QueryRedirect to={`/dashboard?tab=${t}`} />} />
               ))}
               <Route path="/dashboard/:tab" element={<DashboardTabRedirect />} />
@@ -107,6 +97,8 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
           <Route path="/podcast" element={<Podcast />} />
+          <Route path="/resources" element={<ResourcesIndex />} />
+          <Route path="/resources/what-does-child-maintenance-cover" element={<WhatDoesChildMaintenanceCover />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><InAppShell><ChildMaintenanceGuideApp /></InAppShell></ProtectedRoute>} />
               <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<QueryRedirect to="/resources/child-maintenance-guide#article-1" />} />

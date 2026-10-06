@@ -3,12 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import FooterContact from "@/components/FooterContact";
 import { useAppCtaHref } from "@/hooks/useAppCta";
 
+export interface Crumb {
+  label: string;
+  to?: string;
+}
+
 interface GuideLayoutProps {
   children: React.ReactNode;
   breadcrumb?: string;
+  crumbs?: Crumb[];
 }
 
-const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
+const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
   const navigate = useNavigate();
   const ctaHref = useAppCtaHref("/signup");
 
@@ -31,6 +37,24 @@ const GuideLayout = ({ children, breadcrumb }: GuideLayoutProps) => {
           <span className="mx-1.5 opacity-50">&rsaquo;</span>
           <span>{breadcrumb}</span>
         </div>
+      )}
+
+      {crumbs && crumbs.length > 0 && (
+        <nav aria-label="Breadcrumb" className="mx-auto max-w-[800px] px-5 pt-5 text-sm text-[#AEADA5] sm:px-8">
+          {crumbs.map((c, i) => {
+            const last = i === crumbs.length - 1;
+            return (
+              <span key={`${c.label}-${i}`}>
+                {i > 0 && <span className="mx-1.5 opacity-50">&rsaquo;</span>}
+                {!last && c.to ? (
+                  <Link to={c.to} className="text-[#AEADA5] no-underline hover:text-[#1E6B5E]">{c.label}</Link>
+                ) : (
+                  <span aria-current={last ? "page" : undefined}>{c.label}</span>
+                )}
+              </span>
+            );
+          })}
+        </nav>
       )}
 
       {children}
