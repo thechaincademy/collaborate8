@@ -82,13 +82,13 @@ const App = () => (
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               {["maintenance", "expenses", "chat", "benefits", "resources", "documents"].map((t) => (
-                <Route key={t} path={`/${t}`} element={<Navigate to={`/dashboard?tab=${t}`} replace />} />
+                <Route key={t} path={`/${t}`} element={<QueryRedirect to={`/dashboard?tab=${t}`} />} />
               ))}
               <Route path="/dashboard/:tab" element={<DashboardTabRedirect />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/cost-of-conflict" element={<ProtectedRoute><InAppShell><CostOfConflict /></InAppShell></ProtectedRoute>} />
-              <Route path="/tax-and-benefits" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
-              <Route path="/communication-guide" element={<Navigate to="/resources/child-maintenance-guide-app" replace />} />
+              <Route path="/tax-and-benefits" element={<QueryRedirect to="/resources/child-maintenance-guide-app" />} />
+              <Route path="/communication-guide" element={<QueryRedirect to="/resources/child-maintenance-guide-app" />} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
 
@@ -103,12 +103,12 @@ const App = () => (
           <Route path="/podcast" element={<Podcast />} />
           <Route path="/resources/child-maintenance-guide" element={<ChildMaintenanceGuide />} />
               <Route path="/resources/child-maintenance-guide-app" element={<ProtectedRoute><InAppShell><ChildMaintenanceGuideApp /></InAppShell></ProtectedRoute>} />
-              <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<Navigate to="/resources/child-maintenance-guide#article-1" replace />} />
-              <Route path="/resources/child-maintenance-guide/who-pays" element={<Navigate to="/resources/child-maintenance-guide#article-2" replace />} />
-              <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<Navigate to="/resources/child-maintenance-guide#article-3" replace />} />
-              <Route path="/resources/child-maintenance-guide/shared-expenses" element={<Navigate to="/resources/child-maintenance-guide#article-4" replace />} />
-              <Route path="/resources/child-maintenance-guide/rights-and-responsibilities" element={<Navigate to="/resources/child-maintenance-guide#article-5" replace />} />
-              <Route path="/resources/support-and-guidance" element={<Navigate to="/resources/child-maintenance-guide#money-help" replace />} />
+              <Route path="/resources/child-maintenance-guide/what-is-child-maintenance" element={<QueryRedirect to="/resources/child-maintenance-guide#article-1" />} />
+              <Route path="/resources/child-maintenance-guide/who-pays" element={<QueryRedirect to="/resources/child-maintenance-guide#article-2" />} />
+              <Route path="/resources/child-maintenance-guide/how-to-set-up-payments" element={<QueryRedirect to="/resources/child-maintenance-guide#article-3" />} />
+              <Route path="/resources/child-maintenance-guide/shared-expenses" element={<QueryRedirect to="/resources/child-maintenance-guide#article-4" />} />
+              <Route path="/resources/child-maintenance-guide/rights-and-responsibilities" element={<QueryRedirect to="/resources/child-maintenance-guide#article-5" />} />
+              <Route path="/resources/support-and-guidance" element={<QueryRedirect to="/resources/child-maintenance-guide#money-help" />} />
               <Route path="/app/child-maintenance-calculator" element={<ProtectedRoute><InAppShell title="Calculator"><ChildMaintenanceCalculator embedded /></InAppShell></ProtectedRoute>} />
               <Route path="/child-maintenance-calculator" element={<ChildMaintenanceCalculator />} />
               <Route path="/resources/financial-coparenting-tips" element={<FinancialCoparentingTips />} />
