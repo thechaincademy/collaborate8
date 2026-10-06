@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => ({
         importScripts: ["/push-sw.js"],
         // Never precache HTML: stale pages point at old picture files that no longer exist.
         globPatterns: ["**/*.{js,css}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
