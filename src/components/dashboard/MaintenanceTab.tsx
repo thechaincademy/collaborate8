@@ -137,16 +137,7 @@ const MaintenanceTab = () => {
   // Role selection gate - shown once, before the arrangement UI is unlocked.
   if (!profileLoading && profile && !roleConfirmed) {
     return (
-      <div className="px-6 pt-12">
-        <div className="mb-2">
-          <button
-            onClick={() => navigate(-1)}
-            aria-label="Go back"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
-          >
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-        </div>
+      <div className="px-6 pt-12 pb-24">
         <DashboardHeader title="Child Maintenance" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -197,16 +188,7 @@ const MaintenanceTab = () => {
   }
 
   return (
-    <div className="px-6 pt-12">
-      <div className="mb-2">
-        <button
-          onClick={() => navigate(-1)}
-          aria-label="Go back"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
-        >
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-      </div>
+    <div className="px-6 pt-12 pb-24">
       <DashboardHeader title="Child Maintenance" />
 
       {!profileLoading && (isManaging || isViewing) && (

@@ -94,7 +94,11 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   const activePayment = getActivePayment();
   const nextDueDate = getUpcomingDueDate(activePayment);
 
-  const firstName = profile?.first_name?.trim();
+  const meta = (user?.user_metadata ?? {}) as Record<string, string | undefined>;
+  const displayName = (meta.display_name || meta.full_name || meta.name || "").trim();
+  const firstName =
+    profile?.first_name?.trim() || meta.first_name?.trim() || displayName.split(/\s+/)[0] || "";
+  const greetingPending = !firstName && profileLoading;
   const greeting = firstName ? `Hi, ${firstName}` : "Hi there";
 
   const oneMonthAgo = useMemo(() => subMonths(new Date(), 1), []);
@@ -168,7 +172,11 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h2 className="text-2xl font-bold text-foreground">{greeting}</h2>
+        {greetingPending ? (
+          <Skeleton className="h-8 w-32 rounded-lg" />
+        ) : (
+          <h2 className="text-2xl font-bold text-foreground">{greeting}</h2>
+        )}
         <p className="text-sm text-muted-foreground">A snapshot of your activity in the last month.</p>
       </motion.div>
 

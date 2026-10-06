@@ -13,10 +13,21 @@ interface Profile {
   updated_at: string;
 }
 
+// Shared in-memory cache so tabs that mount later render instantly
+let profileCache: Profile | null = null;
+
 export const useProfile = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cached = user && profileCache?.id === user.id ? profileCache : null;
+  const [profile, setProfileState] = useState<Profile | null>(cached);
+  const [loading, setLoading] = useState(!cached);
+  const setProfile = (next: Profile | null | ((prev: Profile | null) => Profile | null)) => {
+    setProfileState((prev) => {
+      const value = typeof next === "function" ? next(prev) : next;
+      if (value) profileCache = value;
+      return value;
+    });
+  };
 
   useEffect(() => {
     if (!user) {
@@ -26,7 +37,7 @@ export const useProfile = () => {
     }
 
     const fetchProfile = async () => {
-      setLoading(true);
+      if (!(profileCache?.id === user.id)) setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")

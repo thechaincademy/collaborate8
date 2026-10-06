@@ -1,9 +1,11 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const TopBanner = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const handleWaitlistClick = () => {
     navigate("/splash");
@@ -46,9 +48,15 @@ const TopBanner = () => {
           >
             Guide
           </Link>
-          <Button size="sm" onClick={handleWaitlistClick} className="rounded-full">
-            Sign Up
-          </Button>
+          {user ? (
+            <Button size="sm" onClick={() => navigate("/dashboard")} className="rounded-full">
+              Back to app
+            </Button>
+          ) : (
+            <Button size="sm" onClick={handleWaitlistClick} className="rounded-full">
+              Sign Up
+            </Button>
+          )}
 
         </div>
       </div>
