@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { ArrowLeft, Download, Info, Calculator } from "lucide-react";
+import { ArrowLeft, Download, Info, Calculator, Lock } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import TopBanner from "@/components/TopBanner";
@@ -218,6 +218,12 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
           </div>
         </div>
 
+        {embedded && (
+          <p className="mb-4 text-sm font-medium leading-relaxed text-navy">
+            Use estimated figures or your own - you can update this any time.
+          </p>
+        )}
+
         {/* Introduction */}
         <div className="mx-auto max-w-[680px] px-4 py-8">
           <p className="text-[1.1rem] font-semibold leading-relaxed text-navy">
@@ -237,6 +243,12 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
             </div>
             <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-[#3D3D38]">Parent making payments</span>
           </div>
+          {embedded && (
+            <p className="mb-4 flex items-center gap-1.5 text-xs font-medium text-teal">
+              <Lock className="h-3.5 w-3.5 shrink-0" />
+              Your calculation is only visible to you.
+            </p>
+          )}
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-[#3D3D38]">{incomeLabels[incomePeriod].label}</label>
@@ -338,6 +350,10 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
             </button>
           </div>
         </div>
+
+        {embedded && Number(income) > 0 && (
+          <p className="-mt-2 mb-4 text-xs text-muted-foreground">Only visible to you. Share it when you are ready.</p>
+        )}
 
         {/* Breakdown card */}
         <div className="mb-4 rounded-2xl border border-[#E4E2DA] bg-background p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
