@@ -25,3 +25,4 @@
 - [x] "See it in action" images made less busy: promo card, half-cut second payment row, bottom nav and empty space trimmed out of the three app screenshots
 - [x] Undo the 'The first official step' card change on the landing page (Jade O, 12:17 UTC) - card restored to 'Get started'
 - [x] 'Everything you get' card: 'Get started' -> 'The first official step' with new description and teal 'Get started today' link to sign up (shown to Jade O, not published)
+- [x] In-app calculator copy only: intro line above the privacy notice, padlock privacy line above the inputs, grey 'Only visible to you' line under the results once a figure exists (public calculator untouched; not published)
