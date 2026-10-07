@@ -248,8 +248,8 @@ const Landing = () => {
             {[
               {
                 icon: Infinity,
-                title: "Maintain a secure record",
-                description: "Maintain a secure record of everything surrounding your child/ren's finances.",
+                title: "Your data stays yours",
+                description: "Your personal information, profile and account details are never visible to your co-parent. Only what you choose to share in the financial chat is seen by both of you.",
               },
               {
                 icon: BookOpen,
