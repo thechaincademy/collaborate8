@@ -2,7 +2,7 @@ import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { Play, Youtube } from "lucide-react";
+import { Play, Youtube, MicVocal } from "lucide-react";
 import TopBanner from "@/components/TopBanner";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -123,17 +123,17 @@ const Podcast = () => {
   return (
   <div className="min-h-screen bg-background">
     <Helmet>
-      <title>Podcast | Collabor8</title>
+      <title>The Blog | Collabor8</title>
       <meta
         name="description"
-        content="Practical conversations about child maintenance in the UK - CMS, arrangements, calculating contributions and common questions for separated parents."
+        content="Practical guides, videos and resources for separated parents navigating family finances."
       />
       <link rel="canonical" href="https://collaborate8.com/podcast" />
-        <meta property="og:title" content="Podcast | Collabor8" />
-        <meta property="og:description" content="Practical conversations about child maintenance in the UK - CMS, arrangements, calculating contributions and common questions for separated parents." />
+        <meta property="og:title" content="The Blog | Collabor8" />
+        <meta property="og:description" content="Practical guides, videos and resources for separated parents navigating family finances." />
         <meta property="og:url" content="https://collaborate8.com/podcast" />
-        <meta name="twitter:title" content="Podcast | Collabor8" />
-        <meta name="twitter:description" content="Practical conversations about child maintenance in the UK - CMS, arrangements, calculating contributions and common questions for separated parents." />
+        <meta name="twitter:title" content="The Blog | Collabor8" />
+        <meta name="twitter:description" content="Practical guides, videos and resources for separated parents navigating family finances." />
     </Helmet>
     <TopBanner />
 
@@ -147,19 +147,18 @@ const Podcast = () => {
         className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-start px-6 pb-16 pt-8 md:px-8 md:py-24"
       >
         <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
-          The Collabor8 Podcast
+          The Collabor8 Blog
         </div>
         <h1 className="text-6xl font-extrabold italic leading-[0.9] tracking-tighter text-foreground md:text-7xl">
           The
           <br />
-          <span className="not-italic text-primary">Podcast.</span>
+          <span className="not-italic text-primary">Blog.</span>
         </h1>
         <div className="mt-6 flex items-center gap-4">
           <div className="h-px w-8 shrink-0 bg-primary" />
           <p className="max-w-xl text-base font-medium leading-relaxed text-foreground/90 md:text-lg">
-            This is where we share practical conversations about child maintenance in the UK.
-            From how the CMS works to calculating contributions and the questions separated
-            parents ask most, each episode is built to be helpful, calm and practical.
+            Practical guides, videos and resources for separated parents navigating family
+            finances.
           </p>
         </div>
       </motion.div>
@@ -182,6 +181,39 @@ const Podcast = () => {
             <Youtube className="h-4 w-4" />
             New episodes will appear here as they are released.
           </p>
+        </motion.div>
+      </section>
+
+      {/* Coming soon podcast episodes */}
+      <section className="px-6 pb-16 md:px-8 md:pb-24">
+        <motion.div {...fade} className="mx-auto max-w-5xl">
+          <div className="mb-8 flex items-center gap-4">
+            <h2 className="text-2xl font-bold text-foreground md:text-3xl">
+              Coming Soon - Podcast Episodes
+            </h2>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <ul className="flex flex-col gap-4">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <li
+                key={n}
+                className="relative flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-card"
+              >
+                <span className="absolute right-4 top-4 rounded-full border border-gold px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-gold">
+                  Coming Soon
+                </span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal/10">
+                  <MicVocal className="h-5 w-5 text-teal" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-base font-bold text-foreground">Episode {n}</span>
+                  <span className="mt-0.5 block text-sm text-muted-foreground">
+                    Details coming soon.
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </motion.div>
       </section>
 
@@ -226,7 +258,7 @@ const Podcast = () => {
               Maintenance Guide
             </Link>
             <Link to="/podcast" className="hover:text-foreground">
-              Podcast
+              The Blog
             </Link>
             <Link to="/faq" className="hover:text-foreground">
               FAQ
