@@ -41,6 +41,7 @@ import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import CoparentStatus from "./CoparentStatus";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import NeedsResponse from "./NeedsResponse";
+import HomeTutorial from "./HomeTutorial";
 
 interface HomeTabProps {
   onNavigate: (tab: DashboardTab) => void;
@@ -165,6 +166,15 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   return (
     <div className="px-6 pt-12">
       <DashboardHeader title="Home" />
+
+      <HomeTutorial
+        userId={user?.id}
+        isLinked={isLinked}
+        coparentId={profile?.coparent_id ?? null}
+        inviteEmail={coparentEmail || null}
+        onInvite={() => setStatusOpen(true)}
+        onNavigate={onNavigate}
+      />
 
       {/* Greeting */}
       <motion.div
