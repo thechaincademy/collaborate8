@@ -181,7 +181,7 @@ const Landing = () => {
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-10 md:grid-cols-3 md:gap-8">
             {[
               {
                 src: appScreenshot1,
@@ -210,11 +210,13 @@ const Landing = () => {
                 transition={{ delay: i * 0.15 }}
                 className="flex flex-col items-center text-center"
               >
-                <img
-                  src={screenshot.src}
-                  alt={screenshot.alt}
-                  className="h-48 w-auto rounded-2xl object-contain shadow-elevated md:h-64"
-                />
+                <div className="mx-auto rounded-[2rem] border border-border bg-card p-2 shadow-soft">
+                  <img
+                    src={screenshot.src}
+                    alt={screenshot.alt}
+                    className="h-[606px] w-[280px] rounded-[1.6rem] object-cover md:h-[520px] md:w-[240px]"
+                  />
+                </div>
                 <h3 className="mt-6 max-w-xs text-lg font-bold leading-snug text-foreground">
                   {screenshot.title}
                 </h3>
