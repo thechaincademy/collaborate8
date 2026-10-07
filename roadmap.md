@@ -18,4 +18,5 @@
 - [x] Signed-in "Get started" / sign-up CTAs on public pages lead to the dashboard
 - [x] Podcast tab renamed to The Blog, new description, 5 minimal "Coming Soon - Podcast Episodes" cards (teal mic, gold badge, "Details coming soon.")
 - [x] Resources link block removed from the homepage footer only
-- [x] "See it in action" screenshots: uniform size, soft shadow, light-grey phone frame, centred, single column on mobile
+- [x] "See it in action" screenshots: reverted the phone-frame/uniform-size restyle (disliked), back to the earlier plain presentation
+- [x] "See it in action" images made less busy: promo card, half-cut second payment row, bottom nav and empty space trimmed out of the three app screenshots
