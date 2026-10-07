@@ -108,6 +108,9 @@ serve(async (req) => {
 
         const amountPaid = (invoice.amount_paid || 0) / 100;
 
+        // A scheduled arrangement's zero-value trial invoice is not a payment.
+        if (amountPaid <= 0) break;
+
         // Record payment in ledger (idempotent)
         const idempotencyKey = `inv_${invoice.id}`;
         const { data: existingPayment } = await supabase
