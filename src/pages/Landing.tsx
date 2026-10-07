@@ -27,7 +27,6 @@ import { useAppCtaHref } from "@/hooks/useAppCta";
 const Landing = () => {
   const navigate = useNavigate();
   const ctaHref = useAppCtaHref("/splash");
-  const signupHref = useAppCtaHref("/signup");
   const [email, setEmail] = useState("");
   const [honeypot, setHoneypot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -259,17 +258,10 @@ const Landing = () => {
               },
               {
                 icon: Trophy,
-                title: "The first official step",
-                description:
-                  "Collabor8 is the only dedicated space for separated parents to manage child maintenance and talk about money after separation.",
-                cta: "Get started today →",
+                title: "Get started",
+                description: "Get started. Sign up here.",
               },
-            ] as {
-              icon: typeof Trophy;
-              title: string;
-              description: string;
-              cta?: string;
-            }[]).map((item, i) => (
+            ].map((item, i) => (
               <motion.div
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -283,14 +275,6 @@ const Landing = () => {
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-foreground">{item.title}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{item.description}</p>
-                {item.cta && (
-                  <Link
-                    to={signupHref}
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-teal-700 transition-colors hover:text-teal-800 hover:underline"
-                  >
-                    {item.cta}
-                  </Link>
-                )}
               </motion.div>
             ))}
           </div>

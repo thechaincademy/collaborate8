@@ -20,3 +20,4 @@
 - [x] Resources link block removed from the homepage footer only
 - [x] "See it in action" screenshots: reverted the phone-frame/uniform-size restyle (disliked), back to the earlier plain presentation
 - [x] "See it in action" images made less busy: promo card, half-cut second payment row, bottom nav and empty space trimmed out of the three app screenshots
+- [x] Undo the 'The first official step' card change on the landing page (Jade O, 12:17 UTC) - card restored to 'Get started'
