@@ -15,6 +15,8 @@
 - [x] Stage 3: privacy & account settings (retention, data download, delete, cancel)
 
 # Bugfixes
+- [ ] Compact optional Home tutorial in existing empty space - awaiting Jade's approval of revised placement; no app changes or publishing
+- [x] Show the app again after Files previews - provided direct Home preview link
 - [x] Replace only paying parent maintenance setup with a sequential three-step flow and verified live confirmation (desktop/phone locks, review and banner checked with isolated payment responses; no charge created)
 - [x] Signed-in "Get started" / sign-up CTAs on public pages lead to the dashboard
 - [x] Podcast tab renamed to The Blog, new description, 5 minimal "Coming Soon - Podcast Episodes" cards (teal mic, gold badge, "Details coming soon.")
