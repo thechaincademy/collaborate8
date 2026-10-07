@@ -135,7 +135,7 @@ const Landing = () => {
                 onClick={scrollToWaitlist}
                 className="w-full rounded-xl bg-teal-700 px-6 py-4 text-lg font-bold text-white shadow-elevated transition-all hover:scale-[1.02] hover:bg-teal-800 active:scale-95"
               >
-                Use Collabor8 online now →
+                Sign up here →
               </button>
 
               <div className="mt-4 flex w-full items-center gap-3">
