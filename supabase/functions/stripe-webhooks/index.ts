@@ -108,6 +108,9 @@ serve(async (req) => {
 
         const amountPaid = (invoice.amount_paid || 0) / 100;
 
+        // A scheduled arrangement's zero-value trial invoice is not a payment.
+        if (amountPaid <= 0) break;
+
         // Record payment in ledger (idempotent)
         const idempotencyKey = `inv_${invoice.id}`;
         const { data: existingPayment } = await supabase
@@ -398,6 +401,19 @@ serve(async (req) => {
             subscriptionId,
           });
           break;
+        }
+
+        if (!["active", "trialing"].includes(subscription.status)) break;
+
+        if (meta.collabor8_setup_flow === "payer_stepper") {
+          await supabase.from("notifications").upsert({
+            user_id: payerId,
+            type: "maintenance",
+            title: "Maintenance arrangement confirmed",
+            message: `Your ${dbFrequency} arrangement of £${amount.toFixed(2)} is confirmed.`,
+            link: "/dashboard?tab=maintenance",
+            dedupe_key: `arrangement-confirmed-${subscriptionId}-payer`,
+          }, { onConflict: "dedupe_key", ignoreDuplicates: true });
         }
 
         // Idempotency: don't re-insert if arrangement already exists for this subscription

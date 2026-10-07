@@ -82,12 +82,12 @@ export const useStripePayments = () => {
   const [cards, setCards] = useState<CardInfo[]>([]);
 
   /** Redirect to Stripe Checkout to add a card */
-  const setupCard = async () => {
+  const setupCard = async (returnToMaintenance = false) => {
     if (!user) return null;
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-subscriptions", {
-        body: { action: "setup-card" },
+        body: { action: "setup-card", returnToMaintenance },
       });
       if (error) throw error;
       return data as { url: string; customerId: string };
@@ -127,6 +127,8 @@ export const useStripePayments = () => {
     currency?: string;
     interval?: string;
     receiverId: string;
+    startDate?: string;
+    returnToMaintenance?: boolean;
   }) => {
     if (!user) return null;
     setLoading(true);

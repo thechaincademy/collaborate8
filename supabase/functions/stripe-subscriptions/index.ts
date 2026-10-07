@@ -79,8 +79,8 @@ serve(async (req) => {
       const origin = req.headers.get("origin") || "https://collabor8.lovable.app";
       const url = await paymentMethodProvider.createSetupSession(
         customerId,
-        `${origin}/dashboard?card-setup=success`,
-        `${origin}/dashboard?card-setup=cancelled`,
+        `${origin}/dashboard?${body.returnToMaintenance ? "tab=maintenance&" : ""}card-setup=success`,
+        `${origin}/dashboard?${body.returnToMaintenance ? "tab=maintenance&" : ""}card-setup=cancelled`,
       );
 
       logStep("Setup session created", { customerId });
@@ -116,9 +116,39 @@ serve(async (req) => {
 
     // ── Create subscription via hosted Checkout (Apple Pay / Google Pay / card) ──
     if (action === "create-subscription-checkout") {
-      const { amount, currency = "gbp", interval = "month", receiverId } = body;
+      const { amount, currency = "gbp", interval = "month", receiverId, startDate, returnToMaintenance } = body;
       const normalizedInterval = normalizeInterval(interval);
       const dbFrequency = toDbFrequency(normalizedInterval);
+
+      // Optional scheduling is scoped to the new payer setup. Existing callers
+      // retain immediate billing and their existing return destinations.
+      let trialEnd: number | undefined;
+      if (startDate !== undefined) {
+        const requested = new Date(startDate);
+        if (!Number.isFinite(requested.getTime())) {
+          return new Response(JSON.stringify({ error: "Invalid start date" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const londonDate = (date: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+        const now = new Date();
+        if (londonDate(requested) !== londonDate(now)) {
+          trialEnd = Math.floor(requested.getTime() / 1000);
+          const delay = trialEnd - Math.floor(now.getTime() / 1000);
+          if (delay < 48 * 60 * 60 || delay > 730 * 24 * 60 * 60) {
+            return new Response(JSON.stringify({ error: "Choose today or a start date at least three days from today and within two years." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+      }
+
+      if (returnToMaintenance) {
+        const { data: payer } = await supabase.from("profiles").select("coparent_id, role").eq("id", user.id).maybeSingle();
+        if (payer?.role !== "managing" || payer.coparent_id !== receiverId) {
+          return new Response(JSON.stringify({ error: "Link your receiving co-parent before confirming your arrangement." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+
+      if (!Number.isFinite(amount) || amount < 0.50 || Math.abs(amount * 100 - Math.round(amount * 100)) > 0.00001) {
+        return new Response(JSON.stringify({ error: "Enter an amount of at least £0.50 with no more than two decimal places." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
       if (!amount || !receiverId) {
         return new Response(JSON.stringify({ error: "Missing amount or receiverId" }), {
@@ -198,6 +228,7 @@ serve(async (req) => {
         payment_method_types: ["card"],
         line_items: [{ price: priceId, quantity: 1 }],
         subscription_data: {
+          ...(trialEnd ? { trial_end: trialEnd, proration_behavior: "none" as const } : {}),
           transfer_data: {
             destination: connectedAccount.provider_account_id,
           },
@@ -207,10 +238,12 @@ serve(async (req) => {
             collabor8_type: "maintenance",
             collabor8_db_frequency: dbFrequency,
             collabor8_amount: String(amount),
+            ...(startDate ? { collabor8_start_date: startDate } : {}),
+            ...(returnToMaintenance ? { collabor8_setup_flow: "payer_stepper" } : {}),
           },
         },
-        success_url: `${origin}/dashboard?subscription-checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/edit-payment?subscription-checkout=cancelled`,
+        success_url: `${origin}/dashboard?${returnToMaintenance ? "tab=maintenance&" : ""}subscription-checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: returnToMaintenance ? `${origin}/dashboard?tab=maintenance` : `${origin}/edit-payment?subscription-checkout=cancelled`,
       });
 
       logStep("Checkout session created", { sessionId: session.id, priceId });
@@ -615,6 +648,10 @@ serve(async (req) => {
         });
       }
 
+      if (session.status !== "complete" || !["active", "trialing"].includes(subscription.status)) {
+        return new Response(JSON.stringify({ error: "The arrangement has not been confirmed yet." }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       const { data: existing } = await supabase
         .from("recurring_payments")
         .select("id")
@@ -663,9 +700,20 @@ serve(async (req) => {
         arrangementId = inserted.id;
       }
 
+      if (meta.collabor8_setup_flow === "payer_stepper") {
+        await supabase.from("notifications").upsert({
+          user_id: payerId,
+          type: "maintenance",
+          title: "Maintenance arrangement confirmed",
+          message: `Your ${dbFrequency} arrangement of £${amount.toFixed(2)} is confirmed.`,
+          link: "/dashboard?tab=maintenance",
+          dedupe_key: `arrangement-confirmed-${subscription.id}-payer`,
+        }, { onConflict: "dedupe_key", ignoreDuplicates: true });
+      }
+
       // Backfill the first paid invoice if not already recorded
       const latestInvoice = subscription.latest_invoice as Stripe.Invoice | null;
-      if (latestInvoice && (latestInvoice.status === "paid" || latestInvoice.amount_paid > 0)) {
+      if (latestInvoice && latestInvoice.amount_paid > 0) {
         const idempotencyKey = `inv_${latestInvoice.id}`;
         const { data: existingPayment } = await supabase
           .from("payments")

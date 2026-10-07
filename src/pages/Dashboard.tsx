@@ -46,7 +46,14 @@ const Dashboard = () => {
     if (checkoutResult === "success") {
       const finalize = async () => {
         if (sessionId) {
-          await syncCheckoutSession(sessionId);
+          const result = await syncCheckoutSession(sessionId);
+          if (!result?.success) {
+            toast.error("Your arrangement could not be confirmed. Please try again.");
+            return;
+          }
+          window.dispatchEvent(new Event("c8-arrangement-refresh"));
+        } else {
+          return;
         }
         toast.success("Recurring payment set up successfully!");
         setSearchParams((prev) => {
@@ -59,6 +66,15 @@ const Dashboard = () => {
       };
       finalize();
     }
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!searchParams.has("card-setup") || searchParams.get("tab") !== "maintenance") return;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("card-setup");
+      return next;
+    }, { replace: true });
   }, [searchParams, setSearchParams]);
 
   // Normalise invalid or redundant ?tab= values with replace (only for invalid values).
