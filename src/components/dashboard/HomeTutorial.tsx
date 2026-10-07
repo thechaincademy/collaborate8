@@ -157,7 +157,7 @@ const HomeTutorial = ({ userId, isLinked, coparentId, inviteEmail, onInvite, onN
             const unlocked = index === 0 || done[index - 1];
             const isDone = done[index];
             return (
-              <li key={step.title} aria-disabled={!unlocked} className={cn("flex gap-2.5", !unlocked && "opacity-45")}>
+              <li key={step.title} aria-disabled={!unlocked} className={cn("flex gap-2.5", !unlocked && "opacity-60")}>
                 <span
                   className={cn(
                     "mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
