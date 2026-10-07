@@ -138,7 +138,7 @@ const HomeTutorial = ({ userId, isLinked, coparentId, inviteEmail, onInvite, onN
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       aria-label="Getting started"
-      className="mb-4 overflow-hidden rounded-xl border border-teal/25 bg-card shadow-sm"
+      className="mb-4 max-w-md overflow-hidden rounded-xl border border-teal/25 bg-card shadow-sm"
     >
       <div className="h-1 w-full bg-muted" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full bg-teal transition-all duration-500" style={{ width: `${percent}%` }} />
