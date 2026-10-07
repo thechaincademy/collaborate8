@@ -1,4 +1,3 @@
-import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -339,7 +338,6 @@ const Landing = () => {
             </div>
           </div>
         </div>
-      <FooterResources />
         <FooterContact />
         <div className="mt-6 flex items-center justify-center gap-3">
           <a
