@@ -14,7 +14,8 @@ import {
   ChevronDown,
   Trophy,
   BookOpen,
-  Infinity
+  Infinity,
+  Instagram
 } from "lucide-react";
 
 import appScreenshot1 from "@/assets/app-real-1.jpg";
@@ -340,6 +341,17 @@ const Landing = () => {
         </div>
       <FooterResources />
         <FooterContact />
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <a
+            href="https://www.instagram.com/collabor8official/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Collabor8 on Instagram"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <Instagram className="h-4 w-4" />
+          </a>
+        </div>
       </footer>
     </div>
   );
