@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "./DashboardHeader";
+import PayingParentSetup from "./PayingParentSetup";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { useProfile } from "@/hooks/useProfile";
 import { usePayments } from "@/hooks/usePayments";
@@ -15,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const MaintenanceTab = () => {
   const navigate = useNavigate();
-  const { getActivePayment, loading } = useRecurringPayments();
+  const { getActivePayment, loading, refetch } = useRecurringPayments();
   const { isViewing, isManaging, profile, loading: profileLoading, updateProfile } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
   const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
@@ -28,6 +29,12 @@ const MaintenanceTab = () => {
     return false; // set below in effect once we know user id
   });
   const [roleSaving, setRoleSaving] = useState(false);
+
+  useEffect(() => {
+    const refresh = () => { void refetch(); };
+    window.addEventListener("c8-arrangement-refresh", refresh);
+    return () => window.removeEventListener("c8-arrangement-refresh", refresh);
+  }, [profile?.id]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -93,7 +100,7 @@ const MaintenanceTab = () => {
   const isContentLoading = loading || profileLoading || cardsLoading || coparentArrangementLoading || connectStatus === "loading";
 
   const handleSetupCard = async () => {
-    const result = await setupCard();
+    const result = await setupCard(true);
     if (result?.url) window.location.href = result.url;
   };
 
@@ -258,20 +265,15 @@ const MaintenanceTab = () => {
           transition={{ delay: 0.2 }}
           className="mb-6 space-y-3"
         >
-          {/* MANAGING (payer): card to send */}
-          {isManaging && cards.length === 0 && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="mb-3 flex items-center gap-3">
-                <CreditCard className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Add your preferred card to get your arrangement set up</p>
-                </div>
-              </div>
-              <Button onClick={handleSetupCard} className="w-full gap-2" size="lg" disabled={stripeLoading}>
-                <CreditCard className="h-5 w-5" />
-                {stripeLoading ? "Loading..." : "Select your preferred payment method"}
-              </Button>
-            </div>
+          {isManaging && profile && (
+            <PayingParentSetup
+              connected={cards.length > 0}
+              userId={profile.id}
+              receiverId={profile.coparent_id}
+              arrangement={activePayment}
+              onConnect={handleSetupCard}
+              connecting={stripeLoading}
+            />
           )}
 
 
@@ -322,15 +324,7 @@ const MaintenanceTab = () => {
           {/* Arrangement actions for managing parent (payer) */}
           {isManaging && cards.length > 0 && (
             <>
-              {!displayArrangement ? (
-                <button
-                  onClick={() => navigate("/edit-payment")}
-                  className="w-full rounded-2xl border border-primary/40 bg-primary/10 p-5 text-left transition-colors hover:bg-primary/15"
-                >
-                  <p className="font-semibold text-foreground">You're nearly there</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Click here to set up payment.</p>
-                </button>
-              ) : (
+              {displayArrangement && (
                 <div className="grid grid-cols-2 gap-3">
                   <Button className="h-auto flex-col gap-2 py-4" variant="outline" onClick={() => navigate("/payment-history")}>
                     <span className="font-medium">Payment History</span>
