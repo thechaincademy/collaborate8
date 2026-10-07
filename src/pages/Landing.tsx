@@ -249,7 +249,7 @@ const Landing = () => {
               {
                 icon: Infinity,
                 title: "Your data stays yours",
-                description: "Your personal information, profile and account details are never visible to your co-parent. Only what you choose to share in the financial chat is seen by both of you.",
+                description: "Your personal information, profile and account details are never visible to your co-parent.",
               },
               {
                 icon: BookOpen,
