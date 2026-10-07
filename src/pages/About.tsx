@@ -165,7 +165,7 @@ const About = () => (
               Child Maintenance Calculator
             </Link>
             <Link to="/podcast" className="hover:text-foreground">
-              Podcast
+              The Blog
             </Link>
             <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">
               Maintenance Guide
