@@ -16,3 +16,4 @@
 
 # Bugfixes
 - [x] Signed-in "Get started" / sign-up CTAs on public pages lead to the dashboard
+- [x] Podcast tab renamed to The Blog, new description, 5 minimal "Coming Soon - Podcast Episodes" cards (teal mic, gold badge, "Details coming soon.")
