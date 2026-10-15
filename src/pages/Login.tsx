@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { useAuth } from "@/hooks/useAuth";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
@@ -41,6 +42,7 @@ const Login = () => {
     if (error) {
       toast.error(error.message || "Failed to log in");
     } else {
+      void track("login", { method: "password" });
       navigate(nextPath);
     }
   };

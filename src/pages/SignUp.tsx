@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import signupFamily from "@/assets/signup-family-hd.jpg";
 
 type SignUpStep = "welcome" | "name" | "email" | "password" | "coparent" | "verify";
@@ -90,6 +91,7 @@ const SignUp = () => {
       return;
     }
     setAccountCreated(true);
+    void track("signup_completed", { flow: "email" });
     setStep("coparent");
   };
 
@@ -131,7 +133,10 @@ const SignUp = () => {
         .invoke("send-invite-email", {
           body: { recipientEmail: coparentEmail, inviteCode: code, senderName: `${firstName} ${lastName}` },
         })
-        .then(({ error }) => { if (error) console.error("send-invite-email failed", error); })
+        .then(({ error }) => {
+          if (error) console.error("send-invite-email failed", error);
+          else void track("coparent_invite_sent", { method: "email", source: "signup" });
+        })
         .catch((error) => console.error("send-invite-email failed", error));
     }
 
@@ -188,7 +193,7 @@ const SignUp = () => {
 
       <div className="flex flex-col gap-3">
         <Button
-          onClick={() => { setAuthMethod("manual"); setStep("name"); }}
+          onClick={() => { setAuthMethod("manual"); setStep("name"); void track("signup_started", { flow: "email" }); }}
           className="w-full bg-clay text-clay-foreground hover:bg-clay/90"
           size="lg"
         >
