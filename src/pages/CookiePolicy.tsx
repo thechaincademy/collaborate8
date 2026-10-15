@@ -21,7 +21,7 @@ const CookiePolicy = () => {
         </button>
 
         <h1 className="mb-2 text-3xl font-bold text-foreground">Cookie Policy</h1>
-        <p className="mb-8 text-sm text-muted-foreground">Last updated: February 2025</p>
+        <p className="mb-8 text-sm text-muted-foreground">Last updated: October 2026</p>
 
         <div className="space-y-6 text-sm leading-relaxed text-muted-foreground">
           <section>
@@ -44,7 +44,7 @@ const CookiePolicy = () => {
 
           <section>
             <h2 className="mb-2 text-lg font-semibold text-foreground">Analytics Cookies</h2>
-            <p>We use Hotjar for behavioural analytics. These cookies help us understand how users interact with our app so we can improve the experience.</p>
+            <p>We use Hotjar and Microsoft Clarity for behavioural analytics. These cookies help us understand how users interact with our app so we can improve the experience. Microsoft Clarity is only loaded, and its cookies only set, after you click "Accept All" - it is not loaded if you choose "Essential Only".</p>
             <div className="mt-3 rounded-xl border border-border bg-card p-4">
               <div className="grid grid-cols-3 gap-2 text-xs font-medium text-foreground">
                 <span>Cookie</span><span>Purpose</span><span>Duration</span>
@@ -56,6 +56,12 @@ const CookiePolicy = () => {
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <span>_hjSession*</span><span>Session tracking</span><span>30 min</span>
                 </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <span>_clck</span><span>Microsoft Clarity visitor id</span><span>1 year</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <span>_clsk</span><span>Microsoft Clarity session</span><span>1 day</span>
+                </div>
               </div>
             </div>
           </section>
@@ -63,7 +69,7 @@ const CookiePolicy = () => {
           <section>
             <h2 className="mb-2 text-lg font-semibold text-foreground">Managing Cookies</h2>
             <p>You can manage your cookie preferences through the cookie consent banner that appears when you first visit our site. You can also manage cookies through your browser settings. Note that disabling essential cookies may prevent the app from functioning properly.</p>
-            <p className="mt-2">To opt out of Hotjar tracking specifically, visit <a href="https://www.hotjar.com/legal/policies/do-not-track/" target="_blank" rel="noopener noreferrer" className="underline text-foreground">Hotjar's opt-out page</a>.</p>
+            <p className="mt-2">To opt out of Hotjar tracking specifically, visit <a href="https://www.hotjar.com/legal/policies/do-not-track/" target="_blank" rel="noopener noreferrer" className="underline text-foreground">Hotjar's opt-out page</a>. For Microsoft Clarity, see the <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer" className="underline text-foreground">Microsoft Privacy Statement</a>.</p>
           </section>
 
           <section>
