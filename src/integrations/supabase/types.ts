@@ -923,6 +923,7 @@ export type Database = {
           first_name: string | null
           id: string
           invite_code: string | null
+          is_test_account: boolean
           last_name: string | null
           role: string
           updated_at: string
@@ -933,6 +934,7 @@ export type Database = {
           first_name?: string | null
           id: string
           invite_code?: string | null
+          is_test_account?: boolean
           last_name?: string | null
           role?: string
           updated_at?: string
@@ -943,6 +945,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           invite_code?: string | null
+          is_test_account?: boolean
           last_name?: string | null
           role?: string
           updated_at?: string
