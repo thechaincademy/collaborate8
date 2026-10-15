@@ -44,7 +44,7 @@ const CookiePolicy = () => {
 
           <section>
             <h2 className="mb-2 text-lg font-semibold text-foreground">Analytics Cookies</h2>
-            <p>We use Hotjar and Microsoft Clarity for behavioural analytics. These cookies help us understand how users interact with our app so we can improve the experience. Microsoft Clarity is only loaded, and its cookies only set, after you click "Accept All" - it is not loaded if you choose "Essential Only".</p>
+            <p>We use Hotjar and Microsoft Clarity for behavioural analytics. These cookies help us understand how users interact with our app so we can improve the experience. Hotjar, Microsoft Clarity and the Google tag are only loaded, and their cookies only set, after you click "Accept All" - they are not loaded if you choose "Essential Only".</p>
             <div className="mt-3 rounded-xl border border-border bg-card p-4">
               <div className="grid grid-cols-3 gap-2 text-xs font-medium text-foreground">
                 <span>Cookie</span><span>Purpose</span><span>Duration</span>
