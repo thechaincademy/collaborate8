@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { track, fileType } from "@/lib/analytics";
 import RewriteComposer from "./RewriteComposer";
 import {
   CATEGORIES, PRIORITIES, DecisionThread, ThreadEvent, addEvent, categoryLabel, deadlineSoon,
@@ -165,6 +166,7 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
     setSaving(false);
     reset();
     onOpenChange(false);
+    void track("decision_created", { category, priority, has_deadline: !!deadline, require_ack: requireAck });
     toast.success("Decision thread sent");
     onCreated(id);
   };
@@ -229,7 +231,7 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send decision request"}
           </Button>
         </div>
-        <RewriteComposer open={rewriteOpen} draft={request} onOpenChange={setRewriteOpen} onUse={setRequest} />
+        <RewriteComposer open={rewriteOpen} draft={request} onOpenChange={setRewriteOpen} onUse={setRequest} surface="decision_new" />
       </SheetContent>
     </Sheet>
   );
@@ -286,7 +288,9 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
     const { error } = await supabase.storage.from("chat-attachments").upload(path, f);
     setBusy(false);
     if (error) return toast.error("Could not attach that file");
-    await act("attach", null, { attachment_path: path, attachment_name: f.name });
+    if (await act("attach", null, { attachment_path: path, attachment_name: f.name })) {
+      void track("document_uploaded", { surface: "decision_thread", file_type: fileType(f) });
+    }
   };
 
   const openFile = async (path: string) => {
@@ -433,7 +437,7 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
         </div>
       )}
 
-      <RewriteComposer open={rewriteOpen} draft={draft} onOpenChange={setRewriteOpen} onUse={setDraft} />
+      <RewriteComposer open={rewriteOpen} draft={draft} onOpenChange={setRewriteOpen} onUse={setDraft} surface="decision_reply" />
 
       {/* Propose change */}
       <Sheet open={proposeOpen} onOpenChange={setProposeOpen}>

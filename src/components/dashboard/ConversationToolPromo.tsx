@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { track, trackBeforeRedirect } from "@/lib/analytics";
 
 export const CONVERSATION_TOOL_PRICE = "£29.99";
 
@@ -346,6 +347,10 @@ export const ConversationToolModal = ({
   const { hasAccess, loading, refresh } = useConversationToolAccess();
   const [paying, setPaying] = useState(false);
 
+  useEffect(() => {
+    if (open) void track("chatbot_opened", { surface: "conversation_tool" });
+  }, [open]);
+
   const handleStart = () => {
     onOpenChange(false);
     onStart?.();
@@ -367,7 +372,10 @@ export const ConversationToolModal = ({
       handleStart();
       return;
     }
-    if (data?.url) window.location.href = data.url as string;
+    if (data?.url) {
+      await trackBeforeRedirect("payment_started", { product: "conversation_tool" });
+      window.location.href = data.url as string;
+    }
   };
 
   return (
