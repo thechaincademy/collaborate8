@@ -1,4 +1,8 @@
-[
+import type { RouteMeta } from "../../scripts/routeHeadPlugin";
+
+// Verbatim page metadata. Missing social tags use the page's own text.
+// Cost of Conflict has no runtime canonical; use its existing public route.
+const routeMeta = [
   {
     "route": "/",
     "title": "Collabor8 - Child Maintenance App for UK Parents",
@@ -273,4 +277,6 @@
     "twitterTitle": "What Does Child Maintenance Cover? UK Guide | Collabor8",
     "twitterDescription": "Does child maintenance cover school uniform, trips, clubs or the dentist? What it is for, and simple ways UK parents can split extra costs fairly."
   }
-]
+] satisfies readonly RouteMeta[];
+
+export default routeMeta;
