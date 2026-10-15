@@ -53,16 +53,16 @@
   },
   {
     "route": "/resources",
-    "title": "{TITLE}",
-    "description": null,
+    "title": "Child Maintenance Resources for UK Parents | Collabor8",
+    "description": "Free guides for separated parents in the UK: what child maintenance covers, written agreements, how long it lasts, fair amounts and calm money talks.",
     "canonical": "https://collaborate8.com/resources",
-    "ogTitle": null,
-    "ogDescription": null,
-    "ogUrl": null,
+    "ogTitle": "Child Maintenance Resources for UK Parents | Collabor8",
+    "ogDescription": "Free guides for separated parents in the UK: what child maintenance covers, written agreements, how long it lasts, fair amounts and calm money talks.",
+    "ogUrl": "https://collaborate8.com/resources",
     "ogType": "website",
     "twitterCard": "summary_large_image",
-    "twitterTitle": null,
-    "twitterDescription": null
+    "twitterTitle": "Child Maintenance Resources for UK Parents | Collabor8",
+    "twitterDescription": "Free guides for separated parents in the UK: what child maintenance covers, written agreements, how long it lasts, fair amounts and calm money talks."
   },
   {
     "route": "/resources/child-maintenance-guide",
