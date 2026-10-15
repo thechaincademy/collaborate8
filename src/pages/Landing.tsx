@@ -22,11 +22,12 @@ import appScreenshot2 from "@/assets/app-real-2.jpg";
 import appScreenshot3 from "@/assets/app-real-3.jpg";
 import TopBanner from "@/components/TopBanner";
 import InstallAppButtons from "@/components/InstallAppButtons";
+import RedirectIfSignedIn from "@/components/RedirectIfSignedIn";
 import { useAppCtaHref } from "@/hooks/useAppCta";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const ctaHref = useAppCtaHref("/splash");
+  const ctaHref = useAppCtaHref("/signup");
   const signupHref = useAppCtaHref("/signup");
   const [email, setEmail] = useState("");
   const [honeypot, setHoneypot] = useState("");
@@ -75,6 +76,7 @@ const Landing = () => {
   };
 
   return (
+    <RedirectIfSignedIn>
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Collabor8 - Child Maintenance App for UK Parents</title>
@@ -132,21 +134,19 @@ const Landing = () => {
             </p>
 
             <div className="flex w-full max-w-md flex-col items-center">
-              <button
+              <Button
                 onClick={scrollToWaitlist}
-                className="w-full rounded-xl bg-teal-700 px-6 py-4 text-lg font-bold text-white shadow-elevated transition-all hover:scale-[1.02] hover:bg-teal-800 active:scale-95"
+                className="h-auto w-full rounded-xl bg-teal-700 px-6 py-4 text-lg font-bold text-primary-foreground shadow-elevated transition-all hover:scale-[1.02] hover:bg-teal-800 active:scale-95"
               >
                 Sign up here →
-              </button>
+              </Button>
 
-              <div className="mt-4 flex w-full items-center gap-3">
-                <span className="h-px flex-1 bg-foreground/20" />
-                <span className="text-xs font-medium text-foreground/70">or</span>
-                <span className="h-px flex-1 bg-foreground/20" />
-              </div>
+              <Link to="/login" className="mt-4 text-sm text-foreground/80 underline-offset-4 hover:underline">
+                Already have an account? Log in
+              </Link>
 
-              <div className="mt-4">
-                <InstallAppButtons />
+              <div className="mt-2">
+                <InstallAppButtons variant="subtle" />
               </div>
 
             </div>
@@ -301,7 +301,7 @@ const Landing = () => {
             viewport={{ once: true }}
             className="mt-10 text-center"
           >
-            <Button size="lg" onClick={scrollToWaitlist} className="gap-2">
+            <Button variant="outline" size="lg" onClick={scrollToWaitlist} className="gap-2">
               Sign Up <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>
@@ -324,7 +324,7 @@ const Landing = () => {
               Create your account and get started in minutes.
             </p>
             <div className="mt-8">
-              <Button size="lg" onClick={() => navigate(ctaHref)} className="gap-2">
+              <Button variant="outline" size="lg" onClick={() => navigate(ctaHref)} className="gap-2">
                 Sign Up <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -368,6 +368,7 @@ const Landing = () => {
         </div>
       </footer>
     </div>
+    </RedirectIfSignedIn>
   );
 };
 

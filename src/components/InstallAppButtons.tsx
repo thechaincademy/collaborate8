@@ -21,7 +21,7 @@ const isStandalone = () =>
   (window.matchMedia("(display-mode: standalone)").matches ||
     (window.navigator as unknown as { standalone?: boolean }).standalone === true);
 
-const InstallAppButtons = () => {
+const InstallAppButtons = ({ variant = "default" }: { variant?: "default" | "subtle" }) => {
   const [installed, setInstalled] = useState(false);
   const ctaHref = useAppCtaHref("/splash");
   const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null);
@@ -55,6 +55,7 @@ const InstallAppButtons = () => {
   };
 
   if (installed) {
+    if (variant === "subtle") return null;
     return (
       <div className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-bold text-background">
         <Download className="h-4 w-4" />
@@ -65,6 +66,11 @@ const InstallAppButtons = () => {
 
   return (
     <>
+      {variant === "subtle" ? (
+        <Button variant="link" onClick={openHomeScreenGuide} className="h-auto px-1 py-2 text-xs font-normal text-foreground/70">
+          Add to home screen
+        </Button>
+      ) : (
       <div className="flex w-full max-w-md flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button asChild className="w-full sm:w-auto">
           <Link to={ctaHref}>Use Collabor8 online</Link>
@@ -73,6 +79,7 @@ const InstallAppButtons = () => {
           <Plus className="h-4 w-4" /> Add to home screen
         </Button>
       </div>
+      )}
 
       <Dialog open={openGuide !== null} onOpenChange={(open) => !open && setOpenGuide(null)}>
         <DialogContent className="max-w-sm rounded-2xl">
