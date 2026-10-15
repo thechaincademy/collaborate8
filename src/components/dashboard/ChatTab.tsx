@@ -13,6 +13,7 @@ import { useProfile } from "@/hooks/useProfile";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { track, fileType } from "@/lib/analytics";
 import {
   ConversationToolModal,
   ConversationToolSuggestionCard,
@@ -122,6 +123,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     }
     if (draft.trim()) setDraft("");
     if (data) setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data as Message]));
+    void track("document_uploaded", { surface: "chat_attachment", file_type: fileType(file) });
     toast.success("Attachment sent and saved to Documents");
   };
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -208,6 +210,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           toast.error("We could not confirm your payment yet. Please try again in a moment.");
           return;
         }
+        void track("payment_completed", { product: "conversation_tool" });
         toast.success("Payment confirmed - let's get started.");
         setEmailStepOpen(true);
       })();
@@ -304,6 +307,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     } catch {
       // message is stored either way
     }
+    void track("chat_message_sent", { pending: true });
     setPendingMessage(data);
     setSavedCoparentEmail(email);
     setPendingDraft("");
@@ -436,6 +440,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       toast.error("Could not send message");
       return;
     }
+    void track("chat_message_sent", { used_suggestion: opts?.usedSuggestion ?? false, rewritten: !!opts?.original });
     setDraft("");
     setIntercept(null);
   };
@@ -846,7 +851,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         </Button>
       </div>
       <div className="-mt-2 mb-2 flex items-center justify-between">
-        <button onClick={() => setStartersOpen((o) => !o)}
+        <button onClick={() => { if (!startersOpen) void track("chatbot_opened", { surface: "prompts" }); setStartersOpen((o) => !o); }}
           className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
           <MessageCircle className="h-3.5 w-3.5 text-primary" /> {startersOpen ? "Hide AI prompts" : "AI prompts"}
         </button>
