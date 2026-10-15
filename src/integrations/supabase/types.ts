@@ -1119,6 +1119,7 @@ export type Database = {
       }
       usage_events: {
         Row: {
+          anonymous_id: string | null
           created_at: string
           event_type: string
           id: string
@@ -1128,6 +1129,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          anonymous_id?: string | null
           created_at?: string
           event_type: string
           id?: string
@@ -1137,6 +1139,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          anonymous_id?: string | null
           created_at?: string
           event_type?: string
           id?: string
@@ -1167,7 +1170,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      usage_events_reportable: {
+        Row: {
+          anonymous_id: string | null
+          created_at: string | null
+          event_type: string | null
+          id: string | null
+          metadata: Json | null
+          path: string | null
+          tab: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_coparent_invitation: {

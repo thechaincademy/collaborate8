@@ -8,6 +8,13 @@
       "when": 1792088246856,
       "tag": "0000_profiles_is_test_account_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792088317006,
+      "tag": "0001_usage_events_feature_analytics",
+      "breakpoints": true
     }
   ]
 }
