@@ -19,6 +19,8 @@ const CookieConsent = () => {
   const handleAccept = () => {
     localStorage.setItem("medi8-cookie-consent", "accepted");
     (window as any).c8LoadClarity?.();
+    (window as any).c8LoadHotjar?.();
+    (window as any).c8LoadGtag?.();
     setVisible(false);
   };
 
