@@ -1,21 +1,20 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 const TopBanner = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
 
   const handleWaitlistClick = () => {
-    navigate("/splash");
+    navigate("/signup");
   };
 
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+      <div className="mx-auto flex max-w-5xl flex-nowrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        <Link to="/" className="flex shrink-0 items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
             <span className="text-sm font-bold text-background">C8</span>
           </div>
@@ -32,13 +31,13 @@ const TopBanner = () => {
           </Link>
           <Link
             to="/podcast"
-            className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="hidden whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
           >
             The Blog
           </Link>
           <Link
             to="/child-maintenance-calculator"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="hidden whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
           >
             Calculator
           </Link>

@@ -8,6 +8,7 @@ import { Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import splashFamily from "@/assets/splash-family-hd.jpg";
+import RedirectIfSignedIn from "@/components/RedirectIfSignedIn";
 
 const Splash = () => {
   const navigate = useNavigate();
@@ -49,9 +50,8 @@ const Splash = () => {
       {!showLogin && (
         <Button
           onClick={() => setShowLogin(true)}
-          variant="outline"
-          className="w-full"
-          size="lg"
+          variant="link"
+          className="h-auto w-full py-2 text-sm font-normal text-muted-foreground"
           aria-expanded={showLogin}
           aria-controls="inline-login-form"
         >
@@ -104,13 +104,13 @@ const Splash = () => {
   );
 
   return (
-    <>
+    <RedirectIfSignedIn>
       <Helmet>
         <title>Get Started - Collabor8</title>
         <meta name="description" content="Create your account or log in to Collabor8. The app helping co-parents manage child maintenance payments with ease." />
         <link rel="canonical" href="https://collaborate8.com/splash" />
       </Helmet>
-      <div className="mx-auto flex min-h-screen max-w-md md:max-w-4xl lg:max-w-5xl flex-col bg-background px-6 md:px-10">
+      <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-4xl lg:max-w-5xl flex-col bg-background pl-[calc(1.5rem+env(safe-area-inset-left))] pr-[calc(1.5rem+env(safe-area-inset-right))] pb-[env(safe-area-inset-bottom)] md:pl-[calc(2.5rem+env(safe-area-inset-left))] md:pr-[calc(2.5rem+env(safe-area-inset-right))]">
         <div className="flex flex-1 flex-col items-center justify-center pt-10 md:grid md:grid-cols-2 md:items-center md:gap-12 md:pt-0">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -166,7 +166,7 @@ const Splash = () => {
           {renderAccountActions()}
         </motion.div>
       </div>
-    </>
+    </RedirectIfSignedIn>
   );
 };
 
