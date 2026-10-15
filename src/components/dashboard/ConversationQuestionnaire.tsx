@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics";
 
 type QuestionType = "single" | "multi";
 
@@ -331,6 +332,7 @@ const ConversationQuestionnaire = ({
       toast.error("We couldn't save your answers. Please try again.");
       return;
     }
+    void track("chatbot_message_sent", { surface: "conversation_tool", action: "answers_saved" });
 
     // If the co-parent has already completed their questions, the shared
     // summary email goes out to both parents now.

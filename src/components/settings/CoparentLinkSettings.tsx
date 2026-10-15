@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Clock, Copy, ChevronRight, Landmark, Loader2, Mail, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,7 @@ const CoparentLinkSettings = () => {
     });
     setSending(false);
     if (error) return toast.error("Could not send the invite email");
+    void track("coparent_invite_sent", { method: "email", source: "settings" });
     toast.success("Invitation sent");
     setInviteEmail(next);
     setEmailInput("");
@@ -49,6 +51,7 @@ const CoparentLinkSettings = () => {
   const copy = async () => {
     if (!code) return;
     await navigator.clipboard.writeText(code);
+    void track("coparent_invite_sent", { method: "code_copied", source: "settings" });
     toast.success("Code copied");
   };
 

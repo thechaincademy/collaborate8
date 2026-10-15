@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ const ResendInviteLink = ({ email, onResent, className = "" }: Props) => {
       toast.error("Could not resend the invitation");
       return;
     }
+    void track("coparent_invite_sent", { method: "email", source: "resend" });
     toast.success("Invitation resent");
     window.dispatchEvent(new CustomEvent(INVITE_EVENT, { detail: next }));
     onResent?.(next);

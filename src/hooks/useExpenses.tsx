@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { track, amountBucket } from "@/lib/analytics";
 
 export interface ExpenseRequest {
   id: string;
@@ -100,6 +101,7 @@ export const useExpenses = () => {
     }
 
     setExpenses((prev) => [data as unknown as ExpenseRequest, ...prev]);
+    void track("expense_added", { kind: "reimbursement", has_receipt: !!receiptFile, amount_bucket: amountBucket(amount) });
     toast.success("Expense sent to your co-parent for approval");
     return { error: null, data };
   };
@@ -122,6 +124,7 @@ export const useExpenses = () => {
         throw new Error(serverMsg || error.message);
       }
       if (data?.error) throw new Error(data.error);
+      void track(decision === "approve" ? "expense_approved" : "expense_rejected", { kind: "reimbursement" });
 
       if (decision === "approve") {
         toast.success(
@@ -156,6 +159,7 @@ export const useExpenses = () => {
       return { error };
     }
     setExpenses((prev) => [data as unknown as ExpenseRequest, ...prev]);
+    void track("expense_added", { kind: "split_request", category, amount_bucket: amountBucket(amount) });
     toast.success("Request sent to your co-parent");
     return { error: null };
   };
@@ -171,6 +175,7 @@ export const useExpenses = () => {
     if (error) {
       toast.error("Could not update this request");
     } else {
+      void track(agree ? "expense_approved" : "expense_rejected", { kind: "split_request" });
       if (!agree) {
         await supabase.from("messages").insert({
           sender_id: user.id,

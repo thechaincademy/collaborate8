@@ -29,6 +29,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -134,6 +135,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           text: `Use this code to link with me on Collabor8: ${inviteCode}`,
         }).catch(() => {});
       }
+      void track("coparent_invite_sent", { method: "code_copied", source: "home" });
       toast.success("Code copied to clipboard");
     } catch {
       toast.error("Could not copy code");
@@ -157,6 +159,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
     setResending(false);
     if (error) toast.error("Could not send the invite email");
     else {
+      void track("coparent_invite_sent", { method: "email", source: "home" });
       toast.success("Invite email sent");
       setInvitation({ invitee_email: targetEmail });
       setEmailInput("");

@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { Plane } from "lucide-react";
+import { useEffect } from "react";
+import { track } from "@/lib/analytics";
 import DashboardHeader from "./DashboardHeader";
 import amazonLogo from "@/assets/amazon-logo-hd.png";
 import amexLogo from "@/assets/amex-logo-hd.png";
@@ -20,6 +22,10 @@ const benefits = [
 ];
 
 const BenefitsTab = () => {
+  useEffect(() => {
+    void track("benefits_viewed", { surface: "benefits_tab" });
+  }, []);
+
   return (
     <div className="px-6 pt-12">
       <DashboardHeader title="Benefits" />

@@ -34,6 +34,8 @@ interface Summary {
   expenses_count: number;
   tabs: TabRow[];
   daily: { day: string; events: number; users: number }[];
+  features?: { name: string; events: number; users: number }[];
+  signup_funnel?: { started_anon: number; completed: number; invited_or_linked: number; first_action: number };
 }
 
 const Stat = ({ label, value }: { label: string; value: string | number }) => (
@@ -160,9 +162,7 @@ const AdminDashboard = () => {
 
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle className="text-base">
-                  Tabs and screens opened ({summary?.total_events ?? 0} in total)
-                </CardTitle>
+                <CardTitle className="text-base">Tabs opened</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {(summary?.tabs ?? []).length === 0 ? (
@@ -184,6 +184,31 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                   ))
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-base">Features used</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {(summary?.features ?? []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+                ) : (
+                  summary!.features!.map((f) => (
+                    <div key={f.name} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="font-medium capitalize">{f.name.replace(/_/g, " ")}</span>
+                      <span className="shrink-0 text-muted-foreground">
+                        {f.events} events - {f.users} users
+                      </span>
+                    </div>
+                  ))
+                )}
+                {summary?.signup_funnel && (
+                  <p className="border-t border-border pt-2 text-xs text-muted-foreground">
+                    Sign-up funnel: {summary.signup_funnel.started_anon} started - {summary.signup_funnel.completed} completed - {summary.signup_funnel.invited_or_linked} invited or linked - {summary.signup_funnel.first_action} took a first action (visitors who accepted analytics cookies, test accounts excluded)
+                  </p>
                 )}
               </CardContent>
             </Card>

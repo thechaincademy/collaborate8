@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
@@ -109,6 +110,7 @@ const Profile = () => {
     setSendingInvite(false);
     if (error) toast.error("Could not send the invite email");
     else {
+      void track("coparent_invite_sent", { method: "email", source: "profile" });
       toast.success("Invite email sent");
       setInviteEmail("");
     }

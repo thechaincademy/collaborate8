@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
 
@@ -86,6 +87,7 @@ const SignUpInvited = () => {
     if (invite.invitee_email) {
       setEmail(invite.invitee_email);
     }
+    void track("signup_started", { flow: "invited" });
     setStep("name");
   };
 
@@ -127,6 +129,9 @@ const SignUpInvited = () => {
       setIsLoading(false);
       return;
     }
+
+    void track("signup_completed", { flow: "invited" });
+    void track("coparent_linked", { source: "invite_accepted" });
 
     setEmail(signedInUser.email ?? "");
     setIsLoading(false);
