@@ -3,21 +3,28 @@ import { Loader2, Wand2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 
 interface Props {
   open: boolean;
   draft: string;
   onOpenChange: (o: boolean) => void;
   onUse: (text: string) => void;
+  surface?: "chat" | "decision_new" | "decision_reply";
 }
 
 /** Optional, private writing aid. Never sends anything itself. */
-const RewriteComposer = ({ open, draft, onOpenChange, onUse }: Props) => {
+const RewriteComposer = ({ open, draft, onOpenChange, onUse, surface = "chat" }: Props) => {
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<{ tone: string; text: string }[]>([]);
   const [changes, setChanges] = useState("");
   const [showWhy, setShowWhy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) void track("chatbot_opened", { surface: "rewrite", source: surface });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     if (!open || !draft.trim()) return;
@@ -30,7 +37,9 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse }: Props) => {
       .then(({ data, error }) => {
         if (error || (data as any)?.error) setError((data as any)?.error ?? "The writing aid is unavailable right now.");
         else {
-          setOptions((data as any)?.options ?? []);
+          const opts = (data as any)?.options ?? [];
+          setOptions(opts);
+          if (opts.length > 0) void track("chatbot_message_sent", { surface: "rewrite", source: surface, action: "request", options_count: opts.length });
           setChanges((data as any)?.changes ?? "");
         }
       })
@@ -66,7 +75,7 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse }: Props) => {
             <div key={o.tone} className="rounded-xl border border-border bg-card p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">{o.tone}</p>
               <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{o.text}</p>
-              <Button size="sm" variant="outline" className="mt-2" onClick={() => { onUse(o.text); onOpenChange(false); }}>
+              <Button size="sm" variant="outline" className="mt-2" onClick={() => { void track("chatbot_message_sent", { surface: "rewrite", source: surface, action: "used_version" }); onUse(o.text); onOpenChange(false); }}>
                 Use this version
               </Button>
             </div>

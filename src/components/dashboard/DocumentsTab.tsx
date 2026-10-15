@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
+import { track, fileType } from "@/lib/analytics";
 
 interface SharedDocument {
   id: string;
@@ -88,6 +89,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
       toast.error("Could not share that document");
       return;
     }
+    void track("document_uploaded", { surface: "documents", file_type: fileType(file) });
     toast.success("Document shared with your co-parent");
     void loadDocuments();
   };
