@@ -4,7 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 import { VitePWA } from "vite-plugin-pwa";
-import routeMeta from "./src/seo/routeMeta.json";
+import routeMeta from "./src/seo/routeMeta";
 import { routeHeadPlugin } from "./scripts/routeHeadPlugin";
 
 // https://vitejs.dev/config/
