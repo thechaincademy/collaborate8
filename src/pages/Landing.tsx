@@ -136,7 +136,7 @@ const Landing = () => {
             <div className="flex w-full max-w-md flex-col items-center">
               <Button
                 onClick={scrollToWaitlist}
-                className="h-auto w-full rounded-xl bg-teal-700 px-6 py-4 text-lg font-bold text-primary-foreground shadow-elevated transition-all hover:scale-[1.02] hover:bg-teal-800 active:scale-95"
+                className="h-auto w-full rounded-xl bg-teal-700 px-6 py-4 text-lg font-bold text-teal-foreground shadow-elevated transition-all hover:scale-[1.02] hover:bg-teal-800 active:scale-95"
               >
                 Sign up here →
               </Button>
