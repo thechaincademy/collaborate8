@@ -12,7 +12,7 @@ import ChatTab from "@/components/dashboard/ChatTab";
 import ResourcesTab from "@/components/dashboard/ResourcesTab";
 import ComingSoonOverlay from "@/components/dashboard/ComingSoonOverlay";
 import { useStripePayments } from "@/hooks/useStripe";
-import { trackTab } from "@/lib/analytics";
+import { trackTab, track } from "@/lib/analytics";
 
 export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
 
@@ -51,6 +51,7 @@ const Dashboard = () => {
             toast.error("Your arrangement could not be confirmed. Please try again.");
             return;
           }
+          void track("payment_completed", { product: "maintenance_subscription" });
           window.dispatchEvent(new Event("c8-arrangement-refresh"));
         } else {
           return;

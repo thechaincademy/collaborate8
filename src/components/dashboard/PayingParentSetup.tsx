@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { trackBeforeRedirect, amountBucket } from "@/lib/analytics";
 import { useStripePayments } from "@/hooks/useStripe";
 import type { RecurringPayment } from "@/hooks/useRecurringPayments";
 
@@ -87,7 +88,10 @@ export default function PayingParentSetup({ connected, userId, receiverId, arran
     }
     setError("");
     const result = await createSubscriptionCheckout({ amount: amountNumber, currency: "gbp", interval: frequency, receiverId, startDate: selectedDate.toISOString(), returnToMaintenance: true });
-    if (result?.url) window.location.assign(result.url);
+    if (result?.url) {
+      await trackBeforeRedirect("payment_started", { product: "maintenance_subscription", interval: frequency, amount_bucket: amountBucket(amountNumber) });
+      window.location.assign(result.url);
+    }
   };
 
   return (
