@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { ArrowLeft, Download, Info, Calculator, Lock } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { track } from "@/lib/analytics";
 import TopBanner from "@/components/TopBanner";
 
 const nightOptions = [
@@ -37,6 +38,16 @@ const ChildMaintenanceCalculator = ({ embedded = false }: { embedded?: boolean }
   const [otherKids, setOtherKids] = useState("0");
   const [kids, setKids] = useState("1");
   const [childNights, setChildNights] = useState<number[]>([0]);
+  const [usageTracked, setUsageTracked] = useState(false);
+
+  useEffect(() => {
+    if (usageTracked || !(Number(income) > 0)) return;
+    const timer = setTimeout(() => {
+      setUsageTracked(true);
+      void track("calculator_used", { surface: embedded ? "app" : "public", action: "estimate" });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [income, usageTracked, embedded]);
   useEffect(() => {
     if (Number(income) > 0) {
       try { localStorage.setItem("c8_calc_run", "1"); } catch {}
@@ -125,6 +136,7 @@ const ChildMaintenanceCalculator = ({ embedded = false }: { embedded?: boolean }
   }, [income, incomePeriod, benefits, otherKids, kidsNum, childNights]);
 
   const downloadSummary = () => {
+    void track("calculator_used", { surface: embedded ? "app" : "public", action: "download" });
     const d = result;
     const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
     let childRows = "";
