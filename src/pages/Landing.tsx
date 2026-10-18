@@ -34,7 +34,6 @@ const Landing = () => {
   const [honeypot, setHoneypot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
-  const waitlistRef = useRef<HTMLDivElement>(null);
   const formLoadedAt = useRef(Date.now());
 
   const scrollToWaitlist = () => {
@@ -166,8 +165,6 @@ const Landing = () => {
         </motion.div>
       </div>
 
-      {/* Trusted by */}
-      <TrustedBy />
 
       {/* App Screenshots */}
       <section className="overflow-hidden border-t border-border bg-card py-20 bg-background">
@@ -313,28 +310,9 @@ const Landing = () => {
       </section>
 
 
-      {/* Sign up CTA */}
-      <section id="waitlist" ref={waitlistRef} className="py-20 bg-slate-50">
-        <div className="mx-auto max-w-5xl px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-              Ready to simplify co-parenting?
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              Create your account and get started in minutes.
-            </p>
-            <div className="mt-8">
-              <Button variant="outline" size="lg" onClick={() => navigate(ctaHref)} className="gap-2">
-                Sign Up <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {/* Trusted by */}
+      <TrustedBy />
+
 
 
       {/* Footer */}
