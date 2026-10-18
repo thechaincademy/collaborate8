@@ -129,8 +129,8 @@ const Landing = () => {
               Let's talk finances.
             </h1>
 
-            <p className="mb-10 max-w-lg text-lg leading-relaxed text-foreground/80 md:text-xl">
-              Collabor8 gives separated parents a dedicated space to discuss money and manage child maintenance - away from everything else.
+            <p className="font-display mb-10 max-w-lg text-lg leading-relaxed text-foreground/80 md:text-xl">
+              Every month there are payments to make and conversations to have. Collabor8 is the system that holds it all together so both co-parents always know where they stand
             </p>
 
             <div className="flex w-full max-w-md flex-col items-center">
