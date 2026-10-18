@@ -1,4 +1,6 @@
 # Roadmap (mustard style, hyphens)
+- [ ] Trusted-by strip on homepage (Jade O): logos bigger, "COUNCIL" caption right under its logo, modern and fresh look - in progress, preview only
+
 - [x] Copy accuracy: browser/home-screen buttons, live wording, dynamic footer/contact, consistent branding
 - [x] 1 Co-parent connection status
 - [x] 2 Request expense split
