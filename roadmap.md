@@ -32,3 +32,4 @@
 - [x] Undo the 'The first official step' card change on the landing page (Jade O, 12:17 UTC) - card restored to 'Get started'
 - [x] 'Everything you get' card: 'Get started' -> 'The first official step' with new description and teal 'Get started today' link to sign up (shown to Jade O, not published)
 - [x] In-app calculator copy only: intro line above the privacy notice, padlock privacy line above the inputs, grey 'Only visible to you' line under the results once a figure exists (public calculator untouched; not published)
+- [x] About page block 02 (Rafa) replaced with Jade's copy: 'So Rafa and I built it.' + 'ex gov consultant', 'She grew up in a separated family...', 'our very dedicated team' (matches her supplied wording; not published)
