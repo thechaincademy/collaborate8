@@ -1,6 +1,7 @@
 # Roadmap (mustard style, hyphens)
 - [x] Trusted-by strip on homepage (Jade O): logos bigger, "COUNCIL" caption right under its logo, modern and fresh look - preview only
 - [x] Trusted-by strip: LawtechUK logo blur reduced by sharpening the supplied file's edges (source is very low resolution; vector trace and redraw not used) - preview only
+- [x] Trusted-by strip: LawtechUK logo replaced with Jade's new high-quality file (800x121, white background knocked out to transparency so it sits cleanly on the grey); old low-res asset removed from storage - preview only
 - [x] About page opening story replaced with Jade's supplied copy word for word (four paragraphs, "So Rafa and I built one."); duplicate "So Rafa and I built it." line removed from "The solution" block - preview only
 
 
