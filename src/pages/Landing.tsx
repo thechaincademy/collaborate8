@@ -21,6 +21,7 @@ import appScreenshot1 from "@/assets/app-real-1.jpg";
 import appScreenshot2 from "@/assets/app-real-2.jpg";
 import appScreenshot3 from "@/assets/app-real-3.jpg";
 import TopBanner from "@/components/TopBanner";
+import TrustedBy from "@/components/TrustedBy";
 import InstallAppButtons from "@/components/InstallAppButtons";
 import RedirectIfSignedIn from "@/components/RedirectIfSignedIn";
 import { useAppCtaHref } from "@/hooks/useAppCta";
@@ -164,6 +165,9 @@ const Landing = () => {
           <ChevronDown className="h-5 w-5 animate-bounce text-muted-foreground" />
         </motion.div>
       </div>
+
+      {/* Trusted by */}
+      <TrustedBy />
 
       {/* App Screenshots */}
       <section className="overflow-hidden border-t border-border bg-card py-20 bg-background">
