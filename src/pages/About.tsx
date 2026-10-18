@@ -29,7 +29,6 @@ const blocks = [
     n: "02",
     label: "The solution",
     paras: [
-      "So Rafa and I built it.",
       "Rafa is my co-founder and the technical mind behind Collabor8. Between us, and our very dedicated team, we bring the lived experience and the technical expertise that this problem deserves.",
     ],
   },
