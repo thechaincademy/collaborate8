@@ -1,5 +1,7 @@
 # Roadmap (mustard style, hyphens)
 - [x] Trusted-by strip on homepage (Jade O): logos bigger, "COUNCIL" caption right under its logo, modern and fresh look - preview only
+- [x] Trusted-by strip: LawtechUK logo blur reduced by sharpening the supplied file's edges (source is very low resolution; vector trace and redraw not used) - preview only
+
 
 - [x] Copy accuracy: browser/home-screen buttons, live wording, dynamic footer/contact, consistent branding
 - [x] 1 Co-parent connection status

@@ -178,9 +178,6 @@ const Landing = () => {
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
               See it in action
             </h2>
-            <p className="mt-3 text-muted-foreground">
-              Handle payments and expenses, in a few simple clicks
-            </p>
           </motion.div>
 
           <div className="grid gap-8 md:grid-cols-3">
@@ -189,19 +186,16 @@ const Landing = () => {
                 src: appScreenshot1,
                 alt: "Financial chat screen",
                 title: "Talking about money can be tough. Get the conversation started",
-                description: "A dedicated space to discuss finances with your co-parent - separate from everything else.",
               },
               {
                 src: appScreenshot2,
                 alt: "Child maintenance and expense management screen",
                 title: "Manage child maintenance payments or other expenses",
-                description: "Set up recurring payments, log shared costs, and keep everything in one place.",
               },
               {
                 src: appScreenshot3,
                 alt: "Payment flexibility and rewards screen",
                 title: "Payment flexibility - pay by credit card and earn points",
-                description: "Choose how you pay and unlock rewards with every maintenance payment.",
               },
             ].map((screenshot, i) => (
               <motion.div
@@ -220,9 +214,6 @@ const Landing = () => {
                 <h3 className="mt-6 max-w-xs text-lg font-bold leading-snug text-foreground">
                   {screenshot.title}
                 </h3>
-                <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
-                  {screenshot.description}
-                </p>
               </motion.div>
             ))}
           </div>
