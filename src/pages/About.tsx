@@ -20,15 +20,15 @@ const blocks = [
     label: "The problem",
     paras: [
       "Collabor8 was built from personal experience.",
-      "I am Jade, a single mother who spent five years navigating the UK family court system. Throughout that time, one thing became clear. The hardest conversation I faced was not the legal process. It was money. What one parent owed the other. How shared costs would be managed. How to even begin that conversation without spending thousands in mediation or solicitor fees, without it becoming something else entirely.",
-      "I looked for somewhere to have it. A neutral space. Somewhere separate from the parenting conversation, the legal conversation and everything else. Somewhere that was just for the money. It did not exist.",
+      "I am Jade, a single mother who went through separation. After I separated, it became clear that talking about money was tough. We knew we needed to discuss finances but we did not have a system to do it.",
+      "I kept thinking about how a system underpins everything we do. Businesses run on them. Households run on them. Yet no system existed for child maintenance, shared expenses and the financial conversations that come with co-parenting.",
+      "So Rafa and I built one.",
     ],
   },
   {
     n: "02",
     label: "The solution",
     paras: [
-      "So Rafa and I built it.",
       "Rafa is my co-founder and the technical mind behind Collabor8. Between us, and our very dedicated team, we bring the lived experience and the technical expertise that this problem deserves.",
     ],
   },
