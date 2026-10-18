@@ -1,25 +1,24 @@
-import lawtechukLogo from "@/assets/lawtechuk-logo.webp.asset.json";
-import hackneyLogo from "@/assets/hackney-logo.jpg.asset.json";
+import lawtechukLogo from "@/assets/lawtechuk-logo.png.asset.json";
+import hackneyLogo from "@/assets/hackney-logo.png.asset.json";
 
 const TrustedBy = () => {
   const logoClass =
-    "grayscale opacity-60 transition-opacity hover:opacity-100 max-h-10 w-auto object-contain";
+    "grayscale opacity-60 transition-opacity duration-300 hover:opacity-100 h-12 md:h-16 w-auto object-contain";
 
   return (
     <section
-      className="w-full border-t py-10"
+      className="w-full py-12 md:py-14"
       style={{
         backgroundColor: "hsl(150 3% 96%)",
-        borderTopColor: "hsl(var(--teal))",
-        borderTopWidth: "1px",
+        boxShadow: "inset 0 1px 0 0 hsl(var(--teal))",
       }}
       aria-label="Trusted by"
     >
       <div className="mx-auto max-w-5xl px-6 text-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[15px] leading-relaxed text-muted-foreground">
           Trusted by leading charities, firms, councils and organisations across the UK.
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-16 gap-y-6">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-20 gap-y-8">
           <div className="flex items-center">
             <img
               src={lawtechukLogo.url}
@@ -35,7 +34,7 @@ const TrustedBy = () => {
               className={`${logoClass} mix-blend-multiply`}
               loading="lazy"
             />
-            <span className="mt-0.5 text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+            <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
               Council
             </span>
           </div>
