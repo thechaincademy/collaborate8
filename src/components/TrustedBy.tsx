@@ -3,7 +3,7 @@ import hackneyLogo from "@/assets/hackney-logo.png.asset.json";
 
 const TrustedBy = () => {
   const logoClass =
-    "grayscale opacity-60 transition-opacity duration-300 hover:opacity-100 h-12 md:h-16 w-auto object-contain";
+    "grayscale opacity-60 transition-opacity duration-300 hover:opacity-100 h-8 md:h-10 w-auto object-contain";
 
   return (
     <section
