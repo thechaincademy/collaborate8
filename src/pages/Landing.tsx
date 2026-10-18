@@ -125,7 +125,7 @@ const Landing = () => {
             className="relative z-10 flex flex-col items-center px-6 py-20 text-center md:px-8 md:py-28"
           >
 
-            <h1 className="mb-6 max-w-2xl text-4xl font-extrabold tracking-tight text-foreground md:text-6xl lg:leading-[1.1]">
+            <h1 className="font-display mb-6 max-w-2xl text-4xl font-extrabold tracking-tight text-foreground md:text-6xl lg:leading-[1.1]">
               Let's talk finances.
             </h1>
 
