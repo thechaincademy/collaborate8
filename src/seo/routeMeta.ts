@@ -110,15 +110,15 @@ const routeMeta = [
   },
   {
     "route": "/child-maintenance-calculator",
-    "title": "Child Maintenance Calculator UK 2025 | Collabor8",
+    "title": "Child Maintenance Calculator UK 2026 | Collabor8",
     "description": "Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly and annual payments instantly.",
     "canonical": "https://collaborate8.com/child-maintenance-calculator",
-    "ogTitle": "Child Maintenance Calculator UK 2025 | Collabor8",
+    "ogTitle": "Child Maintenance Calculator UK 2026 | Collabor8",
     "ogDescription": "Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly and annual payments instantly.",
     "ogUrl": "https://collaborate8.com/child-maintenance-calculator",
     "ogType": "website",
     "twitterCard": "summary_large_image",
-    "twitterTitle": "Child Maintenance Calculator UK 2025 | Collabor8",
+    "twitterTitle": "Child Maintenance Calculator UK 2026 | Collabor8",
     "twitterDescription": "Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly and annual payments instantly."
   },
   {

@@ -202,14 +202,14 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
       {!embedded && <TopBanner />}
       <div className="px-4 py-10 bg-background">
       <Helmet>
-        <title>Child Maintenance Calculator UK 2025 | Collabor8</title>
+        <title>Child Maintenance Calculator UK 2026 | Collabor8</title>
         <meta name="description" content="Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly and annual payments instantly." />
         <meta name="keywords" content="child maintenance calculator, child maintenance service, CMS calculator, child maintenance UK, how much child maintenance, child maintenance login" />
         <link rel="canonical" href="https://collaborate8.com/child-maintenance-calculator" />
-        <meta property="og:title" content="Child Maintenance Calculator UK 2025 | Collabor8" />
+        <meta property="og:title" content="Child Maintenance Calculator UK 2026 | Collabor8" />
         <meta property="og:description" content="Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly and annual payments instantly." />
         <meta property="og:url" content="https://collaborate8.com/child-maintenance-calculator" />
-        <meta name="twitter:title" content="Child Maintenance Calculator UK 2025 | Collabor8" />
+        <meta name="twitter:title" content="Child Maintenance Calculator UK 2026 | Collabor8" />
         <meta name="twitter:description" content="Free child maintenance calculator based on the official UK CMS formula. Calculate weekly, monthly and annual payments instantly." />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
