@@ -195,7 +195,7 @@ const Landing = () => {
               {
                 src: appScreenshot3,
                 alt: "Payment flexibility and rewards screen",
-                title: "Payment flexibility - pay by credit card and earn points",
+                title: "Pay each other back - settle up in the app through Stripe Connect",
               },
             ].map((screenshot, i) => (
               <motion.div
@@ -253,7 +253,7 @@ const Landing = () => {
                 icon: Trophy,
                 title: "The first official step",
                 description:
-                  "Collabor8 is the only dedicated space for separated parents to manage child maintenance and talk about money after separation.",
+                  "Collabor8 is the UK's first dedicated space for separated parents to manage child maintenance and talk about money after separation.",
                 cta: "Get started today →",
               },
             ] as {

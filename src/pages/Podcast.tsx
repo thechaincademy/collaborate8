@@ -235,7 +235,7 @@ const Podcast = () => {
             </Button>
           </div>
           <p className="mt-6 text-sm text-muted-foreground">
-            Free to download. Low cost to use. Built for you.
+            Free to use. Paying each other back through the app costs £2.99 per transaction. A £4.99 Premium subscription unlocks premium features such as the AI mediator in chat.
           </p>
         </motion.div>
       </section>
