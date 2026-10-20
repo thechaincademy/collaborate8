@@ -146,7 +146,7 @@ const About = () => (
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <InstallAppButtons />
           </div>
-          <p className="mt-6 text-sm text-muted-foreground">Free to download. Low cost to use. Built for you.</p>
+          <p className="mt-6 text-sm text-muted-foreground">Free to use. Paying each other back through the app costs £2.99 per transaction. A £4.99 Premium subscription unlocks premium features such as the AI mediator in chat.</p>
         </motion.div>
       </section>
     </main>

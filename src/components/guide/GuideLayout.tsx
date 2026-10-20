@@ -71,7 +71,7 @@ const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
           Get started with Collabor8 - it's free
         </Link>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-10">
-          {["Track payments automatically", "Log shared expenses with receipts", "Earn rewards for staying on top", "No fees. No middlemen."].map((f) => (
+          {["Track payments automatically", "Log shared expenses with receipts", "Earn rewards for staying on top", "Free to use. £2.99 per transaction."].map((f) => (
             <span key={f} className="flex items-center gap-2 text-sm text-white/65">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
               {f}

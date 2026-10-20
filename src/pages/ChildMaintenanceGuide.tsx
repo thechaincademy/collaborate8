@@ -266,7 +266,7 @@ const ChildMaintenanceGuide = () => {
           <ArticleH3>Is it the same as child support?</ArticleH3>
           <P>Yes, 'child maintenance' and 'child support' mean the same thing in the UK. You might hear either term, along with 'maintenance payments' or just 'maintenance'. They all refer to the same financial arrangement.</P>
           <ArticleH3>What are your options for arranging maintenance?</ArticleH3>
-          <P>Most parents prefer a family-based arrangement, where you agree an amount between yourselves, manage payments directly, and keep everything private. It's the simplest route, and Collabor8 is built for exactly this. No waiting, no fees, and both parents have full visibility of every payment.</P>
+          <P>Most parents prefer a family-based arrangement, where you agree an amount between yourselves, manage payments directly, and keep everything private. It's the simplest route, and Collabor8 is built for exactly this. No waiting, and both parents have full visibility of every payment.</P>
           <P>Some families use the Child Maintenance Service (CMS), a government service that can calculate, and in some cases collect, payments on your behalf. If that's the arrangement you're working with, Collabor8 sits alongside it, helping you track what's been paid, log shared expenses, and keep a clear record whatever the source of the payment.</P>
           <Callout><strong className="not-italic font-medium">Collabor8 tip:</strong> Family-based arrangement or CMS, it doesn't matter. Collabor8 works with any arrangement, giving both parents a clear, shared record and removing the day-to-day stress of managing it manually.</Callout>
           <ArticleH3>What if there's already a court order?</ArticleH3>
@@ -324,7 +324,7 @@ const ChildMaintenanceGuide = () => {
           <img src={articles[2].img} alt={articles[2].alt} className="mb-10 block h-[340px] w-full rounded-2xl object-cover" />
           <P>Working out a fair amount is the first step. Setting up a reliable, clear payment arrangement is where it all comes to life. Here's what you need to know, and why keeping it between yourselves is usually the best option.</P>
           <ArticleH3>Family-based arrangement, the simplest route</ArticleH3>
-          <P>The most common approach is a private family arrangement. You and the other parent agree on an amount, decide on a payment schedule, and manage it directly. No waiting for assessments, no bureaucracy, no fees. For most parents who are on reasonable terms, this works well, and Collabor8 is built to make it even easier.</P>
+          <P>The most common approach is a private family arrangement. You and the other parent agree on an amount, decide on a payment schedule, and manage it directly. No waiting for assessments, no bureaucracy. For most parents who are on reasonable terms, this works well, and Collabor8 is built to make it even easier.</P>
           <ArticleH3>If you're using the Child Maintenance Service</ArticleH3>
           <P>The Child Maintenance Service (CMS) is a government service that can calculate the amount, and in some cases collect and pass on payments. Some families use it, particularly when communication is difficult or an independent calculation provides reassurance. If that's your situation, Collabor8 works alongside it. Set up the CMS-calculated amount in the app, and Collabor8 handles the tracking, reminders, and receipts from there. You still get a clear shared record, and both parents can see exactly where things stand.</P>
           <ArticleH3>What if there's already a court order?</ArticleH3>
@@ -441,7 +441,7 @@ const ChildMaintenanceGuide = () => {
           Get started with Collabor8, it's free
         </Link>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-10">
-          {["Track payments automatically", "Log shared expenses with receipts", "Earn rewards for staying on top", "No fees. No middlemen."].map((f) => (
+          {["Track payments automatically", "Log shared expenses with receipts", "Earn rewards for staying on top", "Free to use. £2.99 per transaction."].map((f) => (
             <span key={f} className="flex items-center gap-2 text-[0.88rem] text-slate-600">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
               {f}
