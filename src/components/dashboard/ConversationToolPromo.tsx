@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { track, trackBeforeRedirect } from "@/lib/analytics";
 
-export const CONVERSATION_TOOL_PRICE = "£29.99";
+export const CONVERSATION_TOOL_PRICE = "£4.99";
 
 const isValidEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
