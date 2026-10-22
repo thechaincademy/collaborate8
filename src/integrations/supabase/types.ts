@@ -161,38 +161,53 @@ export type Database = {
       conversation_tool_access: {
         Row: {
           amount: number | null
+          cancel_at_period_end: boolean | null
           created_at: string
           currency: string | null
+          current_period_end: string | null
           expires_at: string | null
           granted_at: string
           id: string
           promo_code: string | null
           provider_session_id: string | null
           source: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
           user_id: string
         }
         Insert: {
           amount?: number | null
+          cancel_at_period_end?: boolean | null
           created_at?: string
           currency?: string | null
+          current_period_end?: string | null
           expires_at?: string | null
           granted_at?: string
           id?: string
           promo_code?: string | null
           provider_session_id?: string | null
           source?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           user_id: string
         }
         Update: {
           amount?: number | null
+          cancel_at_period_end?: boolean | null
           created_at?: string
           currency?: string | null
+          current_period_end?: string | null
           expires_at?: string | null
           granted_at?: string
           id?: string
           promo_code?: string | null
           provider_session_id?: string | null
           source?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           user_id?: string
         }
         Relationships: [
