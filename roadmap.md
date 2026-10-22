@@ -37,3 +37,5 @@
 - [x] Chat conversation tool: £59.88 one-off price, 12 months expiry column, "£4.99 a month, paid yearly" wording
 - [x] Swapped staged conversation-tool-access function into place and deployed (£59.88 price)
 - [x] Guide "How to set up payments": "No waiting, no bureaucracy, no fees." -> "No waiting, no bureaucracy."; full source sweep for "no fees" found no other occurrence - preview only, not published
+
+- [ ] Publish premium yearly subscription: deploy staged files in .lovable/pending/ together with publish (waits on Rafa)
