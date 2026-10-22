@@ -3,6 +3,7 @@
 - [x] Trusted-by strip: LawtechUK logo blur reduced by sharpening the supplied file's edges (source is very low resolution; vector trace and redraw not used) - preview only
 - [x] Trusted-by strip: LawtechUK logo replaced with Jade's new high-quality file (800x121, white background knocked out to transparency so it sits cleanly on the grey); old low-res asset removed from storage - preview only
 - [x] About page opening story replaced with Jade's supplied copy word for word (four paragraphs, "So Rafa and I built one."); duplicate "So Rafa and I built it." line removed from "The solution" block - preview only
+- [x] Export wording corrected from PDF to CSV in FAQ (visible answer + FAQ structured data); chat record export left as PDF - preview only
 
 
 - [x] Copy accuracy: browser/home-screen buttons, live wording, dynamic footer/contact, consistent branding
