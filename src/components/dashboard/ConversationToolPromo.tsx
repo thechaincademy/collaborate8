@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { track, trackBeforeRedirect } from "@/lib/analytics";
 
-export const CONVERSATION_TOOL_PRICE = "£4.99";
+export const CONVERSATION_TOOL_PRICE = "£59.88";
+export const CONVERSATION_TOOL_MONTHLY = "£4.99";
 
 const isValidEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -308,6 +309,7 @@ export const ConversationCostsStep = ({
 export const useConversationToolAccess = () => {
   const { user } = useAuth();
   const [hasAccess, setHasAccess] = useState(false);
+  const [expiredAt, setExpiredAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
@@ -324,6 +326,7 @@ export const useConversationToolAccess = () => {
     if (error) return false;
     const granted = !!data?.hasAccess;
     setHasAccess(granted);
+    setExpiredAt(typeof data?.expiredAt === "string" ? data.expiredAt : null);
     return granted;
   };
 
@@ -332,7 +335,7 @@ export const useConversationToolAccess = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  return { hasAccess, loading, refresh, setHasAccess };
+  return { hasAccess, expiredAt, loading, refresh, setHasAccess };
 };
 
 export const ConversationToolModal = ({
@@ -344,7 +347,7 @@ export const ConversationToolModal = ({
   onOpenChange: (v: boolean) => void;
   onStart?: () => void;
 }) => {
-  const { hasAccess, loading, refresh } = useConversationToolAccess();
+  const { hasAccess, expiredAt, loading, refresh } = useConversationToolAccess();
   const [paying, setPaying] = useState(false);
 
   useEffect(() => {
@@ -423,8 +426,14 @@ export const ConversationToolModal = ({
             This is a self-guided financial conversation tool. It is not a professional mediation service and does not replace professional family mediation.
           </p>
 
+          {!hasAccess && expiredAt && (
+            <p className="font-semibold">
+              Your 12 months access ended on {new Date(expiredAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Pay {CONVERSATION_TOOL_PRICE} to unlock for another 12 months.
+            </p>
+          )}
+
           <p className="font-semibold">
-            {CONVERSATION_TOOL_PRICE} - one-off payment. Only one parent pays. Your co-parent participates for free.
+            {CONVERSATION_TOOL_MONTHLY} a month, paid as one {CONVERSATION_TOOL_PRICE} payment for 12 months. It doesn&apos;t renew automatically. Only one parent pays. Your co-parent joins for free.
           </p>
 
         </div>
@@ -492,7 +501,7 @@ export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void 
       onClick={onOpen}
       className="mt-3 bg-gold text-gold-foreground hover:bg-gold/90"
     >
-      Unlock for {CONVERSATION_TOOL_PRICE}
+      Unlock for {CONVERSATION_TOOL_MONTHLY} a month, paid yearly
     </Button>
   </div>
 );

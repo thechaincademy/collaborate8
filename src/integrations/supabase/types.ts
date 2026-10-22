@@ -163,6 +163,7 @@ export type Database = {
           amount: number | null
           created_at: string
           currency: string | null
+          expires_at: string | null
           granted_at: string
           id: string
           promo_code: string | null
@@ -174,6 +175,7 @@ export type Database = {
           amount?: number | null
           created_at?: string
           currency?: string | null
+          expires_at?: string | null
           granted_at?: string
           id?: string
           promo_code?: string | null
@@ -185,6 +187,7 @@ export type Database = {
           amount?: number | null
           created_at?: string
           currency?: string | null
+          expires_at?: string | null
           granted_at?: string
           id?: string
           promo_code?: string | null
