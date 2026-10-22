@@ -150,6 +150,7 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
   const [saving, setSaving] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
 
+  const premium = usePremiumGate();
   const reset = () => { setTitle(""); setRequest(""); setDeadline(""); setChildren(""); setRequireAck(false); setPriority("normal"); };
 
   const submit = async () => {
@@ -213,10 +214,10 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
           <div>
             <div className="flex items-center justify-between">
               <label className="text-xs text-muted-foreground">What are you asking for?</label>
-              <button disabled={!request.trim()} onClick={() => setRewriteOpen(true)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-foreground disabled:opacity-40">
+              <Button variant="ghost" size="sm" disabled={!request.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }}
+                className="h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40">
                 <Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly
-              </button>
+              </Button>
             </div>
             <Textarea value={request} onChange={(e) => setRequest(e.target.value)} rows={3}
               placeholder="e.g. Could we move Saturday pickup to 11am at the school gate?" />
@@ -233,6 +234,7 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
           </Button>
         </div>
         <RewriteComposer open={rewriteOpen} draft={request} onOpenChange={setRewriteOpen} onUse={setRequest} surface="decision_new" />
+        <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
       </SheetContent>
     </Sheet>
   );
@@ -430,7 +432,7 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
             <Button variant="ghost" size="sm" onClick={async () => { if (await premium.requireAccess()) fileRef.current?.click(); }} className="h-auto gap-1 px-0 text-xs text-muted-foreground"><Paperclip className="h-3.5 w-3.5" /> Document</Button>
             <Button variant="ghost" size="sm" onClick={async () => { if (await premium.requireAccess()) photoRef.current?.click(); }} className="h-auto gap-1 px-0 text-xs text-muted-foreground"><Camera className="h-3.5 w-3.5" /> Photo</Button>
             <button onClick={() => setLinkOpen(true)} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><Receipt className="h-3.5 w-3.5" /> Expense</button>
-            <button disabled={!draft.trim()} onClick={() => setRewriteOpen(true)} className="ml-auto inline-flex items-center gap-1 font-medium text-foreground disabled:opacity-40"><Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly</button>
+            <Button variant="ghost" size="sm" disabled={!draft.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }} className="ml-auto h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40"><Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly</Button>
           </div>
           <input ref={fileRef} type="file" accept="application/pdf,image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
           <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
