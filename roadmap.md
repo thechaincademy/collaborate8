@@ -35,4 +35,4 @@
 - [x] In-app calculator copy only: intro line above the privacy notice, padlock privacy line above the inputs, grey 'Only visible to you' line under the results once a figure exists (public calculator untouched; not published)
 - [x] About page block 02 (Rafa) replaced with Jade's copy: 'ex gov consultant', 'She grew up in a separated family...', 'our very dedicated team'; the 'So Rafa and I built it.' line was then removed from the top of 02 (not published)
 - [x] Chat conversation tool: £59.88 one-off price, 12 months expiry column, "£4.99 a month, paid yearly" wording
-- [ ] Swap staged conversation-tool-access function into place at publish time (blocked: waiting for publish decision)
+- [x] Swapped staged conversation-tool-access function into place and deployed (£59.88 price)
