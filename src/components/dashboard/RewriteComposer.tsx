@@ -52,8 +52,8 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse, surface = "chat" }:
     return () => { active = false; };
   }, [open, draft]);
 
-  if (open && (!premium.hasAccess || premium.paywallOpen)) {
-    return <PremiumPaywall open={open} onOpenChange={onOpenChange} />;
+  if (open && premium.paywallOpen) {
+    return <PremiumPaywall open={open} onOpenChange={(next) => { premium.setPaywallOpen(next); onOpenChange(next); }} />;
   }
 
   return (

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { isPremiumRequired } from "./premium";
-import { isActive } from "../../.lovable/pending/_shared.conversation-tool-access-rule";
+import { isPremiumRequired } from "../src/lib/premium";
+import { isActive } from "../.lovable/pending/_shared.conversation-tool-access-rule";
 
 const now = Date.parse("2026-10-22T15:39:00Z");
 const future = "2027-10-22T15:39:00Z";
