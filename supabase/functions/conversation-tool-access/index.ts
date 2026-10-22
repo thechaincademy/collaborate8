@@ -3,8 +3,18 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
 
-// Live one-off price for the Self-Guided Financial Conversation Tool (£29.99)
-const CONVERSATION_TOOL_PRICE_ID = "price_1UF8lmCN8qgG26mrxyfT0C5u";
+// Live one-off price for 12 months access to the Self-Guided Financial Conversation Tool (£59.88)
+const CONVERSATION_TOOL_PRICE_ID = "price_1UTKhnCN8qgG26mr19HPkqlG";
+const ACCESS_MONTHS = 12;
+
+const expiryFromNow = () => {
+  const d = new Date();
+  d.setMonth(d.getMonth() + ACCESS_MONTHS);
+  return d.toISOString();
+};
+
+const isActive = (a: { expires_at: string | null } | null) =>
+  !!a && (!a.expires_at || new Date(a.expires_at).getTime() > Date.now());
 
 // Promotional codes that grant free access
 const PROMO_CODES = new Set(["4321"]);
@@ -36,7 +46,7 @@ serve(async (req) => {
     const readAccess = async () => {
       const { data } = await supabase
         .from("conversation_tool_access")
-        .select("source, promo_code, granted_at")
+        .select("source, promo_code, granted_at, expires_at")
         .eq("user_id", user.id)
         .maybeSingle();
       return data ?? null;
@@ -52,7 +62,8 @@ serve(async (req) => {
     // ── Current access state ──
     if (action === "status") {
       const access = await readAccess();
-      return json({ hasAccess: !!access, access });
+      if (isActive(access)) return json({ hasAccess: true, access });
+      return json({ hasAccess: false, expiredAt: access?.expires_at ?? null });
     }
 
     // ── Redeem a promotional code ──
@@ -64,7 +75,7 @@ serve(async (req) => {
         return json({ error: "That promotional code is not valid" }, 400);
       }
 
-      await grant({ source: "promo", promo_code: code, amount: 0 });
+      await grant({ source: "promo", promo_code: code, amount: 0, granted_at: new Date().toISOString(), expires_at: expiryFromNow() });
       log("Promo redeemed", { userId: user.id });
       return json({ hasAccess: true, source: "promo" });
     }
@@ -72,7 +83,7 @@ serve(async (req) => {
     // ── Start Stripe Checkout for the one-off payment ──
     if (action === "create-checkout") {
       const existing = await readAccess();
-      if (existing) return json({ hasAccess: true, access: existing });
+      if (isActive(existing)) return json({ hasAccess: true, access: existing });
 
       const origin = req.headers.get("origin") || "https://collaborate8.com";
       const stripe = getStripe();
@@ -118,6 +129,8 @@ serve(async (req) => {
         provider_session_id: session.id,
         amount: (session.amount_total ?? 0) / 100,
         currency: session.currency ?? "gbp",
+        granted_at: new Date().toISOString(),
+        expires_at: expiryFromNow(),
       });
 
       log("Payment verified", { userId: user.id, sessionId });
