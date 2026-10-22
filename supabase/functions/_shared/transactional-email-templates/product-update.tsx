@@ -1,3 +1,4 @@
+// Deploy target: supabase/functions/_shared/transactional-email-templates/product-update.tsx
 import * as React from 'npm:react@18.3.1'
 import {
   Body,
@@ -12,6 +13,7 @@ import {
   Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import { FounderSignature } from './founder-signature.tsx'
 
 interface Update {
   title: string
@@ -112,11 +114,8 @@ export const ProductUpdate = ({
             . A real person will answer.
           </Text>
           <Text style={{ ...p, marginBottom: '4px' }}>Warm wishes,</Text>
-          <Text style={p}>
-            <strong>Jade &amp; Rafa</strong>
-            <br />
-            Founders, Collabor8
-          </Text>
+          <Text style={p}>Jade and Rafa</Text>
+          <FounderSignature />
         </Container>
       </Body>
     </Html>
@@ -137,7 +136,7 @@ const main = {
   color: '#111111',
   padding: '24px',
 }
-const container = { maxWidth: '560px', margin: '0 auto', padding: '8px 16px' }
+const container = { maxWidth: '600px', margin: '0 auto', padding: '8px 16px' }
 const h1 = { margin: '0 0 6px', fontSize: '22px' }
 const sub = { margin: '0 0 20px', fontSize: '14px', color: '#6b6b6b' }
 const p = { margin: '0 0 14px', lineHeight: 1.6, fontSize: '15px' }

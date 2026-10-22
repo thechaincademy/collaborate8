@@ -2,6 +2,85 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
 import { sendCoparentReminder } from "../_shared/send-reminder.ts";
+import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import {
+  isConversationToolSubscription,
+  subscriptionFields,
+} from "../_shared/conversation-tool-access-rule.ts";
+
+const CT_EVENTS = new Set([
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "invoice.paid",
+  "invoice.payment_failed",
+  "invoice.upcoming",
+]);
+
+/** Returns true when the event belonged to the conversation tool and was handled. */
+async function handleConversationTool(stripe: Stripe, supabase: any, event: Stripe.Event): Promise<boolean> {
+  if (!CT_EVENTS.has(event.type)) return false;
+
+  let sub: any;
+  if (event.type.startsWith("customer.subscription.")) {
+    sub = event.data.object;
+  } else {
+    const subId = extractSubscriptionId(event.data.object);
+    if (!subId) return false;
+    sub = await stripe.subscriptions.retrieve(subId);
+  }
+  if (!isConversationToolSubscription(sub)) return false;
+
+  const fields = subscriptionFields(sub);
+  const userId = sub.metadata?.collabor8_user_id as string | undefined;
+
+  if (event.type !== "invoice.upcoming") {
+    const { data: byId } = await supabase
+      .from("conversation_tool_access")
+      .update(fields)
+      .eq("stripe_subscription_id", sub.id)
+      .select("id");
+    if (!byId?.length && userId) {
+      await supabase
+        .from("conversation_tool_access")
+        .upsert(
+          { user_id: userId, granted_at: new Date().toISOString(), currency: "gbp", amount: 59.88, ...fields },
+          { onConflict: "user_id" },
+        );
+    }
+    logStep("Conversation tool access synced", { type: event.type, subscriptionId: sub.id, status: sub.status });
+    return true;
+  }
+
+  // invoice.upcoming: 7-day renewal reminder (Stripe "upcoming renewal events" set to 7 days)
+  if (sub.cancel_at_period_end || !["active", "trialing"].includes(sub.status)) return true;
+  const invoice = event.data.object as any;
+  const email = invoice.customer_email as string | null;
+  if (!email) return true;
+  const renewSecs = invoice.next_payment_attempt ?? invoice.period_end ?? null;
+  const renewalDate = fields.current_period_end
+    ? new Date(fields.current_period_end).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" })
+    : renewSecs
+      ? new Date(renewSecs * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" })
+      : "your renewal date";
+  try {
+    const result = await sendTemplateEmail("premium_renewal_reminder", email, {
+      templateData: {
+        renewalDate,
+        portalLink: "https://collaborate8.com/dashboard?tab=chat&conversation-tool=manage",
+      },
+      idempotencyKey: `premium-renewal-${sub.id}-${fields.current_period_end ?? renewSecs}`,
+    });
+    await supabase.from("email_send_log").insert({
+      template_name: "premium_renewal_reminder",
+      recipient_email: email,
+      status: result.sent ? "sent" : "suppressed",
+    });
+  } catch (e) {
+    logStep("Renewal reminder failed", { error: String(e) });
+  }
+  return true;
+}
 
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOKS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -69,6 +148,15 @@ serve(async (req) => {
     }
 
     logStep("Event received", { type: event.type, id: event.id });
+
+    // Chat financial conversation tool (premium yearly subscription). Handled
+    // first and returns early, so maintenance handling below is untouched.
+    if (await handleConversationTool(stripe, supabase, event)) {
+      return new Response(JSON.stringify({ received: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     switch (event.type) {
       // ── Invoice paid → record payment ──

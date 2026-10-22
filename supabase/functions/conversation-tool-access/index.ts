@@ -2,21 +2,14 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
+import {
+  CONVERSATION_TOOL_SUBSCRIPTION_PRICE_ID,
+  isActive,
+  promoExpiry,
+  subscriptionFields,
+} from "../_shared/conversation-tool-access-rule.ts";
 
-// Live one-off price for 12 months access to the Self-Guided Financial Conversation Tool (£59.88)
-const CONVERSATION_TOOL_PRICE_ID = "price_1UTKhnCN8qgG26mr19HPkqlG";
-const ACCESS_MONTHS = 12;
-
-const expiryFromNow = () => {
-  const d = new Date();
-  d.setMonth(d.getMonth() + ACCESS_MONTHS);
-  return d.toISOString();
-};
-
-const isActive = (a: { expires_at: string | null } | null) =>
-  !!a && (!a.expires_at || new Date(a.expires_at).getTime() > Date.now());
-
-// Promotional codes that grant free access
+// Promotional codes that grant free access (12 months, no renewal)
 const PROMO_CODES = new Set(["4321"]);
 
 const log = (step: string, details?: unknown) =>
@@ -34,6 +27,9 @@ const getStripe = () => {
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 };
 
+const SELECT =
+  "source, promo_code, granted_at, expires_at, stripe_subscription_id, stripe_customer_id, subscription_status, current_period_end, cancel_at_period_end";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -46,7 +42,7 @@ serve(async (req) => {
     const readAccess = async () => {
       const { data } = await supabase
         .from("conversation_tool_access")
-        .select("source, promo_code, granted_at, expires_at")
+        .select(SELECT)
         .eq("user_id", user.id)
         .maybeSingle();
       return data ?? null;
@@ -75,12 +71,21 @@ serve(async (req) => {
         return json({ error: "That promotional code is not valid" }, 400);
       }
 
-      await grant({ source: "promo", promo_code: code, amount: 0, granted_at: new Date().toISOString(), expires_at: expiryFromNow() });
+      await grant({
+        source: "promo",
+        promo_code: code,
+        amount: 0,
+        granted_at: new Date().toISOString(),
+        expires_at: promoExpiry(),
+        subscription_status: null,
+        current_period_end: null,
+        cancel_at_period_end: null,
+      });
       log("Promo redeemed", { userId: user.id });
       return json({ hasAccess: true, source: "promo" });
     }
 
-    // ── Start Stripe Checkout for the one-off payment ──
+    // ── Start Stripe Checkout for the yearly subscription ──
     if (action === "create-checkout") {
       const existing = await readAccess();
       if (isActive(existing)) return json({ hasAccess: true, access: existing });
@@ -90,17 +95,15 @@ serve(async (req) => {
 
       const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
       const customerId = customers.data[0]?.id;
+      const metadata = { collabor8_type: "conversation_tool", collabor8_user_id: user.id };
 
       const session = await stripe.checkout.sessions.create({
-        mode: "payment",
+        mode: "subscription",
         customer: customerId,
         customer_email: customerId ? undefined : user.email!,
-        payment_method_types: ["card"],
-        line_items: [{ price: CONVERSATION_TOOL_PRICE_ID, quantity: 1 }],
-        metadata: {
-          collabor8_type: "conversation_tool",
-          collabor8_user_id: user.id,
-        },
+        line_items: [{ price: CONVERSATION_TOOL_SUBSCRIPTION_PRICE_ID, quantity: 1 }],
+        metadata,
+        subscription_data: { metadata },
         success_url: `${origin}/dashboard?tab=chat&conversation-tool=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/dashboard?tab=chat&conversation-tool=cancelled`,
       });
@@ -120,21 +123,36 @@ serve(async (req) => {
       if (session.metadata?.collabor8_user_id !== user.id) {
         return json({ error: "Session does not belong to this account" }, 403);
       }
-      if (session.payment_status !== "paid") {
+      if (session.status !== "complete" || !session.subscription) {
         return json({ hasAccess: false, paymentStatus: session.payment_status });
       }
 
+      const subId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
+      const sub = await stripe.subscriptions.retrieve(subId);
+      const fields = subscriptionFields(sub);
+
       await grant({
-        source: "payment",
+        ...fields,
         provider_session_id: session.id,
         amount: (session.amount_total ?? 0) / 100,
         currency: session.currency ?? "gbp",
         granted_at: new Date().toISOString(),
-        expires_at: expiryFromNow(),
       });
 
-      log("Payment verified", { userId: user.id, sessionId });
-      return json({ hasAccess: true, source: "payment" });
+      log("Subscription verified", { userId: user.id, sessionId, status: sub.status });
+      return json({ hasAccess: isActive(fields), source: "subscription" });
+    }
+
+    // ── Stripe customer portal (cancel, change card, invoices) ──
+    if (action === "portal") {
+      const access = await readAccess();
+      if (!access?.stripe_customer_id) return json({ error: "No subscription found" }, 400);
+      const origin = req.headers.get("origin") || "https://collaborate8.com";
+      const portal = await getStripe().billingPortal.sessions.create({
+        customer: access.stripe_customer_id,
+        return_url: `${origin}/dashboard?tab=chat`,
+      });
+      return json({ url: portal.url });
     }
 
     return json({ error: "Unknown action" }, 400);
