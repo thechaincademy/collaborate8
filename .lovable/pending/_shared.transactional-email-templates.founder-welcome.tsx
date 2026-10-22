@@ -2,6 +2,7 @@
 import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Html, Preview, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import { FounderSignature } from './founder-signature.tsx'
 
 interface Props {
   firstName?: string
@@ -14,7 +15,7 @@ const FounderWelcome = ({ firstName }: Props) => (
     <Head />
     <Preview>A personal welcome from Rafa and Jade</Preview>
     <Body style={{ margin: 0, backgroundColor: '#ffffff', fontFamily: 'Arial, Helvetica, sans-serif', color: '#111111', padding: '24px' }}>
-      <Container style={{ maxWidth: '520px', margin: '0 auto', padding: '8px 4px' }}>
+      <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '8px 4px' }}>
         <Text style={p}>{firstName ? `Hi ${firstName},` : 'Hi there,'}</Text>
         <Text style={p}>Thank you for joining Collabor8. Jade and I wanted to welcome you personally.</Text>
         <Text style={p}>
@@ -27,9 +28,8 @@ const FounderWelcome = ({ firstName }: Props) => (
           Warm wishes,
           <br />
           Rafa and Jade
-          <br />
-          Co-founders, Collabor8
         </Text>
+        <FounderSignature />
       </Container>
     </Body>
   </Html>
