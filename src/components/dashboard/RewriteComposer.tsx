@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 
 interface Props {
   open: boolean;
@@ -20,6 +21,7 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse, surface = "chat" }:
   const [changes, setChanges] = useState("");
   const [showWhy, setShowWhy] = useState(false);
   const [error, setError] = useState("");
+  const premium = usePremiumGate();
 
   useEffect(() => {
     if (open) void track("chatbot_opened", { surface: "rewrite", source: surface });
@@ -32,9 +34,12 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse, surface = "chat" }:
     setOptions([]);
     setError("");
     setShowWhy(false);
-    supabase.functions
-      .invoke("chat-rewrite", { body: { draft } })
-      .then(({ data, error }) => {
+    let active = true;
+    void (async () => {
+      if (!(await premium.requireAccess()) || !active) return;
+      const { data, error } = await supabase.functions.invoke("chat-rewrite", { body: { draft } });
+      if (!active) return;
+      if (await premium.handleDenied(data, error)) return;
         if (error || (data as any)?.error) setError((data as any)?.error ?? "The writing aid is unavailable right now.");
         else {
           const opts = (data as any)?.options ?? [];
@@ -42,9 +47,14 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse, surface = "chat" }:
           if (opts.length > 0) void track("chatbot_message_sent", { surface: "rewrite", source: surface, action: "request", options_count: opts.length });
           setChanges((data as any)?.changes ?? "");
         }
-      })
-      .finally(() => setLoading(false));
+    })().catch(() => { if (active) setError("The writing aid is unavailable right now."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [open, draft]);
+
+  if (open && (!premium.hasAccess || premium.paywallOpen)) {
+    return <PremiumPaywall open={open} onOpenChange={onOpenChange} />;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
