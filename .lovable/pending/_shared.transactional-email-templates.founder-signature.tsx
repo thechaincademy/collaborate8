@@ -77,16 +77,6 @@ const WEB = { glyph: '\u25EF', text: 'www.collaborate8.com', href: 'https://www.
 export const FounderSignature = () => (
   <div style={{ marginTop: '24px' }}>
     <Card
-      name="Jade O"
-      title="CEO & Co-founder"
-      rows={[
-        { glyph: '\u260E', text: '07745523847', href: 'tel:07745523847' },
-        WEB,
-        { glyph: '\u2709', text: 'jade@collaborate8.com', href: 'mailto:jade@collaborate8.com' },
-        { glyph: '\u26B2', text: ADDRESS },
-      ]}
-    />
-    <Card
       name="Rafaela A"
       title="Co-founder & CTO"
       rows={[
