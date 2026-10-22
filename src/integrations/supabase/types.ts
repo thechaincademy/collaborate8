@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       audit_events: {
         Row: {
           created_at: string
@@ -945,6 +963,7 @@ export type Database = {
           last_name: string | null
           role: string
           updated_at: string
+          welcome_email_sent_at: string | null
         }
         Insert: {
           coparent_id?: string | null
@@ -956,6 +975,7 @@ export type Database = {
           last_name?: string | null
           role?: string
           updated_at?: string
+          welcome_email_sent_at?: string | null
         }
         Update: {
           coparent_id?: string | null
@@ -967,6 +987,7 @@ export type Database = {
           last_name?: string | null
           role?: string
           updated_at?: string
+          welcome_email_sent_at?: string | null
         }
         Relationships: [
           {

@@ -29,6 +29,13 @@
       "when": 1792671581464,
       "tag": "0003_conversation_tool_access_subscription_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792671956551,
+      "tag": "0004_founder_welcome_email_tracking",
+      "breakpoints": true
     }
   ]
 }
