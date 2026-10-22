@@ -200,6 +200,13 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       return;
     }
 
+    // Link from the renewal reminder email: open the tool so the paying parent can choose Manage subscription
+    if (result === "manage") {
+      clean();
+      setToolOpen(true);
+      return;
+    }
+
     if (result === "success" && sessionId) {
       (async () => {
         const { data, error } = await supabase.functions.invoke("conversation-tool-access", {

@@ -22,6 +22,13 @@
       "when": 1792670572047,
       "tag": "0002_conversation_tool_access_expires_at",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792671581464,
+      "tag": "0003_conversation_tool_access_subscription_columns",
+      "breakpoints": true
     }
   ]
 }

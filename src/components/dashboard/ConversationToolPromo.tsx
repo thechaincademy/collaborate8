@@ -306,10 +306,34 @@ export const ConversationCostsStep = ({
   );
 };
 
+export interface ConversationToolAccess {
+  source?: string | null;
+  stripe_customer_id?: string | null;
+  subscription_status?: string | null;
+  current_period_end?: string | null;
+  cancel_at_period_end?: boolean | null;
+}
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+/** Opens the Stripe customer portal so the paying parent can cancel or change card. */
+export const openConversationToolPortal = async () => {
+  const { data, error } = await supabase.functions.invoke("conversation-tool-access", {
+    body: { action: "portal" },
+  });
+  if (error || !data?.url) {
+    toast.error("We could not open your subscription settings. Please try again.");
+    return;
+  }
+  window.location.href = data.url as string;
+};
+
 export const useConversationToolAccess = () => {
   const { user } = useAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [expiredAt, setExpiredAt] = useState<string | null>(null);
+  const [access, setAccess] = useState<ConversationToolAccess | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
@@ -327,6 +351,7 @@ export const useConversationToolAccess = () => {
     const granted = !!data?.hasAccess;
     setHasAccess(granted);
     setExpiredAt(typeof data?.expiredAt === "string" ? data.expiredAt : null);
+    setAccess((data?.access as ConversationToolAccess | undefined) ?? null);
     return granted;
   };
 
@@ -335,7 +360,7 @@ export const useConversationToolAccess = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  return { hasAccess, expiredAt, loading, refresh, setHasAccess };
+  return { hasAccess, expiredAt, access, loading, refresh, setHasAccess };
 };
 
 export const ConversationToolModal = ({
@@ -347,7 +372,8 @@ export const ConversationToolModal = ({
   onOpenChange: (v: boolean) => void;
   onStart?: () => void;
 }) => {
-  const { hasAccess, expiredAt, loading, refresh } = useConversationToolAccess();
+  const { hasAccess, expiredAt, access, loading, refresh } = useConversationToolAccess();
+  const isSubscription = hasAccess && access?.source === "subscription" && !!access?.stripe_customer_id;
   const [paying, setPaying] = useState(false);
 
   useEffect(() => {
@@ -428,26 +454,44 @@ export const ConversationToolModal = ({
 
           {!hasAccess && expiredAt && (
             <p className="font-semibold">
-              Your 12 months access ended on {new Date(expiredAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Pay {CONVERSATION_TOOL_PRICE} to unlock for another 12 months.
+              Your access ended on {new Date(expiredAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Subscribe for {CONVERSATION_TOOL_PRICE} a year to unlock again.
             </p>
           )}
 
           <p className="font-semibold">
-            {CONVERSATION_TOOL_MONTHLY} a month, paid as one {CONVERSATION_TOOL_PRICE} payment for 12 months. It doesn&apos;t renew automatically. Only one parent pays. Your co-parent joins for free.
+            {CONVERSATION_TOOL_MONTHLY} a month, billed as {CONVERSATION_TOOL_PRICE} a year. Renews automatically each year. Cancel anytime. Only one parent pays. Your co-parent joins for free.
           </p>
+
+          {isSubscription && (
+            <p className="text-foreground/90">
+              {access?.cancel_at_period_end && access?.current_period_end
+                ? `Your subscription is cancelled. You keep access until ${formatDate(access.current_period_end)}.`
+                : access?.current_period_end
+                  ? `Your subscription renews on ${formatDate(access.current_period_end)}.`
+                  : null}{" "}
+              If you cancel, you keep access until the end of your paid year.
+            </p>
+          )}
 
         </div>
 
 
         <div className="space-y-3 border-t border-border p-5 pt-3">
           {hasAccess ? (
-            <Button
-              className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
-              onClick={handleStart}
-              disabled={loading}
-            >
-              Start now
-            </Button>
+            <>
+              <Button
+                className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+                onClick={handleStart}
+                disabled={loading}
+              >
+                Start now
+              </Button>
+              {isSubscription && (
+                <Button variant="outline" className="w-full" onClick={() => void openConversationToolPortal()}>
+                  Manage subscription
+                </Button>
+              )}
+            </>
           ) : (
             <>
               <Button
@@ -455,7 +499,7 @@ export const ConversationToolModal = ({
                 onClick={startCheckout}
                 disabled={loading || paying}
               >
-                {paying ? "Opening payment..." : `Pay ${CONVERSATION_TOOL_PRICE} and start`}
+                {paying ? "Opening payment..." : `Subscribe for ${CONVERSATION_TOOL_PRICE} a year`}
               </Button>
 
             </>
