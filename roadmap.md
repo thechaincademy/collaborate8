@@ -39,3 +39,4 @@
 - [x] Guide "How to set up payments": "No waiting, no bureaucracy, no fees." -> "No waiting, no bureaucracy."; full source sweep for "no fees" found no other occurrence - preview only, not published
 
 - [ ] Publish premium yearly subscription: deploy staged files in .lovable/pending/ together with publish (waits on Rafa)
+- [ ] Founder welcome email: deploy staged files and run welcome-email-cron.sql (waits on Rafa)
