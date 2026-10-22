@@ -3,8 +3,8 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
 
-// Live one-off price for the Self-Guided Financial Conversation Tool (£29.99)
-const CONVERSATION_TOOL_PRICE_ID = "price_1UF8lmCN8qgG26mrxyfT0C5u";
+// Live one-off price for the Self-Guided Financial Conversation Tool (£4.99)
+const CONVERSATION_TOOL_PRICE_ID = "price_1UTKaICN8qgG26mrbAmb9VzQ";
 
 // Promotional codes that grant free access
 const PROMO_CODES = new Set(["4321"]);
