@@ -36,3 +36,4 @@
 - [x] About page block 02 (Rafa) replaced with Jade's copy: 'ex gov consultant', 'She grew up in a separated family...', 'our very dedicated team'; the 'So Rafa and I built it.' line was then removed from the top of 02 (not published)
 - [x] Chat conversation tool: £59.88 one-off price, 12 months expiry column, "£4.99 a month, paid yearly" wording
 - [x] Swapped staged conversation-tool-access function into place and deployed (£59.88 price)
+- [x] Guide "How to set up payments": "No waiting, no bureaucracy, no fees." -> "No waiting, no bureaucracy."; full source sweep for "no fees" found no other occurrence - preview only, not published
