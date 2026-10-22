@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { track, fileType } from "@/lib/analytics";
 import RewriteComposer from "./RewriteComposer";
+import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 import {
   CATEGORIES, PRIORITIES, DecisionThread, ThreadEvent, addEvent, categoryLabel, deadlineSoon,
   effectiveStatus, eventLabel, needsMyResponse, priorityLabel, statusMeta, useThreads, RESPONSE_KINDS,
@@ -149,6 +150,7 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
   const [saving, setSaving] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
 
+  const premium = usePremiumGate();
   const reset = () => { setTitle(""); setRequest(""); setDeadline(""); setChildren(""); setRequireAck(false); setPriority("normal"); };
 
   const submit = async () => {
@@ -212,10 +214,10 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
           <div>
             <div className="flex items-center justify-between">
               <label className="text-xs text-muted-foreground">What are you asking for?</label>
-              <button disabled={!request.trim()} onClick={() => setRewriteOpen(true)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-foreground disabled:opacity-40">
+              <Button variant="ghost" size="sm" disabled={!request.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }}
+                className="h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40">
                 <Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly
-              </button>
+              </Button>
             </div>
             <Textarea value={request} onChange={(e) => setRequest(e.target.value)} rows={3}
               placeholder="e.g. Could we move Saturday pickup to 11am at the school gate?" />
@@ -232,6 +234,7 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
           </Button>
         </div>
         <RewriteComposer open={rewriteOpen} draft={request} onOpenChange={setRewriteOpen} onUse={setRequest} surface="decision_new" />
+        <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
       </SheetContent>
     </Sheet>
   );
@@ -253,6 +256,7 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
   const [view, setView] = useState<"messages" | "timeline">("messages");
   const fileRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
+  const premium = usePremiumGate();
 
   const status = effectiveStatus(t);
   const done = status === "resolved";
@@ -282,12 +286,16 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
   };
 
   const upload = async (f: File) => {
+    if (!(await premium.requireAccess())) return;
     if (f.size > 10 * 1024 * 1024) return toast.error("Files must be under 10MB");
     const path = `${userId}/threads/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     setBusy(true);
     const { error } = await supabase.storage.from("chat-attachments").upload(path, f);
     setBusy(false);
-    if (error) return toast.error("Could not attach that file");
+    if (error) {
+      if (await premium.handleDenied(null, error, true)) return;
+      return toast.error("Could not attach that file");
+    }
     if (await act("attach", null, { attachment_path: path, attachment_name: f.name })) {
       void track("document_uploaded", { surface: "decision_thread", file_type: fileType(f) });
     }
@@ -421,10 +429,10 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
       {!done && (
         <div className="border-t border-border pt-2 pb-4">
           <div className="mb-2 flex items-center gap-3 text-xs">
-            <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><Paperclip className="h-3.5 w-3.5" /> Document</button>
-            <button onClick={() => photoRef.current?.click()} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><Camera className="h-3.5 w-3.5" /> Photo</button>
+            <Button variant="ghost" size="sm" onClick={async () => { if (await premium.requireAccess()) fileRef.current?.click(); }} className="h-auto gap-1 px-0 text-xs text-muted-foreground"><Paperclip className="h-3.5 w-3.5" /> Document</Button>
+            <Button variant="ghost" size="sm" onClick={async () => { if (await premium.requireAccess()) photoRef.current?.click(); }} className="h-auto gap-1 px-0 text-xs text-muted-foreground"><Camera className="h-3.5 w-3.5" /> Photo</Button>
             <button onClick={() => setLinkOpen(true)} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><Receipt className="h-3.5 w-3.5" /> Expense</button>
-            <button disabled={!draft.trim()} onClick={() => setRewriteOpen(true)} className="ml-auto inline-flex items-center gap-1 font-medium text-foreground disabled:opacity-40"><Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly</button>
+            <Button variant="ghost" size="sm" disabled={!draft.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }} className="ml-auto h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40"><Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly</Button>
           </div>
           <input ref={fileRef} type="file" accept="application/pdf,image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
           <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
@@ -438,6 +446,7 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
       )}
 
       <RewriteComposer open={rewriteOpen} draft={draft} onOpenChange={setRewriteOpen} onUse={setDraft} surface="decision_reply" />
+      <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
 
       {/* Propose change */}
       <Sheet open={proposeOpen} onOpenChange={setProposeOpen}>

@@ -24,6 +24,7 @@ import {
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
 import RewriteComposer from "./RewriteComposer";
 import DocumentsTab from "./DocumentsTab";
+import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -82,6 +83,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const coparentId = profile?.coparent_id ?? null;
+  const premium = usePremiumGate();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,6 +99,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   const handleAttach = async (file: File) => {
     if (!user || !coparentId || attaching) return;
+    if (!(await premium.requireAccess())) return;
     if (file.size > 10 * 1024 * 1024) {
       toast.error("Files must be under 10MB");
       return;
@@ -107,6 +110,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     const { error: upErr } = await supabase.storage.from("chat-attachments").upload(path, file, { upsert: false });
     if (upErr) {
       setAttaching(false);
+      if (await premium.handleDenied(null, upErr, true)) return;
       toast.error("Could not upload that file");
       return;
     }
@@ -826,7 +830,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           size="icon"
           aria-label="Add attachment"
           disabled={attaching}
-          onClick={() => attachInputRef.current?.click()}
+          onClick={async () => { if (await premium.requireAccess()) attachInputRef.current?.click(); }}
           className="h-12 w-12 shrink-0"
         >
           {attaching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
@@ -858,29 +862,30 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         </Button>
       </div>
       <div className="-mt-2 mb-2 flex items-center justify-between">
-        <button onClick={() => { if (!startersOpen) void track("chatbot_opened", { surface: "prompts" }); setStartersOpen((o) => !o); }}
-          className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+        <Button variant="ghost" size="sm" onClick={async () => { if (!(await premium.requireAccess())) return; if (!startersOpen) void track("chatbot_opened", { surface: "prompts" }); setStartersOpen((o) => !o); }}
+          className="h-auto gap-1 px-0 text-xs font-medium text-foreground">
           <MessageCircle className="h-3.5 w-3.5 text-primary" /> {startersOpen ? "Hide AI prompts" : "AI prompts"}
-        </button>
-        <button disabled={!draft.trim()} onClick={() => setRewriteOpen(true)}
-          className="inline-flex items-center gap-1 text-xs font-medium text-foreground disabled:opacity-40">
+        </Button>
+        <Button variant="ghost" size="sm" disabled={!draft.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }}
+          className="h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40">
           <Sparkles className="h-3.5 w-3.5 text-primary" /> Rewrite calmly
-        </button>
+        </Button>
       </div>
       {startersOpen && (
         <div className="mb-3 rounded-2xl border border-border bg-card p-3">
           <p className="mb-2 text-xs text-muted-foreground">Tap a prompt to start your message. You can edit it before sending.</p>
           <div className="flex flex-wrap gap-2">
             {CONVERSATION_STARTERS.map((s) => (
-              <button key={s.label} onClick={() => { setDraft(s.text); setStartersOpen(false); }}
-                className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-primary/20">
+              <Button variant="outline" size="sm" key={s.label} onClick={async () => { if (!(await premium.requireAccess())) return; setDraft(s.text); setStartersOpen(false); }}
+                className="h-auto rounded-full border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-primary/20">
                 {s.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       )}
       <RewriteComposer open={rewriteOpen} draft={draft} onOpenChange={setRewriteOpen} onUse={setDraft} />
+      <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
       </>)}
     </div>
   );

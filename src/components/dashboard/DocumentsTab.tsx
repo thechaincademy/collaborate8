@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { track, fileType } from "@/lib/analytics";
+import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 
 interface SharedDocument {
   id: string;
@@ -25,6 +26,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const coparentId = profile?.coparent_id ?? null;
+  const premium = usePremiumGate();
 
   const [documents, setDocuments] = useState<SharedDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
 
   const handleUpload = async (file: File) => {
     if (!user || !coparentId || uploading) return;
+    if (!(await premium.requireAccess())) return;
     setUploading(true);
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const path = `${user.id}/${Date.now()}-${safeName}`;
@@ -74,6 +77,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
       .upload(path, file, { upsert: false });
     if (uploadError) {
       setUploading(false);
+      if (await premium.handleDenied(null, uploadError, true)) return;
       toast.error("Could not upload that file");
       return;
     }
@@ -126,7 +130,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
             }}
           />
           <Button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={async () => { if (await premium.requireAccess()) fileInputRef.current?.click(); }}
             disabled={uploading}
             className="mb-4 w-full"
           >
@@ -182,6 +186,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
           </div>
         </>
       )}
+      <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
     </div>
   );
 };
