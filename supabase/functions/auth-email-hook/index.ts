@@ -15,7 +15,7 @@ const corsHeaders = {
 }
 
 // Configuration
-const SITE_NAME = "Medi8 Your Connection Hub"
+const SITE_NAME = "Collabor8"
 const SENDER_DOMAIN = "notify.collaborate8.com"
 const ROOT_DOMAIN = "collaborate8.com"
 const FROM_DOMAIN = "collaborate8.com"
