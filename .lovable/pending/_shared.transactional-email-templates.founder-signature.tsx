@@ -2,8 +2,7 @@
 import * as React from 'npm:react@18.3.1'
 
 // Email-safe founder signature: tables, inline styles, Arial, no images, no <style> tag.
-// The two cards are fluid inline-block columns: side by side on wide screens,
-// stacked automatically on narrow ones (no media query needed).
+// A single fluid inline-block card: full width on narrow screens, capped at 290px on wide ones.
 
 const NAVY = '#1B4A6B'
 const font = 'Arial, Helvetica, sans-serif'
@@ -76,16 +75,6 @@ const WEB = { glyph: '\u25EF', text: 'www.collaborate8.com', href: 'https://www.
 
 export const FounderSignature = () => (
   <div style={{ marginTop: '24px' }}>
-    <Card
-      name="Jade O"
-      title="CEO & Co-founder"
-      rows={[
-        { glyph: '\u260E', text: '07745523847', href: 'tel:07745523847' },
-        WEB,
-        { glyph: '\u2709', text: 'jade@collaborate8.com', href: 'mailto:jade@collaborate8.com' },
-        { glyph: '\u26B2', text: ADDRESS },
-      ]}
-    />
     <Card
       name="Rafaela A"
       title="Co-founder & CTO"
