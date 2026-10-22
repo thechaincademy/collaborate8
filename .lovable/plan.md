@@ -1,51 +1,51 @@
-# Chat conversation tool: £59.88 one-off for 12 months access
+# Premium gating - status report (read-only, nothing to build)
 
-## Correction on the current state
-The live edge function does **not** charge `price_1UTKaICN8qgG26mrbAmb9VzQ` (£4.99 one-off). It was reverted and redeployed in the previous turn and now charges `price_1UF8lmCN8qgG26mrxyfT0C5u` (£29.99 one-off). The £4.99 one-off price exists in Stripe but nothing uses it. The live site's button text is an older build. In preview it says "£4.99 - one-off payment". So right now live charges £29.99.
+Approving or skipping this changes nothing. It is the report requested.
 
-## 1) New Stripe price
-- Create one live price on `prod_VFe3hx29MYgCMR`: 5988 pence, GBP, one-time (no `recurring`), nickname "12 months access".
-- Leave `price_1UF8lmCN8qgG26mrxyfT0C5u` (£29.99) and `price_1UTKaICN8qgG26mrbAmb9VzQ` (£4.99) as they are, active but unused.
-- Check the new price by reading it back from Stripe (amount, currency, type, product).
+## (a) Files
+Preview frontend changed:
+- src/components/dashboard/ChatTab.tsx (upload button, AI prompt starters, Rewrite calmly gated)
+- src/components/dashboard/DocumentsTab.tsx (upload gated)
+- src/components/dashboard/DecisionThreads.tsx (photo/document upload gated)
+- src/components/dashboard/RewriteComposer.tsx (rewrite gated, handles 402)
+- src/components/dashboard/PremiumGate.tsx (new: usePremiumGate + PremiumPaywall, reuses ConversationToolModal)
+- src/lib/premium.ts (new: isPremiumRequired parser)
+- tests/premium.test.ts (new), AGENTS.md, roadmap.md
 
-## 2) How access works now, and the minimal change
-Now:
-- Table `conversation_tool_access`, one row per user (`user_id` is unique). Columns: `source` ('payment' or 'promo'), `promo_code`, `provider_session_id`, `amount`, `currency`, `granted_at`, `created_at`. There is no expiry.
-- Access is granted only by the `conversation-tool-access` edge function: `verify-session` reads the Checkout session back from Stripe after the redirect (`payment_status = 'paid'`, metadata user matches) and upserts the row. `redeem-promo` (code "4321") upserts a row with source 'promo'. No webhook is involved: `stripe-webhooks` doesn't handle this product.
-- `status` and `create-checkout` treat "a row exists" as access, forever.
+New in .lovable/pending/:
+- _shared.premium-access.ts -> supabase/functions/_shared/premium-access.ts
+- chat-rewrite.index.ts -> supabase/functions/chat-rewrite/index.ts
+- premium-chat-storage.sql (migration, not applied)
+- premium-gates.DEPLOY.md
 
-Change:
-- Add a nullable `expires_at timestamptz` column.
-- `verify-session`: set `granted_at = now()` and `expires_at = now() + 12 months`. Paying again after expiry overwrites the same row (the upsert is already keyed on user_id), so a renewal starts a new 12 months.
-- Access check (one helper used by `status` and `create-checkout`): access counts only if a row exists and `expires_at` is null or in the future. When it has expired, `status` returns `hasAccess: false` with `expiredAt`, and `create-checkout` lets them pay again.
-- Use the new price ID. Change the code comment to £59.88.
-- Assumption to confirm: promo-code access also lasts 12 months from redemption. The alternative is that promo access never expires (expires_at null).
+## (b) Git output
+`git status --porcelain supabase/functions supabase/migrations`: empty.
 
-## 3) Existing users who already unlocked
-- The table has **0 rows**: no one has paid and no one has redeemed a promo. Nobody needs migrating or protecting.
-- To be safe, the migration still fills `expires_at = granted_at + 12 months` for any existing row.
+`git diff HEAD~3 --stat -- supabase/` lists 13 files (config.toml, conversation-tool-access-rule.ts, founder-signature/founder-welcome/premium-renewal-reminder/product-update/registry/user-welcome templates, conversation-tool-access, founder-welcome-email, stripe-webhooks), 506 insertions, 44 deletions. These are NOT from this task: `git log -- supabase/` shows the last commits touching supabase/ at 14:29 and 14:29:55 UTC, which is the earlier approved publish step (copy pending files + deploy). The premium gating commits are 15:42-15:45 UTC and touch only .lovable/pending/, src/, tests/, AGENTS.md, roadmap.md. No migration files changed. No SQL was run on the live database in this task (only a read of pg_policies).
 
-## 4) Wording (ConversationToolPromo.tsx)
-- `CONVERSATION_TOOL_PRICE` becomes "£59.88".
-- Button (line 495): "Unlock for £59.88 a year".
-- Promo line (427): "£59.88 one-off payment for 12 months access. It doesn't renew automatically. Only one parent pays. Your co-parent participates for free."
-- Pay button (449): "Pay £59.88 and start".
-- If access has expired: "Your 12 months access ended on {date}. Pay £59.88 to unlock for another 12 months."
-- These avoid the words "monthly", "yearly" and "subscription" and don't mention £4.99, following the pricing copy rule. Note: the "£4.99 Premium subscription" claim on the marketing pages, FAQ and About no longer matches this model. I'll list those lines for a separate copy fix and won't change them in this task.
+## (c) Entitlement check
+Endpoint: edge function `conversation-tool-access` (authenticated, user's bearer token).
+Request: `{ "action": "status" }`
+Allowed: `{ "hasAccess": true, "access": { ...access row } }`
+Locked or expired: `{ "hasAccess": false, "expiredAt": "<ISO date or null>" }`
 
-## 5) What goes live when, and the order of steps
-- Migration (adds `expires_at` and fills existing rows): applies to the live database straight away. It's harmless because nothing reads it yet.
-- Stripe price: goes live as soon as it's created, but stays unused until the function points at it.
-- Edge function: goes live as soon as it's deployed, before publishing.
-- Button and promo wording: only goes live when you publish, and publishing is still on hold because of the other held-back changes.
+## (d) Blocked responses
+- AI rewrite (pending chat-rewrite): HTTP 402 `{ "error": "premium_required", "feature": "rewrite" }`. Not live yet; live chat-rewrite still runs for everyone server-side.
+- AI prompts: no server call exists. They are fixed starter prompts in ChatTab, so they are gated in the UI only. No 402 applies.
+- Uploads: go straight to storage (bucket chat-attachments), so gated by the pending SQL file premium-chat-storage.sql: SECURITY DEFINER `public.has_premium_access(uid)` plus a RESTRICTIVE INSERT policy "Chat attachments require premium insert". When applied, a denied upload returns storage's HTTP 403 (not the 402 JSON); the UI rechecks access and opens the paywall. Reads, deletes and receipts unchanged. Until applied, uploads are only blocked in the UI.
 
-Order:
-1. Create the £59.88 price and read it back.
-2. Apply the migration.
-3. Update the wording and the expired-access state in preview, and run `npx vite build`.
-4. Deploy the edge function, then publish straight away so the live price and button text change together. Keep the gap to minutes. If you don't want to publish yet, hold step 4: live keeps charging £29.99 with the old live wording. Deploying without publishing would leave live charging £59.88 while showing the old text.
-5. Check the function's `status` against a test account, and check that the new price reads back from Stripe.
+## (e) Paywall wording (existing pop-up, reused)
+- Heading: "Start the financial conversation."
+- Price line: "£4.99 a month, billed as £59.88 a year. Renews automatically each year. Cancel anytime. Only one parent pays. Your co-parent joins for free."
+- Pay button: "Subscribe for £59.88 a year"
+- Expired: "Your access ended on {date}. Subscribe for £59.88 a year to unlock again."
+- Promo entry button: "Unlock for £4.99 a month, paid yearly"
 
-## Technical details
-- Migration: `ALTER TABLE public.conversation_tool_access ADD COLUMN expires_at timestamptz; UPDATE ... SET expires_at = granted_at + interval '12 months' WHERE expires_at IS NULL;` The existing grants and RLS stay as they are, and types.ts gets regenerated.
-- Add a small test of the expiry rule: active the day before expiry, locked once it's passed.
+## (f) Product tracker
+No product tracker found (no file, table or page; search for "tracker" only hit analytics, FAQ and tool pages). roadmap.md is a task list without numbered item #16. Item #16 and Rafa's approval cannot be verified.
+
+## (g) Not done / caveats
+- Server enforcement is pending only: chat-rewrite gate and storage policy are not deployed or applied.
+- Access is per paying parent (caller's own row); the linked co-parent does not inherit Premium, which conflicts with "Your co-parent joins for free". Needs a decision before deploy.
+- Real signed-in linked-parent flow not tested end to end (paywall checked with sample data only).
+- Webhook still missing customer.subscription.created, invoice.paid, invoice.upcoming in Stripe (from earlier).
