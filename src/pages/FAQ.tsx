@@ -60,7 +60,7 @@ const faqSchema = {
       name: "How does Collabor8 handle shared expenses?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Collabor8 includes a shared expense tracker that allows both parents to log, split and confirm shared costs for their child including school fees, school trips, medical expenses, sports activities and clothing. Both parents can see and confirm expenses in real time, creating a verified shared record that can be exported as a PDF if needed.",
+        text: "Collabor8 includes a shared expense tracker that allows both parents to log, split and confirm shared costs for their child including school fees, school trips, medical expenses, sports activities and clothing. Both parents can see and confirm expenses in real time, creating a verified shared record that can be exported as a CSV if needed.",
       },
     },
     
@@ -148,7 +148,7 @@ const sections = [
       {
         question: "How does Collabor8 handle shared expenses?",
         answer: [
-          "Collabor8 includes a shared expense tracker that allows both parents to log, split and confirm shared costs for their child including school fees, school trips, medical expenses, sports activities and clothing. Both parents can see and confirm expenses in real time, creating a verified shared record that can be exported as a PDF if needed.",
+          "Collabor8 includes a shared expense tracker that allows both parents to log, split and confirm shared costs for their child including school fees, school trips, medical expenses, sports activities and clothing. Both parents can see and confirm expenses in real time, creating a verified shared record that can be exported as a CSV if needed.",
         ],
       },
       {
