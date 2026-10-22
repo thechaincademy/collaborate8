@@ -459,7 +459,7 @@ export const ConversationToolModal = ({
           )}
 
           <p className="font-semibold">
-            {CONVERSATION_TOOL_MONTHLY} a month, billed as {CONVERSATION_TOOL_PRICE} a year. Renews automatically each year. Cancel anytime. Only one parent pays. Your co-parent joins for free.
+            {CONVERSATION_TOOL_MONTHLY} a month, billed as {CONVERSATION_TOOL_PRICE} a year. Renews automatically each year. Cancel anytime. Premium is for your account only. Your co-parent can still use Collabor8 for free.
           </p>
 
           {isSubscription && (

@@ -41,3 +41,4 @@
 
 - [ ] Publish premium yearly subscription: deploy staged files in .lovable/pending/ together with publish (waits on Rafa)
 - [ ] Founder welcome email: deploy staged files and run welcome-email-cron.sql (waits on Rafa)
+- [x] Paywall copy: Premium is for the paying parent's account only (co-parent not covered)
