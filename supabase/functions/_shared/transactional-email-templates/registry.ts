@@ -10,6 +10,7 @@ import { template as firstMessageNoticeTemplate } from './first-message-notice.t
 import { template as manualPaymentReminderTemplate } from './manual-payment-reminder.tsx'
 import { template as coparentNotificationTemplate } from './coparent-notification.tsx'
 import { template as premiumRenewalReminderTemplate } from './premium-renewal-reminder.tsx'
+import { template as founderWelcomeTemplate } from './founder-welcome.tsx'
 
 
 export interface TemplateEntry {
@@ -41,4 +42,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'manual_payment_reminder': manualPaymentReminderTemplate,
   'coparent_notification': coparentNotificationTemplate,
   'premium_renewal_reminder': premiumRenewalReminderTemplate,
+  'founder_welcome': founderWelcomeTemplate,
 }
