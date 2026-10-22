@@ -15,6 +15,13 @@
       "when": 1792088317006,
       "tag": "0001_usage_events_feature_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792670572047,
+      "tag": "0002_conversation_tool_access_expires_at",
+      "breakpoints": true
     }
   ]
 }

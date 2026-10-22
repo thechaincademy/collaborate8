@@ -1,0 +1,2 @@
+ALTER TABLE public.conversation_tool_access ADD COLUMN IF NOT EXISTS expires_at timestamptz;
+UPDATE public.conversation_tool_access SET expires_at = granted_at + interval '12 months' WHERE expires_at IS NULL;
