@@ -85,8 +85,8 @@ const articles = [
         <p className="font-medium text-foreground">Family-based arrangement</p>
         <p>
           The simplest route: you and the other parent agree an amount, pick a
-          schedule, and manage it directly. No waiting, no bureaucracy, no
-          fees. Collabor8 is built for exactly this.
+          schedule, and manage it directly. No waiting, no bureaucracy.
+          Collabor8 is built for exactly this.
         </p>
         <p className="font-medium text-foreground">Child Maintenance Service</p>
         <p>
