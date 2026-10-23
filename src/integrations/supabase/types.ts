@@ -1254,6 +1254,7 @@ export type Database = {
         }[]
       }
       get_user_role: { Args: { _user_id: string }; Returns: string }
+      has_premium_access: { Args: { uid: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
