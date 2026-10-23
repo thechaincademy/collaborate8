@@ -3,14 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Cookie } from "lucide-react";
-import { loadGa4 } from "@/lib/analytics";
+import { sendGa4PageView } from "@/lib/ga4";
 
 const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const consent = localStorage.getItem("medi8-cookie-consent");
-    if (consent === "accepted") loadGa4();
     if (!consent) {
       // Small delay so it doesn't flash on load
       const timer = setTimeout(() => setVisible(true), 1000);
@@ -23,7 +22,8 @@ const CookieConsent = () => {
     (window as any).c8LoadClarity?.();
     (window as any).c8LoadHotjar?.();
     (window as any).c8LoadGtag?.();
-    loadGa4();
+    // Record the landing page_view now that consent is granted (no route change fires on accept)
+    sendGa4PageView();
     setVisible(false);
   };
 
