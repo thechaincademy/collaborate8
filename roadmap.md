@@ -24,7 +24,7 @@
 - [x] Stage 3: privacy & account settings (retention, data download, delete, cancel)
 
 # Bugfixes
-- [ ] Preview payer explanation after No: reuse card setup, keep receiver copy unchanged, verify later and card paths.
+- [x] Preview payer explanation after No: reused existing card-only setup, receiver copy unchanged, later/card paths verified on mobile with isolated responses; build OK and 35 tests passed.
 - [x] Preview-only post-signup receiving question and Stripe explainer; Yes, No, later, and payer bypass verified with isolated responses; build OK and 32 tests passed.
 - [x] Preview QA: simple Premium/expired paywall, invite-message refetch/original timestamp, pending atomic delivery SQL, read-only setup explanation; 27 tests and isolated phone paywall check passed.
 - [ ] Apply pending invite-first-message-delivery.sql and publish matching timestamp-preserving preview client; waits for separate approval. Existing historical timestamps need unambiguous row matching before any backfill.
