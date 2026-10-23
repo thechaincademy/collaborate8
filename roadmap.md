@@ -1,4 +1,5 @@
 # Roadmap (mustard style, hyphens)
+- [x] Deploy approved Premium rewrite and chat/document upload enforcement; frontend publishing remains the user's action.
 - [x] Preview premium gates for AI writing aids and chat/document uploads; server/storage enforcement staged, 10 rule tests passed, mobile/desktop paywalls checked with isolated linked-parent data (nothing deployed)
 - [x] Trusted-by strip on homepage (Jade O): logos bigger, "COUNCIL" caption right under its logo, modern and fresh look - preview only
 - [x] Trusted-by strip: LawtechUK logo blur reduced by sharpening the supplied file's edges (source is very low resolution; vector trace and redraw not used) - preview only

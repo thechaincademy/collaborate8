@@ -1,4 +1,6 @@
-# Premium AI and upload gates - not deployed
+# Premium AI and upload gates - deployed 23 October 2026
+
+Approved function copies and storage enforcement were deployed on 23 October 2026. Frontend publishing remains the user's action.
 
 Copy only when explicitly approved:
 - `_shared.premium-access.ts` -> `supabase/functions/_shared/premium-access.ts`
