@@ -14,7 +14,7 @@ import { useEffect } from "react";
 const Ga4PageTracker = () => {
   const location = useLocation();
   useEffect(() => {
-    sendGa4PageView();
+    return sendGa4PageView();
   }, [location.pathname, location.search]);
   return null;
 };
