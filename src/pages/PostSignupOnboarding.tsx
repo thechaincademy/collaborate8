@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Check, Calculator, PoundSterling, Loader2, CreditCard } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
-import { afterMaintenanceCard, initialMaintenanceStep, maintenanceReceivingAnswer, type MaintenanceOnboardingStep } from "@/lib/maintenanceOnboarding";
+import { afterMaintenanceCard, initialMaintenanceStep, maintenancePayerAction, maintenanceReceivingAnswer, type MaintenanceOnboardingStep } from "@/lib/maintenanceOnboarding";
 
 type OnboardingStep = MaintenanceOnboardingStep;
 
@@ -37,7 +37,11 @@ const PostSignupOnboarding = () => {
   const handleBack = () => {
     switch (step) {
       case "setup-card":
-        navigate(-1);
+        if (receivingMaintenance === false) setStep("payer-explainer");
+        else navigate(-1);
+        break;
+      case "payer-explainer":
+        setStep("receiving-question");
         break;
       case "setup-connect":
         setStep("receiving-question");
@@ -67,7 +71,7 @@ const PostSignupOnboarding = () => {
   };
 
   const handleCardNext = () => {
-    setStep(afterMaintenanceCard());
+    setStep(afterMaintenanceCard(receivingMaintenance === false));
   };
 
   const handleReceivingAnswer = (receiving: boolean) => {
@@ -89,7 +93,7 @@ const PostSignupOnboarding = () => {
 
   // ── Step: Add Card (to SEND payments) ──
   const renderSetupCard = () => (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+    <motion.div key="setup-card" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
       <h1 className="mb-2 text-3xl font-bold text-foreground">Add a payment card</h1>
       <p className="mb-8 text-muted-foreground">Add your credit or debit card to send maintenance payments to your co-parent.</p>
 
@@ -123,6 +127,18 @@ const PostSignupOnboarding = () => {
       <div className="space-y-3 pb-8">
         <Button onClick={() => handleReceivingAnswer(true)} className="w-full" size="lg">Yes</Button>
         <Button onClick={() => handleReceivingAnswer(false)} variant="outline" className="w-full" size="lg">No</Button>
+      </div>
+    </motion.div>
+  );
+
+  const renderPayerExplainer = () => (
+    <motion.div key="payer-explainer" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+      <h1 className="mb-2 text-3xl font-bold text-foreground">Set up to pay maintenance</h1>
+      <p className="mb-8 text-muted-foreground">To pay child maintenance, you'll need to add how you want to pay, by credit card, debit card or bank account. This is handled securely by Stripe. You can do this now or later from Settings, but you won't be able to send payments until it's done.</p>
+      <div className="flex-1" />
+      <div className="space-y-3 pb-8">
+        <Button onClick={() => setStep(maintenancePayerAction(true))} className="w-full" size="lg">Add payment method</Button>
+        <Button onClick={() => setStep(maintenancePayerAction(false))} variant="ghost" className="w-full text-muted-foreground" size="lg">Do this later</Button>
       </div>
     </motion.div>
   );
@@ -264,6 +280,7 @@ const PostSignupOnboarding = () => {
           <AnimatePresence mode="wait">
             {step === "setup-card" && renderSetupCard()}
             {step === "receiving-question" && renderReceivingQuestion()}
+            {step === "payer-explainer" && renderPayerExplainer()}
             {step === "setup-connect" && renderSetupConnect()}
             {step === "payment-amount" && renderPaymentAmount()}
             {step === "payment-frequency" && renderPaymentFrequency()}
