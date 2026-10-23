@@ -1,4 +1,6 @@
-import { corsHeaders } from "../_shared/cors.ts";
+// Deploy target: supabase/functions/chat-rewrite/index.ts
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requirePremium } from "../_shared/premium-access.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -11,6 +13,8 @@ Return ONLY JSON: {"options":[{"tone":"Neutral","text":"..."},{"tone":"Brief","t
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+    const denied = await requirePremium(req, "rewrite");
+    if (denied) return denied;
     const { draft } = await req.json();
     if (!draft || typeof draft !== "string" || draft.length > 4000) return json({ error: "Missing draft" }, 400);
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
