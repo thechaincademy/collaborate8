@@ -62,6 +62,12 @@ const CookiePolicy = () => {
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <span>_clsk</span><span>Microsoft Clarity session</span><span>1 day</span>
                 </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <span>_ga</span><span>Google Analytics visitor id</span><span>2 years</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <span>_ga_*</span><span>Google Analytics session</span><span>2 years</span>
+                </div>
               </div>
             </div>
           </section>
