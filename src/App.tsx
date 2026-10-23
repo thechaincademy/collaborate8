@@ -7,6 +7,17 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieConsent from "@/components/CookieConsent";
+import { sendGa4PageView } from "@/lib/ga4";
+import { useEffect } from "react";
+
+/** Sends one GA4 page_view per route change (deduped inside sendGa4PageView). */
+const Ga4PageTracker = () => {
+  const location = useLocation();
+  useEffect(() => {
+    sendGa4PageView();
+  }, [location.pathname, location.search]);
+  return null;
+};
 import Landing from "./pages/Landing";
 import Splash from "./pages/Splash";
 import SignUp from "./pages/SignUp";
