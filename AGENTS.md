@@ -10,3 +10,4 @@
 - Generate public-route HTML heads from the route metadata list via the Vite build plugin, leaving the SPA body and runtime Helmet intact, because link-preview crawlers do not execute JavaScript.
 - Schedule GA4 page views through the shared title-aware tracker with cancellable navigation waits, because Helmet updates titles after route effects and consent acceptance must use the same timing rules.
 - Reuse the checkout modal's premium-only variant for feature gates and keep its questionnaire variant for the Chat tool; merge chat fetch/realtime rows by ID and preserve pending-message timestamps to avoid stale empty lists and changed chronology.
+- Post-signup payment-direction routing uses the shared maintenance onboarding helpers; automatically assigned viewing roles require local confirmation before Connect, because invite signup does not establish actual maintenance direction.
