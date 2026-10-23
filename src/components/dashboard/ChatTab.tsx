@@ -360,7 +360,6 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     let fetchVersion = 0;
     const fetchMessages = async () => {
       const version = ++fetchVersion;
-      setLoading(true);
       const { data, error } = await supabase
         .from("messages")
         .select("*")
@@ -376,6 +375,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       }
     };
     setMessages([]);
+    setLoading(true);
     void fetchMessages();
 
     const channel = supabase
@@ -398,7 +398,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         { event: "UPDATE", schema: "public", table: "messages" },
         (payload) => {
           const m = payload.new as Message;
-          setMessages((prev) => prev.map((p) => (p.id === m.id ? { ...p, read_at: m.read_at } : p)));
+          if (active) setMessages((prev) => prev.map((p) => (p.id === m.id ? { ...p, read_at: m.read_at } : p)));
         },
       )
       .subscribe(status => {
