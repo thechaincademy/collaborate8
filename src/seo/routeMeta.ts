@@ -276,6 +276,19 @@ const routeMeta = [
     "twitterCard": "summary_large_image",
     "twitterTitle": "What Does Child Maintenance Cover? UK Guide | Collabor8",
     "twitterDescription": "Does child maintenance cover school uniform, trips, clubs or the dentist? What it is for, and simple ways UK parents can split extra costs fairly."
+  },
+  {
+    "route": "/contact",
+    "title": "Contact Collabor8",
+    "description": "Contact Collabor8 by phone on 020 3488 1055 or by email at jade@collaborate8.com.",
+    "canonical": "https://collaborate8.com/contact",
+    "ogTitle": "Contact Collabor8",
+    "ogDescription": "Contact Collabor8 by phone on 020 3488 1055 or by email at jade@collaborate8.com.",
+    "ogUrl": "https://collaborate8.com/contact",
+    "ogType": "website",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Contact Collabor8",
+    "twitterDescription": "Contact Collabor8 by phone on 020 3488 1055 or by email at jade@collaborate8.com."
   }
 ] satisfies readonly RouteMeta[];
 

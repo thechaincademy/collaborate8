@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import Contact from "./pages/Contact";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -113,6 +114,7 @@ const App = () => (
           <Route path="/cookies" element={<CookiePolicy />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/podcast" element={<Podcast />} />
           <Route path="/resources" element={<ResourcesIndex />} />
           <Route path="/resources/what-does-child-maintenance-cover" element={<WhatDoesChildMaintenanceCover />} />
