@@ -10,6 +10,7 @@ let gtagCalls: unknown[][];
 let observers: Set<() => void>;
 let frames: Map<number, FrameRequestCallback>;
 let nextFrame = 0;
+let consentAtSend: string[];
 const fallback = async () => {
   const callbacks = [...frames.values()];
   frames.clear();
@@ -23,6 +24,7 @@ const updateTitle = (title: string) => {
 
 const setupDom = (href: string) => {
   gtagCalls = [];
+  consentAtSend = [];
   observers = new Set();
   frames = new Map();
   (globalThis as any).document = { title: "About Us | Collabor8", head: {} };
@@ -45,6 +47,9 @@ const setupDom = (href: string) => {
   (globalThis as any).window = {
     location: { href },
     gtag: (...args: unknown[]) => gtagCalls.push(args),
+    c8UpdateGoogleConsent: () => consentAtSend.push(
+      localStorage.getItem("medi8-cookie-consent") === "accepted" ? "granted" : "denied"
+    ),
   };
 };
 
@@ -56,17 +61,21 @@ const accept = () => localStorage.setItem("medi8-cookie-consent", "accepted");
 describe("sendGa4PageView", () => {
   beforeEach(() => setupDom(LANDING));
 
-  it("sends nothing before consent", async () => {
+  it("sends a cookieless visit before consent with denied signals", async () => {
     const { sendGa4PageView } = await loadModule(1);
     sendGa4PageView();
-    expect(gtagCalls).toHaveLength(0);
+    await fallback();
+    expect(gtagCalls).toHaveLength(1);
+    expect(consentAtSend).toEqual(["denied"]);
   });
 
-  it("sends nothing when consent is Essential Only (declined)", async () => {
+  it("sends a cookieless visit when consent is Essential Only (declined)", async () => {
     localStorage.setItem("medi8-cookie-consent", "declined");
     const { sendGa4PageView } = await loadModule(2);
     sendGa4PageView();
-    expect(gtagCalls).toHaveLength(0);
+    await fallback();
+    expect(gtagCalls).toHaveLength(1);
+    expect(consentAtSend).toEqual(["denied"]);
   });
 
   it("first page_view uses the landing URL with its UTM query string", async () => {
@@ -107,7 +116,7 @@ describe("sendGa4PageView", () => {
     expect((gtagCalls[2][2] as any).page_location).toBe("https://collaborate8.com/about");
   });
 
-  it("stops sending when consent is withdrawn", async () => {
+  it("reverts to denied cookieless visits when consent is withdrawn", async () => {
     accept();
     const { sendGa4PageView } = await loadModule(6);
     sendGa4PageView();
@@ -115,7 +124,9 @@ describe("sendGa4PageView", () => {
     expect(gtagCalls).toHaveLength(1);
     localStorage.setItem("medi8-cookie-consent", "declined");
     sendGa4PageView("https://collaborate8.com/faq");
-    expect(gtagCalls).toHaveLength(1);
+    await fallback();
+    expect(gtagCalls).toHaveLength(2);
+    expect(consentAtSend).toEqual(["granted", "denied"]);
   });
 
   it("sends nothing if gtag is not loaded", async () => {
@@ -168,13 +179,14 @@ describe("sendGa4PageView", () => {
     expect((gtagCalls[1][2] as any).page_title).toBe("Child Maintenance Guide | Collabor8");
   });
 
-  it("checks withdrawal again before a pending send", async () => {
+  it("checks withdrawal again before a pending cookieless send", async () => {
     accept();
     const { sendGa4PageView } = await loadModule(11);
     sendGa4PageView();
     localStorage.setItem("medi8-cookie-consent", "declined");
     updateTitle("FAQ | Collabor8");
     await fallback();
-    expect(gtagCalls).toHaveLength(0);
+    expect(gtagCalls).toHaveLength(1);
+    expect(consentAtSend).toEqual(["denied"]);
   });
 });
