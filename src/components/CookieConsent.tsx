@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Cookie } from "lucide-react";
-import { sendGa4PageView } from "@/lib/ga4";
+import { sendGa4ConsentedLandingPageView } from "@/lib/ga4";
 
 const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
