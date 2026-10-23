@@ -197,6 +197,24 @@ describe("sendGa4PageView", () => {
     expect(gtagCalls).toHaveLength(1);
     expect(consentAtSend).toEqual(["denied"]);
   });
+
+  it("reload in the same session sends a normal route page_view, not the landing hit", async () => {
+    accept();
+    // Simulate an earlier page load in this session that already sent the
+    // consented landing hit (sessionStorage flag survived the reload).
+    sessionStorage.setItem("c8-ga4-landing-pv", "1");
+    const { sendGa4PageView } = await loadModule(18);
+    // The router stripped the query before this first send
+    (globalThis as any).window.location.href = "https://collaborate8.com/faq";
+    sendGa4PageView();
+    updateTitle("FAQ | Collabor8");
+    await fallback();
+    expect(gtagCalls).toHaveLength(1);
+    const hit = gtagCalls[0][2] as any;
+    expect(hit.page_location).toBe("https://collaborate8.com/faq");
+    expect(hit.page_title).toBe("FAQ | Collabor8");
+    expect(hit.page_referrer).toBeUndefined();
+  });
 });
 
 describe("sendGa4ConsentedLandingPageView", () => {

@@ -17,7 +17,9 @@
  *    exactly one consented landing page_view is re-sent with the original
  *    landing URL, its UTM query string and the original document.referrer.
  *    A sessionStorage flag guarantees it fires only once per session and
- *    never doubles with the normal route page_views
+ *    never doubles with the normal route page_views. When the flag survives
+ *    a reload in the same session, the first send falls back to a regular
+ *    route page_view instead of being dropped
  *  - StrictMode double effects and repeat renders cannot double-send: a URL
  *    is only sent once until the route actually changes
  */
@@ -130,11 +132,21 @@ export const sendGa4PageView = (url?: string) => {
       lastSentUrl = routeUrl;
       if (isConsentGranted()) {
         // Consented first hit: original landing URL + referrer, once per
-        // session. If the banner Accept handler already sent it, skip.
+        // session. Skip only when the banner Accept handler already sent
+        // it in THIS page load, so it never doubles.
+        if (landingConsentedSent) return;
         if (!landingAlreadySent()) {
           markLandingSent();
           landingHit(w);
+          return;
         }
+        // Reloaded in the same session: the consented landing hit went out
+        // once already, so this first send is a regular route page_view.
+        w.gtag("event", "page_view", {
+          send_to: GA4_MEASUREMENT_ID,
+          page_location: routeUrl,
+          page_title: document.title,
+        });
         return;
       }
       // No consent yet: cookieless landing ping (GA drops it, but the visit
