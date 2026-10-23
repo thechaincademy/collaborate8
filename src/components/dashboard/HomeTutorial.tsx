@@ -168,7 +168,7 @@ const HomeTutorial = ({ userId, isLinked, coparentId, inviteEmail, onInvite, onN
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <h3 className={cn("text-[13px] font-bold leading-tight", unlocked ? "text-navy" : "text-muted-foreground")}>
+                    <h3 className={cn("text-[13px] font-bold leading-tight", unlocked ? "text-foreground" : "text-muted-foreground")}>
                       {step.title}
                     </h3>
                     {isDone && <Check aria-label={`${step.title} completed`} className="h-3.5 w-3.5 shrink-0 text-gold" strokeWidth={3} />}

@@ -231,14 +231,14 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
         </div>
 
         {embedded && (
-          <p className="mb-4 text-sm font-medium leading-relaxed text-navy">
+          <p className="mb-4 text-sm font-medium leading-relaxed text-foreground">
             Use estimated figures or your own - you can update this any time.
           </p>
         )}
 
         {/* Introduction */}
         <div className="mx-auto max-w-[680px] px-4 py-8">
-          <p className="text-[1.1rem] font-semibold leading-relaxed text-navy">
+          <p className="text-[1.1rem] font-semibold leading-relaxed text-foreground">
             Many parents do not know where to start, and the child maintenance calculator can be a good starting point.
           </p>
           <p className="mt-3 text-base leading-[1.7] text-[#333333]">
@@ -335,24 +335,24 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
         </div>
 
         {/* Result card */}
-        <div className="mb-4 rounded-2xl bg-navy p-7 shadow-elevated">
-          <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-white/60">Estimated child maintenance</div>
+        <div className="mb-4 rounded-2xl border border-border bg-card p-7 shadow-elevated">
+          <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Estimated child maintenance</div>
           <div className="mb-6 flex items-end gap-1.5">
-            <span className="text-[56px] font-semibold leading-none tracking-tight text-gold max-[480px]:text-[44px]">{fmt(result.totalFinal)}</span>
-            <span className="mb-2.5 text-base font-medium text-white/60">per week</span>
+            <span className="text-[56px] font-semibold leading-none tracking-tight text-foreground max-[480px]:text-[44px]">{fmt(result.totalFinal)}</span>
+            <span className="mb-2.5 text-base font-medium text-muted-foreground">per week</span>
           </div>
           <div className="mb-5 grid grid-cols-2 gap-2.5">
-            <div className="rounded-[10px] bg-background/10 p-3.5">
-              <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.06em] text-white/55">Monthly</div>
-              <div className="text-[22px] font-semibold text-white">{fmt(result.totalFinal * 52 / 12)}</div>
+            <div className="rounded-[10px] bg-background p-3.5">
+              <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">Monthly</div>
+              <div className="text-[22px] font-semibold text-foreground">{fmt(result.totalFinal * 52 / 12)}</div>
             </div>
-            <div className="rounded-[10px] bg-background/10 p-3.5">
-              <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.06em] text-white/55">Annual</div>
-              <div className="text-[22px] font-semibold text-white">{fmt(result.totalFinal * 52)}</div>
+            <div className="rounded-[10px] bg-background p-3.5">
+              <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">Annual</div>
+              <div className="text-[22px] font-semibold text-foreground">{fmt(result.totalFinal * 52)}</div>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-background/10 px-3 py-1 text-xs font-semibold text-white/90">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-gold" />
               {result.rateName}
             </span>

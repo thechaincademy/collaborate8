@@ -106,7 +106,7 @@ export default function PayingParentSetup({ connected, userId, receiverId, arran
               <span className={cn("relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold", unlocked ? "bg-teal text-teal-foreground" : "bg-muted text-muted-foreground")}>{index + 1}</span>
               <div className={cn("min-w-0 flex-1 pt-1", !unlocked && "opacity-50")}>
                 <div className="flex items-start gap-2">
-                  <h3 className={cn("flex-1 text-base font-bold", unlocked ? "text-navy" : "text-muted-foreground")}>{item.title}</h3>
+                  <h3 className={cn("flex-1 text-base font-bold", unlocked ? "text-foreground" : "text-muted-foreground")}>{item.title}</h3>
                   {done && <Check aria-label={`${item.title} completed`} className="h-5 w-5 shrink-0 text-gold" strokeWidth={3} />}
                 </div>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.description}</p>

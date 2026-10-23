@@ -75,7 +75,7 @@ export const ConversationEmailStep = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
-        <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
+        <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <h2 className="text-lg font-semibold leading-snug">
             Your co-parent&apos;s invitation
           </h2>
@@ -218,7 +218,7 @@ export const ConversationCostsStep = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
-        <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
+        <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <h2 className="text-lg font-semibold leading-snug">
             Provide further details on your costs (optional)
           </h2>
@@ -413,7 +413,7 @@ export const ConversationToolModal = ({
 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
-        <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
+        <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <h2 className="text-lg font-semibold leading-snug">
             {premiumOnly ? "Unlock Collabor8 Premium" : "Start the financial conversation."}
           </h2>
@@ -539,7 +539,7 @@ export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => (
 );
 
 export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void }) => (
-  <div className="mt-4 rounded-2xl bg-navy p-4 text-navy-foreground">
+  <div className="mt-4 rounded-2xl border border-border bg-card p-4 text-foreground">
     <p className="text-xs leading-relaxed">
       Not getting a response? The Self-Guided Financial Conversation Tool lets both parents answer
       questions privately - before any direct conversation takes place. An email is sent to your
