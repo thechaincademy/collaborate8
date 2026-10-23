@@ -2,9 +2,11 @@ import { describe, it, expect, beforeEach } from "bun:test";
 
 // Tests the GA4 page_view rules in src/lib/ga4.ts:
 // consent gating, one send per URL, landing URL (with UTM query) on first hit,
-// and that withdrawing consent stops further sends.
+// the consented landing re-send after Accept (original URL + referrer, once
+// per session), and that withdrawing consent stops further sends.
 
-const LANDING = "https://collaborate8.com/?utm_source=leaflet&utm_campaign=hackney";
+const LANDING = "https://collaborate8.com/?utm_source=nfm&utm_medium=referral&utm_campaign=nfm_partnership";
+const REFERRER = "https://nfm.example/partners";
 
 let gtagCalls: unknown[][];
 let observers: Set<() => void>;
@@ -27,7 +29,7 @@ const setupDom = (href: string) => {
   consentAtSend = [];
   observers = new Set();
   frames = new Map();
-  (globalThis as any).document = { title: "About Us | Collabor8", head: {} };
+  (globalThis as any).document = { title: "About Us | Collabor8", head: {}, referrer: REFERRER };
   (globalThis as any).MutationObserver = class {
     constructor(private callback: () => void) {}
     observe() { observers.add(this.callback); }
@@ -43,6 +45,12 @@ const setupDom = (href: string) => {
     getItem: (k: string) => storage.get(k) ?? null,
     setItem: (k: string, v: string) => void storage.set(k, v),
     removeItem: (k: string) => void storage.delete(k),
+  };
+  const session = new Map<string, string>();
+  (globalThis as any).sessionStorage = {
+    getItem: (k: string) => session.get(k) ?? null,
+    setItem: (k: string, v: string) => void session.set(k, v),
+    removeItem: (k: string) => void session.delete(k),
   };
   (globalThis as any).window = {
     location: { href },
@@ -188,5 +196,78 @@ describe("sendGa4PageView", () => {
     await fallback();
     expect(gtagCalls).toHaveLength(1);
     expect(consentAtSend).toEqual(["denied"]);
+  });
+});
+
+describe("sendGa4ConsentedLandingPageView", () => {
+  beforeEach(() => setupDom(LANDING));
+
+  it("re-sends the landing page_view with UTMs and referrer after Accept", async () => {
+    const { sendGa4PageView, sendGa4ConsentedLandingPageView } = await loadModule(12);
+    sendGa4PageView(); // pre-consent cookieless landing ping
+    await fallback();
+    expect(gtagCalls).toHaveLength(1);
+    expect(consentAtSend).toEqual(["denied"]);
+    accept();
+    sendGa4ConsentedLandingPageView();
+    expect(gtagCalls).toHaveLength(2);
+    const hit = gtagCalls[1][2] as any;
+    expect(gtagCalls[1][1]).toBe("page_view");
+    expect(hit.send_to).toBe("G-2YB8M4ZYEG");
+    expect(hit.page_location).toBe(LANDING);
+    expect(hit.page_referrer).toBe(REFERRER);
+    // Consent update ran before the hit went out
+    expect(consentAtSend).toEqual(["denied", "granted"]);
+  });
+
+  it("does not double with the pending first route send when Accept comes first", async () => {
+    const { sendGa4PageView, sendGa4ConsentedLandingPageView } = await loadModule(13);
+    sendGa4PageView(); // pending, waiting on title/fallback
+    accept();
+    sendGa4ConsentedLandingPageView(); // banner Accept handler
+    expect(gtagCalls).toHaveLength(1);
+    await fallback(); // pending route send must not re-fire the landing hit
+    expect(gtagCalls).toHaveLength(1);
+    expect((gtagCalls[0][2] as any).page_location).toBe(LANDING);
+  });
+
+  it("fires only once per session even if called again", async () => {
+    accept();
+    const { sendGa4ConsentedLandingPageView } = await loadModule(14);
+    sendGa4ConsentedLandingPageView();
+    sendGa4ConsentedLandingPageView();
+    expect(gtagCalls).toHaveLength(1);
+  });
+
+  it("sends nothing without consent", async () => {
+    const { sendGa4ConsentedLandingPageView } = await loadModule(15);
+    sendGa4ConsentedLandingPageView();
+    expect(gtagCalls).toHaveLength(0);
+  });
+
+  it("keeps later route page_views on the current URL after the landing re-send", async () => {
+    const { sendGa4PageView, sendGa4ConsentedLandingPageView } = await loadModule(16);
+    sendGa4PageView();
+    await fallback();
+    accept();
+    sendGa4ConsentedLandingPageView();
+    sendGa4PageView("https://collaborate8.com/faq");
+    updateTitle("FAQ | Collabor8");
+    expect(gtagCalls).toHaveLength(3);
+    const routeHit = gtagCalls[2][2] as any;
+    expect(routeHit.page_location).toBe("https://collaborate8.com/faq");
+    expect(routeHit.page_referrer).toBeUndefined();
+  });
+
+  it("stored consent on load: first send is the consented landing hit with referrer", async () => {
+    accept();
+    const { sendGa4PageView } = await loadModule(17);
+    sendGa4PageView();
+    await fallback();
+    expect(gtagCalls).toHaveLength(1);
+    const hit = gtagCalls[0][2] as any;
+    expect(hit.page_location).toBe(LANDING);
+    expect(hit.page_referrer).toBe(REFERRER);
+    expect(consentAtSend).toEqual(["granted"]);
   });
 });
