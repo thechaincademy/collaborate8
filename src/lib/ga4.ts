@@ -26,6 +26,7 @@ const LANDING_URL = typeof window !== "undefined" ? window.location.href : "";
 
 let lastSentUrl: string | null = null;
 let firstSent = false;
+let cancelPending: (() => void) | undefined;
 
 const hasConsent = () => {
   try {
@@ -36,18 +37,51 @@ const hasConsent = () => {
 };
 
 /**
- * Send a GA4 page_view for the given URL (defaults to the current location).
- * The first send after consent uses the captured landing URL. Repeat sends of
- * the same URL are ignored.
+ * Wait for Helmet's title update, or one animation frame plus 300ms for
+ * same-title routes. New navigation cancels the previous pending page view.
+ * The returned cleanup is safe across React StrictMode effect replays.
  */
 export const sendGa4PageView = (url?: string) => {
-  if (!hasConsent()) return;
+  cancelPending?.();
+  const noop = () => {};
+  if (!hasConsent()) return noop;
   const w = window as unknown as { gtag?: (...args: unknown[]) => void };
-  if (typeof w.gtag !== "function") return;
-  const target = !firstSent && LANDING_URL ? LANDING_URL : (url ?? window.location.href);
-  if (target === lastSentUrl) return;
-  lastSentUrl = target;
-  firstSent = true;
-  // send_to keeps this event on GA4 only, so the Ads tag does not double-count
-  w.gtag("event", "page_view", { send_to: GA4_MEASUREMENT_ID, page_location: target });
+  if (typeof w.gtag !== "function") return noop;
+  const routeUrl = url ?? window.location.href;
+  if (routeUrl === lastSentUrl) return noop;
+  const initialTitle = document.title;
+  let settled = false;
+  let frame: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const observer = new MutationObserver(() => {
+    if (document.title !== initialTitle) finish();
+  });
+  const cancel = () => {
+    settled = true;
+    observer.disconnect();
+    if (frame !== undefined) cancelAnimationFrame(frame);
+    if (timer !== undefined) clearTimeout(timer);
+    if (cancelPending === cancel) cancelPending = undefined;
+  };
+  const finish = () => {
+    if (settled) return;
+    cancel();
+    // Consent can change while waiting for the new title.
+    if (!hasConsent() || typeof w.gtag !== "function") return;
+    const target = !firstSent && LANDING_URL ? LANDING_URL : routeUrl;
+    lastSentUrl = routeUrl;
+    firstSent = true;
+    w.gtag("event", "page_view", {
+      send_to: GA4_MEASUREMENT_ID,
+      page_location: target,
+      page_title: document.title,
+    });
+  };
+  cancelPending = cancel;
+  // Observe head as Helmet may replace the title element rather than its text.
+  observer.observe(document.head, { subtree: true, childList: true, characterData: true });
+  frame = requestAnimationFrame(() => {
+    timer = setTimeout(finish, 300);
+  });
+  return cancel;
 };
