@@ -1,6 +1,7 @@
 export type MaintenanceOnboardingStep =
   | "setup-card"
   | "receiving-question"
+  | "payer-explainer"
   | "setup-connect"
   | "payment-amount"
   | "payment-frequency"
@@ -12,6 +13,10 @@ export const initialMaintenanceStep = (role?: string): MaintenanceOnboardingStep
   role === "managing" ? "setup-card" : "receiving-question";
 
 export const maintenanceReceivingAnswer = (receiving: boolean): MaintenanceOnboardingStep =>
-  receiving ? "setup-connect" : "waiting-coparent";
+  receiving ? "setup-connect" : "payer-explainer";
 
-export const afterMaintenanceCard = (): MaintenanceOnboardingStep => "payment-amount";
+export const maintenancePayerAction = (addMethod: boolean): MaintenanceOnboardingStep =>
+  addMethod ? "setup-card" : "waiting-coparent";
+
+export const afterMaintenanceCard = (invitedPayer = false): MaintenanceOnboardingStep =>
+  invitedPayer ? "waiting-coparent" : "payment-amount";
