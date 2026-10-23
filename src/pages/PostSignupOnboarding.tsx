@@ -134,11 +134,12 @@ const PostSignupOnboarding = () => {
   const renderPayerExplainer = () => (
     <motion.div key="payer-explainer" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
       <h1 className="mb-2 text-3xl font-bold text-foreground">Set up to pay maintenance</h1>
-      <p className="mb-8 text-muted-foreground">To pay child maintenance, you'll need to add how you want to pay, by credit card, debit card or bank account. This is handled securely by Stripe. You can do this now or later from Settings, but you won't be able to send payments until it's done.</p>
+      <p className="mb-8 text-muted-foreground">Add how you'd like to pay: credit card, debit card or bank account. Stripe handles this securely.</p>
       <div className="flex-1" />
       <div className="space-y-3 pb-8">
         <Button onClick={() => setStep(maintenancePayerAction(true))} className="w-full" size="lg">Add payment method</Button>
         <Button onClick={() => setStep(maintenancePayerAction(false))} variant="ghost" className="w-full text-muted-foreground" size="lg">Do this later</Button>
+        <p className="pt-1 text-center text-xs text-muted-foreground">You can do this later from Settings.</p>
       </div>
     </motion.div>
   );
@@ -147,7 +148,7 @@ const PostSignupOnboarding = () => {
   const renderSetupConnect = () => (
     <motion.div key="setup-connect" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
       <h1 className="mb-2 text-3xl font-bold text-foreground">Set up to receive payments</h1>
-      <p className="mb-8 text-muted-foreground">To receive the payment on your bank account, we need to verify your identity and add your bank details. This is handled securely by Stripe and takes about 5 minutes. You can skip for now and do it later from Settings, but you won't be able to receive payments until it's done.</p>
+      <p className="mb-8 text-muted-foreground">Add your bank details so maintenance is paid into your bank account. Stripe handles this securely and it takes about 5 minutes.</p>
 
       <div className="flex-1" />
       <div className="space-y-3 pb-8">
@@ -157,6 +158,7 @@ const PostSignupOnboarding = () => {
         <Button onClick={handleConnectNext} variant="ghost" className="w-full text-muted-foreground" size="lg">
           Do this later
         </Button>
+        <p className="pt-1 text-center text-xs text-muted-foreground">You can do this later from Settings.</p>
       </div>
     </motion.div>
   );
