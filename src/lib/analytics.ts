@@ -66,7 +66,7 @@ const CONSENT_KEY = "medi8-cookie-consent"; // set by CookieConsent.tsx
 const ANON_KEY = "c8_anon_id";
 
 // GA4 page_view tracking lives in ./ga4.ts; the gtag.js script itself is
-// consent-gated in index.html (window.c8LoadGtag), shared with the Ads tag.
+// in index.html (window.c8LoadGtag), shared with Ads and using Consent Mode v2.
 
 
 /** "accepted" = Accept All. "analytics" is reserved for a future analytics-only choice. */

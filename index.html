@@ -50,11 +50,25 @@
       } catch (e) { /* storage unavailable */ }
     </script>
 
-    <!-- Google tag (gtag.js) (loads only after analytics consent) -->
+    <!-- Google Consent Mode v2: cookieless pings until consent is granted -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied' });
+      gtag('consent', 'default', {
+        analytics_storage: 'denied', ad_storage: 'denied',
+        ad_user_data: 'denied', ad_personalization: 'denied'
+      });
+      window.c8UpdateGoogleConsent = function () {
+        var choice = null;
+        try { choice = localStorage.getItem('medi8-cookie-consent'); } catch (e) { /* storage unavailable */ }
+        var state = choice === 'accepted' ? 'granted' : 'denied';
+        if (window.c8GoogleConsentState === state) return;
+        window.c8GoogleConsentState = state;
+        gtag('consent', 'update', {
+          analytics_storage: state, ad_storage: state,
+          ad_user_data: state, ad_personalization: state
+        });
+      };
       window.c8LoadGtag = function () {
         if (window.c8GtagLoaded) return;
         window.c8GtagLoaded = true;
@@ -62,16 +76,19 @@
         s.async = true;
         s.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18435476721';
         document.head.appendChild(s);
-        gtag('consent', 'update', { analytics_storage: 'granted' });
         gtag('js', new Date());
         gtag('config', 'AW-18435476721');
         // GA4: automatic page_view disabled, the SPA sends one per route change (src/lib/ga4.ts)
         gtag('config', 'G-2YB8M4ZYEG', { send_page_view: false });
       };
+      window.c8UpdateGoogleConsent();
+      window.c8LoadGtag();
+      window.addEventListener('storage', function (event) {
+        if (event.key === 'medi8-cookie-consent' || event.key === null) window.c8UpdateGoogleConsent();
+      });
       try {
         if (localStorage.getItem("medi8-cookie-consent") === "accepted") {
           window.c8LoadHotjar();
-          window.c8LoadGtag();
         }
       } catch (e) { /* storage unavailable */ }
     </script>
