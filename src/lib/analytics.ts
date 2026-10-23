@@ -65,6 +65,38 @@ export type UsageProps = Partial<Record<PropKey, string | number | boolean>>;
 const CONSENT_KEY = "medi8-cookie-consent"; // set by CookieConsent.tsx
 const ANON_KEY = "c8_anon_id";
 
+const GA4_MEASUREMENT_ID = import.meta.env
+  .VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY as string | undefined;
+
+/**
+ * Google Analytics 4 tag. Consent-gated like Hotjar, Clarity and the Google
+ * tag in index.html: only call this after the visitor clicks "Accept All"
+ * (or has already accepted on a previous visit).
+ */
+export const loadGa4 = () => {
+  if (!GA4_MEASUREMENT_ID) return;
+  const w = window as unknown as {
+    c8Ga4Loaded?: boolean;
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
+  };
+  if (w.c8Ga4Loaded) return;
+  w.c8Ga4Loaded = true;
+  w.dataLayer = w.dataLayer || [];
+  w.gtag =
+    w.gtag ||
+    function () {
+      // eslint-disable-next-line prefer-rest-params -- gtag.js needs the Arguments object
+      w.dataLayer!.push(arguments);
+    };
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;
+  document.head.appendChild(s);
+  w.gtag("js", new Date());
+  w.gtag("config", GA4_MEASUREMENT_ID);
+};
+
 /** "accepted" = Accept All. "analytics" is reserved for a future analytics-only choice. */
 const CONSENT_VALUES = ["accepted", "analytics"];
 
