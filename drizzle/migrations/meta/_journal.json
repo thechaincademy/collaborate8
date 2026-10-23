@@ -43,6 +43,13 @@
       "when": 1792752275667,
       "tag": "0005_enforce_premium_chat_uploads",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792769198995,
+      "tag": "0006_invite_first_message_delivery",
+      "breakpoints": true
     }
   ]
 }

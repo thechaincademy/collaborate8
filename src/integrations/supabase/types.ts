@@ -632,6 +632,7 @@ export type Database = {
           created_at: string
           id: string
           original_body: string | null
+          pending_first_message_id: string | null
           read_at: string | null
           recipient_id: string
           sender_id: string
@@ -645,6 +646,7 @@ export type Database = {
           created_at?: string
           id?: string
           original_body?: string | null
+          pending_first_message_id?: string | null
           read_at?: string | null
           recipient_id: string
           sender_id: string
@@ -658,6 +660,7 @@ export type Database = {
           created_at?: string
           id?: string
           original_body?: string | null
+          pending_first_message_id?: string | null
           read_at?: string | null
           recipient_id?: string
           sender_id?: string
