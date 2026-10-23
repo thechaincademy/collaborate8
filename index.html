@@ -64,7 +64,7 @@
         document.head.appendChild(s);
         gtag('consent', 'update', { analytics_storage: 'granted' });
         gtag('js', new Date());
-        gtag('config', 'AW-18435476721');
+        gtag('config', 'AW-18435476721', { send_page_view: false });
         // GA4: automatic page_view disabled, the SPA sends one per route change (src/lib/ga4.ts)
         gtag('config', 'G-QLHPHSQVJJ', { send_page_view: false });
       };
