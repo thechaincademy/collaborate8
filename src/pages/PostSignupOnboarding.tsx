@@ -7,14 +7,9 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Check, Calculator, PoundSterling, Loader2, CreditCard } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
+import { afterMaintenanceCard, initialMaintenanceStep, maintenanceReceivingAnswer, type MaintenanceOnboardingStep } from "@/lib/maintenanceOnboarding";
 
-type OnboardingStep =
-  | "setup-card"
-  | "setup-connect"
-  | "payment-amount"
-  | "payment-frequency"
-  | "complete"
-  | "waiting-coparent";
+type OnboardingStep = MaintenanceOnboardingStep;
 
 const PostSignupOnboarding = () => {
   const navigate = useNavigate();
@@ -24,6 +19,7 @@ const PostSignupOnboarding = () => {
   const { startOnboarding, loading: connectLoading } = useStripeConnect();
 
   const [step, setStep] = useState<OnboardingStep>("setup-card");
+  const [receivingMaintenance, setReceivingMaintenance] = useState<boolean | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [useCalculator, setUseCalculator] = useState(false);
   const [frequency, setFrequency] = useState<"monthly" | "weekly">("monthly");
@@ -32,17 +28,11 @@ const PostSignupOnboarding = () => {
     fetchCards();
   }, []);
 
-  // Determine initial step based on role
+  // Invited parents are assigned viewing without confirming payment direction.
   useEffect(() => {
     if (profileLoading) return;
-    if (isViewing) {
-      // Viewing parent: first set up Connect (to receive), then card (to send)
-      setStep("setup-connect");
-    } else {
-      // Managing parent: first card (to send), then Connect (to receive)
-      setStep("setup-card");
-    }
-  }, [profileLoading, isViewing]);
+    setStep(initialMaintenanceStep(profile?.role));
+  }, [profileLoading, profile?.role]);
 
   const handleBack = () => {
     switch (step) {
@@ -50,11 +40,13 @@ const PostSignupOnboarding = () => {
         navigate(-1);
         break;
       case "setup-connect":
-        if (isViewing) navigate(-1);
-        else setStep("setup-card");
+        setStep("receiving-question");
+        break;
+      case "receiving-question":
+        navigate(-1);
         break;
       case "payment-amount":
-        setStep("setup-connect");
+        setStep("setup-card");
         break;
       case "payment-frequency":
         setStep("payment-amount");
@@ -75,7 +67,12 @@ const PostSignupOnboarding = () => {
   };
 
   const handleCardNext = () => {
-    setStep("setup-connect");
+    setStep(afterMaintenanceCard());
+  };
+
+  const handleReceivingAnswer = (receiving: boolean) => {
+    setReceivingMaintenance(receiving);
+    setStep(maintenanceReceivingAnswer(receiving));
   };
 
   const handleConnectNext = () => {
@@ -119,29 +116,30 @@ const PostSignupOnboarding = () => {
     </motion.div>
   );
 
-  // ── Step: Set Up Connect (to RECEIVE payments) ──
-  const renderSetupConnect = () => (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
-      <h1 className="mb-2 text-3xl font-bold text-foreground">Set up to receive payments</h1>
-      <p className="mb-8 text-muted-foreground">Complete a quick verification so you can receive maintenance payments from your co-parent.</p>
-
-      <div className="mb-6 rounded-2xl bg-card p-6">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-          <CreditCard className="h-6 w-6 text-foreground" />
-        </div>
-        <h3 className="mb-2 font-semibold text-foreground">Powered by Stripe</h3>
-        <p className="text-sm text-muted-foreground">
-          We use Stripe Connect to securely verify your identity and send payouts directly to your bank account. The setup takes about 5 minutes.
-        </p>
+  const renderReceivingQuestion = () => (
+    <motion.div key="receiving-question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+      <h1 className="mb-8 text-3xl font-bold text-foreground">Will you be receiving maintenance payments?</h1>
+      <div className="flex-1" />
+      <div className="space-y-3 pb-8">
+        <Button onClick={() => handleReceivingAnswer(true)} className="w-full" size="lg">Yes</Button>
+        <Button onClick={() => handleReceivingAnswer(false)} variant="outline" className="w-full" size="lg">No</Button>
       </div>
+    </motion.div>
+  );
+
+  // Step: explain Connect before opening Stripe.
+  const renderSetupConnect = () => (
+    <motion.div key="setup-connect" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
+      <h1 className="mb-2 text-3xl font-bold text-foreground">Set up to receive payments</h1>
+      <p className="mb-8 text-muted-foreground">To receive the payment on your bank account, we need to verify your identity and add your bank details. This is handled securely by Stripe and takes about 5 minutes. You can skip for now and do it later from Settings, but you won't be able to receive payments until it's done.</p>
 
       <div className="flex-1" />
       <div className="space-y-3 pb-8">
         <Button onClick={handleStartConnect} className="w-full gap-2" size="lg" disabled={connectLoading}>
-          {connectLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</> : "Start Verification"}
+          {connectLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</> : "Continue to Stripe"}
         </Button>
         <Button onClick={handleConnectNext} variant="ghost" className="w-full text-muted-foreground" size="lg">
-          Skip for now
+          Do this later
         </Button>
       </div>
     </motion.div>
@@ -226,7 +224,7 @@ const PostSignupOnboarding = () => {
       </div>
       <h1 className="mb-2 text-3xl font-bold text-foreground">You're set up!</h1>
       <p className="mb-8 text-muted-foreground">
-        Your co-parent manages the maintenance arrangement. You'll receive payments automatically once they set things up.
+        {receivingMaintenance === false ? "You can continue using Collabor8." : "Your co-parent manages the maintenance arrangement. You can complete your payment verification later from Settings."}
       </p>
       <Button onClick={handleFinish} className="w-full" size="lg">Go to Dashboard</Button>
     </motion.div>
@@ -265,6 +263,7 @@ const PostSignupOnboarding = () => {
         <div className={`flex flex-1 flex-col pb-8 ${!showBackButton ? "pt-12" : ""}`}>
           <AnimatePresence mode="wait">
             {step === "setup-card" && renderSetupCard()}
+            {step === "receiving-question" && renderReceivingQuestion()}
             {step === "setup-connect" && renderSetupConnect()}
             {step === "payment-amount" && renderPaymentAmount()}
             {step === "payment-frequency" && renderPaymentFrequency()}
