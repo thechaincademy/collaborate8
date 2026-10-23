@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Cookie } from "lucide-react";
-import { sendGa4PageView } from "@/lib/ga4";
+import { sendGa4ConsentedLandingPageView } from "@/lib/ga4";
 
 const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
@@ -23,8 +23,10 @@ const CookieConsent = () => {
     (window as any).c8LoadClarity?.();
     (window as any).c8LoadHotjar?.();
     (window as any).c8LoadGtag?.();
-    // Record the landing page_view now that consent is granted (no route change fires on accept)
-    sendGa4PageView();
+    // Re-send the landing page_view now that consent is granted: the pre-consent
+    // cookieless ping is dropped by GA, so this carries the UTM landing URL and
+    // original referrer for campaign attribution (once per session).
+    sendGa4ConsentedLandingPageView();
     setVisible(false);
   };
 
