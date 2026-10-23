@@ -422,13 +422,19 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   // Mark incoming messages as read while the chat is open
   useEffect(() => {
     if (!user || !coparentId || activeSection !== "chat") return;
-    const unread = messages.filter((m) => m.recipient_id === user.id && !m.read_at).map((m) => m.id);
-    if (unread.length === 0) return;
-    const now = new Date().toISOString();
-    setMessages((prev) => prev.map((p) => (unread.includes(p.id) ? { ...p, read_at: now } : p)));
-    void supabase.from("messages").update({ read_at: now }).in("id", unread).then(({ error }) => {
-      if (error) console.error("Could not mark messages read", error);
-    });
+    const markIncomingRead = () => {
+      if (document.visibilityState !== "visible") return;
+      const unread = messages.filter((m) => m.recipient_id === user.id && !m.read_at).map((m) => m.id);
+      if (unread.length === 0) return;
+      const now = new Date().toISOString();
+      setMessages((prev) => prev.map((p) => (unread.includes(p.id) ? { ...p, read_at: now } : p)));
+      void supabase.from("messages").update({ read_at: now }).in("id", unread).then(({ error }) => {
+        if (error) console.error("Could not mark messages read", error);
+      });
+    };
+    markIncomingRead();
+    document.addEventListener("visibilitychange", markIncomingRead);
+    return () => document.removeEventListener("visibilitychange", markIncomingRead);
   }, [messages, user, coparentId, activeSection]);
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { readFileSync } from "node:fs";
 import { mergeChatMessages, pendingMessageDelivery } from "../src/lib/chatMessages";
 
 describe("Invite message chronology and synchronization", () => {
@@ -16,5 +17,71 @@ describe("Invite message chronology and synchronization", () => {
     const first = { id: "first", created_at: "2026-10-23T12:03:00Z" };
     const next = { id: "next", created_at: "2026-10-23T12:12:00Z" };
     expect(mergeChatMessages([next, first], [first])).toEqual([first, next]);
+  });
+});
+
+describe("Chat read status follows page visibility", () => {
+  // Exercise the actual effect with isolated browser and persistence dependencies.
+  const source = readFileSync(new URL("../src/components/dashboard/ChatTab.tsx", import.meta.url), "utf8");
+  const effect = source.split("// Mark incoming messages as read while the chat is open")[1]?.split("\n  useEffect(() => {\n    scrollRef")[0];
+  if (!effect) throw new Error("Chat read-status effect not found");
+  const runEffect = new Function("useEffect", "document", "user", "coparentId", "activeSection", "messages", "setMessages", "supabase", effect);
+
+  function mount(visibilityState: string, activeSection = "chat") {
+    const document = Object.assign(new EventTarget(), { visibilityState });
+    let messages = [
+      { id: "incoming", recipient_id: "me", read_at: null as string | null },
+      { id: "already-read", recipient_id: "me", read_at: "2026-10-23T12:00:00Z" },
+      { id: "outgoing", recipient_id: "coparent", read_at: null as string | null },
+    ];
+    const updates: string[][] = [];
+    let cleanup: (() => void) | undefined;
+    const supabase = { from: () => ({ update: () => ({ in: (_key: string, ids: string[]) => {
+      updates.push(ids);
+      return Promise.resolve({ error: null });
+    } }) }) };
+    runEffect((callback: () => (() => void) | undefined) => { cleanup = callback(); }, document,
+      { id: "me" }, "coparent", activeSection, messages,
+      (update: (current: typeof messages) => typeof messages) => { messages = update(messages); }, supabase);
+    return { document, updates, getMessages: () => messages, cleanup: () => cleanup?.() };
+  }
+
+  it("does not mark incoming messages read while hidden", () => {
+    const chat = mount("hidden");
+    expect(chat.updates).toEqual([]);
+    expect(chat.getMessages()[0]?.read_at).toBeNull();
+    chat.cleanup();
+  });
+
+  it("marks unread incoming messages read when a hidden chat becomes visible", () => {
+    const chat = mount("hidden");
+    chat.document.visibilityState = "visible";
+    chat.document.dispatchEvent(new Event("visibilitychange"));
+    expect(chat.updates).toEqual([["incoming"]]);
+    expect(chat.getMessages()[0]?.read_at).toEqual(expect.any(String));
+    chat.cleanup();
+  });
+
+  it("marks visible arrivals read without updating already-read or outgoing messages", () => {
+    const chat = mount("visible");
+    expect(chat.updates).toEqual([["incoming"]]);
+    expect(chat.getMessages()[1]?.read_at).toBe("2026-10-23T12:00:00Z");
+    expect(chat.getMessages()[2]?.read_at).toBeNull();
+    chat.cleanup();
+  });
+
+  it("removes the visibility listener on unmount", () => {
+    const chat = mount("hidden");
+    chat.cleanup();
+    chat.document.visibilityState = "visible";
+    chat.document.dispatchEvent(new Event("visibilitychange"));
+    expect(chat.updates).toEqual([]);
+  });
+
+  it("does not mark messages read in the Documents section", () => {
+    const chat = mount("visible", "documents");
+    chat.document.dispatchEvent(new Event("visibilitychange"));
+    expect(chat.updates).toEqual([]);
+    chat.cleanup();
   });
 });
