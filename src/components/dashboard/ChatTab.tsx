@@ -25,6 +25,7 @@ import ConversationQuestionnaire from "./ConversationQuestionnaire";
 import RewriteComposer from "./RewriteComposer";
 import DocumentsTab from "./DocumentsTab";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
+import { mergeChatMessages, pendingMessageDelivery } from "@/lib/chatMessages";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -230,7 +231,8 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
 
   // First message written before the co-parent has joined
-  const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string; recipient_email?: string | null } | null>(null);
+  const [pendingMessage, setPendingMessage] = useState<{ id: string; body: string; created_at: string; recipient_email?: string | null } | null>(null);
+  const deliveryInFlight = useRef<string | null>(null);
   const [pendingLoading, setPendingLoading] = useState(true);
   const [pendingDraft, setPendingDraft] = useState("");
   const [savedCoparentEmail, setSavedCoparentEmail] = useState("");
@@ -246,7 +248,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       const [{ data: pending }, { data: invite }] = await Promise.all([
         supabase
           .from("pending_first_messages")
-          .select("id, body, recipient_email")
+          .select("id, body, created_at, recipient_email")
           .eq("sender_id", user.id)
           .is("delivered_at", null)
           .order("created_at", { ascending: false })
@@ -276,19 +278,19 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   // Deliver the waiting message once the co-parent connects
   useEffect(() => {
-    if (!user || !coparentId || !pendingMessage) return;
+    if (!user || !coparentId || !pendingMessage || deliveryInFlight.current === pendingMessage.id) return;
+    deliveryInFlight.current = pendingMessage.id;
     (async () => {
-      const { error } = await supabase.from("messages").insert({
-        sender_id: user.id,
-        recipient_id: coparentId,
-        body: pendingMessage.body,
-      });
-      if (error) return;
-      await supabase
+      const { data, error } = await supabase.from("messages")
+        .insert(pendingMessageDelivery(user.id, coparentId, pendingMessage))
+        .select().single();
+      if (error) { deliveryInFlight.current = null; return; }
+      if (data) setMessages(prev => mergeChatMessages(prev, [data as Message]));
+      const { error: completionError } = await supabase
         .from("pending_first_messages")
         .update({ delivered_at: new Date().toISOString() })
         .eq("id", pendingMessage.id);
-      setPendingMessage(null);
+      if (!completionError) setPendingMessage(null);
     })();
   }, [user, coparentId, pendingMessage]);
 
@@ -304,7 +306,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     const { data, error } = await supabase
       .from("pending_first_messages")
       .insert({ sender_id: user.id, body: text, recipient_email: email })
-      .select("id, body")
+      .select("id, body, created_at")
       .single();
     if (error || !data) {
       setSendingPending(false);
@@ -355,7 +357,9 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     }
     let active = true;
 
-    (async () => {
+    let fetchVersion = 0;
+    const fetchMessages = async () => {
+      const version = ++fetchVersion;
       setLoading(true);
       const { data, error } = await supabase
         .from("messages")
@@ -365,15 +369,17 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         )
         .order("created_at", { ascending: true })
         .limit(200);
-      if (active) {
+      if (active && version === fetchVersion) {
         if (error) toast.error("Could not load messages");
-        else setMessages((data ?? []) as Message[]);
+        else setMessages(prev => mergeChatMessages(prev, (data ?? []) as Message[]));
         setLoading(false);
       }
-    })();
+    };
+    setMessages([]);
+    void fetchMessages();
 
     const channel = supabase
-      .channel(`messages:${user.id}`)
+      .channel(`messages:${user.id}:${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
@@ -383,7 +389,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
             (m.sender_id === user.id && m.recipient_id === coparentId) ||
             (m.sender_id === coparentId && m.recipient_id === user.id)
           ) {
-            setMessages((prev) => (prev.some((p) => p.id === m.id) ? prev : [...prev, m]));
+            if (active) setMessages(prev => mergeChatMessages(prev, [m]));
           }
         },
       )
@@ -395,10 +401,20 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           setMessages((prev) => prev.map((p) => (p.id === m.id ? { ...p, read_at: m.read_at } : p)));
         },
       )
-      .subscribe();
+      .subscribe(status => {
+        // Close the gap between the initial query and a ready subscription.
+        if (status === "SUBSCRIBED" && active) void fetchMessages();
+      });
+    const refreshMessages = () => { if (active) void fetchMessages(); };
+    window.addEventListener("focus", refreshMessages);
+    window.addEventListener("c8-profile-refresh", refreshMessages);
+    const poll = setInterval(refreshMessages, 10000);
 
     return () => {
       active = false;
+      clearInterval(poll);
+      window.removeEventListener("focus", refreshMessages);
+      window.removeEventListener("c8-profile-refresh", refreshMessages);
       supabase.removeChannel(channel);
     };
   }, [user, coparentId]);

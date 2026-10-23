@@ -367,10 +367,12 @@ export const ConversationToolModal = ({
   open,
   onOpenChange,
   onStart,
+  premiumOnly = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onStart?: () => void;
+  premiumOnly?: boolean;
 }) => {
   const { hasAccess, expiredAt, access, loading, refresh } = useConversationToolAccess();
   const isSubscription = hasAccess && access?.source === "subscription" && !!access?.stripe_customer_id;
@@ -413,11 +415,14 @@ export const ConversationToolModal = ({
       <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
         <div className="rounded-t-lg bg-navy p-5 text-navy-foreground">
           <h2 className="text-lg font-semibold leading-snug">
-            Start the financial conversation.
+            {premiumOnly ? "Unlock Collabor8 Premium" : "Start the financial conversation."}
           </h2>
         </div>
 
         <div className="space-y-4 p-5 text-sm text-foreground">
+          {premiumOnly ? (
+            <p>Premium includes Rewrite calmly, AI prompts, chat and document uploads, and the financial conversation tool.</p>
+          ) : <>
           <p>
             Sometimes the most difficult part is knowing where to begin. This tool gives both parents a private, structured way to set out what they would like to discuss - before any direct conversation takes place.
           </p>
@@ -451,6 +456,7 @@ export const ConversationToolModal = ({
           <p className="text-foreground/90">
             This is a self-guided financial conversation tool. It is not a professional mediation service and does not replace professional family mediation.
           </p>
+          </>}
 
           {!hasAccess && expiredAt && (
             <p className="font-semibold">
@@ -484,7 +490,7 @@ export const ConversationToolModal = ({
                 onClick={handleStart}
                 disabled={loading}
               >
-                Start now
+                {premiumOnly ? "Continue" : "Start now"}
               </Button>
               {isSubscription && (
                 <Button variant="outline" className="w-full" onClick={() => void openConversationToolPortal()}>
@@ -506,9 +512,9 @@ export const ConversationToolModal = ({
           )}
 
 
-          <p className="text-center text-xs text-muted-foreground">
+          {!premiumOnly && <p className="text-center text-xs text-muted-foreground">
             If your co-parent does not respond within 14 days, you will hear from us about next steps.
-          </p>
+          </p>}
         </div>
       </DialogContent>
     </Dialog>

@@ -28,4 +28,4 @@ export const usePremiumGate = () => {
 
 export const PremiumPaywall = ({ open, onOpenChange }: {
   open: boolean; onOpenChange: (open: boolean) => void;
-}) => <ConversationToolModal open={open} onOpenChange={onOpenChange} />;
+}) => <ConversationToolModal open={open} onOpenChange={onOpenChange} premiumOnly />;

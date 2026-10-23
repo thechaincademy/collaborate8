@@ -24,6 +24,7 @@
 - [x] Stage 3: privacy & account settings (retention, data download, delete, cancel)
 
 # Bugfixes
+- [ ] Preview QA: simple Premium paywall, invite-message refetch/original timestamp, pending atomic delivery SQL, read-only setup explanation.
 - [x] Compact optional Home tutorial card below the Home header: four sequential steps, teal progress bar and circles, gold ticks, slim "Your space is ready." banner that re-expands on tap (phone 342x292, desktop 448x277; not published)
 - [x] Show the app again after Files previews - provided direct Home preview link
 - [x] Replace only paying parent maintenance setup with a sequential three-step flow and verified live confirmation (desktop/phone locks, review and banner checked with isolated payment responses; no charge created)
