@@ -52,7 +52,7 @@ describe("sendGa4PageView", () => {
     expect(gtagCalls).toHaveLength(1);
     expect(gtagCalls[0][1]).toBe("page_view");
     expect((gtagCalls[0][2] as any).page_location).toBe(LANDING);
-    expect((gtagCalls[0][2] as any).send_to).toBe("G-QLHPHSQVJJ");
+    expect((gtagCalls[0][2] as any).send_to).toBe("G-2YB8M4ZYEG");
   });
 
   it("does not double-send the same URL (StrictMode double effect)", async () => {

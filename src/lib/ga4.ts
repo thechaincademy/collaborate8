@@ -16,7 +16,7 @@
  *    is only sent once until the route actually changes
  */
 
-export const GA4_MEASUREMENT_ID = "G-QLHPHSQVJJ";
+export const GA4_MEASUREMENT_ID = "G-2YB8M4ZYEG";
 
 const CONSENT_KEY = "medi8-cookie-consent"; // set by CookieConsent.tsx
 const CONSENT_VALUES = ["accepted", "analytics"];
