@@ -1,3 +1,4 @@
+// Deploy target: supabase/functions/_shared/transactional-email-templates/first-message-notice.tsx
 import * as React from 'npm:react@18.3.1'
 import {
   Body,
@@ -31,7 +32,7 @@ export const FirstMessageNotice = ({ inviteCode = 'ABC123' }: FirstMessageNotice
             Your co-parent has reached out on Collabor8
           </Heading>
           <Text style={{ margin: '0 0 20px', color: '#444444', lineHeight: 1.6 }}>
-            Your co-parent has joined Collabor8 and has written you a message in the financial chat.
+            Your co-parent has sent you a message on Collabor8. Join to read it and reply.
             Collabor8 is a platform for separated parents to discuss and manage finances away from
             everything else. To read their message and respond, join Collabor8 using the link below.
             Your co-parent's message will be waiting for you when you do.
