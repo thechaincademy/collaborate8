@@ -10,6 +10,7 @@ const CookieConsent = () => {
 
   useEffect(() => {
     const consent = localStorage.getItem("medi8-cookie-consent");
+    if (consent === "accepted") loadGa4();
     if (!consent) {
       // Small delay so it doesn't flash on load
       const timer = setTimeout(() => setVisible(true), 1000);
@@ -22,6 +23,7 @@ const CookieConsent = () => {
     (window as any).c8LoadClarity?.();
     (window as any).c8LoadHotjar?.();
     (window as any).c8LoadGtag?.();
+    loadGa4();
     setVisible(false);
   };
 
