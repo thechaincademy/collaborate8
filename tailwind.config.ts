@@ -80,10 +80,6 @@ export default {
           DEFAULT: "hsl(var(--teal))",
           foreground: "hsl(var(--teal-foreground))",
         },
-        navy: {
-          DEFAULT: "hsl(var(--navy))",
-          foreground: "hsl(var(--navy-foreground))",
-        },
         mist: "hsl(var(--mist))",
         cream: "hsl(var(--cream))",
         "body-ink": "hsl(var(--body-ink))",

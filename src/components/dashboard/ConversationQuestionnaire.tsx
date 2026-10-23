@@ -361,7 +361,7 @@ const ConversationQuestionnaire = ({
 
   if (done) {
     return (
-      <div className="flex min-h-[60vh] flex-col justify-center rounded-2xl bg-navy p-6 text-navy-foreground">
+      <div className="flex min-h-[60vh] flex-col justify-center rounded-2xl border border-border bg-background p-6 text-foreground">
         <p className="text-sm leading-relaxed">
           {summaryReady
             ? "Your answers have been saved. Your co-parent has also completed their questions, so your shared summary has been emailed to you both. Your financial chat is ready."
@@ -384,25 +384,25 @@ const ConversationQuestionnaire = ({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-navy p-4 text-navy-foreground">
+      <div className="rounded-2xl border border-border bg-background p-4 text-foreground">
         <div className="flex items-center gap-3">
           <button
             onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-foreground/15 text-navy-foreground transition-colors hover:bg-navy-foreground/25"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground/10 text-foreground transition-colors hover:bg-foreground/15"
             aria-label="Go back"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-navy-foreground/70">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {stepLabel}
             </p>
             <Progress
               value={progress}
-              className="mt-1.5 h-2 bg-navy-foreground/20 [&>div]:bg-gold"
+              className="mt-1.5 h-2 bg-foreground/10 [&>div]:bg-gold"
             />
           </div>
-          <span className="text-xs font-semibold text-navy-foreground/80">{progress}%</span>
+          <span className="text-xs font-semibold text-foreground">{progress}%</span>
         </div>
       </div>
 
