@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check, MessageCircle, FolderOpen, Paperclip } from "lucide-react";
@@ -419,23 +419,54 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     };
   }, [user, coparentId]);
 
+  const markMessageNotificationsRead = useCallback(async () => {
+    if (!user || !coparentId || activeSection !== "chat" || document.visibilityState !== "visible") return;
+    const { error } = await supabase.from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("user_id", user.id)
+      .eq("type", "message")
+      .is("read_at", null);
+    if (error) console.error("Could not mark message notifications read", error);
+  }, [user, coparentId, activeSection]);
+
+  // Catch notifications inserted after the message read effect, without resubscribing on each message.
+  useEffect(() => {
+    if (!user || !coparentId || activeSection !== "chat") return;
+    const channel = supabase
+      .channel(`chat-notifications:${user.id}:${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        if (payload.new.type === "message" && payload.new.read_at === null) void markMessageNotificationsRead();
+      })
+      .subscribe((status) => {
+        // Also close the initial-fetch/subscription-ready gap.
+        if (status === "SUBSCRIBED") void markMessageNotificationsRead();
+      });
+    return () => { void supabase.removeChannel(channel); };
+  }, [user, coparentId, activeSection, markMessageNotificationsRead]);
+
   // Mark incoming messages as read while the chat is open
   useEffect(() => {
     if (!user || !coparentId || activeSection !== "chat") return;
     const markIncomingRead = () => {
       if (document.visibilityState !== "visible") return;
       const unread = messages.filter((m) => m.recipient_id === user.id && !m.read_at).map((m) => m.id);
-      if (unread.length === 0) return;
+      if (unread.length === 0) {
+        void markMessageNotificationsRead();
+        return;
+      }
       const now = new Date().toISOString();
       setMessages((prev) => prev.map((p) => (unread.includes(p.id) ? { ...p, read_at: now } : p)));
       void supabase.from("messages").update({ read_at: now }).in("id", unread).then(({ error }) => {
         if (error) console.error("Could not mark messages read", error);
+        else void markMessageNotificationsRead();
       });
     };
     markIncomingRead();
     document.addEventListener("visibilitychange", markIncomingRead);
     return () => document.removeEventListener("visibilitychange", markIncomingRead);
-  }, [messages, user, coparentId, activeSection]);
+  }, [messages, user, coparentId, activeSection, markMessageNotificationsRead]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
