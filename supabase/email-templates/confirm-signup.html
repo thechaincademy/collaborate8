@@ -1,0 +1,44 @@
+<!--
+  Prepared only, not wired up.
+  Subject: Confirm your Collabor8 account
+  Sender: Collabor8 <noreply@collaborate8.com>
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirm your Collabor8 account</title>
+</head>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;border-radius:16px;overflow:hidden;border:1px solid #eee8d8;">
+          <tr>
+            <td style="background-color:#D4A72C;padding:28px 24px;text-align:center;">
+              <span style="font-size:26px;font-weight:bold;color:#1a1a1a;">Collabor8</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#FAF8F3;padding:32px 24px;">
+              <h1 style="margin:0 0 16px;font-size:22px;color:#1a1a1a;">Confirm your email</h1>
+              <p style="margin:0 0 24px;font-size:16px;line-height:24px;">Thanks for joining Collabor8. Tap the button below to confirm your email address and finish setting up your account.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}" style="display:inline-block;background-color:#0F766E;color:#ffffff;text-decoration:none;font-size:16px;font-weight:bold;padding:14px 28px;border-radius:12px;">Confirm my email</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 8px;font-size:13px;line-height:20px;color:#555555;">If the button doesn't work, copy this link into your browser:</p>
+              <p style="margin:0 0 24px;font-size:13px;line-height:20px;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#0F766E;">{{ .ConfirmationURL }}</a></p>
+              <p style="margin:0;font-size:13px;line-height:20px;color:#555555;">If you didn't create a Collabor8 account, you can ignore this email.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

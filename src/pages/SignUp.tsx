@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
+import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
 import signupFamily from "@/assets/signup-family-hd.jpg";
 
@@ -279,8 +280,8 @@ const SignUp = () => {
         )}
         <div className="flex-1" />
         <div className="pb-8 pt-6">
-          <Button onClick={handleEmailContinue} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isEmailFormatValid}>
-            Continue
+          <Button onClick={handleEmailContinue} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isEmailFormatValid || checkingEmail}>
+            {checkingEmail ? "Checking your email..." : "Continue"}
           </Button>
         </div>
       </motion.div>
