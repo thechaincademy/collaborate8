@@ -1,4 +1,5 @@
 # Project Architecture Rules
+- Financial history uses the shared profile display helper and Chat's shared DeletedUserLabel for missing profile links; never derive initials or avatars from deleted identities.
 - Device push tokens reference public.profiles with cascading deletion and use owner-only RLS, because application tables must not reference the managed auth schema directly.
 - AI writing aids and chat/document uploads share the caller-owned conversation-tool entitlement and existing paywall; enforce rewrite access in the shared premium-access function and uploads with a restrictive storage policy, because UI gating alone is not a security boundary.
 

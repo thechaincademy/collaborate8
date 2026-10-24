@@ -19,6 +19,8 @@ import DashboardHeader from "./DashboardHeader";
 import { useExpenses, type ExpenseRequest } from "@/hooks/useExpenses";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
+import DeletedUserLabel from "@/components/DeletedUserLabel";
+import { isDeletedProfile } from "@/lib/profileDisplay";
 
 const statusLabel = (e: ExpenseRequest) => {
   switch (e.status) {
@@ -105,6 +107,7 @@ const ExpensesTab = () => {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-medium text-foreground">{e.description}</p>
+          {(isDeletedProfile(e.user_id, e.creator) || (Boolean(e.decided_at) && isDeletedProfile(e.decided_by, e.decider))) && <DeletedUserLabel />}
           <p className="text-xs text-muted-foreground">
             {format(new Date(e.created_at), "d MMM yyyy")}
             {e.kind === "split_request" && ` · Split request${e.category ? ` · ${e.category}` : ""}`}
@@ -118,13 +121,14 @@ const ExpensesTab = () => {
       </div>
 
       {e.receipt_url && (
-        <button
-          onClick={() => openReceipt(e.receipt_url!)}
+        <Button
+          variant="link"
+          onClick={() => { if (e.receipt_url) void openReceipt(e.receipt_url); }}
           className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline"
         >
           <FileText className="h-3.5 w-3.5" />
           View receipt
-        </button>
+        </Button>
       )}
 
       {e.apply_note && e.status !== "pending" && (
