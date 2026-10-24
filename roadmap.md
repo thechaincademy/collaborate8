@@ -48,3 +48,5 @@
 - [ ] Publish premium yearly subscription: deploy staged files in .lovable/pending/ together with publish (waits on Rafa)
 - [ ] Founder welcome email: deploy staged files and run welcome-email-cron.sql (waits on Rafa)
 - [x] Paywall copy: Premium is for the paying parent's account only (co-parent not covered)
+- [x] Sign-up email checks (reserved, disposable, MX), Check your email screen, unconfirmed login hint, branded confirm template file (not wired)
+- [ ] Account deletion fix: migration needs owner approval, then delete-account rewrite, request-account-deletion, /delete-account page, tests

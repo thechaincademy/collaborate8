@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
+import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
 import signupFamily from "@/assets/signup-family-hd.jpg";
 
@@ -76,7 +77,7 @@ const SignUp = () => {
       return;
     }
     setIsLoading(true);
-    const { error } = await signUp(email, password);
+    const { error, needsConfirmation } = await signUp(email, password);
     setIsLoading(false);
     if (error) {
       const msg = error.message?.toLowerCase() ?? "";
@@ -92,11 +93,23 @@ const SignUp = () => {
     }
     setAccountCreated(true);
     void track("signup_completed", { flow: "email" });
+    if (needsConfirmation) {
+      navigate(`/check-email?email=${encodeURIComponent(email)}`, { state: { email } });
+      return;
+    }
     setStep("coparent");
   };
 
-  const handleEmailContinue = () => {
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const handleEmailContinue = async () => {
     setEmailError(null);
+    setCheckingEmail(true);
+    const problem = await validateSignupEmail(email);
+    setCheckingEmail(false);
+    if (problem) {
+      setEmailError(problem);
+      return;
+    }
     setStep("password");
   };
 
@@ -267,8 +280,8 @@ const SignUp = () => {
         )}
         <div className="flex-1" />
         <div className="pb-8 pt-6">
-          <Button onClick={handleEmailContinue} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isEmailFormatValid}>
-            Continue
+          <Button onClick={handleEmailContinue} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isEmailFormatValid || checkingEmail}>
+            {checkingEmail ? "Checking your email..." : "Continue"}
           </Button>
         </div>
       </motion.div>
