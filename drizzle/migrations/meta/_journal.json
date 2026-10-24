@@ -57,6 +57,13 @@
       "when": 1792828672595,
       "tag": "0007_create_device_push_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792861806390,
+      "tag": "0008_account_deletion",
+      "breakpoints": true
     }
   ]
 }
