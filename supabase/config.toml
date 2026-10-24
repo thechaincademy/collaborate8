@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.founder-welcome-email]
 verify_jwt = false
+
+[functions.request-account-deletion]
+verify_jwt = false

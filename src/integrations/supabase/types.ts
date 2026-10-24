@@ -335,9 +335,9 @@ export type Database = {
           acknowledged_at: string | null
           category: string
           children: string[]
-          coparent_id: string
+          coparent_id: string | null
           created_at: string
-          creator_id: string
+          creator_id: string | null
           current_proposal: string | null
           deadline: string | null
           final_outcome: string | null
@@ -355,9 +355,9 @@ export type Database = {
           acknowledged_at?: string | null
           category?: string
           children?: string[]
-          coparent_id: string
+          coparent_id?: string | null
           created_at?: string
-          creator_id: string
+          creator_id?: string | null
           current_proposal?: string | null
           deadline?: string | null
           final_outcome?: string | null
@@ -375,9 +375,9 @@ export type Database = {
           acknowledged_at?: string | null
           category?: string
           children?: string[]
-          coparent_id?: string
+          coparent_id?: string | null
           created_at?: string
-          creator_id?: string
+          creator_id?: string | null
           current_proposal?: string | null
           deadline?: string | null
           final_outcome?: string | null
@@ -390,6 +390,36 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      deletion_requests: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          status: string
+          token_hash: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token_hash: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token_hash?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -669,8 +699,8 @@ export type Database = {
           original_body: string | null
           pending_first_message_id: string | null
           read_at: string | null
-          recipient_id: string
-          sender_id: string
+          recipient_id: string | null
+          sender_id: string | null
           tone_score: number | null
           used_suggestion: boolean
         }
@@ -683,8 +713,8 @@ export type Database = {
           original_body?: string | null
           pending_first_message_id?: string | null
           read_at?: string | null
-          recipient_id: string
-          sender_id: string
+          recipient_id?: string | null
+          sender_id?: string | null
           tone_score?: number | null
           used_suggestion?: boolean
         }
@@ -697,8 +727,8 @@ export type Database = {
           original_body?: string | null
           pending_first_message_id?: string | null
           read_at?: string | null
-          recipient_id?: string
-          sender_id?: string
+          recipient_id?: string | null
+          sender_id?: string | null
           tone_score?: number | null
           used_suggestion?: boolean
         }
@@ -774,11 +804,11 @@ export type Database = {
           expense_id: string | null
           id: string
           network: string
-          payer_id: string
+          payer_id: string | null
           payer_wallet: string
           payment_type: string
           period: string | null
-          receiver_id: string
+          receiver_id: string | null
           receiver_wallet: string
           reference_hash: string
           salt: string
@@ -796,11 +826,11 @@ export type Database = {
           expense_id?: string | null
           id?: string
           network?: string
-          payer_id: string
+          payer_id?: string | null
           payer_wallet: string
           payment_type?: string
           period?: string | null
-          receiver_id: string
+          receiver_id?: string | null
           receiver_wallet: string
           reference_hash: string
           salt: string
@@ -818,11 +848,11 @@ export type Database = {
           expense_id?: string | null
           id?: string
           network?: string
-          payer_id?: string
+          payer_id?: string | null
           payer_wallet?: string
           payment_type?: string
           period?: string | null
-          receiver_id?: string
+          receiver_id?: string | null
           receiver_wallet?: string
           reference_hash?: string
           salt?: string
@@ -871,8 +901,8 @@ export type Database = {
           error_message: string | null
           id: string
           idempotency_key: string
-          payee_id: string
-          payer_id: string
+          payee_id: string | null
+          payer_id: string | null
           payout_delay_until: string | null
           provider: string | null
           provider_charge_id: string | null
@@ -894,8 +924,8 @@ export type Database = {
           error_message?: string | null
           id?: string
           idempotency_key: string
-          payee_id: string
-          payer_id: string
+          payee_id?: string | null
+          payer_id?: string | null
           payout_delay_until?: string | null
           provider?: string | null
           provider_charge_id?: string | null
@@ -917,8 +947,8 @@ export type Database = {
           error_message?: string | null
           id?: string
           idempotency_key?: string
-          payee_id?: string
-          payer_id?: string
+          payee_id?: string | null
+          payer_id?: string | null
           payout_delay_until?: string | null
           provider?: string | null
           provider_charge_id?: string | null
@@ -1152,7 +1182,7 @@ export type Database = {
       }
       thread_events: {
         Row: {
-          actor_id: string
+          actor_id: string | null
           attachment_name: string | null
           attachment_path: string | null
           body: string | null
@@ -1163,7 +1193,7 @@ export type Database = {
           thread_id: string
         }
         Insert: {
-          actor_id: string
+          actor_id?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           body?: string | null
@@ -1174,7 +1204,7 @@ export type Database = {
           thread_id: string
         }
         Update: {
-          actor_id?: string
+          actor_id?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           body?: string | null
@@ -1294,6 +1324,7 @@ export type Database = {
       get_user_role: { Args: { _user_id: string }; Returns: string }
       has_premium_access: { Args: { uid: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      purge_deleted_account_data: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
