@@ -1,4 +1,5 @@
 # Project Architecture Rules
+- Device push tokens reference public.profiles with cascading deletion and use owner-only RLS, because application tables must not reference the managed auth schema directly.
 - AI writing aids and chat/document uploads share the caller-owned conversation-tool entitlement and existing paywall; enforce rewrite access in the shared premium-access function and uploads with a restrictive storage policy, because UI gating alone is not a security boundary.
 
 - Documents live as a Chat/Documents switch inside Financial Chat, not as a dashboard bottom-navigation destination, because document sharing belongs to the communication flow.

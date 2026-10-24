@@ -50,6 +50,13 @@
       "when": 1792769198995,
       "tag": "0006_invite_first_message_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792828672595,
+      "tag": "0007_create_device_push_tokens",
+      "breakpoints": true
     }
   ]
 }
