@@ -10,8 +10,12 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { verifyPayment } from "@/hooks/useSolanaPayment";
 import { explorerTxUrl } from "@/config/solana";
+import DeletedUserLabel from "@/components/DeletedUserLabel";
+import { DELETED_USER_NAME } from "@/lib/profileDisplay";
 
 interface PaymentRecord {
+  payer_id: string | null;
+  receiver_id: string | null;
   id: string;
   arrangement_id: string | null;
   period: string | null;
@@ -113,6 +117,10 @@ const SolanaPaymentAudit = () => {
       );
       y += 5;
       doc.setFontSize(8);
+      if (r.payer_id === null || r.receiver_id === null) {
+        doc.text(DELETED_USER_NAME, 14, y);
+        y += 4;
+      }
       doc.text(`Signature: ${r.tx_signature ?? "not submitted"}`, 14, y);
       y += 4;
       doc.text(
@@ -190,6 +198,7 @@ const SolanaPaymentAudit = () => {
                       {r.period ?? format(new Date(r.created_at), "MMM yyyy")}
                     </p>
                     <p className="text-xs capitalize text-muted-foreground">{r.payment_type}</p>
+                    {(r.payer_id === null || r.receiver_id === null) && <DeletedUserLabel />}
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-foreground">
