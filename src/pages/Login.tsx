@@ -40,7 +40,14 @@ const Login = () => {
     const { error } = await signIn(email, password);
     setIsLoading(false);
     if (error) {
-      toast.error(error.message || "Failed to log in");
+      if (/email not confirmed/i.test(error.message ?? "")) {
+        toast.error("Please confirm your email first. We sent you a link when you signed up.", {
+          action: { label: "Resend link", onClick: () => navigate(`/check-email?email=${encodeURIComponent(email)}`, { state: { email } }) },
+          duration: 10000,
+        });
+      } else {
+        toast.error(error.message || "Failed to log in");
+      }
     } else {
       void track("login", { method: "password" });
       navigate(nextPath);

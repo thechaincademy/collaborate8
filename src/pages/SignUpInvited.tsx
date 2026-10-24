@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
+import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
@@ -144,11 +145,22 @@ const SignUpInvited = () => {
     if (!invitationData) return;
 
     setIsLoading(true);
-    const { error } = await signUp(email, password);
+    const problem = await validateSignupEmail(email);
+    if (problem) {
+      setIsLoading(false);
+      toast.error(problem);
+      return;
+    }
+    const { error, needsConfirmation } = await signUp(email, password);
 
     if (error) {
       setIsLoading(false);
       toast.error(error.message || "Failed to create account");
+      return;
+    }
+    if (needsConfirmation) {
+      setIsLoading(false);
+      navigate(`/check-email?email=${encodeURIComponent(email)}`, { state: { email } });
       return;
     }
 

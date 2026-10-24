@@ -76,7 +76,7 @@ const SignUp = () => {
       return;
     }
     setIsLoading(true);
-    const { error } = await signUp(email, password);
+    const { error, needsConfirmation } = await signUp(email, password);
     setIsLoading(false);
     if (error) {
       const msg = error.message?.toLowerCase() ?? "";
@@ -92,11 +92,23 @@ const SignUp = () => {
     }
     setAccountCreated(true);
     void track("signup_completed", { flow: "email" });
+    if (needsConfirmation) {
+      navigate(`/check-email?email=${encodeURIComponent(email)}`, { state: { email } });
+      return;
+    }
     setStep("coparent");
   };
 
-  const handleEmailContinue = () => {
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const handleEmailContinue = async () => {
     setEmailError(null);
+    setCheckingEmail(true);
+    const problem = await validateSignupEmail(email);
+    setCheckingEmail(false);
+    if (problem) {
+      setEmailError(problem);
+      return;
+    }
     setStep("password");
   };
 
