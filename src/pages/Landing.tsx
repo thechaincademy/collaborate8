@@ -204,14 +204,21 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="flex flex-col items-center text-center"
+                className={`flex flex-col items-center text-center ${i === 1 ? "relative overflow-hidden" : ""}`}
               >
+                {i === 1 && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-0 top-6 z-0 h-28 w-28 translate-x-1/2 -rotate-[7deg] rounded-full md:top-10 md:h-40 md:w-40"
+                    style={{ backgroundColor: "#F0EBE0" }}
+                  />
+                )}
                 <img
                   src={screenshot.src}
                   alt={screenshot.alt}
-                  className="h-48 w-auto rounded-2xl object-contain shadow-elevated md:h-64"
+                  className="relative z-10 h-48 w-auto rounded-2xl object-contain shadow-elevated md:h-64"
                 />
-                <h3 className="mt-6 max-w-xs text-lg font-bold leading-snug text-foreground">
+                <h3 className="relative z-10 mt-6 max-w-xs text-lg font-bold leading-snug text-foreground">
                   {screenshot.title}
                 </h3>
               </motion.div>
