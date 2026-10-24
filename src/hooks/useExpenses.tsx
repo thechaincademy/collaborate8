@@ -3,10 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { track, amountBucket } from "@/lib/analytics";
+import type { DisplayProfile } from "@/lib/profileDisplay";
 
 export interface ExpenseRequest {
   id: string;
   user_id: string;
+  creator?: DisplayProfile | null;
+  decider?: DisplayProfile | null;
   description: string;
   amount: number;
   status: "pending" | "approved" | "paid" | "rejected" | "agreed";
@@ -39,13 +42,19 @@ export const useExpenses = () => {
 
     const { data, error } = await supabase
       .from("expense_requests")
-      .select("*")
+      .select("*, decider:profiles!expense_requests_decided_by_fkey(first_name,last_name)")
       .order("created_at", { ascending: false });
 
     if (error) {
       toast.error("Failed to load expenses");
     } else {
-      setExpenses((data as unknown as ExpenseRequest[]) || []);
+      const rows = (data as unknown as ExpenseRequest[]) || [];
+      const ids = [...new Set(rows.map((row) => row.user_id).filter(Boolean))];
+      const { data: creators, error: profilesError } = ids.length
+        ? await supabase.from("profiles").select("id,first_name,last_name").in("id", ids)
+        : { data: [], error: null };
+      const profiles = new Map((creators ?? []).map((p) => [p.id, p]));
+      setExpenses(rows.map((row) => ({ ...row, creator: profilesError ? undefined : profiles.get(row.user_id) ?? null })));
     }
     setLoading(false);
   };

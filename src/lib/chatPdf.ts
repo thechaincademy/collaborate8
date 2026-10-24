@@ -1,8 +1,9 @@
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
+import { DELETED_USER_NAME } from "./profileDisplay";
 
 interface Msg {
-  sender_id: string;
+  sender_id: string | null;
   body: string;
   created_at: string;
   attachment_name?: string | null;
@@ -41,7 +42,7 @@ export function downloadChatPdf(opts: {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`${opts.myName} and ${opts.coparentName} · Generated ${format(new Date(), "d MMM yyyy, HH:mm")}`, M + 50, y + 32);
+  doc.text(`${opts.myName} and ${opts.coparentName.trim() || DELETED_USER_NAME} · Generated ${format(new Date(), "d MMM yyyy, HH:mm")}`, M + 50, y + 32);
   y += 60;
   doc.setDrawColor(212, 160, 23);
   doc.line(M, y, W - M, y);
@@ -71,7 +72,7 @@ export function downloadChatPdf(opts: {
     y += 16;
   }
   opts.messages.forEach((m) => {
-    const who = m.sender_id === opts.myId ? opts.myName : opts.coparentName;
+    const who = m.sender_id === null ? DELETED_USER_NAME : m.sender_id === opts.myId ? opts.myName : opts.coparentName.trim() || DELETED_USER_NAME;
     const body = m.body + (m.attachment_name ? ` [Attachment: ${m.attachment_name}]` : "");
     doc.setFontSize(10);
     const lines = doc.splitTextToSize(body || " ", W - M * 2);

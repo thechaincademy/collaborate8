@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import DeletedUserLabel from "@/components/DeletedUserLabel";
+import { DELETED_USER_NAME, isDeletedProfile, profileDisplayName, type DisplayProfile } from "@/lib/profileDisplay";
 
 type Period = "3" | "6" | "12" | "all";
 type StatementType = "maintenance" | "expenses";
@@ -18,6 +20,8 @@ interface Row {
   description: string;
   amount: number;
   status?: string;
+  person: string;
+  deletedPerson: boolean;
 }
 
 const Statement = () => {
@@ -38,7 +42,7 @@ const Statement = () => {
       if (isMaintenance) {
         const { data } = await supabase
           .from("payments")
-          .select("id, created_at, amount, type, status")
+          .select("id, created_at, amount, type, status, payer_id, payee_id, payer:profiles!payments_payer_id_fkey(first_name,last_name), payee:profiles!payments_payee_id_fkey(first_name,last_name)")
           .order("created_at", { ascending: false });
         setRows(
           (data || []).map((p: any) => ({
@@ -47,13 +51,20 @@ const Statement = () => {
             description: p.type === "recurring" ? "Recurring maintenance" : "Maintenance payment",
             amount: Number(p.amount),
             status: p.status,
+            person: profileDisplayName(p.payee_id === user.id ? p.payer : p.payee),
+            deletedPerson: isDeletedProfile(p.payee_id === user.id ? p.payer_id : p.payee_id, p.payee_id === user.id ? p.payer : p.payee),
           }))
         );
       } else {
         const { data } = await supabase
           .from("expense_requests")
-          .select("id, created_at, description, amount, status")
+          .select("id, created_at, description, amount, status, user_id, decided_by, decided_at, decider:profiles!expense_requests_decided_by_fkey(first_name,last_name)")
           .order("created_at", { ascending: false });
+        const ids = [...new Set((data ?? []).map((e) => e.user_id))];
+        const { data: creators, error: profilesError } = ids.length
+          ? await supabase.from("profiles").select("id,first_name,last_name").in("id", ids)
+          : { data: [], error: null };
+        const profiles = new Map<string, DisplayProfile>((creators ?? []).map((p) => [p.id, p]));
         setRows(
           (data || []).map((e: any) => ({
             id: e.id,
@@ -61,6 +72,9 @@ const Statement = () => {
             description: e.description,
             amount: Number(e.amount),
             status: e.status,
+            person: e.decided_at && isDeletedProfile(e.decided_by, e.decider)
+              ? DELETED_USER_NAME : profileDisplayName(profiles.get(e.user_id)),
+            deletedPerson: (!profilesError && !profiles.has(e.user_id)) || (Boolean(e.decided_at) && isDeletedProfile(e.decided_by, e.decider)),
           }))
         );
       }
@@ -78,7 +92,7 @@ const Statement = () => {
   const total = filtered.reduce((sum, r) => sum + r.amount, 0);
 
   const downloadCsv = () => {
-    const header = ["Date", "Description", "Amount", "Status"].join(",");
+    const header = ["Date", "Description", "Amount", "Status", "Person"].join(",");
     const body = filtered
       .map((r) =>
         [
@@ -86,6 +100,7 @@ const Statement = () => {
           `"${r.description.replace(/"/g, '""')}"`,
           r.amount.toFixed(2),
           r.status ?? "",
+          `"${r.person.replace(/"/g, '""')}"`,
         ].join(",")
       )
       .join("\n");
@@ -155,6 +170,7 @@ const Statement = () => {
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-foreground">{r.description}</p>
+                  {r.deletedPerson && <DeletedUserLabel />}
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(r.date), "d MMM yyyy")}
                     {r.status ? ` • ${r.status}` : ""}

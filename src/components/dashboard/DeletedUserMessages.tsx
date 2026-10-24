@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import DeletedUserLabel from "@/components/DeletedUserLabel";
 
 type Row = { id: string; body: string; sender_id: string | null; created_at: string };
 
@@ -26,7 +27,7 @@ const DeletedUserMessages = () => {
           const mine = m.sender_id === user?.id;
           return (
             <div key={m.id} className={mine ? "self-end text-right" : "self-start"}>
-              {!mine && <p className="mb-0.5 text-xs text-muted-foreground">Deleted user</p>}
+              {!mine && <DeletedUserLabel />}
               <p className={mine ? "rounded-2xl rounded-br-md bg-foreground px-3 py-2 text-sm text-background" : "rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm text-foreground"}>{m.body}</p>
             </div>
           );

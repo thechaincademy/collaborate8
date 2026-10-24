@@ -8,15 +8,19 @@ import { usePayments } from "@/hooks/usePayments";
 import { useProfile } from "@/hooks/useProfile";
 import { format } from "date-fns";
 import MobileLayout from "@/components/layout/MobileLayout";
+import DeletedUserLabel from "@/components/DeletedUserLabel";
+import { isDeletedProfile } from "@/lib/profileDisplay";
+import { useAuth } from "@/hooks/useAuth";
 
 const PaymentHistory = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { payments, loading, fetchPayments } = usePayments();
   const { profile, loading: profileLoading } = useProfile();
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [user?.id]);
 
   const isLoading = loading || profileLoading;
 
@@ -62,6 +66,7 @@ const PaymentHistory = () => {
                       <p className="font-medium text-foreground">
                         {isIncoming ? "Payment received" : "Payment sent"}
                       </p>
+                      {isDeletedProfile(isIncoming ? tx.payer_id : tx.payee_id, isIncoming ? tx.payer : tx.payee) && <DeletedUserLabel />}
                       <p className="text-sm text-muted-foreground">
                         {format(new Date(tx.created_at), "d MMM yyyy")}
                       </p>

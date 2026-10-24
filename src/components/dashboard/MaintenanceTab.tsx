@@ -13,6 +13,8 @@ import { usePayments } from "@/hooks/usePayments";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import DeletedUserLabel from "@/components/DeletedUserLabel";
+import { isDeletedProfile } from "@/lib/profileDisplay";
 
 const MaintenanceTab = () => {
   const navigate = useNavigate();
@@ -394,6 +396,7 @@ const MaintenanceTab = () => {
                       <p className="font-medium text-foreground">
                         {isIncoming ? "Payment received" : "Payment sent"}
                       </p>
+                      {isDeletedProfile(isIncoming ? tx.payer_id : tx.payee_id, isIncoming ? tx.payer : tx.payee) && <DeletedUserLabel />}
                       <p className="text-sm text-muted-foreground">
                         {format(new Date(tx.created_at), "d MMM yyyy")}
                       </p>

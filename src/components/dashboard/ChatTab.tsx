@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check, MessageCircle, FolderOpen, Paperclip } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chatPdf";
+import { profileDisplayName } from "@/lib/profileDisplay";
 import DashboardHeader from "./DashboardHeader";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -171,7 +172,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     downloadChatPdf({
       myId: user.id,
       myName: nm(profile?.first_name, profile?.last_name, "You"),
-      coparentName: nm(cp?.first_name, cp?.last_name, "Co-parent"),
+      coparentName: profileDisplayName(cp),
       messages,
       agreements: (exp ?? []) as any,
     });

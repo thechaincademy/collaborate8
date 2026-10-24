@@ -2,12 +2,15 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import type { DisplayProfile } from "@/lib/profileDisplay";
 
 export interface Payment {
   id: string;
   idempotency_key: string;
-  payer_id: string;
-  payee_id: string;
+  payer_id: string | null;
+  payee_id: string | null;
+  payer?: DisplayProfile | null;
+  payee?: DisplayProfile | null;
   amount: number;
   currency: string;
   type: string;
@@ -30,7 +33,7 @@ export const usePayments = () => {
     setLoading(true);
     const { data } = await supabase
       .from("payments")
-      .select("*")
+      .select("*, payer:profiles!payments_payer_id_fkey(first_name,last_name), payee:profiles!payments_payee_id_fkey(first_name,last_name)")
       .order("created_at", { ascending: false });
     if (data) setPayments(data as Payment[]);
     setLoading(false);
