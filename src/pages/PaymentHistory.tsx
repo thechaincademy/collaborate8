@@ -10,15 +10,17 @@ import { format } from "date-fns";
 import MobileLayout from "@/components/layout/MobileLayout";
 import DeletedUserLabel from "@/components/DeletedUserLabel";
 import { isDeletedProfile } from "@/lib/profileDisplay";
+import { useAuth } from "@/hooks/useAuth";
 
 const PaymentHistory = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { payments, loading, fetchPayments } = usePayments();
   const { profile, loading: profileLoading } = useProfile();
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [user?.id]);
 
   const isLoading = loading || profileLoading;
 
