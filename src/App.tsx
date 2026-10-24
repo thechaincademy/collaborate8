@@ -24,6 +24,7 @@ import Splash from "./pages/Splash";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import CheckEmail from "./pages/CheckEmail";
+import DeleteAccount from "./pages/DeleteAccount";
 import ForgotPassword from "./pages/ForgotPassword";
 import PostSignupOnboarding from "./pages/PostSignupOnboarding";
 import Dashboard from "./pages/Dashboard";
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="/signup/invited" element={<SignUpInvited />} />
               <Route path="/login" element={<Login />} />
               <Route path="/check-email" element={<CheckEmail />} />
+              <Route path="/delete-account" element={<DeleteAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/post-signup" element={<PostSignupOnboarding />} />

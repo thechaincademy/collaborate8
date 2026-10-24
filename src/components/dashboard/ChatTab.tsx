@@ -1,3 +1,4 @@
+import DeletedUserMessages from "./DeletedUserMessages";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -577,6 +578,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         {sectionTabs}
         <div className="flex flex-1 flex-col gap-4 pt-2">
+          <DeletedUserMessages />
           <div className="rounded-2xl border border-border bg-card p-4">
             <h2 className="text-base font-semibold text-foreground">
               Start your financial conversation.
