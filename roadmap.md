@@ -24,6 +24,7 @@
 - [x] Stage 3: privacy & account settings (retention, data download, delete, cancel)
 
 # Bugfixes
+- [ ] Frontend-only Deleted user fallback in financial history, expenses, transactions and exports; no publish.
 - [x] GA4 campaign attribution: consented landing page_view (original UTM URL + referrer) re-sent once per session after Accept or stored consent, guarded against doubling with route sends - preview only
 - [x] Preview payer explanation after No: reused existing card-only setup, receiver copy unchanged, later/card paths verified on mobile with isolated responses; build OK and 35 tests passed.
 - [x] Preview-only post-signup receiving question and Stripe explainer; Yes, No, later, and payer bypass verified with isolated responses; build OK and 32 tests passed.
