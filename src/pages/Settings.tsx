@@ -63,14 +63,9 @@ const Settings = () => {
     setDeleting(true);
     const { data, error } = await supabase.functions.invoke("delete-account");
     setDeleting(false);
-    const d = data as { status?: string; message?: string; error?: string } | null;
-    if (d?.error === "active_payment" || (error && (error as any).context?.status === 409)) {
-      setConfirmDelete(false);
-      toast.error("Please stop your recurring maintenance payment first.");
-      return;
-    }
-    if (error || d?.error) return toast.error("Could not delete your account - please try again");
-    toast.success(d?.message ?? "Your account has been deleted");
+    const d = data as { status?: string } | null;
+    if (error || d?.status !== "deleted") return toast.error("Could not delete your account - please try again");
+    toast.success("Your account has been deleted");
     await signOut();
     navigate("/");
   };
