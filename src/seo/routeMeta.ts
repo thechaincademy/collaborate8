@@ -289,6 +289,19 @@ const routeMeta = [
     "twitterCard": "summary_large_image",
     "twitterTitle": "Contact Collabor8",
     "twitterDescription": "Contact Collabor8 by phone on 020 3488 1055 or by email at jade@collaborate8.com."
+  },
+  {
+    "route": "/delete-account",
+    "title": "Delete your Collabor8 account",
+    "description": "How to delete your Collabor8 account and data, what is deleted and what stays with your co-parent.",
+    "canonical": "https://collaborate8.com/delete-account",
+    "ogTitle": "Delete your Collabor8 account",
+    "ogDescription": "How to delete your Collabor8 account and data, what is deleted and what stays with your co-parent.",
+    "ogUrl": "https://collaborate8.com/delete-account",
+    "ogType": "website",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Delete your Collabor8 account",
+    "twitterDescription": "How to delete your Collabor8 account and data, what is deleted and what stays with your co-parent."
   }
 ] satisfies readonly RouteMeta[];
 

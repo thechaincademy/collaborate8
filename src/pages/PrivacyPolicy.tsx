@@ -326,9 +326,9 @@ const PrivacyPolicy = () => {
                 </thead>
                 <tbody>
                   {[
-                    ["Account data", "Duration of account + 30 days after deletion request"],
-                    ["Financial records & calculations", "6 years from creation (Companies Act / HMRC requirement)"],
-                    ["Payment records", "7 years (financial record-keeping obligation)"],
+                    ["Account data", "Duration of account, gone within 30 days of deletion"],
+                    ["Financial records & calculations", "Duration of account, gone within 30 days of deletion"],
+                    ["Payments shared with your co-parent", "Kept in your co-parent's account without your name, while their account exists"],
                     ["Support communications", "3 years from last interaction"],
                     ["Analytics data", "13 months (rolling), then aggregated / anonymised"],
                     ["Crash logs & error data", "90 days"],
@@ -343,6 +343,12 @@ const PrivacyPolicy = () => {
               </table>
             </div>
             <p className="mt-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">After applicable retention periods, data is securely deleted or anonymised so it can no longer be linked to you.</p>
+            <h3 id="deleting-your-account" className="mb-2 mt-8 text-[1.15rem] font-semibold text-[#1A1A18]">Deleting your account and data retention</h3>
+            <p className="text-[0.95rem] leading-[1.75] text-[#3D3D38]">
+              You can delete your account at any time in the app (Settings, Delete my account), on the web, or by emailing rafa@collaborate8.com. Please download your data first if you want a copy.
+              When you delete your account, everything is deleted and gone within 30 days. Payments you shared with your co-parent stay in their account without your name, and messages they received from you stay, shown as from "Deleted user". Your Stripe subscriptions are cancelled automatically.
+              {" "}<a href="/delete-account" className="underline">See how to delete your account</a>.
+            </p>
           </section>
 
           {/* 7. Security */}

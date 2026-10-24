@@ -63,14 +63,9 @@ const Settings = () => {
     setDeleting(true);
     const { data, error } = await supabase.functions.invoke("delete-account");
     setDeleting(false);
-    const d = data as { status?: string; message?: string; error?: string } | null;
-    if (d?.error === "active_payment" || (error && (error as any).context?.status === 409)) {
-      setConfirmDelete(false);
-      toast.error("Please stop your recurring maintenance payment first.");
-      return;
-    }
-    if (error || d?.error) return toast.error("Could not delete your account - please try again");
-    toast.success(d?.message ?? "Your account has been deleted");
+    const d = data as { status?: string } | null;
+    if (error || d?.status !== "deleted") return toast.error("Could not delete your account - please try again");
+    toast.success("Your account has been deleted");
     await signOut();
     navigate("/");
   };
@@ -112,7 +107,7 @@ const Settings = () => {
             </div>
             <div className="flex gap-3">
               <Shield className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-              <p className="text-foreground/90"><span className="font-medium text-foreground">What we keep and why:</span> messages and decision timelines can't be edited or deleted, so both of you have a reliable record if you ever need one. Payment records are kept for 6 years because UK tax and fraud rules require it.</p>
+              <p className="text-foreground/90"><span className="font-medium text-foreground">What we keep and why:</span> messages and decision timelines can't be edited, so both of you have a reliable record. We keep your data only while you have an account.</p>
             </div>
           </div>
           <button onClick={exportData} disabled={exporting} className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50">
@@ -153,7 +148,7 @@ const Settings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
-              You'll be signed out and unlinked from your co-parent. Download your data first if you want a copy. Records your co-parent already received stay in their account, and payment records are kept for 6 years by law.
+              Download your data first if you want a copy. Everything is deleted and gone within 30 days. Payments you shared with your co-parent stay in their account without your name, and messages they received from you stay, shown as from "Deleted user". Your Stripe subscriptions are cancelled automatically.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
