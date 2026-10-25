@@ -209,7 +209,7 @@ const Landing = () => {
                 {i === 1 && (
                   <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute right-0 top-6 z-0 h-28 w-28 translate-x-1/2 -rotate-[7deg] rounded-full md:top-10 md:h-40 md:w-40"
+                    className="pointer-events-none absolute left-[58%] top-1/2 z-0 h-[120%] w-[80%] -translate-y-1/2 -rotate-[7deg] rounded-full md:left-1/2 md:w-full"
                     style={{ backgroundColor: "#F0EBE0" }}
                   />
                 )}
