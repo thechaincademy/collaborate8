@@ -57,6 +57,11 @@ Deno.serve(async (req) => {
       if ((u.email ?? "").toLowerCase().endsWith("@agentmail.to")) excluded.add(u.id);
     }
     const users = allUsers.filter((u) => !excluded.has(u.id));
+    // Profiles (aggregated locally): non-test profile count, plus sign-ups with no profile row
+    const { data: allProfiles } = await admin.from("profiles").select("id");
+    const profileIds = new Set<string>((allProfiles ?? []).map((p) => p.id as string));
+    const nonTestProfiles = [...profileIds].filter((id) => !excluded.has(id)).length;
+    const authUsersWithoutProfile = users.filter((u) => !profileIds.has(u.id)).length;
     const exList = [...excluded];
     const excl = (q: any, col: string) => (exList.length ? q.not(col, "in", `(${exList.join(",")})`) : q);
 
@@ -180,7 +185,8 @@ Deno.serve(async (req) => {
       generated_at: new Date().toISOString(),
       signups: { daily_30d: daily, weekly_8w: weekly },
       accounts: {
-        total_auth_users: users.length,
+        total: nonTestProfiles,
+        auth_users_without_profile: authUsersWithoutProfile,
         email_confirmed: confirmed,
         email_unconfirmed: users.length - confirmed,
       },
