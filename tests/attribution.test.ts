@@ -1,5 +1,12 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { buildAttribution, captureAttribution, getAttribution } from "@/lib/attribution";
+import { beforeEach, describe, expect, it } from "bun:test";
+
+const store = new Map<string, string>();
+(globalThis as any).localStorage = {
+  getItem: (k: string) => store.get(k) ?? null,
+  setItem: (k: string, v: string) => void store.set(k, v),
+  clear: () => store.clear(),
+};
+const { buildAttribution, captureAttribution, getAttribution } = await import("../src/lib/attribution");
 
 describe("sign-up attribution", () => {
   beforeEach(() => localStorage.clear());
