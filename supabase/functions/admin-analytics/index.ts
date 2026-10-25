@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     const count = (q: any) => q.then((r: { count: number | null }) => r.count ?? 0);
 
     // Auth users (aggregated locally, nothing personal leaves this function)
-    const users: { created_at: string; email_confirmed_at?: string | null; last_sign_in_at?: string | null }[] = [];
+    const users: { created_at: string; email_confirmed_at?: string | null; last_sign_in_at?: string | null; user_metadata?: Record<string, unknown> }[] = [];
     for (let page = 1; page < 200; page++) {
       const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
       if (error) throw error;
@@ -77,6 +77,30 @@ Deno.serve(async (req) => {
     }
     for (const [date, n] of dailyMap) daily.push({ date, count: n });
     const weekly = [...weeklyMap].map(([week_start, n]) => ({ week_start, count: n }));
+
+    // Sign-up attribution breakdown (counts only)
+    const NONE = "(none)";
+    const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 100) : NONE);
+    const host = (v: unknown) => {
+      if (typeof v !== "string" || !v) return NONE;
+      try { return new URL(v).hostname.replace(/^www\./, "") || NONE; } catch { return NONE; }
+    };
+    const breakdown = (sinceMs: number) => {
+      const dims = { source: new Map<string, number>(), medium: new Map<string, number>(), campaign: new Map<string, number>(), referrer_domain: new Map<string, number>(), acquisition_source: new Map<string, number>() };
+      const inc = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
+      for (const u of users) {
+        if (new Date(u.created_at).getTime() < sinceMs) continue;
+        const md = u.user_metadata ?? {};
+        inc(dims.source, str(md.utm_source));
+        inc(dims.medium, str(md.utm_medium));
+        inc(dims.campaign, str(md.utm_campaign));
+        inc(dims.referrer_domain, host(md.referrer));
+        inc(dims.acquisition_source, str(md.acquisition_source));
+      }
+      const out = (m: Map<string, number>) => [...m].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count);
+      return { source: out(dims.source), medium: out(dims.medium), campaign: out(dims.campaign), referrer_domain: out(dims.referrer_domain), acquisition_source: out(dims.acquisition_source) };
+    };
+    const attribution = { last_7d: breakdown(t7), last_30d: breakdown(t30) };
 
     // Activity-based actives (usage_events)
     const { data: ev30 } = await admin
@@ -153,6 +177,7 @@ Deno.serve(async (req) => {
       payments: { total: paymentsTotal, last_7d: payments7 },
       expenses: { total: expensesTotal, last_7d: expenses7 },
       premium_subscribers: premium.size,
+      attribution,
       weekly_report: {
         new_users: newProfiles7,
         total_users: totalProfiles,

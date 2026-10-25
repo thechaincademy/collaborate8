@@ -10,6 +10,15 @@ import { useAuth } from "@/hooks/useAuth";
 
 const ALLOWED = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 
+type Dim = "source" | "medium" | "campaign" | "referrer_domain" | "acquisition_source";
+const DIMS: { key: Dim; label: string }[] = [
+  { key: "source", label: "Source" },
+  { key: "medium", label: "Medium" },
+  { key: "campaign", label: "Campaign" },
+  { key: "referrer_domain", label: "Referrer" },
+  { key: "acquisition_source", label: "App acquisition source" },
+];
+
 interface Analytics {
   generated_at: string;
   signups: { daily_30d: { date: string; count: number }[]; weekly_8w: { week_start: string; count: number }[] };
@@ -20,6 +29,7 @@ interface Analytics {
   payments: { total: number; last_7d: number };
   expenses: { total: number; last_7d: number };
   premium_subscribers: number;
+  attribution: Record<"last_7d" | "last_30d", Record<Dim, { value: string; count: number }[]>>;
   weekly_report: {
     new_users: number; total_users: number; active_users: number; total_events: number;
     linked_pairs: number; payments_count: number; payments_total: number; expenses_count: number;
@@ -53,6 +63,7 @@ const AdminAnalytics = () => {
   const [data, setData] = useState<Analytics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"week" | "day">("week");
+  const [range, setRange] = useState<"last_7d" | "last_30d">("last_7d");
 
   const emailOk = ALLOWED.includes((user?.email ?? "").toLowerCase());
 
@@ -124,6 +135,32 @@ const AdminAnalytics = () => {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
+            </Section>
+
+            <Section title="Where sign-ups come from">
+              <div className="mb-3 flex gap-1">
+                <Button size="sm" variant={range === "last_7d" ? "default" : "outline"} onClick={() => setRange("last_7d")}>7 days</Button>
+                <Button size="sm" variant={range === "last_30d" ? "default" : "outline"} onClick={() => setRange("last_30d")}>30 days</Button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {DIMS.map(({ key, label }) => {
+                  const rows = data.attribution?.[range]?.[key] ?? [];
+                  return (
+                    <Card key={key}>
+                      <CardContent className="space-y-2 p-4">
+                        <p className="text-xs text-muted-foreground">{label}</p>
+                        {rows.length === 0 && <p className="text-sm text-muted-foreground">No sign-ups</p>}
+                        {rows.map((r) => (
+                          <div key={r.value} className="flex justify-between text-sm">
+                            <span className="truncate pr-2">{r.value}</span>
+                            <span className="tabular-nums text-muted-foreground">{r.count}</span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </Section>
 
             <Section title="Accounts">

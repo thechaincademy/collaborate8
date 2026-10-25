@@ -1,3 +1,4 @@
+import { getAttribution } from "@/lib/attribution";
 import { useState, useEffect, createContext, useContext } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
       options: {
         emailRedirectTo: "https://collaborate8.com/dashboard",
+        data: getAttribution(),
       },
     });
     return { error, needsConfirmation: !error && !!data.user && !data.session };
