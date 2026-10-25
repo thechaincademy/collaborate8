@@ -1,3 +1,4 @@
+import { captureAttribution } from "@/lib/attribution";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ const CookieConsent = () => {
 
   useEffect(() => {
     const consent = localStorage.getItem("medi8-cookie-consent");
+    captureAttribution();
     if (!consent) {
       // Small delay so it doesn't flash on load
       const timer = setTimeout(() => setVisible(true), 1000);
@@ -27,6 +29,7 @@ const CookieConsent = () => {
     // cookieless ping is dropped by GA, so this carries the UTM landing URL and
     // original referrer for campaign attribution (once per session).
     sendGa4ConsentedLandingPageView();
+    captureAttribution();
     setVisible(false);
   };
 
