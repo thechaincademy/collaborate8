@@ -22,8 +22,8 @@ const DIMS: { key: Dim; label: string }[] = [
 interface Analytics {
   generated_at: string;
   signups: { daily_30d: { date: string; count: number }[]; weekly_8w: { week_start: string; count: number }[] };
-  accounts: { total_auth_users: number; total_profiles: number; email_confirmed: number; email_unconfirmed: number };
-  active_users: { last_7d_sign_in: number; last_30d_sign_in: number; last_7d_activity: number; last_30d_activity: number };
+  accounts: { total_auth_users: number; email_confirmed: number; email_unconfirmed: number };
+  active_users: { last_1d_sign_in: number; last_7d_sign_in: number; last_30d_sign_in: number; last_7d_activity: number; last_30d_activity: number };
   invites: { sent: number; accepted: number };
   linked_pairs: number;
   payments: { total: number; last_7d: number };
@@ -166,7 +166,6 @@ const AdminAnalytics = () => {
             <Section title="Accounts">
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 <Stat label="Total accounts" value={data.accounts.total_auth_users} />
-                <Stat label="Profiles" value={data.accounts.total_profiles} />
                 <Stat label="Email confirmed" value={data.accounts.email_confirmed} />
                 <Stat label="Email unconfirmed" value={data.accounts.email_unconfirmed} />
                 <Stat label="Premium (conversation tools)" value={data.premium_subscribers} />
@@ -176,6 +175,7 @@ const AdminAnalytics = () => {
 
             <Section title="Active users">
               <div className="grid grid-cols-2 gap-3">
+                <Stat label="Signed in, 24 hours" value={data.active_users.last_1d_sign_in} />
                 <Stat label="Signed in, 7 days" value={data.active_users.last_7d_sign_in} />
                 <Stat label="Signed in, 30 days" value={data.active_users.last_30d_sign_in} />
                 <Stat label="Used the app, 7 days" value={data.active_users.last_7d_activity} />
