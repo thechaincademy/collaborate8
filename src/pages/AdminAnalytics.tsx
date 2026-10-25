@@ -169,7 +169,7 @@ const AdminAnalytics = () => {
                 <Stat label="Profiles" value={data.accounts.total_profiles} />
                 <Stat label="Email confirmed" value={data.accounts.email_confirmed} />
                 <Stat label="Email unconfirmed" value={data.accounts.email_unconfirmed} />
-                <Stat label="Premium subscribers" value={data.premium_subscribers} />
+                <Stat label="Premium (conversation tools)" value={data.premium_subscribers} />
                 <Stat label="Linked co-parent pairs" value={data.linked_pairs} />
               </div>
             </Section>
