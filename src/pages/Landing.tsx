@@ -234,29 +234,30 @@ const Landing = () => {
                           <Link to={signupHref}>Get started</Link>
                         </Button>
                       </div>
-                      <div className="flex w-full flex-col items-start gap-3 md:w-1/2">
+                      <div className="flex w-full flex-col items-start gap-3 md:-ml-6 md:w-1/2">
                         <span
-                          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium"
-                          style={{ color: "#0D1B3E" }}
+                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
+                          style={{ color: "#0D1B3E", backgroundColor: "#FFFFFF" }}
                         >
                           <Check className="h-4 w-4 text-primary" />
                           Payment sent
                         </span>
                         <span
-                          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium"
-                          style={{ color: "#0D1B3E" }}
+                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
+                          style={{ color: "#0D1B3E", backgroundColor: "#FFFFFF" }}
                         >
                           <MessageCircleMore className="h-4 w-4 text-muted-foreground" />
                           School trip agreed
                         </span>
                         <span
-                          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium"
-                          style={{ color: "#0D1B3E" }}
+                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
+                          style={{ color: "#0D1B3E", backgroundColor: "#FFFFFF" }}
                         >
                           <Check className="h-4 w-4 text-primary" />
                           Arrangement set
                         </span>
                       </div>
+
                     </div>
                   </div>
                 ) : (
