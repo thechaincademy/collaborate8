@@ -24,6 +24,7 @@ import Splash from "./pages/Splash";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import CheckEmail from "./pages/CheckEmail";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import DeleteAccount from "./pages/DeleteAccount";
 import ForgotPassword from "./pages/ForgotPassword";
 import PostSignupOnboarding from "./pages/PostSignupOnboarding";
@@ -145,6 +146,7 @@ const App = () => (
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Ga4PageTracker />
