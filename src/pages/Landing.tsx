@@ -183,7 +183,8 @@ const Landing = () => {
             </h2>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2">
+
             {[
               {
                 src: appScreenshot1,
@@ -207,7 +208,7 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className={`flex flex-col items-center text-center ${i === 1 ? "relative overflow-hidden" : ""}`}
+                className={`flex flex-col items-center text-center ${i === 1 ? "relative overflow-hidden md:order-first md:col-span-2" : ""}`}
               >
                 {i === 1 ? (
                   <div className="relative w-full overflow-hidden rounded-3xl border border-border bg-card p-6 text-left md:p-8">
