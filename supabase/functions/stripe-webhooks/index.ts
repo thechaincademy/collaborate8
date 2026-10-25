@@ -5,6 +5,7 @@ import { sendCoparentReminder } from "../_shared/send-reminder.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
 import {
   isConversationToolSubscription,
+  periodEndIso,
   subscriptionFields,
 } from "../_shared/conversation-tool-access-rule.ts";
 
@@ -236,7 +237,7 @@ serve(async (req) => {
           await supabase
             .from("recurring_payments")
             .update({
-              next_due_date: new Date(sub.current_period_end * 1000).toISOString(),
+              next_due_date: periodEndIso(sub),
             })
             .eq("id", arrangement.id);
         } catch (e) {
@@ -330,12 +331,15 @@ serve(async (req) => {
           .maybeSingle();
 
         if (arrangement) {
-          const isActive = ["active", "trialing"].includes(subscription.status);
+          const dead =
+            event.type === "customer.subscription.deleted" ||
+            ["canceled", "incomplete_expired", "unpaid"].includes(subscription.status);
+          const isActive = !dead && ["active", "trialing"].includes(subscription.status);
           await supabase
             .from("recurring_payments")
             .update({
               is_active: isActive,
-              next_due_date: isActive ? new Date(subscription.current_period_end * 1000).toISOString() : null,
+              next_due_date: isActive ? periodEndIso(subscription) : null,
             })
             .eq("id", arrangement.id);
 
@@ -464,6 +468,39 @@ serve(async (req) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
+        // Chat conversation tool (premium) subscription: record access and stop;
+        // do not fall through to the maintenance arrangement logic.
+        if (session.mode === "subscription" && session.metadata?.collabor8_type === "conversation_tool") {
+          const ctUserId = session.metadata.collabor8_user_id;
+          if (!ctUserId) {
+            logStep("Conversation tool checkout missing collabor8_user_id", { sessionId: session.id });
+            break;
+          }
+          if (!session.subscription) break;
+          const subId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
+          const sub = await stripe.subscriptions.retrieve(subId);
+          const fields = subscriptionFields(sub);
+          const { error: ctError } = await supabase
+            .from("conversation_tool_access")
+            .upsert(
+              {
+                user_id: ctUserId,
+                granted_at: new Date().toISOString(),
+                currency: session.currency ?? "gbp",
+                amount: (session.amount_total ?? 0) / 100,
+                provider_session_id: session.id,
+                ...fields,
+              },
+              { onConflict: "user_id" },
+            );
+          if (ctError) {
+            logStep("Failed to upsert conversation tool access", { error: ctError.message });
+          } else {
+            logStep("Conversation tool access granted from checkout", { sessionId: session.id, userId: ctUserId });
+          }
+          break;
+        }
+
         if (session.mode !== "subscription" || !session.subscription) {
           logStep("Ignoring non-subscription checkout session", { id: session.id, mode: session.mode });
           break;
@@ -526,9 +563,7 @@ serve(async (req) => {
 
         const priceId = subscription.items.data[0]?.price?.id ?? null;
         const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
-        const nextDue = new Date(
-          (subscription.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000,
-        ).toISOString();
+        const nextDue = periodEndIso(subscription);
 
         const { data: arrangement, error: arrErr } = await supabase
           .from("recurring_payments")
