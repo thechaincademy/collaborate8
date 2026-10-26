@@ -148,6 +148,19 @@ const routeMeta = [
     "twitterDescription": "Collabor8 Privacy Policy. Learn how Collaborate Technologies Ltd collects, uses, shares and protects your personal data. UK GDPR compliant."
   },
   {
+    "route": "/terms",
+    "title": "Terms of Service - Collabor8",
+    "description": "Collabor8 Terms of Service in plain English. The agreement between you and Collaborate Technologies Ltd for using the Collabor8 website and app.",
+    "canonical": "https://collaborate8.com/terms",
+    "ogTitle": "Terms of Service - Collabor8",
+    "ogDescription": "Collabor8 Terms of Service in plain English. The agreement between you and Collaborate Technologies Ltd for using the Collabor8 website and app.",
+    "ogUrl": "https://collaborate8.com/terms",
+    "ogType": "website",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Terms of Service - Collabor8",
+    "twitterDescription": "Collabor8 Terms of Service in plain English. The agreement between you and Collaborate Technologies Ltd for using the Collabor8 website and app."
+  },
+  {
     "route": "/cookies",
     "title": "Cookie Policy - Collabor8",
     "description": "Learn how Collabor8 uses cookies to improve your experience. Manage your preferences for essential and analytics cookies.",

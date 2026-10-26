@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -148,10 +148,10 @@ const Login = () => {
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                By proceeding, you accept to our{" "}
-                <button type="button" className="font-semibold text-foreground">Privacy Policy</button>
+                By proceeding, you accept our{" "}
+                <Link to="/privacy" className="font-semibold text-foreground underline">Privacy Policy</Link>
                 {" "}and{" "}
-                <button type="button" className="font-semibold text-foreground">Terms of Services</button>.
+                <Link to="/terms" className="font-semibold text-foreground underline">Terms of Service</Link>.
               </p>
 
               <button
