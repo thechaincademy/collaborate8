@@ -608,7 +608,7 @@ const AdminAnalytics = () => {
             <BpCard g={data?.google} />
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {["Hotjar", "Facebook"].map((l) => (
+            {["Hotjar"].map((l) => (
               <Stat key={l} label={l} value="-" hint="Coming soon" />
             ))}
           </div>
