@@ -225,7 +225,8 @@ const GCard = ({ title, children }: { title: string; children: React.ReactNode }
   <Card className="min-w-0"><CardHeader className="p-4 pb-2"><CardTitle className="text-base">{title}</CardTitle></CardHeader>
     <CardContent className="space-y-4 p-4 pt-0">{children}</CardContent></Card>
 );
-const GState = ({ g, src }: { g?: GoogleData; src: GErr | { ok: true } | null | undefined }) => {
+const GState = ({ g, src: raw }: { g?: GoogleData; src: GErr | { ok: true } | null | undefined }) => {
+  const src = raw as (GErr & { ok: boolean }) | null | undefined;
   if (!g?.connected) return <p className="text-sm text-muted-foreground">Connect Google to see this</p>;
   if (g.error) return <p className="break-words text-xs text-destructive">{g.error}</p>;
   if (src && !src.ok && src.waiting_approval) return <><p className="text-sm text-muted-foreground">Waiting for Google API approval</p><p className="break-words text-xs text-muted-foreground">{src.error}</p></>;
