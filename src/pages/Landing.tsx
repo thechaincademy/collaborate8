@@ -14,11 +14,8 @@ import {
   Trophy,
   BookOpen,
   Infinity,
-  Instagram,
-  Check,
-  MessageCircleMore
+  Instagram
 } from "lucide-react";
-
 
 import appScreenshot1 from "@/assets/app-real-1.jpg";
 import appScreenshot2 from "@/assets/app-real-2.jpg";
@@ -183,8 +180,7 @@ const Landing = () => {
             </h2>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-2">
-
+          <div className="grid gap-8 md:grid-cols-3">
             {[
               {
                 src: appScreenshot1,
@@ -208,71 +204,16 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className={`flex flex-col items-center text-center ${i === 1 ? "relative overflow-hidden md:order-first md:col-span-2" : ""}`}
+                className="flex flex-col items-center text-center"
               >
-                {i === 1 ? (
-                  <div
-                    className="relative w-full overflow-hidden rounded-3xl border border-border p-6 text-left md:p-8"
-                    style={{ backgroundColor: "#FFFFFF" }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute -bottom-[20%] -right-[15%] z-0 h-[60%] w-[70%] -rotate-[7deg] rounded-full md:bottom-auto md:left-[52%] md:right-auto md:top-1/2 md:h-[120%] md:w-[70%] md:-translate-y-1/2"
-                      style={{ backgroundColor: "#F0EBE0" }}
-                    />
-
-                    <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:gap-6">
-                      <div className="md:w-1/2">
-                        <p className="text-sm font-medium text-muted-foreground">Every month</p>
-                        <h3 className="mt-3 text-2xl font-semibold leading-snug text-foreground md:text-3xl">
-                          Payments to make and conversations to have
-                        </h3>
-                        <p className="mt-4 leading-relaxed text-muted-foreground">
-                          Collabor8 is the system that holds it all together so both co-parents always know where they stand.
-                        </p>
-                        <Button variant="outline" asChild className="mt-6 rounded-lg bg-card">
-                          <Link to={signupHref}>Get started</Link>
-                        </Button>
-                      </div>
-                      <div className="flex w-full flex-col items-start gap-3 md:-ml-6 md:w-1/2">
-                        <span
-                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
-                          style={{ color: "#0D1B3E", backgroundColor: "#FFFFFF" }}
-                        >
-                          <Check className="h-4 w-4 text-primary" />
-                          Payment sent
-                        </span>
-                        <span
-                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
-                          style={{ color: "#0D1B3E", backgroundColor: "#FFFFFF" }}
-                        >
-                          <MessageCircleMore className="h-4 w-4 text-muted-foreground" />
-                          School trip agreed
-                        </span>
-                        <span
-                          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
-                          style={{ color: "#0D1B3E", backgroundColor: "#FFFFFF" }}
-                        >
-                          <Check className="h-4 w-4 text-primary" />
-                          Arrangement set
-                        </span>
-                      </div>
-
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <img
-                      src={screenshot.src}
-                      alt={screenshot.alt}
-                      className="relative z-10 h-48 w-auto rounded-2xl object-contain shadow-elevated md:h-64"
-                    />
-                    <h3 className="relative z-10 mt-6 max-w-xs text-lg font-bold leading-snug text-foreground">
-                      {screenshot.title}
-                    </h3>
-                  </>
-                )}
-
+                <img
+                  src={screenshot.src}
+                  alt={screenshot.alt}
+                  className="h-48 w-auto rounded-2xl object-contain shadow-elevated md:h-64"
+                />
+                <h3 className="mt-6 max-w-xs text-lg font-bold leading-snug text-foreground">
+                  {screenshot.title}
+                </h3>
               </motion.div>
             ))}
           </div>
