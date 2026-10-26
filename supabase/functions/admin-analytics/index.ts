@@ -16,6 +16,8 @@ const TEST_EMAIL_PATTERNS: RegExp[] = [
   /@test\.com$/,    // test.com addresses
   /@collabor8\.dev$/, // internal dev domain
 ];
+// Exact email addresses excluded as test accounts (matched on lowercased email).
+const EXCLUDED_EMAILS = new Set(["jade@lovethecaribbean.com", "jadeollivierre@hotmail.co.uk"]);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
