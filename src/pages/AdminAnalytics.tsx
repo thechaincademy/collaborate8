@@ -20,6 +20,7 @@ const DIMS: { key: Dim; label: string }[] = [
 ];
 
 interface Analytics {
+  social?: { buffer_ok: boolean; error?: string; organization_name: string | null; fetched_at: string; channels: Record<string, SocialChannel> };
   generated_at: string;
   signups: { daily_30d: { date: string; count: number }[]; weekly_8w: { week_start: string; count: number }[] };
   accounts: { total: number; auth_users_without_profile: number; email_confirmed: number; email_unconfirmed: number };
@@ -43,6 +44,72 @@ interface Analytics {
     tabs: { name: string; clicks: number; users: number }[];
   };
 }
+
+interface SocialChannel {
+  connected: boolean; disconnected: boolean; name: string | null; error?: string;
+  last7: SocialMetrics; last30: SocialMetrics;
+  daily: { date: string; impressions: number | null; reach: number | null; engagements: number | null }[];
+  top_posts: { text: string; sent_at: string; link: string | null; impressions: number | null; reach: number | null; engagements: number | null }[];
+  followers: null; followers_available: false;
+}
+interface SocialMetrics {
+  posts: number | null; reach: number | null; impressions: number | null;
+  reactions: number | null; comments: number | null; shares: number | null; engagement_rate: number | null;
+}
+const SocialCard = ({ title, channel, error }: { title: string; channel?: SocialChannel; error?: string }) => {
+  const [period, setPeriod] = useState<"last7" | "last30">("last7");
+  const metrics = channel?.[period];
+  const format = (n: number | null | undefined) => n == null ? "Not reported" : n.toLocaleString("en-GB", { maximumFractionDigits: 1 });
+  const hasImpressions = channel?.daily.some((d) => d.impressions !== null);
+  const message = channel?.error ?? error;
+  return (
+    <Card className="min-w-0">
+      <CardHeader className="p-4 pb-2"><CardTitle className="text-base">{title}</CardTitle>
+        {channel?.name && <p className="break-words text-xs text-muted-foreground">{channel.name}</p>}
+      </CardHeader>
+      <CardContent className="space-y-4 p-4 pt-0">
+        {message && <p className="break-words text-xs text-destructive">{message}</p>}
+        {channel?.disconnected && <p className="text-sm text-muted-foreground">Reconnect this channel in Buffer</p>}
+        {!channel?.connected && !message && <p className="text-sm text-muted-foreground">Not connected in Buffer</p>}
+        {channel?.connected && <>
+          <div className="flex gap-2">
+            <Button size="sm" variant={period === "last7" ? "default" : "outline"} onClick={() => setPeriod("last7")}>7 days</Button>
+            <Button size="sm" variant={period === "last30" ? "default" : "outline"} onClick={() => setPeriod("last30")}>30 days</Button>
+          </div>
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            {([['Posts', metrics?.posts], ['Reach', metrics?.reach], ['Impressions', metrics?.impressions], ['Reactions', metrics?.reactions], ['Comments', metrics?.comments], ['Shares', metrics?.shares]] as const).map(([label, n]) => (
+              <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{format(n)}</dd></div>
+            ))}
+            <div className="col-span-2"><dt className="text-xs text-muted-foreground">Engagement rate</dt><dd className="font-medium">{metrics?.engagement_rate == null ? "Not reported" : `${format(metrics.engagement_rate)}%`}</dd></div>
+          </dl>
+          <div>
+            <p className="mb-2 text-xs text-muted-foreground">Daily {hasImpressions ? "impressions" : "reach"}, last 30 days</p>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={channel.daily.map((d) => ({ ...d, label: fmtDay(d.date) }))}>
+                  <XAxis dataKey="label" fontSize={10} tickLine={false} interval="preserveStartEnd" />
+                  <YAxis fontSize={10} width={32} allowDecimals={false} />
+                  <Tooltip />
+                  <Line dataKey={hasImpressions ? "impressions" : "reach"} name={hasImpressions ? "Impressions" : "Reach"} stroke="hsl(var(--primary))" dot={false} connectNulls={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm font-medium">Top posts</p>
+            {!channel.top_posts.length && <p className="text-xs text-muted-foreground">No sent posts in the last 30 days</p>}
+            {channel.top_posts.map((post, i) => <div key={`${post.sent_at}-${i}`} className="border-t pt-2 text-sm">
+              {post.link ? <a href={post.link} target="_blank" rel="noopener noreferrer" className="break-words underline">{post.text || "View post"}</a> : <p className="break-words">{post.text || "Post"}</p>}
+              <p className="mt-1 text-xs text-muted-foreground">{new Date(post.sent_at).toLocaleDateString("en-GB")} - {format(post.engagements)} engagements</p>
+            </div>)}
+          </div>
+        </>}
+        <p className="text-xs text-muted-foreground">Followers: not available from Buffer</p>
+        <p className="text-xs text-muted-foreground">Data from Buffer, updated daily</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Stat = ({ label, value, hint }: { label: string; value: string | number; hint?: string }) => (
   <Card>
@@ -346,8 +413,13 @@ const AdminAnalytics = () => {
         </Section>
 
         <Section title="Website and social">
+          <div className="mb-3 grid gap-3 md:grid-cols-2">
+            {[["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["tiktok", "TikTok"]].map(([key, label]) => (
+              <SocialCard key={key} title={label} channel={data?.social?.channels[key]} error={!data?.social?.channels[key]?.connected ? data?.social?.error : undefined} />
+            ))}
+          </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {["Website visitors", "Instagram", "Facebook", "LinkedIn", "TikTok"].map((l) => (
+            {["Website visitors", "Facebook"].map((l) => (
               <Stat key={l} label={l} value="-" hint="Coming soon" />
             ))}
           </div>

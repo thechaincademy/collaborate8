@@ -1,6 +1,7 @@
 // Read-only admin analytics. Returns aggregate counts only, never personal data.
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts";
+import { getBufferAnalytics } from "../_shared/buffer-analytics.ts";
 
 const ALLOWED_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 const DAY = 24 * 60 * 60 * 1000;
@@ -44,6 +45,7 @@ Deno.serve(async (req) => {
   if (!isAdmin || !ALLOWED_EMAILS.includes(email)) return json({ error: "Forbidden" }, 403);
 
   try {
+    const socialResult = getBufferAnalytics();
     const now = Date.now();
     const since7 = new Date(now - 7 * DAY).toISOString();
     const since30 = new Date(now - 30 * DAY).toISOString();
@@ -270,6 +272,7 @@ Deno.serve(async (req) => {
     const bySource = [...srcMap].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count).slice(0, 10);
 
     return json({
+      social: (await socialResult).social,
       exclusions: {
         flagged_test: flaggedIds.size,
         agentmail: agentmailCount,
