@@ -613,6 +613,36 @@ export type Database = {
           },
         ]
       }
+      google_oauth_tokens: {
+        Row: {
+          account_email: string | null
+          connected_at: string
+          id: string
+          provider: string
+          refresh_token: string
+          scopes: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_email?: string | null
+          connected_at?: string
+          id?: string
+          provider?: string
+          refresh_token: string
+          scopes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_email?: string | null
+          connected_at?: string
+          id?: string
+          provider?: string
+          refresh_token?: string
+          scopes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           created_at: string
