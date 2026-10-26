@@ -12,6 +12,14 @@ const FooterContact = ({ onDark = false }: { onDark?: boolean }) => (
         privacy@collaborate8.com
       </a>
       {" | "}
+      <Link to="/terms" className="hover:underline">
+        Terms of Service
+      </Link>
+      {" | "}
+      <Link to="/privacy" className="hover:underline">
+        Privacy Policy
+      </Link>
+      {" | "}
       <Link to="/contact" className="hover:underline">
         Contact
       </Link>
