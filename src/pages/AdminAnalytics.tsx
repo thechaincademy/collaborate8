@@ -93,7 +93,7 @@ const SocialCard = ({ title, channel, error }: { title: string; channel?: Social
                   <XAxis dataKey="label" fontSize={10} tickLine={false} interval="preserveStartEnd" />
                   <YAxis fontSize={10} width={32} allowDecimals={false} />
                   <Tooltip />
-                  <Line dataKey={hasImpressions ? "impressions" : "reach"} name={hasImpressions ? "Impressions" : "Reach"} stroke="hsl(var(--primary))" dot={false} connectNulls={false} />
+                  <Line type="linear" dataKey={hasImpressions ? "impressions" : "reach"} name={hasImpressions ? "Impressions" : "Reach"} stroke="hsl(var(--primary))" dot={channel.daily.length < 10 ? { r: 3 } : false} connectNulls={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -225,11 +225,11 @@ const GCard = ({ title, children }: { title: string; children: React.ReactNode }
   <Card className="min-w-0"><CardHeader className="p-4 pb-2"><CardTitle className="text-base">{title}</CardTitle></CardHeader>
     <CardContent className="space-y-4 p-4 pt-0">{children}</CardContent></Card>
 );
-const GState = ({ g, src: raw }: { g?: GoogleData; src: GErr | { ok: true } | null | undefined }) => {
+const GState = ({ g, src: raw, card = "Google API" }: { g?: GoogleData; src: GErr | { ok: true } | null | undefined; card?: string }) => {
   const src = raw as (GErr & { ok: boolean }) | null | undefined;
   if (!g?.connected) return <p className="text-sm text-muted-foreground">Connect Google to see this</p>;
   if (g.error) return <p className="break-words text-xs text-destructive">{g.error}</p>;
-  if (src && !src.ok && src.waiting_approval) return <><p className="text-sm text-muted-foreground">Waiting for Google API approval</p><p className="break-words text-xs text-muted-foreground">{src.error}</p></>;
+  if (src && !src.ok && (src.waiting_approval || /429|RESOURCE_EXHAUSTED|Quota exceeded|403|PERMISSION_DENIED/i.test(src.error ?? ""))) return <><p className="text-sm text-muted-foreground">{card === "Business Profile" ? "Waiting for Google to approve Business Profile API access." : "Waiting for Google API access."}</p><details className="break-words"><summary className="text-xs text-muted-foreground">Details</summary><p className="break-words text-xs text-muted-foreground">{src.error}</p></details></>;
   if (src && !src.ok) return <p className="break-words text-xs text-destructive">{src.error}</p>;
   if (!src) return <p className="text-sm text-muted-foreground">No data</p>;
   return null;
@@ -246,7 +246,7 @@ const MiniLine = ({ data, lines }: { data: Record<string, unknown>[]; lines: { k
       <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
       <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
       <Tooltip />
-      {lines.map((l) => <Line key={l.key} type="monotone" dataKey={l.key} stroke={l.color} dot={false} strokeWidth={2} />)}
+      {lines.map((l) => <Line key={l.key} type="linear" dataKey={l.key} stroke={l.color} dot={data.length < 10 ? { r: 3 } : false} strokeWidth={2} />)}
     </LineChart>
   </ResponsiveContainer></div>
 );
@@ -256,7 +256,7 @@ const Ga4Card = ({ g }: { g?: GoogleData }) => {
   const s = g?.ga4;
   const ok = g?.connected && !g.error && s?.ok ? (s as Ga4) : null;
   return <GCard title="Website visitors (GA4)">
-    <GState g={g} src={s} />
+    <GState g={g} src={s} card="GA4" />
     {ok && <>
       {(["last_7d", "last_30d"] as const).map((k) => <div key={k}><p className="mb-1 text-xs font-medium">{k === "last_7d" ? "Last 7 days" : "Last 30 days"}</p>
         <dl className="grid grid-cols-3 gap-3 text-sm">
@@ -275,7 +275,7 @@ const ScCard = ({ g }: { g?: GoogleData }) => {
   const s = g?.search_console;
   const ok = g?.connected && !g.error && s?.ok ? (s as Sc) : null;
   return <GCard title="Search Console">
-    <GState g={g} src={s} />
+    <GState g={g} src={s} card="Search Console" />
     {ok && <>
       <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
         <Row label="Clicks" value={fmtN(ok.totals.clicks)} /><Row label="Impressions" value={fmtN(ok.totals.impressions)} />
@@ -293,7 +293,7 @@ const BpCard = ({ g }: { g?: GoogleData }) => {
   const s = g?.business_profile;
   const ok = g?.connected && !g.error && s?.ok ? (s as Bp) : null;
   return <GCard title="Business Profile">
-    <GState g={g} src={s} />
+    <GState g={g} src={s} card="Business Profile" />
     {ok && <>
       <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
         <Row label="Impressions" value={fmtN(ok.totals_30d.impressions)} /><Row label="Website clicks" value={fmtN(ok.totals_30d.website_clicks)} />
@@ -452,7 +452,7 @@ const AdminAnalytics = () => {
                     <XAxis dataKey="label" fontSize={10} tickLine={false} interval="preserveStartEnd" />
                     <YAxis allowDecimals={false} fontSize={10} width={28} tickLine={false} />
                     <Tooltip />
-                    <Line type="monotone" dataKey="count" name="Sign-ups" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    <Line type="linear" dataKey="count" name="Sign-ups" stroke="hsl(var(--primary))" strokeWidth={2} dot={data.signups.daily_30d.length < 10 ? { r: 3 } : false} />
                   </LineChart>
                 </ChartCard>
                 <ChartCard title="Weekly active users, last 8 weeks">
