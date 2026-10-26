@@ -4,6 +4,7 @@ import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts"
 import { getBufferAnalytics } from "../_shared/buffer-analytics.ts";
 import { getYouTubeAnalytics } from "../_shared/youtube-analytics.ts";
 import { getClarityAnalytics } from "../_shared/clarity-analytics.ts";
+import { getGoogleAnalytics } from "../_shared/google-analytics.ts";
 
 const ALLOWED_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 const DAY = 24 * 60 * 60 * 1000;
@@ -50,6 +51,7 @@ Deno.serve(async (req) => {
     const socialResult = getBufferAnalytics();
     const youtubeResult = getYouTubeAnalytics();
     const clarityResult = getClarityAnalytics();
+    const googleResult = getGoogleAnalytics(admin).catch((e) => ({ connected: false, error: (e as Error).message }));
     const now = Date.now();
     const since7 = new Date(now - 7 * DAY).toISOString();
     const since30 = new Date(now - 30 * DAY).toISOString();
@@ -279,6 +281,7 @@ Deno.serve(async (req) => {
       social: (await socialResult).social,
       youtube: await youtubeResult,
       clarity: await clarityResult,
+      google: await googleResult,
       exclusions: {
         flagged_test: flaggedIds.size,
         agentmail: agentmailCount,
