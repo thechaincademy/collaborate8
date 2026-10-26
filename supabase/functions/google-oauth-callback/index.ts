@@ -55,8 +55,8 @@ Deno.serve(async (req) => {
     );
     if (error) return fail("save_failed");
 
-    // admin-analytics caches Google results for 15 minutes; mark them stale.
-    await admin.from("app_settings").upsert({ key: "google_cache_bust", value: String(Date.now()), updated_at: new Date().toISOString() }, { onConflict: "key" });
+    // admin-analytics keys its 15-minute Google cache on this row's updated_at,
+    // so the new connection clears the cached results automatically.
     return go("google=connected");
   } catch {
     return fail("unexpected");
