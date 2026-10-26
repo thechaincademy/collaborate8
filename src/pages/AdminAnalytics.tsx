@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Navigate } from "react-router-dom";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +29,13 @@ interface Analytics {
   payments: { total: number; last_7d: number };
   expenses: { total: number; last_7d: number };
   premium_subscribers: number;
+  exclusions?: { flagged_test: number; agentmail: number; email_pattern: number; total_excluded: number; real_users: number };
+  payment_setup?: { users: number; pct_of_real_users: number; stripe_connect_onboarded: number; recurring_payment_users: number; bank_details_users: number };
+  upgrades?: { premium_active: number; all_time: number; pct_of_real_users: number };
+  churn?: { premium_cancelled_30d: number; premium_cancelled_all_time: number; recurring_cancelled_30d: number; recurring_cancelled_all_time: number; churn_rate_30d_pct: number };
+  weekly_active_8w?: { week_start: string; users: number }[];
+  funnel?: { step: string; count: number }[];
+  signups_by_source_all_time?: { value: string; count: number }[];
   attribution: Record<"last_7d" | "last_30d", Record<Dim, { value: string; count: number }[]>>;
   weekly_report: {
     new_users: number; total_users: number; active_users: number; total_events: number;
@@ -56,6 +63,29 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const fmtDay = (iso: string) =>
   new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+
+const HOW_WE_COUNT: [string, string][] = [
+  ["Real users", "Everyone who signed up, minus accounts flagged as test, agentmail inboxes and known test email patterns."],
+  ["Accounts", "Real users who have a Collabor8 profile."],
+  ["Sign-ups", "Real users counted on the day or week they created their account."],
+  ["Active users", "Sign-in counts use the last time someone signed in; activity counts use anything they did in the app."],
+  ["Linked co-parents", "Real users whose profile is linked to a co-parent."],
+  ["Payment set up", "Real users who finished Stripe onboarding, set up a recurring payment, or added bank details."],
+  ["Premium", "Real users with an active or trialing Premium subscription right now."],
+  ["Upgrades", "Real users who have ever had Premium access, even if it has since ended."],
+  ["Churn and churn rate", "Cancelled Premium plans and stopped recurring payments; the rate is cancellations in the last 30 days divided by active plus recently cancelled."],
+  ["Sources", "The UTM source a person arrived with, otherwise the site that referred them, otherwise direct or unknown."],
+  ["Weekly active users", "Real users who did anything in the app in each Monday to Sunday week."],
+];
+
+const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <Card>
+    <CardHeader className="p-4 pb-0"><CardTitle className="text-sm font-medium">{title}</CardTitle></CardHeader>
+    <CardContent className="h-56 p-2">
+      <ResponsiveContainer width="100%" height="100%">{children as React.ReactElement}</ResponsiveContainer>
+    </CardContent>
+  </Card>
+);
 
 const AdminAnalytics = () => {
   const { user, loading: authLoading } = useAuth();
@@ -135,6 +165,81 @@ const AdminAnalytics = () => {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
+            </Section>
+
+            <Section title="Overview">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {data.exclusions && (
+                  <Stat label="Real users" value={data.exclusions.real_users} hint={`${data.exclusions.total_excluded} test accounts excluded`} />
+                )}
+                {data.payment_setup && (
+                  <Stat label="Payment set up" value={data.payment_setup.users} hint={`${data.payment_setup.pct_of_real_users}% of real users`} />
+                )}
+                {data.upgrades && (
+                  <Stat label="Premium" value={data.upgrades.premium_active} hint={`${data.upgrades.all_time} upgrades all time (${data.upgrades.pct_of_real_users}%)`} />
+                )}
+                {data.churn && (
+                  <Stat
+                    label="Churn, 30 days"
+                    value={`${data.churn.churn_rate_30d_pct}%`}
+                    hint={`${data.churn.premium_cancelled_30d + data.churn.recurring_cancelled_30d} cancelled in 30 days, ${data.churn.premium_cancelled_all_time + data.churn.recurring_cancelled_all_time} all time`}
+                  />
+                )}
+              </div>
+              {data.payment_setup && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Payment set up: {data.payment_setup.stripe_connect_onboarded} Stripe onboarded, {data.payment_setup.recurring_payment_users} recurring payments, {data.payment_setup.bank_details_users} bank details.
+                </p>
+              )}
+            </Section>
+
+            <Section title="Charts">
+              <div className="grid gap-3 md:grid-cols-2">
+                <ChartCard title="Sign-ups over time, last 30 days">
+                  <LineChart data={data.signups.daily_30d.map((d) => ({ label: fmtDay(d.date), count: d.count }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="label" fontSize={10} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis allowDecimals={false} fontSize={10} width={28} tickLine={false} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="count" name="Sign-ups" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ChartCard>
+                <ChartCard title="Weekly active users, last 8 weeks">
+                  <BarChart data={(data.weekly_active_8w ?? []).map((w) => ({ label: fmtDay(w.week_start), users: w.users }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="label" fontSize={10} tickLine={false} />
+                    <YAxis allowDecimals={false} fontSize={10} width={28} tickLine={false} />
+                    <Tooltip />
+                    <Bar dataKey="users" name="Active users" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartCard>
+                <ChartCard title="Sign-up funnel">
+                  <BarChart
+                    layout="vertical"
+                    margin={{ right: 56 }}
+                    data={(data.funnel ?? []).map((f) => {
+                      const base = Math.max(1, data.funnel?.[0]?.count ?? 1);
+                      return { ...f, label: `${f.count} (${Math.round((f.count / base) * 1000) / 10}%)` };
+                    })}
+                  >
+                    <XAxis type="number" hide allowDecimals={false} />
+                    <YAxis type="category" dataKey="step" fontSize={10} width={96} tickLine={false} />
+                    <Tooltip />
+                    <Bar dataKey="count" name="Users" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="label" position="right" fontSize={10} />
+                    </Bar>
+                  </BarChart>
+                </ChartCard>
+                <ChartCard title="Sign-ups by source, all time">
+                  <BarChart data={data.signups_by_source_all_time ?? []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="value" fontSize={10} tickLine={false} interval={0} angle={-30} textAnchor="end" height={56} />
+                    <YAxis allowDecimals={false} fontSize={10} width={28} tickLine={false} />
+                    <Tooltip />
+                    <Bar dataKey="count" name="Sign-ups" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartCard>
+              </div>
             </Section>
 
             <Section title="Where sign-ups come from">
@@ -228,6 +333,17 @@ const AdminAnalytics = () => {
             </Section>
           </>
         )}
+
+        <Section title="How we count">
+          <details className="rounded-lg border bg-card p-4">
+            <summary className="cursor-pointer text-sm font-medium">Show definitions</summary>
+            <dl className="mt-3 space-y-2 text-sm">
+              {HOW_WE_COUNT.map(([k, v]) => (
+                <div key={k}><dt className="font-medium">{k}</dt><dd className="text-muted-foreground">{v}</dd></div>
+              ))}
+            </dl>
+          </details>
+        </Section>
 
         <Section title="Website and social">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
