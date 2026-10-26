@@ -38,7 +38,11 @@ export async function getYouTubeAnalytics(): Promise<YouTube> {
     };
     const uploads = c.contentDetails?.relatedPlaylists?.uploads;
     if (uploads) {
-      const pl = await get("playlistItems", { part: "contentDetails,snippet", playlistId: uploads, maxResults: "5" });
+      // A channel with no uploads returns 404 for its uploads playlist: treat that as "no videos yet".
+      const pl = await get("playlistItems", { part: "contentDetails,snippet", playlistId: uploads, maxResults: "5" }).catch((e) => {
+        if (e instanceof Error && /playlistId|cannot be found/i.test(e.message)) return { items: [] };
+        throw e;
+      });
       const items = (pl.items ?? []) as any[];
       const ids = items.map((i) => i.contentDetails?.videoId).filter(Boolean);
       const stats: Record<string, any> = {};
