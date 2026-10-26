@@ -450,6 +450,8 @@ const PrivacyPolicy = () => {
                 </tbody>
               </table>
             </div>
+            <p className="mt-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">Analytics and advertising tools load, and their cookies are set, only after you click "Accept All". If you choose "Essential Only", they are not set. Until you accept, the Google tag runs in Google Consent Mode and may send Google limited signals without cookies, such as that a page was viewed.</p>
+            <p className="mt-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">In the Collabor8 app, we use Firebase Analytics to understand how the app is used, including approximate location. The app does not use your device's advertising ID. Read our <a href="/cookies" className="underline">Cookie Policy</a> for more detail.</p>
           </section>
 
           {/* 10. Third-party links */}
