@@ -4,6 +4,14 @@ import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts"
 
 const ALLOWED_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 const DAY = 24 * 60 * 60 * 1000;
+// Test or QA email addresses that are not real Collabor8 users (matched on lowercased email).
+const TEST_EMAIL_PATTERNS: RegExp[] = [
+  /\+test/,         // plus-addressed test inboxes
+  /@example\./,     // reserved example domains
+  /^qa@/,           // QA inboxes
+  /@test\.com$/,    // test.com addresses
+  /@collabor8\.dev$/, // internal dev domain
+];
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -52,9 +60,13 @@ Deno.serve(async (req) => {
 
     // Excluded set: flagged test accounts plus agentmail test inboxes
     const { data: testProfiles } = await admin.from("profiles").select("id").eq("is_test_account", true);
-    const excluded = new Set<string>((testProfiles ?? []).map((p) => p.id as string));
+    const flaggedIds = new Set<string>((testProfiles ?? []).map((p) => p.id as string));
+    const excluded = new Set<string>(flaggedIds);
+    let agentmailCount = 0, patternCount = 0;
     for (const u of allUsers) {
-      if ((u.email ?? "").toLowerCase().endsWith("@agentmail.to")) excluded.add(u.id);
+      const em = (u.email ?? "").toLowerCase();
+      if (em.endsWith("@agentmail.to")) { agentmailCount++; excluded.add(u.id); }
+      else if (TEST_EMAIL_PATTERNS.some((re) => re.test(em))) { patternCount++; excluded.add(u.id); }
     }
     const users = allUsers.filter((u) => !excluded.has(u.id));
     // Profiles (aggregated locally): non-test profile count, plus sign-ups with no profile row
@@ -181,7 +193,108 @@ Deno.serve(async (req) => {
       .slice(0, 12);
     const paid = (wPayments ?? []).filter((p) => ["succeeded", "completed", "paid"].includes(String(p.status)));
 
+    // ---- Expanded metrics (real users only) ----
+    const realIds = new Set(users.map((u) => u.id));
+    const realCount = users.length;
+    const pct = (n: number) => Math.round((n / Math.max(1, realCount)) * 1000) / 10;
+    const [{ data: ca }, { data: rp }, { data: cba }] = await Promise.all([
+      admin.from("connected_accounts").select("user_id, charges_enabled, onboarding_status"),
+      admin.from("recurring_payments").select("user_id, is_active, updated_at"),
+      admin.from("coparent_bank_accounts").select("user_id"),
+    ]);
+    const connectSet = new Set<string>(), recurSet = new Set<string>(), bankSet = new Set<string>();
+    for (const r of ca ?? []) if (realIds.has(r.user_id) && (r.charges_enabled === true || r.onboarding_status === "complete")) connectSet.add(r.user_id);
+    for (const r of rp ?? []) if (realIds.has(r.user_id)) recurSet.add(r.user_id);
+    for (const r of cba ?? []) if (realIds.has(r.user_id)) bankSet.add(r.user_id);
+    const setupSet = new Set<string>([...connectSet, ...recurSet, ...bankSet]);
+
+    const { data: ctaFull } = await admin.from("conversation_tool_access")
+      .select("user_id, subscription_status, cancel_at_period_end, current_period_end, created_at");
+    const premActive = new Set<string>(), premAll = new Set<string>();
+    let premCancelAll = 0, premCancel30 = 0;
+    for (const r of ctaFull ?? []) {
+      if (!realIds.has(r.user_id)) continue;
+      premAll.add(r.user_id);
+      const st = String(r.subscription_status ?? "");
+      if (st === "active" || st === "trialing") premActive.add(r.user_id);
+      if (r.cancel_at_period_end === true || st === "canceled") {
+        premCancelAll++;
+        const cpe = r.current_period_end ? new Date(r.current_period_end).getTime() : 0;
+        const cr = r.created_at ? new Date(r.created_at).getTime() : 0;
+        if (cpe >= t30 || cr >= t30) premCancel30++;
+      }
+    }
+    let recCancelAll = 0, recCancel30 = 0, recActive = 0;
+    for (const r of rp ?? []) {
+      if (!realIds.has(r.user_id)) continue;
+      if (r.is_active === false) {
+        recCancelAll++;
+        if (r.updated_at && new Date(r.updated_at).getTime() >= t30) recCancel30++;
+      } else recActive++;
+    }
+    const churnDen = Math.max(1, premActive.size + recActive + premCancel30 + recCancel30);
+    const churnRate = Math.round(((premCancel30 + recCancel30) / churnDen) * 1000) / 10;
+
+    // Weekly active users, last 8 Monday-start weeks
+    const since56 = new Date(weekStart(today).getTime() - 7 * 7 * DAY).toISOString();
+    const wauMap = new Map<string, Set<string>>();
+    for (let i = 7; i >= 0; i--) wauMap.set(dayKey(new Date(thisWeek.getTime() - i * 7 * DAY)), new Set());
+    for (let from = 0; from < 200000; from += 1000) {
+      const { data: evs } = await admin.from("usage_events").select("user_id, created_at")
+        .gte("created_at", since56).not("user_id", "is", null).order("created_at").range(from, from + 999);
+      for (const e of evs ?? []) {
+        if (!realIds.has(e.user_id)) continue;
+        wauMap.get(dayKey(weekStart(new Date(e.created_at))))?.add(e.user_id);
+      }
+      if (!evs || evs.length < 1000) break;
+    }
+    const weeklyActive = [...wauMap].map(([week_start, s]) => ({ week_start, users: s.size }));
+
+    const { data: linkedRows } = await admin.from("profiles").select("id").not("coparent_id", "is", null);
+    const linkedReal = (linkedRows ?? []).filter((r) => realIds.has(r.id)).length;
+    const funnel = [
+      { step: "Signed up", count: realCount },
+      { step: "Linked co-parent", count: linkedReal },
+      { step: "Payment set up", count: setupSet.size },
+      { step: "Premium", count: premAll.size },
+    ];
+
+    const srcMap = new Map<string, number>();
+    for (const u of users) {
+      const md = u.user_metadata ?? {};
+      let v = str(md.utm_source);
+      if (v === NONE) v = host(md.referrer);
+      if (v === NONE) v = "(direct or unknown)";
+      srcMap.set(v, (srcMap.get(v) ?? 0) + 1);
+    }
+    const bySource = [...srcMap].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count).slice(0, 10);
+
     return json({
+      exclusions: {
+        flagged_test: flaggedIds.size,
+        agentmail: agentmailCount,
+        email_pattern: patternCount,
+        total_excluded: allUsers.length - realCount,
+        real_users: realCount,
+      },
+      payment_setup: {
+        users: setupSet.size,
+        pct_of_real_users: pct(setupSet.size),
+        stripe_connect_onboarded: connectSet.size,
+        recurring_payment_users: recurSet.size,
+        bank_details_users: bankSet.size,
+      },
+      upgrades: { premium_active: premActive.size, all_time: premAll.size, pct_of_real_users: pct(premAll.size) },
+      churn: {
+        premium_cancelled_30d: premCancel30,
+        premium_cancelled_all_time: premCancelAll,
+        recurring_cancelled_30d: recCancel30,
+        recurring_cancelled_all_time: recCancelAll,
+        churn_rate_30d_pct: churnRate,
+      },
+      weekly_active_8w: weeklyActive,
+      funnel,
+      signups_by_source_all_time: bySource,
       generated_at: new Date().toISOString(),
       signups: { daily_30d: daily, weekly_8w: weekly },
       accounts: {
