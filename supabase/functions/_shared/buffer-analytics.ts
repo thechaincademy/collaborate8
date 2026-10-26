@@ -35,7 +35,11 @@ export function aggregateMetrics(groups: Metric[][]): Metrics {
   const v = (type: string) => sum(groups.map((g) => metricValue(g, type)));
   const impressions = v("impressions"), engaged = sum(groups.map(engagements));
   const reportedRate = groups.length === 1 ? metricValue(groups[0], "engagementRate") : null;
-  return { posts: v("postCount"), reach: v("reach"), impressions, reactions: v("reactions"), comments: v("comments"), shares: v("shares"), engagement_rate: reportedRate ?? (impressions !== null && impressions > 0 && engaged !== null ? engaged / impressions * 100 : null) };
+  const posts = v("postCount"), reach = v("reach");
+  // No posts, or no impressions and no reach: there is nothing to measure, so the rate is null rather than 0.
+  const measurable = (posts ?? 0) > 0 && ((impressions ?? 0) > 0 || (reach ?? 0) > 0);
+  const rate = !measurable ? null : reportedRate ?? (impressions !== null && impressions > 0 && engaged !== null ? engaged / impressions * 100 : null);
+  return { posts, reach, impressions, reactions: v("reactions"), comments: v("comments"), shares: v("shares"), engagement_rate: rate };
 }
 export async function getBufferAnalytics(): Promise<Result> {
   if (cache && Date.now() - cache.at < 15 * 60 * 1000) return cache.result;

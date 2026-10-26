@@ -2,6 +2,8 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts";
 import { getBufferAnalytics } from "../_shared/buffer-analytics.ts";
+import { getYouTubeAnalytics } from "../_shared/youtube-analytics.ts";
+import { getClarityAnalytics } from "../_shared/clarity-analytics.ts";
 
 const ALLOWED_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 const DAY = 24 * 60 * 60 * 1000;
@@ -46,6 +48,8 @@ Deno.serve(async (req) => {
 
   try {
     const socialResult = getBufferAnalytics();
+    const youtubeResult = getYouTubeAnalytics();
+    const clarityResult = getClarityAnalytics();
     const now = Date.now();
     const since7 = new Date(now - 7 * DAY).toISOString();
     const since30 = new Date(now - 30 * DAY).toISOString();
@@ -273,6 +277,8 @@ Deno.serve(async (req) => {
 
     return json({
       social: (await socialResult).social,
+      youtube: await youtubeResult,
+      clarity: await clarityResult,
       exclusions: {
         flagged_test: flaggedIds.size,
         agentmail: agentmailCount,

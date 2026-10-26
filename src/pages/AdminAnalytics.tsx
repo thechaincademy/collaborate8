@@ -21,6 +21,8 @@ const DIMS: { key: Dim; label: string }[] = [
 
 interface Analytics {
   social?: { buffer_ok: boolean; error?: string; organization_name: string | null; fetched_at: string; channels: Record<string, SocialChannel> };
+  youtube?: { ok: boolean; error?: string; channel_id: string | null; title: string | null; handle: string; subscribers: number | null; total_views: number | null; video_count: number | null; recent_videos: { title: string; published_at: string; url: string; views: number | null; likes: number | null; comments: number | null }[]; fetched_at: string };
+  clarity?: { ok: boolean; error?: string; stale?: boolean; days: number; fetched_at: string; sessions: number | null; pages_per_session: number | null; scroll_depth_pct: number | null; dead_click_pct: number | null; rage_click_pct: number | null; quickback_pct: number | null; excessive_scroll_pct: number | null; top_pages: { url: string; sessions: number }[] };
   generated_at: string;
   signups: { daily_30d: { date: string; count: number }[]; weekly_8w: { week_start: string; count: number }[] };
   accounts: { total: number; auth_users_without_profile: number; email_confirmed: number; email_unconfirmed: number };
@@ -76,12 +78,12 @@ const SocialCard = ({ title, channel, error }: { title: string; channel?: Social
             <Button size="sm" variant={period === "last7" ? "default" : "outline"} onClick={() => setPeriod("last7")}>7 days</Button>
             <Button size="sm" variant={period === "last30" ? "default" : "outline"} onClick={() => setPeriod("last30")}>30 days</Button>
           </div>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          {!metrics?.posts ? <p className="text-sm text-muted-foreground">No posts yet</p> : <dl className="grid grid-cols-2 gap-3 text-sm">
             {([['Posts', metrics?.posts], ['Reach', metrics?.reach], ['Impressions', metrics?.impressions], ['Reactions', metrics?.reactions], ['Comments', metrics?.comments], ['Shares', metrics?.shares]] as const).map(([label, n]) => (
               <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{format(n)}</dd></div>
             ))}
             <div className="col-span-2"><dt className="text-xs text-muted-foreground">Engagement rate</dt><dd className="font-medium">{metrics?.engagement_rate == null ? "Not reported" : `${format(metrics.engagement_rate)}%`}</dd></div>
-          </dl>
+          </dl>}
           <div>
             <p className="mb-2 text-xs text-muted-foreground">Daily {hasImpressions ? "impressions" : "reach"}, last 30 days</p>
             <div className="h-40">
@@ -110,6 +112,62 @@ const SocialCard = ({ title, channel, error }: { title: string; channel?: Social
     </Card>
   );
 };
+
+const fmtN = (n: number | null | undefined, suffix = "") => n == null ? "Not reported" : `${n.toLocaleString("en-GB", { maximumFractionDigits: 1 })}${suffix}`;
+const Row = ({ label, value }: { label: string; value: string }) => <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{value}</dd></div>;
+
+const YouTubeCard = ({ yt }: { yt?: Analytics["youtube"] }) => (
+  <Card className="min-w-0">
+    <CardHeader className="p-4 pb-2"><CardTitle className="text-base">YouTube</CardTitle>
+      {yt?.title && <p className="break-words text-xs text-muted-foreground">{yt.title} ({yt.handle})</p>}
+    </CardHeader>
+    <CardContent className="space-y-4 p-4 pt-0">
+      {yt?.error && <p className="break-words text-xs text-destructive">{yt.error}</p>}
+      {yt?.ok && <>
+        <dl className="grid grid-cols-3 gap-3 text-sm">
+          <Row label="Subscribers" value={yt.subscribers == null ? "Hidden" : fmtN(yt.subscribers)} />
+          <Row label="Total views" value={fmtN(yt.total_views)} />
+          <Row label="Videos" value={fmtN(yt.video_count)} />
+        </dl>
+        <div className="space-y-3">
+          <p className="text-sm font-medium">Recent videos</p>
+          {!yt.recent_videos.length && <p className="text-xs text-muted-foreground">No videos yet</p>}
+          {yt.recent_videos.map((v) => <div key={v.url} className="border-t pt-2 text-sm">
+            <a href={v.url} target="_blank" rel="noopener noreferrer" className="break-words underline">{v.title || "View video"}</a>
+            <p className="mt-1 text-xs text-muted-foreground">{v.published_at ? new Date(v.published_at).toLocaleDateString("en-GB") : ""} - {fmtN(v.views)} views, {fmtN(v.likes)} likes, {fmtN(v.comments)} comments</p>
+          </div>)}
+        </div>
+      </>}
+      <p className="text-xs text-muted-foreground">From YouTube, refreshes every 15 minutes</p>
+    </CardContent>
+  </Card>
+);
+
+const ClarityCard = ({ c }: { c?: Analytics["clarity"] }) => (
+  <Card className="min-w-0">
+    <CardHeader className="p-4 pb-2"><CardTitle className="text-base">Website behaviour (Clarity)</CardTitle></CardHeader>
+    <CardContent className="space-y-4 p-4 pt-0">
+      {c?.error && <p className="break-words text-xs text-destructive">{c.error}{c.stale ? " Showing the last saved numbers." : ""}</p>}
+      {(c?.ok || c?.stale) && <>
+        <dl className="grid grid-cols-2 gap-3 text-sm">
+          <Row label="Sessions" value={fmtN(c.sessions)} />
+          <Row label="Pages per session" value={fmtN(c.pages_per_session)} />
+          <Row label="Scroll depth" value={fmtN(c.scroll_depth_pct, "%")} />
+          <Row label="Dead clicks" value={fmtN(c.dead_click_pct, "%")} />
+          <Row label="Rage clicks" value={fmtN(c.rage_click_pct, "%")} />
+          <Row label="Quick backs" value={fmtN(c.quickback_pct, "%")} />
+          <Row label="Excessive scrolling" value={fmtN(c.excessive_scroll_pct, "%")} />
+        </dl>
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Top pages</p>
+          {!c.top_pages.length && <p className="text-xs text-muted-foreground">Not reported</p>}
+          {c.top_pages.map((p) => <div key={p.url} className="flex justify-between gap-3 border-t pt-2 text-sm"><span className="min-w-0 break-all">{p.url}</span><span className="tabular-nums">{p.sessions.toLocaleString("en-GB")}</span></div>)}
+        </div>
+      </>}
+      <p className="text-xs text-muted-foreground">Last 3 days, from Microsoft Clarity, refreshes every 3 hours</p>
+    </CardContent>
+  </Card>
+);
 
 const Stat = ({ label, value, hint }: { label: string; value: string | number; hint?: string }) => (
   <Card>
@@ -417,9 +475,11 @@ const AdminAnalytics = () => {
             {[["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["tiktok", "TikTok"]].map(([key, label]) => (
               <SocialCard key={key} title={label} channel={data?.social?.channels[key]} error={!data?.social?.channels[key]?.connected ? data?.social?.error : undefined} />
             ))}
+            <YouTubeCard yt={data?.youtube} />
+            <ClarityCard c={data?.clarity} />
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {["Website visitors", "Facebook"].map((l) => (
+            {["Website visitors (GA4)", "Search Console", "Business Profile", "Hotjar", "Facebook"].map((l) => (
               <Stat key={l} label={l} value="-" hint="Coming soon" />
             ))}
           </div>
