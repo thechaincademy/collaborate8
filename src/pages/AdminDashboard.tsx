@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,8 @@ const Stat = ({ label, value }: { label: string; value: string | number }) => (
     </CardContent>
   </Card>
 );
+
+const ALLOWED = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 
 const AdminDashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -106,6 +109,9 @@ const AdminDashboard = () => {
     );
   }
 
+  const showAnalytics =
+    ALLOWED.includes((user.email ?? "").toLowerCase()) && isAdmin === true;
+
   const maxClicks = Math.max(1, ...(summary?.tabs ?? []).map((t) => t.clicks));
 
   return (
@@ -120,7 +126,7 @@ const AdminDashboard = () => {
             <h1 className="text-2xl font-semibold">Founder dashboard</h1>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={days} onValueChange={setDays}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
@@ -132,6 +138,14 @@ const AdminDashboard = () => {
                 <SelectItem value="3650">All time</SelectItem>
               </SelectContent>
             </Select>
+            {showAnalytics && (
+              <Button asChild variant="outline">
+                <Link to="/admin/analytics">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Analytics
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" onClick={signOut}>
               Sign out
             </Button>
