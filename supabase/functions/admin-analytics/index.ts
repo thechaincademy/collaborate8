@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     for (const u of allUsers) {
       const em = (u.email ?? "").toLowerCase();
       if (em.endsWith("@agentmail.to")) { agentmailCount++; excluded.add(u.id); }
-      else if (TEST_EMAIL_PATTERNS.some((re) => re.test(em))) { patternCount++; excluded.add(u.id); }
+      else if (TEST_EMAIL_PATTERNS.some((re) => re.test(em)) || EXCLUDED_EMAILS.has(em)) { patternCount++; excluded.add(u.id); }
     }
     const users = allUsers.filter((u) => !excluded.has(u.id));
     // Profiles (aggregated locally): non-test profile count, plus sign-ups with no profile row
