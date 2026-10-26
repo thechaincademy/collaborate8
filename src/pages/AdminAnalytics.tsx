@@ -23,6 +23,7 @@ interface Analytics {
   social?: { buffer_ok: boolean; error?: string; organization_name: string | null; fetched_at: string; channels: Record<string, SocialChannel> };
   youtube?: { ok: boolean; error?: string; channel_id: string | null; title: string | null; handle: string; subscribers: number | null; total_views: number | null; video_count: number | null; recent_videos: { title: string; published_at: string; url: string; views: number | null; likes: number | null; comments: number | null }[]; fetched_at: string };
   clarity?: { ok: boolean; error?: string; stale?: boolean; days: number; fetched_at: string; sessions: number | null; pages_per_session: number | null; scroll_depth_pct: number | null; dead_click_pct: number | null; rage_click_pct: number | null; quickback_pct: number | null; excessive_scroll_pct: number | null; top_pages: { url: string; sessions: number }[] };
+  google?: GoogleData;
   generated_at: string;
   signups: { daily_30d: { date: string; count: number }[]; weekly_8w: { week_start: string; count: number }[] };
   accounts: { total: number; auth_users_without_profile: number; email_confirmed: number; email_unconfirmed: number };
@@ -212,6 +213,97 @@ const ChartCard = ({ title, children }: { title: string; children: React.ReactNo
   </Card>
 );
 
+type GErr = { ok: false; error: string; waiting_approval?: boolean };
+type GaTotals = { total_users: number; new_users: number; sessions: number; engagement_rate: number | null; conversions: number | null };
+type Ga4 = { ok: true; last_7d: GaTotals; last_30d: GaTotals; daily: { date: string; active_users: number; sessions: number }[]; top_channels: { value: string; count: number }[]; top_sources: { value: string; count: number }[]; top_pages: { value: string; count: number }[] };
+type ScRow = { value: string; clicks: number; impressions: number; ctr: number; position: number };
+type Sc = { ok: true; totals: { clicks: number; impressions: number; ctr: number; position: number | null }; daily: { date: string; clicks: number; impressions: number }[]; top_queries: ScRow[]; top_pages: ScRow[] };
+type Bp = { ok: true; title: string | null; totals_30d: { impressions: number; website_clicks: number; calls: number; direction_requests: number }; daily_impressions: { date: string; impressions: number }[] };
+interface GoogleData { connected: boolean; account_email: string | null; scopes: string | null; error?: string; ga4: Ga4 | GErr | null; search_console: Sc | GErr | null; business_profile: Bp | GErr | null }
+
+const GCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <Card className="min-w-0"><CardHeader className="p-4 pb-2"><CardTitle className="text-base">{title}</CardTitle></CardHeader>
+    <CardContent className="space-y-4 p-4 pt-0">{children}</CardContent></Card>
+);
+const GState = ({ g, src }: { g?: GoogleData; src: GErr | { ok: true } | null | undefined }) => {
+  if (!g?.connected) return <p className="text-sm text-muted-foreground">Connect Google to see this</p>;
+  if (g.error) return <p className="break-words text-xs text-destructive">{g.error}</p>;
+  if (src && !src.ok && src.waiting_approval) return <><p className="text-sm text-muted-foreground">Waiting for Google API approval</p><p className="break-words text-xs text-muted-foreground">{src.error}</p></>;
+  if (src && !src.ok) return <p className="break-words text-xs text-destructive">{src.error}</p>;
+  if (!src) return <p className="text-sm text-muted-foreground">No data</p>;
+  return null;
+};
+const MiniList = ({ title, items }: { title: string; items: { value: string; count: string }[] }) => (
+  <div><p className="mb-1 text-sm font-medium">{title}</p>
+    {!items.length && <p className="text-xs text-muted-foreground">None yet</p>}
+    {items.map((it) => <div key={it.value} className="flex justify-between gap-2 border-t py-1 text-xs"><span className="min-w-0 break-all">{it.value}</span><span className="tabular-nums">{it.count}</span></div>)}
+  </div>
+);
+const MiniLine = ({ data, lines }: { data: Record<string, unknown>[]; lines: { key: string; color: string }[] }) => (
+  <div className="h-32"><ResponsiveContainer width="100%" height="100%">
+    <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+      <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+      <Tooltip />
+      {lines.map((l) => <Line key={l.key} type="monotone" dataKey={l.key} stroke={l.color} dot={false} strokeWidth={2} />)}
+    </LineChart>
+  </ResponsiveContainer></div>
+);
+const pctStr = (n: number | null | undefined) => n == null ? "Not reported" : `${(n * 100).toFixed(1)}%`;
+
+const Ga4Card = ({ g }: { g?: GoogleData }) => {
+  const s = g?.ga4;
+  const ok = g?.connected && !g.error && s?.ok ? (s as Ga4) : null;
+  return <GCard title="Website visitors (GA4)">
+    <GState g={g} src={s} />
+    {ok && <>
+      {(["last_7d", "last_30d"] as const).map((k) => <div key={k}><p className="mb-1 text-xs font-medium">{k === "last_7d" ? "Last 7 days" : "Last 30 days"}</p>
+        <dl className="grid grid-cols-3 gap-3 text-sm">
+          <Row label="Users" value={fmtN(ok[k].total_users)} /><Row label="New users" value={fmtN(ok[k].new_users)} /><Row label="Sessions" value={fmtN(ok[k].sessions)} />
+          <Row label="Engagement" value={pctStr(ok[k].engagement_rate)} /><Row label="Key events" value={fmtN(ok[k].conversions)} />
+        </dl></div>)}
+      <div><p className="mb-1 text-sm font-medium">Daily sessions, last 30 days</p>
+        <MiniLine data={ok.daily.map((d) => ({ label: fmtDay(d.date), sessions: d.sessions }))} lines={[{ key: "sessions", color: "hsl(var(--primary))" }]} /></div>
+      <MiniList title="Top channels" items={ok.top_channels.map((x) => ({ value: x.value, count: fmtN(x.count) }))} />
+      <MiniList title="Top pages" items={ok.top_pages.map((x) => ({ value: x.value, count: fmtN(x.count) }))} />
+    </>}
+  </GCard>;
+};
+
+const ScCard = ({ g }: { g?: GoogleData }) => {
+  const s = g?.search_console;
+  const ok = g?.connected && !g.error && s?.ok ? (s as Sc) : null;
+  return <GCard title="Search Console">
+    <GState g={g} src={s} />
+    {ok && <>
+      <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+        <Row label="Clicks" value={fmtN(ok.totals.clicks)} /><Row label="Impressions" value={fmtN(ok.totals.impressions)} />
+        <Row label="CTR" value={pctStr(ok.totals.ctr)} /><Row label="Position" value={ok.totals.position == null ? "Not reported" : ok.totals.position.toFixed(1)} />
+      </dl>
+      <div><p className="mb-1 text-sm font-medium">Daily clicks and impressions, last 28 days</p>
+        <MiniLine data={ok.daily.map((d) => ({ label: fmtDay(d.date), clicks: d.clicks, impressions: d.impressions }))} lines={[{ key: "clicks", color: "hsl(var(--primary))" }, { key: "impressions", color: "hsl(var(--muted-foreground))" }]} /></div>
+      <MiniList title="Top queries" items={ok.top_queries.map((x) => ({ value: x.value, count: `${fmtN(x.clicks)} clicks` }))} />
+      <MiniList title="Top pages" items={ok.top_pages.map((x) => ({ value: x.value.replace(/^https?:\/\/[^/]+/, "") || "/", count: `${fmtN(x.clicks)} clicks` }))} />
+    </>}
+  </GCard>;
+};
+
+const BpCard = ({ g }: { g?: GoogleData }) => {
+  const s = g?.business_profile;
+  const ok = g?.connected && !g.error && s?.ok ? (s as Bp) : null;
+  return <GCard title="Business Profile">
+    <GState g={g} src={s} />
+    {ok && <>
+      <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+        <Row label="Impressions" value={fmtN(ok.totals_30d.impressions)} /><Row label="Website clicks" value={fmtN(ok.totals_30d.website_clicks)} />
+        <Row label="Calls" value={fmtN(ok.totals_30d.calls)} /><Row label="Directions" value={fmtN(ok.totals_30d.direction_requests)} />
+      </dl>
+      <div><p className="mb-1 text-sm font-medium">Daily impressions, last 30 days</p>
+        <MiniLine data={ok.daily_impressions.map((d) => ({ label: fmtDay(d.date), impressions: d.impressions }))} lines={[{ key: "impressions", color: "hsl(var(--primary))" }]} /></div>
+    </>}
+  </GCard>;
+};
+
 const AdminAnalytics = () => {
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -219,6 +311,32 @@ const AdminAnalytics = () => {
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"week" | "day">("week");
   const [range, setRange] = useState<"last_7d" | "last_30d">("last_7d");
+  const [banner, setBanner] = useState<{ ok: boolean; text: string } | null>(null);
+  const [connecting, setConnecting] = useState(false);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const g = p.get("google");
+    if (!g) return;
+    if (g === "connected") setBanner({ ok: true, text: "Google connected." });
+    else setBanner({ ok: false, text: `Google connection failed (${p.get("reason") ?? "unknown"}).` });
+    p.delete("google"); p.delete("reason");
+    const qs = p.toString();
+    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
+  }, []);
+
+  const connectGoogle = async () => {
+    setConnecting(true);
+    const { data, error } = await supabase.functions.invoke("google-oauth-start");
+    if (error || !data?.url) {
+      let msg = "Could not start Google connection.";
+      try { const b = await (error as { context?: Response })?.context?.json(); if (b?.error) msg = b.error; } catch { /* keep default */ }
+      setBanner({ ok: false, text: msg });
+      setConnecting(false);
+      return;
+    }
+    window.location.href = data.url;
+  };
 
   const emailOk = ALLOWED.includes((user?.email ?? "").toLowerCase());
 
@@ -257,6 +375,13 @@ const AdminAnalytics = () => {
       <div className="mx-auto max-w-md px-4 py-8 md:max-w-3xl">
         <h1 className="text-2xl font-semibold">Analytics</h1>
         <p className="text-sm text-muted-foreground">Collabor8 counts only. Read-only.</p>
+        {banner && <p className={`mt-4 rounded-md border p-3 text-sm ${banner.ok ? "" : "text-destructive"}`}>{banner.text}</p>}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {data?.google?.connected && <p className="break-all text-sm text-muted-foreground">Connected as {data.google.account_email ?? "unknown account"}</p>}
+          <Button size="sm" variant="outline" onClick={connectGoogle} disabled={connecting}>
+            {connecting ? "Opening Google..." : data?.google?.connected ? "Reconnect Google" : "Connect Google"}
+          </Button>
+        </div>
 
         {error && <p className="mt-6 text-sm text-destructive">{error}</p>}
         {!data && !error && (
@@ -477,9 +602,12 @@ const AdminAnalytics = () => {
             ))}
             <YouTubeCard yt={data?.youtube} />
             <ClarityCard c={data?.clarity} />
+            <Ga4Card g={data?.google} />
+            <ScCard g={data?.google} />
+            <BpCard g={data?.google} />
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {["Website visitors (GA4)", "Search Console", "Business Profile", "Hotjar", "Facebook"].map((l) => (
+            {["Hotjar", "Facebook"].map((l) => (
               <Stat key={l} label={l} value="-" hint="Coming soon" />
             ))}
           </div>
