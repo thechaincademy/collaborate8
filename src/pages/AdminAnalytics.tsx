@@ -607,11 +607,6 @@ const AdminAnalytics = () => {
             <ScCard g={data?.google} />
             <BpCard g={data?.google} />
           </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {["Hotjar"].map((l) => (
-              <Stat key={l} label={l} value="-" hint="Coming soon" />
-            ))}
-          </div>
         </Section>
       </div>
     </>
