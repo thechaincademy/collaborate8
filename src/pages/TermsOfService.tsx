@@ -257,15 +257,14 @@ const TermsOfService = () => {
 
           <Section n={12} title="Deleting your account">
             <P>You can delete your account at any time in the app (Settings, Delete my account), on our <L to="/delete-account">Delete account page</L>, or by emailing <A href="mailto:rafa@collaborate8.com">rafa@collaborate8.com</A>. Download your data first if you want a copy.</P>
-            <P>When you delete your account:</P>
+            <P>When you confirm the deletion, your account is deleted straight away:</P>
             <List items={[
               "Any Collabor8 subscriptions you pay for through Stripe are cancelled automatically, so you will not be charged again.",
+              "Your personal details, files, receipts, settings and records only you were part of are deleted.",
               'Payments you shared with your co-parent stay in their payment history, shown as from "Deleted user", so they still have a record of what was paid.',
-              'Messages your co-parent received from you stay in their account, shown as from "Deleted user".',
-              "Records only you were part of are deleted.",
-              "All your other personal data is deleted within 30 days.",
+              'Messages your co-parent received from you, and expenses and decisions they shared with you, stay in their account, shown as from "Deleted user".',
             ]} />
-            <P last>Deleting your account cannot be undone.</P>
+            <P last>If you ask for a deletion link by email, the link works once and expires after 24 hours. Deleting your account cannot be undone.</P>
           </Section>
 
           <Section n={13} title="Availability and changes to the Service">
