@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.request-account-deletion]
 verify_jwt = false
+
+[functions.google-oauth-callback]
+verify_jwt = false
