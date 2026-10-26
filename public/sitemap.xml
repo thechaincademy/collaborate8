@@ -51,6 +51,12 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://collaborate8.com/terms</loc>
+    <lastmod>2026-10-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://collaborate8.com/cookies</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

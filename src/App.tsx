@@ -35,6 +35,7 @@ import NotificationSettings from "./pages/NotificationSettings";
 
 import EditRecurringPayment from "./pages/EditRecurringPayment";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import FAQ from "./pages/FAQ";
 import CommunicationGuide from "./pages/CommunicationGuide";
@@ -116,6 +117,9 @@ const App = () => (
               <Route path="/coparent-bank-account" element={<ProtectedRoute><CoparentBankAccount /></ProtectedRoute>} />
               <Route path="/statement/:type" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
+          <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
           <Route path="/cookies" element={<CookiePolicy />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />

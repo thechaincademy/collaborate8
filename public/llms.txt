@@ -21,6 +21,7 @@
 - [/resources/support-and-guidance](/resources/support-and-guidance): Support resources, FAQs, and guidance for co-parents.
 - [/resources/financial-coparenting-tips](/resources/financial-coparenting-tips): Practical tips for managing finances as co-parents.
 - [/privacy](/privacy): Privacy policy.
+- [/terms](/terms): Terms of Service.
 - [/cookies](/cookies): Cookie policy.
 
 ## Guides and tools
