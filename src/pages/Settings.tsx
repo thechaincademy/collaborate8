@@ -163,7 +163,7 @@ const Settings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
-              Download your data first if you want a copy. Everything is deleted and gone within 30 days. Payments you shared with your co-parent stay in their account without your name, and messages they received from you stay, shown as from "Deleted user". Your Stripe subscriptions are cancelled automatically.
+              Download your data first if you want a copy. Your account is deleted straight away, along with records only you were part of. Payments you shared with your co-parent stay in their payment history, and messages they received from you stay in their account, all shown as from "Deleted user". Your Stripe subscriptions are cancelled automatically.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -125,8 +125,8 @@ const DeleteAccount = () => {
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-foreground">What is deleted and what stays</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-foreground/90">
-            <li>We only keep your data while you have an account. When you delete it, everything is deleted, and all of it is gone within 30 days.</li>
-            <li>Payments you shared with your co-parent stay in their account, without your name.</li>
+            <li>We only keep your data while you have an account. When you confirm the deletion, your account is deleted straight away, along with records only you were part of.</li>
+            <li>Payments you shared with your co-parent stay in their payment history, shown as from "Deleted user".</li>
             <li>Messages your co-parent received from you stay in their account, shown as from "Deleted user".</li>
             <li>Your Stripe subscriptions are cancelled automatically, so you won't be charged again.</li>
           </ul>
