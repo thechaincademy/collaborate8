@@ -69,9 +69,7 @@ const Premium = () => {
         <title>Collabor8 Premium - Collabor8</title>
         <meta
           name="description"
-          content={inApp
-            ? "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly."
-            : `Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. ${CONVERSATION_TOOL_MONTHLY} a month, billed as ${CONVERSATION_TOOL_PRICE} a year.`}
+          content="Collabor8 Premium: extra tools for calmer co-parenting conversations about money."
         />
         <link rel="canonical" href="https://collaborate8.com/premium" />
       </Helmet>

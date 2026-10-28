@@ -150,15 +150,15 @@ const routeMeta = [
   {
     "route": "/premium",
     "title": "Collabor8 Premium - Collabor8",
-    "description": "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. £4.99 a month, billed as £59.88 a year.",
+    "description": "Collabor8 Premium: extra tools for calmer co-parenting conversations about money.",
     "canonical": "https://collaborate8.com/premium",
     "ogTitle": "Collabor8 Premium - Collabor8",
-    "ogDescription": "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. £4.99 a month, billed as £59.88 a year.",
+    "ogDescription": "Collabor8 Premium: extra tools for calmer co-parenting conversations about money.",
     "ogUrl": "https://collaborate8.com/premium",
     "ogType": "website",
     "twitterCard": "summary_large_image",
     "twitterTitle": "Collabor8 Premium - Collabor8",
-    "twitterDescription": "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. £4.99 a month, billed as £59.88 a year."
+    "twitterDescription": "Collabor8 Premium: extra tools for calmer co-parenting conversations about money."
   },
   {
     "route": "/terms",
