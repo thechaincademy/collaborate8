@@ -59,7 +59,7 @@ const CookieConsent = () => {
               <span className="text-sm font-semibold text-foreground">Cookies & Privacy</span>
             </div>
             <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-              We use essential cookies to keep the app running, and analytics and advertising cookies (Hotjar, Microsoft Clarity, Google Analytics and the Google tag) to improve your experience. Analytics and advertising cookies are only set if you click "Accept All". By clicking "Accept", you consent to our use of cookies. Read our{" "}
+              We use essential cookies to keep the app running. The Google tag (Google Analytics and Google Ads) loads in Google Consent Mode with analytics and ad storage denied, so no analytics or advertising cookies are set until you click "Accept All". Hotjar and Microsoft Clarity only load after you click "Accept All". Read our{" "}
               <Link to="/privacy" className="underline text-foreground">Privacy Policy</Link> and{" "}
               <Link to="/cookies" className="underline text-foreground">Cookie Policy</Link>.
             </p>

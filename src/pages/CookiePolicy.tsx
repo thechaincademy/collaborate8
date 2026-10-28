@@ -21,7 +21,7 @@ const CookiePolicy = () => {
         </button>
 
         <h1 className="mb-2 text-3xl font-bold text-foreground">Cookie Policy</h1>
-        <p className="mb-8 text-sm text-muted-foreground">Last updated: October 2026</p>
+        <p className="mb-8 text-sm text-muted-foreground">Last updated: 28 October 2026</p>
 
         <div className="space-y-6 text-sm leading-relaxed text-muted-foreground">
           <section>
@@ -30,46 +30,71 @@ const CookiePolicy = () => {
           </section>
 
           <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">Essential Cookies</h2>
-            <p>These cookies are necessary for the app to function. They handle authentication, session management, and security. You cannot opt out of essential cookies as they are required for the service to work.</p>
+            <h2 className="mb-2 text-lg font-semibold text-foreground">Strictly necessary</h2>
+            <p>These keep you signed in, keep the Service secure and remember your cookie choice. They cannot be disabled.</p>
             <div className="mt-3 rounded-xl border border-border bg-card p-4">
               <div className="grid grid-cols-3 gap-2 text-xs font-medium text-foreground">
-                <span>Cookie</span><span>Purpose</span><span>Duration</span>
+                <span>Name</span><span>Purpose</span><span>Duration</span>
               </div>
-              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                <span>sb-*-auth-token</span><span>Authentication</span><span>Session</span>
+              <div className="mt-2 space-y-1">
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <span>sb-*-auth-token</span><span>Sign-in session (Supabase)</span><span>Session</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <span>medi8-cookie-consent</span><span>Your cookie choice</span><span>Until you clear it</span>
+                </div>
               </div>
             </div>
           </section>
 
           <section>
-            <h2 className="mb-2 text-lg font-semibold text-foreground">Analytics Cookies</h2>
-            <p>We use Hotjar, Microsoft Clarity and Google Analytics for behavioural analytics. These cookies help us understand how users interact with our app so we can improve the experience. Hotjar, Microsoft Clarity, Google Analytics and the Google tag are only loaded, and their cookies only set, after you click "Accept All" - they are not loaded if you choose "Essential Only".</p>
+            <h2 className="mb-2 text-lg font-semibold text-foreground">Analytics</h2>
+            <p>These help us understand how visitors use the website so we can improve it. They are only set after you click "Accept All".</p>
             <div className="mt-3 rounded-xl border border-border bg-card p-4">
               <div className="grid grid-cols-3 gap-2 text-xs font-medium text-foreground">
-                <span>Cookie</span><span>Purpose</span><span>Duration</span>
+                <span>Name</span><span>Purpose</span><span>Duration</span>
               </div>
               <div className="mt-2 space-y-1">
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <span>_hj*</span><span>Hotjar analytics</span><span>1 year</span>
+                  <span>_ga</span><span>Google Analytics 4 (G-2YB8M4ZYEG) visitor id</span><span>2 years</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <span>_hjSession*</span><span>Session tracking</span><span>30 min</span>
+                  <span>_ga_*</span><span>Google Analytics 4 session</span><span>2 years</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <span>_clck</span><span>Microsoft Clarity visitor id</span><span>1 year</span>
+                  <span>_clck</span><span>Microsoft Clarity (yszafltuee) visitor id</span><span>1 year</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <span>_clsk</span><span>Microsoft Clarity session</span><span>1 day</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <span>_ga</span><span>Google Analytics visitor id</span><span>2 years</span>
+                  <span>_hj*</span><span>Hotjar (6645141) analytics</span><span>1 year</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <span>_ga_*</span><span>Google Analytics session</span><span>2 years</span>
+                  <span>c8_anon_id</span><span>Collabor8 usage events</span><span>Until you clear it</span>
                 </div>
               </div>
             </div>
+          </section>
+
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-foreground">Advertising</h2>
+            <p>The Google tag (Google Ads, AW-18435476721) helps us measure how well our ads work. Advertising cookies are only set after you click "Accept All".</p>
+          </section>
+
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-foreground">Sign-up source</h2>
+            <p>c8_attribution is stored in your browser (localStorage) to remember how you found Collabor8, so we can save it when you sign up. It is only saved after you click "Accept All".</p>
+          </section>
+
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-foreground">Google Consent Mode</h2>
+            <p>The Google tag (Google Analytics 4 and Google Ads) loads before you make a choice, in Google Consent Mode, with analytics and advertising storage set to denied. This means no analytics or advertising cookies are set, but Google may receive limited signals without cookies, such as that a page was viewed. Cookies are only set if you click "Accept All". Microsoft Clarity and Hotjar only load after you click "Accept All". If you choose "Essential Only", none of these cookies are set.</p>
+          </section>
+
+          <section>
+            <h2 className="mb-2 text-lg font-semibold text-foreground">In the Collabor8 app</h2>
+            <p>In the app, we use Google Firebase: Firebase Analytics to understand how the app is used, including approximate location, and Firebase Cloud Messaging for push notifications if you allow them. The app does not use your device's advertising ID.</p>
           </section>
 
           <section>
