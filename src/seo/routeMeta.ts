@@ -148,6 +148,19 @@ const routeMeta = [
     "twitterDescription": "Collabor8 Privacy Policy. Learn how Collaborate Technologies Ltd collects, uses, shares and protects your personal data. UK GDPR compliant."
   },
   {
+    "route": "/premium",
+    "title": "Collabor8 Premium - Collabor8",
+    "description": "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. £4.99 a month, billed as £59.88 a year.",
+    "canonical": "https://collaborate8.com/premium",
+    "ogTitle": "Collabor8 Premium - Collabor8",
+    "ogDescription": "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. £4.99 a month, billed as £59.88 a year.",
+    "ogUrl": "https://collaborate8.com/premium",
+    "ogType": "website",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Collabor8 Premium - Collabor8",
+    "twitterDescription": "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. £4.99 a month, billed as £59.88 a year."
+  },
+  {
     "route": "/terms",
     "title": "Terms of Service - Collabor8",
     "description": "Collabor8 Terms of Service in plain English. The agreement between you and Collaborate Technologies Ltd for using the Collabor8 website and app.",

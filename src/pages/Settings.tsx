@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, PoundSterling } from "lucide-react";
+import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, PoundSterling, Sparkles } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -118,6 +118,10 @@ const Settings = () => {
         </Section>
 
         <Section title="Account" id="account">
+          <button onClick={() => navigate("/premium")} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
+            <span className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Collabor8 Premium</span></span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
           <button onClick={openPortal} disabled={portalLoading} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
             <span className="flex items-center gap-3"><PoundSterling className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Stop a recurring payment</span></span>
             {portalLoading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
