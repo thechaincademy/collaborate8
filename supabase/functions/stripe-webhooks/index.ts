@@ -128,24 +128,29 @@ serve(async (req) => {
 
     let event: Stripe.Event;
 
-    if (sig && (platformSecret || connectSecret)) {
-      let verified = false;
-      for (const secret of [platformSecret, connectSecret].filter(Boolean)) {
-        try {
-          event = await stripe.webhooks.constructEventAsync(body, sig, secret!);
-          verified = true;
-          break;
-        } catch {
-          // Try next secret
-        }
+    if (!sig) {
+      logStep("ERROR: Missing stripe-signature header");
+      return new Response("Missing stripe-signature header", { status: 400 });
+    }
+
+    if (!platformSecret && !connectSecret) {
+      logStep("ERROR: No webhook signing secret configured");
+      return new Response("Webhook secret not configured", { status: 500 });
+    }
+
+    let verified = false;
+    for (const secret of [platformSecret, connectSecret].filter(Boolean)) {
+      try {
+        event = await stripe.webhooks.constructEventAsync(body, sig, secret!);
+        verified = true;
+        break;
+      } catch {
+        // Try next secret
       }
-      if (!verified) {
-        logStep("ERROR: Signature verification failed with all secrets");
-        return new Response("Webhook signature verification failed", { status: 400 });
-      }
-    } else {
-      event = JSON.parse(body) as Stripe.Event;
-      logStep("WARNING: No webhook signature verification");
+    }
+    if (!verified) {
+      logStep("ERROR: Signature verification failed with all secrets");
+      return new Response("Webhook signature verification failed", { status: 400 });
     }
 
     logStep("Event received", { type: event.type, id: event.id });
