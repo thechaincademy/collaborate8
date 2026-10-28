@@ -131,10 +131,12 @@ const Settings = () => {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
           )}
-          <button onClick={openPortal} disabled={portalLoading} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
-            <span className="flex items-center gap-3"><PoundSterling className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Stop a recurring payment</span></span>
-            {portalLoading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-          </button>
+          {!inApp && (
+            <button onClick={openPortal} disabled={portalLoading} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
+              <span className="flex items-center gap-3"><PoundSterling className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Stop a recurring payment</span></span>
+              {portalLoading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+            </button>
+          )}
           <button onClick={() => setConfirmDelete(true)} className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50">
             <span className="flex items-center gap-3"><Trash2 className="h-5 w-5 text-destructive" /><span className="text-destructive">Delete my account</span></span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
