@@ -1,5 +1,6 @@
 import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
+import { WebsiteOnly } from "@/hooks/useIsInApp";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Play, Youtube, MicVocal } from "lucide-react";
@@ -234,9 +235,11 @@ const Podcast = () => {
               <Link to="/child-maintenance-calculator">Try the calculator</Link>
             </Button>
           </div>
+          <WebsiteOnly fallback={<p className="mt-6 text-sm text-muted-foreground">Free to use. Paying each other back through the app costs £2.99 per transaction. Some features are part of Collabor8 Premium.</p>}>
           <p className="mt-6 text-sm text-muted-foreground">
             Free to use. Paying each other back through the app costs £2.99 per transaction. Premium features such as the AI mediator in chat cost £4.99 a month, paid yearly.
           </p>
+          </WebsiteOnly>
         </motion.div>
       </section>
     </main>

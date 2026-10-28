@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import CoparentLinkSettings from "@/components/settings/CoparentLinkSettings";
+import { PREMIUM_FEATURE_LINE, useIsInApp } from "@/hooks/useIsInApp";
 
 
 const Section = ({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) => (
@@ -22,6 +23,7 @@ const Section = ({ title, children, id }: { title: string; children: React.React
 const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const inApp = useIsInApp();
   const [exporting, setExporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -118,10 +120,17 @@ const Settings = () => {
         </Section>
 
         <Section title="Account" id="account">
+          {inApp ? (
+            <div className="flex w-full items-center gap-3 border-b border-border p-4">
+              <Sparkles className="h-5 w-5 text-muted-foreground" />
+              <span className="min-w-0"><span className="block text-foreground">Collabor8 Premium</span><span className="block text-xs text-muted-foreground">{PREMIUM_FEATURE_LINE}</span></span>
+            </div>
+          ) : (
           <button onClick={() => navigate("/premium")} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
             <span className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Collabor8 Premium</span></span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
+          )}
           <button onClick={openPortal} disabled={portalLoading} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
             <span className="flex items-center gap-3"><PoundSterling className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Stop a recurring payment</span></span>
             {portalLoading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}

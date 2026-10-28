@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import TopBanner from "@/components/TopBanner";
 import FooterContact from "@/components/FooterContact";
+import { useIsInApp } from "@/hooks/useIsInApp";
 
 const sections = [
   { id: "s1", num: "01", label: "Who we are" },
@@ -50,6 +51,7 @@ const L = ({ to, children }: { to: string; children: ReactNode }) => (
 
 const TermsOfService = () => {
   const [activeId, setActiveId] = useState("s1");
+  const inApp = useIsInApp();
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
@@ -229,7 +231,10 @@ const TermsOfService = () => {
           </Section>
 
           <Section n={8} title="Premium">
-            <List items={[
+            <List items={inApp ? [
+              "Some features are part of Collabor8 Premium.",
+              "Premium benefits apply only to the parent who has it, not to their linked co-parent.",
+            ] : [
               "Premium unlocks extra features, such as the AI writing tool. It costs £4.99 a month, billed yearly as £59.88, paid through Stripe.",
               "Your Premium renews automatically each year at the price shown to you, unless you cancel before the renewal date. We email you a reminder before each renewal.",
               "You can cancel at any time before your renewal date in the app under Chat, Manage subscription. You keep Premium until the end of the year you have paid for.",

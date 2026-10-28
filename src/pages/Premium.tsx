@@ -13,6 +13,7 @@ import {
   openConversationToolPortal,
   useConversationToolAccess,
 } from "@/components/dashboard/ConversationToolPromo";
+import { PREMIUM_FEATURE_LINE, useIsInApp } from "@/hooks/useIsInApp";
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
@@ -29,6 +30,7 @@ const Premium = () => {
   const { hasAccess, expiredAt, access, loading, refresh } = useConversationToolAccess();
   const [paying, setPaying] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const inApp = useIsInApp();
 
   const isSubscription = hasAccess && access?.source === "subscription" && !!access?.stripe_customer_id;
   const endDate = access?.current_period_end ?? null;
@@ -67,7 +69,9 @@ const Premium = () => {
         <title>Collabor8 Premium - Collabor8</title>
         <meta
           name="description"
-          content={`Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. ${CONVERSATION_TOOL_MONTHLY} a month, billed as ${CONVERSATION_TOOL_PRICE} a year.`}
+          content={inApp
+            ? "Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly."
+            : `Collabor8 Premium: extra tools to help you and your co-parent talk about money calmly. ${CONVERSATION_TOOL_MONTHLY} a month, billed as ${CONVERSATION_TOOL_PRICE} a year.`}
         />
         <link rel="canonical" href="https://collaborate8.com/premium" />
       </Helmet>
@@ -89,11 +93,15 @@ const Premium = () => {
               </li>
             ))}
           </ul>
+          {inApp ? (
+            <p className="mt-4 text-sm text-foreground">{PREMIUM_FEATURE_LINE}</p>
+          ) : (
           <p className="mt-4 text-sm text-foreground">
             {CONVERSATION_TOOL_MONTHLY} a month, billed as {CONVERSATION_TOOL_PRICE} a year. Renews
             automatically each year. Cancel any time, and you keep Premium until the end of the year
             you paid for.
           </p>
+          )}
           <p className="mt-2 text-sm text-muted-foreground">
             Premium is for your account only. Your co-parent can still use Collabor8 for free.
           </p>
@@ -116,7 +124,7 @@ const Premium = () => {
           ) : hasAccess ? (
             <>
               <p className="font-semibold text-foreground">You have Collabor8 Premium.</p>
-              {isSubscription && endDate && (
+              {!inApp && isSubscription && endDate && (
                 <p className="text-sm text-muted-foreground">
                   {access?.cancel_at_period_end
                     ? `Your subscription is cancelled. You keep Premium until ${formatDate(endDate)}.`
@@ -126,7 +134,7 @@ const Premium = () => {
               {!isSubscription && endDate && (
                 <p className="text-sm text-muted-foreground">Your Premium ends on {formatDate(endDate)}.</p>
               )}
-              {isSubscription && (
+              {!inApp && isSubscription && (
                 <Button variant="outline" className="w-full" size="lg" onClick={manage} disabled={portalLoading}>
                   {portalLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Manage subscription
@@ -141,18 +149,22 @@ const Premium = () => {
               {expiredAt && (
                 <p className="text-sm text-muted-foreground">Your Premium ended on {formatDate(expiredAt)}.</p>
               )}
+              {inApp ? (
+                <p className="text-sm text-muted-foreground">{PREMIUM_FEATURE_LINE}</p>
+              ) : (
               <Button className="w-full" size="lg" onClick={startCheckout} disabled={paying}>
                 {paying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Subscribe for {CONVERSATION_TOOL_PRICE} a year
               </Button>
+              )}
             </>
           )}
         </section>
 
-        <p className="text-xs text-muted-foreground">
+        {!inApp && <p className="text-xs text-muted-foreground">
           Payments are handled securely by Stripe. Already bought Premium on the website? Sign in to
           the Collabor8 app with the same account and Premium unlocks automatically.
-        </p>
+        </p>}
       </main>
     </div>
   );
