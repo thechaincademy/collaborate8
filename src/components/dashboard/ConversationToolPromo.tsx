@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { track, trackBeforeRedirect } from "@/lib/analytics";
+import { PREMIUM_FEATURE_LINE, useIsInApp } from "@/hooks/useIsInApp";
 
 export const CONVERSATION_TOOL_PRICE = "£59.88";
 export const CONVERSATION_TOOL_MONTHLY = "£4.99";
@@ -377,6 +378,7 @@ export const ConversationToolModal = ({
   const { hasAccess, expiredAt, access, loading, refresh } = useConversationToolAccess();
   const isSubscription = hasAccess && access?.source === "subscription" && !!access?.stripe_customer_id;
   const [paying, setPaying] = useState(false);
+  const inApp = useIsInApp();
 
   useEffect(() => {
     if (open) void track("chatbot_opened", { surface: "conversation_tool" });
@@ -415,7 +417,7 @@ export const ConversationToolModal = ({
       <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <h2 className="text-lg font-semibold leading-snug">
-            {premiumOnly ? "Unlock Collabor8 Premium" : "Start the financial conversation."}
+            {premiumOnly ? (inApp ? "Collabor8 Premium" : "Unlock Collabor8 Premium") : "Start the financial conversation."}
           </h2>
         </div>
 
@@ -458,17 +460,17 @@ export const ConversationToolModal = ({
           </p>
           </>}
 
-          {!hasAccess && expiredAt && (
+          {!inApp && !hasAccess && expiredAt && (
             <p className="font-semibold">
               Your access ended on {new Date(expiredAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Subscribe for {CONVERSATION_TOOL_PRICE} a year to unlock again.
             </p>
           )}
 
-          <p className="font-semibold">
+          {!inApp && <p className="font-semibold">
             {CONVERSATION_TOOL_MONTHLY} a month, billed as {CONVERSATION_TOOL_PRICE} a year. Renews automatically each year. Cancel anytime. Premium is for your account only. Your co-parent can still use Collabor8 for free.
-          </p>
+          </p>}
 
-          {isSubscription && (
+          {!inApp && isSubscription && (
             <p className="text-foreground/90">
               {access?.cancel_at_period_end && access?.current_period_end
                 ? `Your subscription is cancelled. You keep access until ${formatDate(access.current_period_end)}.`
@@ -492,12 +494,14 @@ export const ConversationToolModal = ({
               >
                 {premiumOnly ? "Continue" : "Start now"}
               </Button>
-              {isSubscription && (
+              {!inApp && isSubscription && (
                 <Button variant="outline" className="w-full" onClick={() => void openConversationToolPortal()}>
                   Manage subscription
                 </Button>
               )}
             </>
+          ) : inApp ? (
+            <p className="text-center text-sm text-muted-foreground">{PREMIUM_FEATURE_LINE}</p>
           ) : (
             <>
               <Button
@@ -521,11 +525,13 @@ export const ConversationToolModal = ({
   );
 };
 
-export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => (
+export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => {
+  const inApp = useIsInApp();
+  return (
   <div className="mb-3 rounded-xl border border-border border-l-4 border-l-primary bg-card p-4 text-foreground shadow-card">
     <p className="text-xs leading-relaxed">
       Sometimes the hardest part of managing finances after separation is knowing where to begin.
-      Unlock the Self-Guided Financial Conversation Tool - both parents answer questions privately,
+      {inApp ? "The" : "Unlock the"} Self-Guided Financial Conversation Tool - both parents answer questions privately,
       and a shared summary shows where you agree and where further conversation is needed.
     </p>
     <Button
@@ -536,9 +542,12 @@ export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => (
       Find out more
     </Button>
   </div>
-);
+  );
+};
 
-export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void }) => (
+export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void }) => {
+  const inApp = useIsInApp();
+  return (
   <div className="mt-4 rounded-2xl border border-border bg-card p-4 text-foreground">
     <p className="text-xs leading-relaxed">
       Not getting a response? The Self-Guided Financial Conversation Tool lets both parents answer
@@ -551,10 +560,12 @@ export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void 
       onClick={onOpen}
       className="mt-3 bg-gold text-gold-foreground hover:bg-gold/90"
     >
-      Unlock for {CONVERSATION_TOOL_MONTHLY} a month, paid yearly
+      {inApp ? "Find out more" : `Unlock for ${CONVERSATION_TOOL_MONTHLY} a month, paid yearly`}
     </Button>
+    {inApp && <p className="mt-2 text-xs text-muted-foreground">{PREMIUM_FEATURE_LINE}</p>}
   </div>
-);
+  );
+};
 
 export const useConversationToolModal = () => {
   const [open, setOpen] = useState(false);

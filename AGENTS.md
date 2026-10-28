@@ -14,3 +14,4 @@
 - Reuse the checkout modal's premium-only variant for feature gates and keep its questionnaire variant for the Chat tool; merge chat fetch/realtime rows by ID and preserve pending-message timestamps to avoid stale empty lists and changed chronology.
 - Post-signup payment-direction routing uses the shared maintenance onboarding helpers; automatically assigned viewing roles require local confirmation before Connect, because invite signup does not establish actual maintenance direction.
 - Account deletion runs through one shared server-side routine used by both the signed-in and email-link flows, so every path cancels Stripe, keeps shared co-parent records with null links and removes personal rows the same way.
+- Inside the mobile app (isInApp/useIsInApp: c8-in-app class or Collabor8App user agent), never show Premium prices or buy/manage links; show 'This is a Premium feature.' instead, because app store rules forbid selling outside in-app purchase.
