@@ -147,14 +147,13 @@ const Premium = () => {
               {expiredAt && (
                 <p className="text-sm text-muted-foreground">Your Premium ended on {formatDate(expiredAt)}.</p>
               )}
-              {inApp ? (
-                <p className="text-sm text-muted-foreground">{PREMIUM_FEATURE_LINE}</p>
-              ) : (
+              {!inApp && (
               <Button className="w-full" size="lg" onClick={startCheckout} disabled={paying}>
                 {paying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Subscribe for {CONVERSATION_TOOL_PRICE} a year
               </Button>
               )}
+
             </>
           )}
         </section>
