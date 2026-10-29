@@ -43,6 +43,7 @@ import CoparentStatus from "./CoparentStatus";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import NeedsResponse from "./NeedsResponse";
 import HomeTutorial from "./HomeTutorial";
+import { useIsInApp } from "@/hooks/useIsInApp";
 
 interface HomeTabProps {
   onNavigate: (tab: DashboardTab) => void;
@@ -62,6 +63,7 @@ const quickLinks: Array<{
 ];
 
 const HomeTab = ({ onNavigate }: HomeTabProps) => {
+  const inApp = useIsInApp();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
@@ -322,7 +324,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           Where to next
         </h3>
         <div className="space-y-3">
-          {quickLinks.map((link, i) => (
+          {quickLinks.filter((link) => !(inApp && link.target === "benefits")).map((link, i) => (
             <motion.button
               key={link.target}
               onClick={() =>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useIsInApp } from "@/hooks/useIsInApp";
 import { motion, AnimatePresence } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -24,11 +25,24 @@ const Dashboard = () => {
   // URL is the single source of truth for the active tab.
   const rawTab = searchParams.get("tab");
   const isValidRaw = rawTab === "documents" || (rawTab !== null && (VALID_TABS as string[]).includes(rawTab));
-  const activeTab: DashboardTab =
+  const inApp = useIsInApp();
+  const requestedTab: DashboardTab =
     rawTab === "documents" ? "chat" : isValidRaw ? (rawTab as DashboardTab) : "home";
+  // Inside the mobile app the Benefits area is not available, so it falls back to home.
+  const activeTab: DashboardTab = inApp && requestedTab === "benefits" ? "home" : requestedTab;
+
+  useEffect(() => {
+    if (!inApp || rawTab !== "benefits") return;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("tab");
+      return next;
+    }, { replace: true });
+  }, [inApp, rawTab, setSearchParams]);
 
   // User tab clicks push a history entry, only when the tab actually changes.
-  const setActiveTab = (tab: DashboardTab) => {
+  const setActiveTab = (requested: DashboardTab) => {
+    const tab: DashboardTab = inApp && requested === "benefits" ? "home" : requested;
     if (tab === activeTab && rawTab !== "documents") return;
     if (tab === "chat" && rawTab === "documents") return;
     setSearchParams((prev) => {
@@ -103,7 +117,7 @@ const Dashboard = () => {
       case "expenses":
         return <ExpensesTab />;
       case "benefits":
-        return <BenefitsTab />;
+        return inApp ? <HomeTab onNavigate={setActiveTab} /> : <BenefitsTab />;
       case "chat":
         return <ChatTab key={rawTab ?? "chat"} initialSection={rawTab === "documents" ? "documents" : "chat"} />;
       case "resources":
@@ -111,7 +125,7 @@ const Dashboard = () => {
     }
   };
 
-  const isComingSoon = COMING_SOON_TABS.includes(activeTab);
+  const isComingSoon = !inApp && COMING_SOON_TABS.includes(activeTab);
 
   return (
     <>

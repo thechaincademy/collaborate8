@@ -15,6 +15,7 @@ import { useProfile } from "@/hooks/useProfile";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useIsInApp } from "@/hooks/useIsInApp";
 import { track, fileType } from "@/lib/analytics";
 import {
   ConversationToolModal,
@@ -82,6 +83,9 @@ const SUBHEADING =
   "A dedicated space to discuss finances with your co-parent - separate from everything else.";
 
 const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "documents" } = {}) => {
+  const inApp = useIsInApp();
+  // Browser: leave room for the bottom menu. App: only the bottom safe area.
+  const chatHeight = inApp ? "h-[calc(100vh-env(safe-area-inset-bottom)-1.5rem)]" : "h-[calc(100vh-6rem)]";
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
@@ -541,7 +545,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   // -------- Render branches
   if (profileLoading) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12">
+      <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12")}>
         <DashboardHeader title="Financial Chat" />
         <Skeleton className="mt-4 h-full w-full rounded-2xl" />
       </div>
@@ -562,7 +566,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   if (activeSection === "documents") {
     return (
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md flex-col overflow-y-auto px-6 pt-12 md:max-w-3xl lg:max-w-5xl">
+      <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md flex-col overflow-y-auto px-6 pt-12 md:max-w-3xl lg:max-w-5xl")}>
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         {sectionTabs}
@@ -574,7 +578,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   if (!coparentId) {
     return (
 
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col overflow-y-auto px-6 pt-12">
+      <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col overflow-y-auto px-6 pt-12")}>
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         {sectionTabs}
@@ -693,7 +697,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   if (intercept) {
     return (
-      <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12">
+      <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12")}>
         <DashboardHeader title="Financial Chat" />
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -758,7 +762,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-6rem)] w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12">
+    <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12")}>
       <DashboardHeader title="Financial Chat" />
 
       <div className="-mt-6 mb-3 flex items-start justify-between gap-3">
