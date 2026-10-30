@@ -125,6 +125,9 @@ const Landing = () => {
             className="relative z-10 flex flex-col items-center px-6 py-20 text-center md:px-8 md:py-28"
           >
 
+            <p className="font-display mb-4 inline-block rounded-full bg-background px-4 py-1.5 text-sm font-semibold text-foreground md:text-base">
+              Separated, but still parenting together
+            </p>
             <h1 className="font-display mb-6 max-w-2xl text-4xl font-extrabold tracking-tight text-foreground md:text-6xl lg:leading-[1.1]">
               Let's talk finances.
             </h1>
@@ -195,7 +198,7 @@ const Landing = () => {
               {
                 src: appScreenshot3,
                 alt: "Payment flexibility and rewards screen",
-                title: "Pay each other back - settle up in the app through Stripe Connect",
+                title: "Pay each other back and settle up in the app",
               },
             ].map((screenshot, i) => (
               <motion.div
