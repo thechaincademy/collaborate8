@@ -290,11 +290,13 @@ Deno.serve(async (req) => {
       clarity: await clarityResult,
       google: await googleResult,
       exclusions: {
-        flagged_test: flaggedIds.size,
+        by_reason: byReason,
+        total_excluded: totalExcluded,
+        real_users: Number(summary.total?.real_parent_signups ?? realCount),
+        real_users_confirmed: Number(summary.total?.confirmed ?? confirmed),
+        flagged_test: flaggedCount,
         agentmail: agentmailCount,
         email_pattern: patternCount,
-        total_excluded: allUsers.length - realCount,
-        real_users: realCount,
       },
       payment_setup: {
         users: setupSet.size,
@@ -316,6 +318,7 @@ Deno.serve(async (req) => {
       signups_by_source_all_time: bySource,
       generated_at: new Date().toISOString(),
       signups: { daily_30d: daily, weekly_8w: weekly },
+      signup_summary: summary,
       accounts: {
         total: nonTestProfiles,
         auth_users_without_profile: authUsersWithoutProfile,
@@ -336,8 +339,10 @@ Deno.serve(async (req) => {
       premium_subscribers: premium.size,
       attribution,
       weekly_report: {
-        new_users: newUsers7,
-        total_users: users.length,
+        new_users: Number(summary.last_7_full_days?.real_parent_signups ?? 0),
+        new_users_confirmed: Number(summary.last_7_full_days?.confirmed ?? 0),
+        new_users_label: String(summary.last_7_full_days?.label ?? ""),
+        total_users: Number(summary.total?.real_parent_signups ?? 0),
         active_users: new Set(rows.map((r) => r.user_id).filter(Boolean)).size,
         total_events: rows.length,
         linked_pairs: linkedProfiles,
