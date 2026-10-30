@@ -93,7 +93,7 @@ const faqSchema = {
       name: "What is the difference between Collabor8 and the Child Maintenance Service?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "The Child Maintenance Service (CMS) is a statutory UK government service that calculates, enforces and in some cases collects child maintenance payments. Collabor8 is a private digital platform that helps parents manage child maintenance privately without involving the CMS. The CMS's own position is that families should attempt to reach a private financial arrangement before using the statutory service. Collabor8 gives them the tools to do that. Unlike the CMS, Collabor8 also provides a shared expense tracker, a dedicated financial chat, and the ability to pay each other back inside the app through Stripe Connect. The CMS currently carries a 1.1-star Trustpilot rating. Collabor8 is free to use.",
+        text: "The Child Maintenance Service (CMS) is a statutory UK government service that calculates, enforces and in some cases collects child maintenance payments. Collabor8 is a private digital platform that helps parents manage child maintenance privately without involving the CMS. The CMS's own position is that families should attempt to reach a private financial arrangement before using the statutory service. Collabor8 gives them the tools to do that. Unlike the CMS, Collabor8 also provides a shared expense tracker, a dedicated financial chat, and the ability to pay each other back inside the app. The CMS currently carries a 1.1-star Trustpilot rating. Collabor8 is free to use.",
       },
     },
     {
@@ -180,7 +180,7 @@ const sections = [
         question: "What is the difference between Collabor8 and the Child Maintenance Service?",
         answer: [
           "The Child Maintenance Service (CMS) is a statutory UK government service that calculates, enforces and in some cases collects child maintenance payments. Collabor8 is a private digital platform that helps parents manage child maintenance privately without involving the CMS.",
-          "The CMS's own position is that families should attempt to reach a private financial arrangement before using the statutory service. Collabor8 gives them the tools to do that. Unlike the CMS, Collabor8 also provides a shared expense tracker, a dedicated financial chat, and the ability to pay each other back inside the app through Stripe Connect. The CMS currently carries a 1.1-star Trustpilot rating. Collabor8 is free to use.",
+          "The CMS's own position is that families should attempt to reach a private financial arrangement before using the statutory service. Collabor8 gives them the tools to do that. Unlike the CMS, Collabor8 also provides a shared expense tracker, a dedicated financial chat, and the ability to pay each other back inside the app. The CMS currently carries a 1.1-star Trustpilot rating. Collabor8 is free to use.",
         ],
       },
       {
