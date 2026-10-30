@@ -190,6 +190,8 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const fmtDay = (iso: string) =>
   new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const fmtWeek = (iso: string) =>
+  new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).replace(",", "");
 
 const HOW_WE_COUNT: [string, string][] = [
   ["Real users", "Everyone who signed up, minus test/QA and agent inboxes (agentmail.to, collaborate8-qa…, emails with 'test' as a separate word), team accounts (Rafa, Jade and aliases, collaborate8.com), disposable and invalid emails, and accounts flagged as test. Unconfirmed emails are counted but shown separately as 'confirmed'."],
