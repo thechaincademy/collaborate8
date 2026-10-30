@@ -106,8 +106,11 @@ const ResetPassword = () => {
         ) : !hasRecoverySession ? (
           <div className="flex flex-1 flex-col">
             <p className="text-foreground">
-              This reset link is no longer valid. It may have expired or already been used.
+              {isExpiredLink
+                ? "This reset link has expired or has already been used. Please request a new one."
+                : "This reset link is no longer valid. It may have expired or already been used."}
             </p>
+
             <div className="flex-1" />
             <div className="pb-8">
               <Button
