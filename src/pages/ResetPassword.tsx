@@ -22,6 +22,21 @@ const ResetPassword = () => {
   const [checking, setChecking] = useState(true);
   const [hasRecoverySession, setHasRecoverySession] = useState(false);
 
+  // Supabase can bounce people back with error params in the hash or the query
+  // string. Read them once on first render, before any effect runs, because the
+  // Supabase client may clean the URL while it initialises.
+  const [linkError] = useState(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const queryParams = new URLSearchParams(window.location.search);
+    const read = (key: string) => hashParams.get(key) || queryParams.get(key) || "";
+    return { error: read("error"), errorCode: read("error_code") };
+  });
+
+  const isExpiredLink =
+    !hasRecoverySession &&
+    (linkError.errorCode === "otp_expired" || linkError.error === "access_denied");
+
+
   useEffect(() => {
     let active = true;
 
@@ -91,8 +106,11 @@ const ResetPassword = () => {
         ) : !hasRecoverySession ? (
           <div className="flex flex-1 flex-col">
             <p className="text-foreground">
-              This reset link is no longer valid. It may have expired or already been used.
+              {isExpiredLink
+                ? "This reset link has expired or has already been used. Please request a new one."
+                : "This reset link is no longer valid. It may have expired or already been used."}
             </p>
+
             <div className="flex-1" />
             <div className="pb-8">
               <Button
