@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_signup_exclusions: {
+        Row: {
+          created_at: string
+          id: number
+          kind: string
+          note: string | null
+          reason: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          kind: string
+          note?: string | null
+          reason: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          kind?: string
+          note?: string | null
+          reason?: string
+          value?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -1361,6 +1388,25 @@ export type Database = {
         Args: { _invite_code: string }
         Returns: undefined
       }
+      admin_real_signups: {
+        Args: { _from: string; _to?: string }
+        Returns: {
+          confirmed: number
+          real_parent_signups: number
+        }[]
+      }
+      admin_signup_classification: {
+        Args: never
+        Returns: {
+          created_at: string
+          created_day_uk: string
+          email_confirmed: boolean
+          exclusion_reason: string
+          user_id: string
+          week_start_uk: string
+        }[]
+      }
+      admin_signup_summary: { Args: { _weeks?: number }; Returns: Json }
       admin_usage_summary: { Args: { _days?: number }; Returns: Json }
       create_due_tomorrow_notifications: { Args: never; Returns: number }
       create_notification: {

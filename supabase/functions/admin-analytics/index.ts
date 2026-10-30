@@ -8,16 +8,6 @@ import { getGoogleAnalytics } from "../_shared/google-analytics.ts";
 
 const ALLOWED_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 const DAY = 24 * 60 * 60 * 1000;
-// Test or QA email addresses that are not real Collabor8 users (matched on lowercased email).
-const TEST_EMAIL_PATTERNS: RegExp[] = [
-  /\+test/,         // plus-addressed test inboxes
-  /@example\./,     // reserved example domains
-  /^qa@/,           // QA inboxes
-  /@test\.com$/,    // test.com addresses
-  /@collabor8\.dev$/, // internal dev domain
-];
-// Exact email addresses excluded as test accounts (matched on lowercased email).
-const EXCLUDED_EMAILS = new Set(["jade@lovethecaribbean.com", "jadeollivierre@hotmail.co.uk"]);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -25,10 +15,14 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+const ukDateFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+// UK calendar date (YYYY-MM-DD) of a timestamp
+const ukDay = (d: Date) => ukDateFmt.format(d);
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
-// Monday-start week key (UTC)
+// Monday-start week (UK calendar), returned as a UTC-midnight Date of that Monday
 const weekStart = (d: Date) => {
-  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const [y, m, dd] = ukDay(d).split("-").map(Number);
+  const x = new Date(Date.UTC(y, m - 1, dd));
   const dow = (x.getUTCDay() + 6) % 7;
   x.setUTCDate(x.getUTCDate() - dow);
   return x;
@@ -68,16 +62,23 @@ Deno.serve(async (req) => {
       if (data.users.length < 1000) break;
     }
 
-    // Excluded set: flagged test accounts plus agentmail test inboxes
-    const { data: testProfiles } = await admin.from("profiles").select("id").eq("is_test_account", true);
-    const flaggedIds = new Set<string>((testProfiles ?? []).map((p) => p.id as string));
-    const excluded = new Set<string>(flaggedIds);
-    let agentmailCount = 0, patternCount = 0;
-    for (const u of allUsers) {
-      const em = (u.email ?? "").toLowerCase();
-      if (em.endsWith("@agentmail.to")) { agentmailCount++; excluded.add(u.id); }
-      else if (TEST_EMAIL_PATTERNS.some((re) => re.test(em)) || EXCLUDED_EMAILS.has(em)) { patternCount++; excluded.add(u.id); }
+    // Excluded set from the shared sign-up classification (same rule everywhere)
+    const classRows: { user_id: string; created_day_uk: string; email_confirmed: boolean; exclusion_reason: string | null }[] = [];
+    for (let from = 0; from < 1_000_000; from += 1000) {
+      const { data, error } = await admin.rpc("admin_signup_classification").range(from, from + 999);
+      if (error) throw error;
+      classRows.push(...((data ?? []) as any[]));
+      if (!data || data.length < 1000) break;
     }
+    const excluded = new Set<string>(classRows.filter((r) => r.exclusion_reason).map((r) => r.user_id));
+    const { data: summaryData, error: summaryError } = await admin.rpc("admin_signup_summary", { _weeks: 8 });
+    if (summaryError) throw summaryError;
+    const summary = (summaryData ?? {}) as any;
+    const byReason = (summary.excluded ?? {}) as Record<string, number>;
+    const flaggedCount = Number(byReason.flagged_test ?? 0);
+    const agentmailCount = Number(byReason.qa_agent ?? 0);
+    const totalExcluded = Object.values(byReason).reduce((s, n) => s + Number(n || 0), 0);
+    const patternCount = totalExcluded - flaggedCount - agentmailCount;
     const users = allUsers.filter((u) => !excluded.has(u.id));
     // Profiles (aggregated locally): non-test profile count, plus sign-ups with no profile row
     const { data: allProfiles } = await admin.from("profiles").select("id");
@@ -88,34 +89,38 @@ Deno.serve(async (req) => {
     const excl = (q: any, col: string) => (exList.length ? q.not(col, "in", `(${exList.join(",")})`) : q);
 
     const today = new Date();
-    const daily: { date: string; count: number }[] = [];
-    const dailyMap = new Map<string, number>();
-    for (let i = 29; i >= 0; i--) {
-      const k = dayKey(new Date(now - i * DAY));
-      dailyMap.set(k, 0);
-    }
-    const weeklyMap = new Map<string, number>();
     const thisWeek = weekStart(today);
-    for (let i = 7; i >= 0; i--) {
-      weeklyMap.set(dayKey(new Date(thisWeek.getTime() - i * 7 * DAY)), 0);
+    // Daily sign-ups over the last 30 UK days
+    const dailyMap = new Map<string, { count: number; confirmed: number }>();
+    const [ty, tm, td] = ukDay(today).split("-").map(Number);
+    for (let i = 29; i >= 0; i--) {
+      dailyMap.set(dayKey(new Date(Date.UTC(ty, tm - 1, td - i))), { count: 0, confirmed: 0 });
     }
-    let confirmed = 0, signIn1 = 0, active7Auth = 0, active30Auth = 0, newUsers7 = 0;
+    for (const r of classRows) {
+      if (r.exclusion_reason) continue;
+      const e = dailyMap.get(String(r.created_day_uk).slice(0, 10));
+      if (!e) continue;
+      e.count++;
+      if (r.email_confirmed) e.confirmed++;
+    }
+    const daily = [...dailyMap].map(([date, v]) => ({ date, count: v.count, confirmed: v.confirmed }));
+    const weekly = (Array.isArray(summary.weekly) ? summary.weekly : []).map((w: any) => ({
+      week_start: w.week_start_uk,
+      label: w.label,
+      count: Number(w.real_parent_signups ?? 0),
+      confirmed: Number(w.confirmed ?? 0),
+      is_partial: Boolean(w.is_partial),
+    }));
+
+    let confirmed = 0, signIn1 = 0, active7Auth = 0, active30Auth = 0;
     const t1 = now - DAY, t7 = now - 7 * DAY, t30 = now - 30 * DAY;
     for (const u of users) {
-      const c = new Date(u.created_at);
-      if (c.getTime() >= t7) newUsers7++;
-      const dk = dayKey(c);
-      if (dailyMap.has(dk)) dailyMap.set(dk, dailyMap.get(dk)! + 1);
-      const wk = dayKey(weekStart(c));
-      if (weeklyMap.has(wk)) weeklyMap.set(wk, weeklyMap.get(wk)! + 1);
       if (u.email_confirmed_at) confirmed++;
       const ls = u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() : 0;
       if (ls >= t1) signIn1++;
       if (ls >= t7) active7Auth++;
       if (ls >= t30) active30Auth++;
     }
-    for (const [date, n] of dailyMap) daily.push({ date, count: n });
-    const weekly = [...weeklyMap].map(([week_start, n]) => ({ week_start, count: n }));
 
     // Sign-up attribution breakdown (counts only)
     const NONE = "(none)";
@@ -285,11 +290,13 @@ Deno.serve(async (req) => {
       clarity: await clarityResult,
       google: await googleResult,
       exclusions: {
-        flagged_test: flaggedIds.size,
+        by_reason: byReason,
+        total_excluded: totalExcluded,
+        real_users: Number(summary.total?.real_parent_signups ?? realCount),
+        real_users_confirmed: Number(summary.total?.confirmed ?? confirmed),
+        flagged_test: flaggedCount,
         agentmail: agentmailCount,
         email_pattern: patternCount,
-        total_excluded: allUsers.length - realCount,
-        real_users: realCount,
       },
       payment_setup: {
         users: setupSet.size,
@@ -311,6 +318,7 @@ Deno.serve(async (req) => {
       signups_by_source_all_time: bySource,
       generated_at: new Date().toISOString(),
       signups: { daily_30d: daily, weekly_8w: weekly },
+      signup_summary: summary,
       accounts: {
         total: nonTestProfiles,
         auth_users_without_profile: authUsersWithoutProfile,
@@ -331,8 +339,10 @@ Deno.serve(async (req) => {
       premium_subscribers: premium.size,
       attribution,
       weekly_report: {
-        new_users: newUsers7,
-        total_users: users.length,
+        new_users: Number(summary.last_7_full_days?.real_parent_signups ?? 0),
+        new_users_confirmed: Number(summary.last_7_full_days?.confirmed ?? 0),
+        new_users_label: String(summary.last_7_full_days?.label ?? ""),
+        total_users: Number(summary.total?.real_parent_signups ?? 0),
         active_users: new Set(rows.map((r) => r.user_id).filter(Boolean)).size,
         total_events: rows.length,
         linked_pairs: linkedProfiles,

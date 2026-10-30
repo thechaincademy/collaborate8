@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Navigate } from "react-router-dom";
-import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +25,8 @@ interface Analytics {
   clarity?: { ok: boolean; error?: string; stale?: boolean; days: number; fetched_at: string; sessions: number | null; pages_per_session: number | null; scroll_depth_pct: number | null; dead_click_pct: number | null; rage_click_pct: number | null; quickback_pct: number | null; excessive_scroll_pct: number | null; top_pages: { url: string; sessions: number }[] };
   google?: GoogleData;
   generated_at: string;
-  signups: { daily_30d: { date: string; count: number }[]; weekly_8w: { week_start: string; count: number }[] };
+  signups: { daily_30d: { date: string; count: number; confirmed?: number }[]; weekly_8w: { week_start: string; count: number; label?: string; confirmed?: number; is_partial?: boolean }[] };
+  signup_summary?: Record<string, unknown>;
   accounts: { total: number; auth_users_without_profile: number; email_confirmed: number; email_unconfirmed: number };
   active_users: { last_1d_sign_in: number; last_7d_sign_in: number; last_30d_sign_in: number; last_7d_activity: number; last_30d_activity: number };
   invites: { sent: number; accepted: number };
@@ -33,7 +34,7 @@ interface Analytics {
   payments: { total: number; last_7d: number };
   expenses: { total: number; last_7d: number };
   premium_subscribers: number;
-  exclusions?: { flagged_test: number; agentmail: number; email_pattern: number; total_excluded: number; real_users: number };
+  exclusions?: { flagged_test: number; agentmail: number; email_pattern: number; total_excluded: number; real_users: number; real_users_confirmed?: number; by_reason?: Record<string, number> };
   payment_setup?: { users: number; pct_of_real_users: number; stripe_connect_onboarded: number; recurring_payment_users: number; bank_details_users: number };
   upgrades?: { premium_active: number; all_time: number; pct_of_real_users: number };
   churn?: { premium_cancelled_30d: number; premium_cancelled_all_time: number; recurring_cancelled_30d: number; recurring_cancelled_all_time: number; churn_rate_30d_pct: number };
@@ -42,7 +43,7 @@ interface Analytics {
   signups_by_source_all_time?: { value: string; count: number }[];
   attribution: Record<"last_7d" | "last_30d", Record<Dim, { value: string; count: number }[]>>;
   weekly_report: {
-    new_users: number; total_users: number; active_users: number; total_events: number;
+    new_users: number; new_users_confirmed?: number; new_users_label?: string; total_users: number; active_users: number; total_events: number;
     linked_pairs: number; payments_count: number; payments_total: number; expenses_count: number;
     tabs: { name: string; clicks: number; users: number }[];
   };
@@ -189,11 +190,13 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const fmtDay = (iso: string) =>
   new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const fmtWeek = (iso: string) =>
+  new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).replace(",", "");
 
 const HOW_WE_COUNT: [string, string][] = [
-  ["Real users", "Everyone who signed up, minus accounts flagged as test, agentmail inboxes and known test email patterns."],
+  ["Real users", "Everyone who signed up, minus test/QA and agent inboxes (agentmail.to, collaborate8-qa…, emails with 'test' as a separate word), team accounts (Rafa, Jade and aliases, collaborate8.com), disposable and invalid emails, and accounts flagged as test. Unconfirmed emails are counted but shown separately as 'confirmed'."],
   ["Accounts", "Real users who have a Collabor8 profile."],
-  ["Sign-ups", "Real users counted on the day or week they created their account."],
+  ["Sign-ups", "Real users counted on the UK day or Monday-start UK week they created their account. The current week is marked (so far)."],
   ["Active users", "Sign-in counts use the last time someone signed in; activity counts use anything they did in the app."],
   ["Linked co-parents", "Real users whose profile is linked to a co-parent."],
   ["Payment set up", "Real users who finished Stripe onboarding, set up a recurring payment, or added bank details."],
@@ -363,8 +366,8 @@ const AdminAnalytics = () => {
 
   const chartData = data
     ? view === "week"
-      ? data.signups.weekly_8w.map((w) => ({ label: fmtDay(w.week_start), count: w.count }))
-      : data.signups.daily_30d.map((d) => ({ label: fmtDay(d.date), count: d.count }))
+      ? data.signups.weekly_8w.map((w) => ({ label: `${fmtWeek(w.week_start)}${w.is_partial ? " (so far)" : ""}`, count: w.count, confirmed: w.confirmed ?? 0, partial: !!w.is_partial }))
+      : data.signups.daily_30d.map((d) => ({ label: fmtDay(d.date), count: d.count, confirmed: d.confirmed ?? 0, partial: false }))
     : [];
 
   return (
@@ -411,17 +414,25 @@ const AdminAnalytics = () => {
                       <XAxis dataKey="label" fontSize={10} tickLine={false} interval="preserveStartEnd" />
                       <YAxis allowDecimals={false} fontSize={10} width={28} tickLine={false} />
                       <Tooltip />
-                      <Bar dataKey="count" name="Sign-ups" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="count" name="Real parent sign-ups" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}>
+                        {chartData.map((d, i) => <Cell key={i} fillOpacity={d.partial ? 0.5 : 1} />)}
+                      </Bar>
+                      <Bar dataKey="confirmed" name="Confirmed" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]}>
+                        {chartData.map((d, i) => <Cell key={i} fillOpacity={d.partial ? 0.25 : 0.6} />)}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
+                <p className="px-4 pb-3 text-xs text-muted-foreground">
+                  {view === "week" ? "Current week is partial (so far). Weeks start Monday, UK time." : "UK time"}
+                </p>
               </Card>
             </Section>
 
             <Section title="Overview">
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {data.exclusions && (
-                  <Stat label="Real users" value={data.exclusions.real_users} hint={`${data.exclusions.total_excluded} test accounts excluded`} />
+                  <Stat label="Real users" value={data.exclusions.real_users} hint={`${data.exclusions.real_users_confirmed ?? data.exclusions.real_users} confirmed · ${data.exclusions.total_excluded} excluded`} />
                 )}
                 {data.payment_setup && (
                   <Stat label="Payment set up" value={data.payment_setup.users} hint={`${data.payment_setup.pct_of_real_users}% of real users`} />
@@ -557,9 +568,10 @@ const AdminAnalytics = () => {
               </div>
             </Section>
 
-            <Section title="Weekly report (last 7 days)">
+            <Section title="Weekly report">
+              <p className="mb-2 text-xs text-muted-foreground">Activity figures: last 7 days, rolling.</p>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                <Stat label="New users" value={data.weekly_report.new_users} />
+                <Stat label="New real parent sign-ups" value={data.weekly_report.new_users} hint={`${data.weekly_report.new_users_confirmed ?? data.weekly_report.new_users} confirmed · ${data.weekly_report.new_users_label ?? ""}`} />
                 <Stat label="Total users" value={data.weekly_report.total_users} />
                 <Stat label="Active users" value={data.weekly_report.active_users} />
                 <Stat label="Total events" value={data.weekly_report.total_events} />
