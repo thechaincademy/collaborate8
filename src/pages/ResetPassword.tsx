@@ -62,7 +62,10 @@ const ResetPassword = () => {
       toast.error(error.message || "Could not update your password");
       return;
     }
-    toast.success("Password updated");
+    toast.success(
+      "Password updated. You can now log in on the website or in the Collabor8 app.",
+    );
+
     navigate("/dashboard");
   };
 
