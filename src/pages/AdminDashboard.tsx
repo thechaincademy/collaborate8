@@ -26,7 +26,11 @@ interface Summary {
   since: string;
   days: number;
   total_users: number;
+  total_users_confirmed?: number;
   new_users: number;
+  new_users_confirmed?: number;
+  new_users_label?: string;
+  signups?: { weekly?: { week_start_uk: string; label: string; is_partial: boolean; real_parent_signups: number; confirmed: number }[] };
   active_users: number;
   total_events: number;
   linked_pairs: number;
@@ -39,11 +43,12 @@ interface Summary {
   signup_funnel?: { started_anon: number; completed: number; invited_or_linked: number; first_action: number };
 }
 
-const Stat = ({ label, value }: { label: string; value: string | number }) => (
+const Stat = ({ label, value, sub }: { label: string; value: string | number; sub?: string }) => (
   <Card>
     <CardContent className="p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
+      {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
     </CardContent>
   </Card>
 );
@@ -161,8 +166,16 @@ const AdminDashboard = () => {
         ) : (
           <>
             <div className="grid gap-3 sm:grid-cols-3">
-              <Stat label="New sign ups" value={summary?.new_users ?? 0} />
-              <Stat label="Total users" value={summary?.total_users ?? 0} />
+              <Stat
+                label="New sign ups"
+                value={summary?.new_users ?? 0}
+                sub={`${summary?.new_users_confirmed ?? summary?.new_users ?? 0} confirmed · ${summary?.new_users_label ?? ""}`}
+              />
+              <Stat
+                label="Total users"
+                value={summary?.total_users ?? 0}
+                sub={summary?.total_users_confirmed != null ? `${summary.total_users_confirmed} confirmed` : undefined}
+              />
               <Stat label="Active users" value={summary?.active_users ?? 0} />
               <Stat label="Linked co-parents" value={summary?.linked_pairs ?? 0} />
               <Stat
@@ -173,6 +186,26 @@ const AdminDashboard = () => {
               />
               <Stat label="Expenses raised" value={summary?.expenses_count ?? 0} />
             </div>
+
+            {(summary?.signups?.weekly ?? []).length > 0 && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-base">Sign-ups by week</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Week</span>
+                    <span>Real · confirmed</span>
+                  </div>
+                  {summary!.signups!.weekly!.map((w) => (
+                    <div key={w.week_start_uk} className="flex justify-between gap-2 text-sm">
+                      <span className={w.is_partial ? "text-muted-foreground" : ""}>{w.label}</span>
+                      <span>{w.real_parent_signups} · {w.confirmed}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="mt-6">
               <CardHeader>
