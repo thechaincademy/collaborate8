@@ -94,7 +94,21 @@ const Splash = () => {
                 className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
               />
             </div>
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  email.trim()
+                    ? `/forgot-password?email=${encodeURIComponent(email.trim())}`
+                    : "/forgot-password",
+                )
+              }
+              className="w-full text-right text-sm font-semibold text-foreground"
+            >
+              Forgot password?
+            </button>
             <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+
               {isLoading ? "Logging in..." : "Log in"}
             </Button>
           </motion.form>
