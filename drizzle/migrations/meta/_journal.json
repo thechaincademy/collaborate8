@@ -71,6 +71,20 @@
       "when": 1793039669165,
       "tag": "0009_google_oauth_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793348919624,
+      "tag": "0010_lock_sent_messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793348928028,
+      "tag": "0011_message_tone_private",
+      "breakpoints": true
     }
   ]
 }

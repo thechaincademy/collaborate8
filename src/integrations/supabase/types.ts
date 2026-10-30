@@ -719,6 +719,41 @@ export type Database = {
           },
         ]
       }
+      message_tone_private: {
+        Row: {
+          created_at: string
+          message_id: string
+          original_body: string | null
+          sender_id: string
+          tone_score: number | null
+          used_suggestion: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          message_id: string
+          original_body?: string | null
+          sender_id: string
+          tone_score?: number | null
+          used_suggestion?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          message_id?: string
+          original_body?: string | null
+          sender_id?: string
+          tone_score?: number | null
+          used_suggestion?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_tone_private_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachment_name: string | null
