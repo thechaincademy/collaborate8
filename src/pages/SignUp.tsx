@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
 import { META, savePayerProfile } from "@/lib/profileCompletion";
+import { rememberLastSignupEmail } from "@/lib/lastSignupEmail";
 import signupFamily from "@/assets/signup-family-hd.jpg";
 
 type SignUpStep = "welcome" | "name" | "email" | "password" | "coparent" | "verify";
@@ -93,6 +94,7 @@ const SignUp = () => {
     if (!accountCreated) {
       const metadata: Record<string, string> = { [META.firstName]: first, [META.lastName]: last };
       if (coparent) metadata[META.coparentEmail] = coparent;
+      rememberLastSignupEmail(email);
       const { error, needsConfirmation } = await signUp(email, password, metadata);
       if (error) {
         setIsLoading(false);

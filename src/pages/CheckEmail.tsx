@@ -5,6 +5,7 @@ import { Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { rememberLastSignupEmail } from "@/lib/lastSignupEmail";
 
 export const CONFIRM_REDIRECT = "https://collaborate8.com/dashboard";
 
@@ -15,6 +16,10 @@ const CheckEmail = () => {
   const email = (location.state as { email?: string } | null)?.email ?? params.get("email") ?? "";
   const [cooldown, setCooldown] = useState(0);
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (email) rememberLastSignupEmail(email);
+  }, [email]);
 
   useEffect(() => {
     if (cooldown <= 0) return;

@@ -10,6 +10,7 @@ import { track } from "@/lib/analytics";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { consumeConfirmLinkError } from "@/lib/confirmLinkError";
+import { readLastSignupEmail } from "@/lib/lastSignupEmail";
 import { CONFIRM_REDIRECT } from "@/pages/CheckEmail";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
@@ -23,7 +24,9 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [linkError] = useState(() => consumeConfirmLinkError());
-  const [resendEmail, setResendEmail] = useState(() => linkError?.email || searchParams.get("email") || "");
+  const [resendEmail, setResendEmail] = useState(
+    () => linkError?.email || searchParams.get("email") || readLastSignupEmail(),
+  );
   const [resendSending, setResendSending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendMsg, setResendMsg] = useState("");
