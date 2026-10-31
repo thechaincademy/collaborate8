@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
+import { META, saveInvitedProfile } from "@/lib/profileCompletion";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
 
@@ -109,20 +110,8 @@ const SignUpInvited = () => {
 
     setIsLoading(true);
 
-    // Update own profile with role and name (allowed by RLS)
-    await supabase
-      .from("profiles")
-      .update({
-        first_name: firstName,
-        last_name: lastName,
-        role: "viewing",
-      })
-      .eq("id", signedInUser.id);
-
-    // Link both sides atomically via SECURITY DEFINER RPC
-    const { error: linkError } = await supabase.rpc("accept_coparent_invitation", {
-      _invite_code: inviteCode.toUpperCase(),
-    });
+    // Immediate path (session exists): save name and link both sides atomically
+    const { error: linkError } = await saveInvitedProfile(signedInUser.id, firstName.trim(), lastName.trim(), inviteCode);
 
     if (linkError) {
       console.error("accept_coparent_invitation failed", linkError);
@@ -132,7 +121,6 @@ const SignUpInvited = () => {
     }
 
     void track("signup_completed", { flow: "invited" });
-    void track("coparent_linked", { source: "invite_accepted" });
 
     setEmail(signedInUser.email ?? "");
     setIsLoading(false);
@@ -151,7 +139,11 @@ const SignUpInvited = () => {
       toast.error(problem);
       return;
     }
-    const { error, needsConfirmation } = await signUp(email, password);
+    const { error, needsConfirmation } = await signUp(email, password, {
+      [META.firstName]: firstName.trim(),
+      [META.lastName]: lastName.trim(),
+      [META.inviteCode]: inviteCode.toUpperCase(),
+    });
 
     if (error) {
       setIsLoading(false);

@@ -70,33 +70,9 @@ const SignUp = () => {
   const getStepIndex = () => STEPS.indexOf(step);
 
 
-  // Create the account at the password step so we surface "email exists" inline.
-  const handlePasswordContinue = async () => {
-    if (accountCreated) {
-      setStep("coparent");
-      return;
-    }
-    setIsLoading(true);
-    const { error, needsConfirmation } = await signUp(email, password);
-    setIsLoading(false);
-    if (error) {
-      const msg = error.message?.toLowerCase() ?? "";
-      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-        setEmailError("An account already exists for this email.");
-        setStep("email");
-      } else if (msg.includes("password")) {
-        toast.error(error.message);
-      } else {
-        toast.error(error.message || "Could not create account");
-      }
-      return;
-    }
-    setAccountCreated(true);
-    void track("signup_completed", { flow: "email" });
-    if (needsConfirmation) {
-      navigate(`/check-email?email=${encodeURIComponent(email)}`, { state: { email } });
-      return;
-    }
+  // The account is created after the co-parent step so every detail is saved as
+  // sign-up metadata and survives email confirmation.
+  const handlePasswordContinue = () => {
     setStep("coparent");
   };
 
@@ -113,8 +89,41 @@ const SignUp = () => {
     setStep("password");
   };
 
-  const finishSignUp = async () => {
+  const finishSignUp = async (withCoparent: boolean) => {
     setIsLoading(true);
+    const first = firstName.trim();
+    const last = lastName.trim();
+    const coparent = withCoparent ? coparentEmail.trim() : "";
+    if (!withCoparent) setCoparentEmail("");
+
+    if (!accountCreated) {
+      const metadata: Record<string, string> = { [META.firstName]: first, [META.lastName]: last };
+      if (coparent) metadata[META.coparentEmail] = coparent;
+      const { error, needsConfirmation } = await signUp(email, password, metadata);
+      if (error) {
+        setIsLoading(false);
+        const msg = error.message?.toLowerCase() ?? "";
+        if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+          setEmailError("An account already exists for this email.");
+          setStep("email");
+        } else if (msg.includes("password")) {
+          toast.error(error.message);
+          setStep("password");
+        } else {
+          toast.error(error.message || "Could not create account");
+        }
+        return;
+      }
+      setAccountCreated(true);
+      void track("signup_completed", { flow: "email" });
+      if (needsConfirmation) {
+        setIsLoading(false);
+        navigate(`/check-email?email=${encodeURIComponent(email)}`, { state: { email } });
+        return;
+      }
+    }
+
+    // Immediate path: a session exists, so save the profile now.
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setIsLoading(false);
@@ -122,35 +131,12 @@ const SignUp = () => {
       navigate("/login");
       return;
     }
-    const code = generateInviteCode();
-    const [profileRes, inviteRes] = await Promise.all([
-      supabase
-        .from("profiles")
-        .update({ first_name: firstName, last_name: lastName, invite_code: code })
-        .eq("id", user.id),
-      supabase.from("invitations").insert({
-        inviter_id: user.id,
-        invite_code: code,
-        invitee_email: coparentEmail || null,
-      }),
-    ]);
-    if (profileRes.error || inviteRes.error) {
-      console.error("finishSignUp write failed", profileRes.error ?? inviteRes.error);
+    const { error: saveError, code } = await savePayerProfile(user.id, first, last, coparent || null);
+    if (saveError) {
+      console.error("finishSignUp write failed", saveError);
       setIsLoading(false);
       toast.error("Something went wrong saving your details. Please try again.");
       return;
-    }
-
-    if (coparentEmail) {
-      supabase.functions
-        .invoke("send-invite-email", {
-          body: { recipientEmail: coparentEmail, inviteCode: code, senderName: `${firstName} ${lastName}` },
-        })
-        .then(({ error }) => {
-          if (error) console.error("send-invite-email failed", error);
-          else void track("coparent_invite_sent", { method: "email", source: "signup" });
-        })
-        .catch((error) => console.error("send-invite-email failed", error));
     }
 
     setGeneratedCode(code);
