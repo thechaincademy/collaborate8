@@ -10,8 +10,15 @@ export function captureConfirmLinkError() {
     const q = new URLSearchParams(search);
     const error = h.get("error") ?? q.get("error");
     const code = h.get("error_code") ?? q.get("error_code");
-    if (error !== "access_denied" && code !== "otp_expired") return;
-    sessionStorage.setItem(KEY, JSON.stringify({ at: Date.now(), email: q.get("email") ?? "" }));
+    const description = (h.get("error_description") ?? q.get("error_description") ?? "")
+      .replace(/\+/g, " ")
+      .toLowerCase();
+    // A cancelled Apple or Google sign-in also arrives as access_denied, so only
+    // treat it as a confirmation problem when the text mentions the email link.
+    const mentionsEmailLink =
+      description.includes("email link") || description.includes("invalid or has expired");
+    if (!(code === "otp_expired" || (error === "access_denied" && mentionsEmailLink))) return;
+    sessionStorage.setItem(KEY, JSON.stringify({ at: Date.now(), email: h.get("email") ?? q.get("email") ?? "" }));
     ["error", "error_code", "error_description"].forEach((k) => { h.delete(k); q.delete(k); });
     const qs = q.toString();
     const hs = h.toString();

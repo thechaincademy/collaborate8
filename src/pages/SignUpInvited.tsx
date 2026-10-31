@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
 import { META, saveInvitedProfile } from "@/lib/profileCompletion";
+import { rememberLastSignupEmail } from "@/lib/lastSignupEmail";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
 
@@ -139,6 +140,7 @@ const SignUpInvited = () => {
       toast.error(problem);
       return;
     }
+    rememberLastSignupEmail(email);
     const { error, needsConfirmation } = await signUp(email, password, {
       [META.firstName]: firstName.trim(),
       [META.lastName]: lastName.trim(),
