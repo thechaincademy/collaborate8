@@ -11,19 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
+import { META, savePayerProfile } from "@/lib/profileCompletion";
 import signupFamily from "@/assets/signup-family-hd.jpg";
 
 type SignUpStep = "welcome" | "name" | "email" | "password" | "coparent" | "verify";
 type AuthMethod = "choice" | "apple" | "manual";
 
 const STEPS: SignUpStep[] = ["welcome", "name", "email", "password", "coparent", "verify"];
-
-const generateInviteCode = () => {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-  return code;
-};
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -304,7 +298,7 @@ const SignUp = () => {
         <div className="flex-1" />
         <div className="pb-8 pt-6">
           <Button onClick={handlePasswordContinue} className="w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isPasswordValid || isLoading}>
-            {isLoading ? "Checking..." : "Continue"}
+            Continue
           </Button>
         </div>
       </motion.div>
@@ -327,10 +321,10 @@ const SignUp = () => {
       )}
       <div className="flex-1" />
       <div className="pb-8 pt-6">
-        <Button onClick={finishSignUp} className="mb-3 w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isCoparentValid || isLoading}>
+        <Button onClick={() => finishSignUp(true)} className="mb-3 w-full bg-clay text-clay-foreground hover:bg-clay/90" size="lg" disabled={!isCoparentValid || isLoading}>
           {isLoading ? "Finishing..." : "Continue"}
         </Button>
-        <Button onClick={finishSignUp} variant="ghost" className="w-full text-muted-foreground" size="lg" disabled={isLoading}>Skip for now</Button>
+        <Button onClick={() => finishSignUp(false)} variant="ghost" className="w-full text-muted-foreground" size="lg" disabled={isLoading}>Skip for now</Button>
       </div>
     </motion.div>
   );
