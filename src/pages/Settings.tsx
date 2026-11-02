@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import CoparentLinkSettings from "@/components/settings/CoparentLinkSettings";
 import { PREMIUM_FEATURE_LINE, useIsInApp } from "@/hooks/useIsInApp";
-import { openConversationToolPortal, useConversationToolAccess } from "@/hooks/useConversationToolAccess";
+import { openConversationToolPortal, useConversationToolAccess } from "@/components/dashboard/ConversationToolPromo";
 
 
 const Section = ({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) => (
