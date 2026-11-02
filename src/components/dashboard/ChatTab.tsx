@@ -140,7 +140,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const sectionTabs = (
-    <div className="mb-4 grid grid-cols-2 rounded-xl border border-border bg-muted/40 p-1" role="tablist" aria-label="Financial Chat sections">
+    <div className="mb-4 grid shrink-0 grid-cols-2 rounded-xl border border-border bg-muted/40 p-1" role="tablist" aria-label="Financial Chat sections">
       <Button
         type="button"
         role="tab"
