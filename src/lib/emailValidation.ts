@@ -48,7 +48,7 @@ export function isDisposableDomain(domain: string): boolean {
 }
 
 /** true = has MX, false = no MX, null = lookup failed (fail open). */
-export async function hasMxRecord(domain: string, fetchImpl: typeof fetch = fetch, timeoutMs = 3000): Promise<boolean | null> {
+export async function hasMxRecord(domain: string, fetchImpl: typeof fetch = fetch, timeoutMs = 1500): Promise<boolean | null> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -63,11 +63,24 @@ export async function hasMxRecord(domain: string, fetchImpl: typeof fetch = fetc
   }
 }
 
+export const KNOWN_MAILBOX_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "hotmail.co.uk", "live.com", "live.co.uk",
+  "msn.com", "icloud.com", "me.com", "mac.com", "yahoo.com", "yahoo.co.uk", "ymail.com", "aol.com",
+  "protonmail.com", "proton.me", "btinternet.com", "sky.com", "virginmedia.com", "talktalk.net",
+]);
+
+const mxCache = new Map<string, boolean>();
+
 /** Returns an error message, or null when the address can be used. */
 export async function validateSignupEmail(email: string, fetchImpl: typeof fetch = fetch): Promise<string | null> {
   const domain = emailDomain(email);
   if (!domain || !domain.includes(".") || isReservedDomain(domain)) return EMAIL_NOT_REAL;
   if (isDisposableDomain(domain)) return EMAIL_DISPOSABLE;
-  const mx = await hasMxRecord(domain, fetchImpl);
+  if (KNOWN_MAILBOX_DOMAINS.has(domain)) return null;
+  let mx: boolean | null | undefined = mxCache.get(domain);
+  if (mx === undefined) {
+    mx = await hasMxRecord(domain, fetchImpl);
+    if (mx !== null) mxCache.set(domain, mx);
+  }
   return mx === false ? EMAIL_NOT_REAL : null;
 }

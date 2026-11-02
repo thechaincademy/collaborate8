@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { isEmailRateLimit, EMAIL_RATE_LIMIT_MESSAGE } from "@/lib/authErrors";
 import { track } from "@/lib/analytics";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +46,7 @@ const Login = () => {
     const { error } = await supabase.auth.resend({ type: "signup", email: target, options: { emailRedirectTo: CONFIRM_REDIRECT } });
     setResendSending(false);
     if (error) {
-      const isRate = /rate limit/i.test(error.message ?? "") || (error as { status?: number }).status === 429;
+      const isRate = isEmailRateLimit(error);
       setResendMsg(isRate ? "Too many emails have been sent just now. Please wait a few minutes and try again." : "We couldn't resend the email. Please try again in a minute.");
       return;
     }

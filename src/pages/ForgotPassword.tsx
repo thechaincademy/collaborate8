@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isEmailRateLimit, EMAIL_RATE_LIMIT_MESSAGE } from "@/lib/authErrors";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,7 +28,7 @@ const ForgotPassword = () => {
     });
     setIsLoading(false);
     if (error) {
-      toast.error(error.message || "Could not send reset email");
+      toast.error(isEmailRateLimit(error) ? EMAIL_RATE_LIMIT_MESSAGE : error.message || "Could not send reset email");
       return;
     }
     setIsSubmitted(true);
