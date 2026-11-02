@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import CoparentLinkSettings from "@/components/settings/CoparentLinkSettings";
 import { PREMIUM_FEATURE_LINE, useIsInApp } from "@/hooks/useIsInApp";
+import { openConversationToolPortal, useConversationToolAccess } from "@/hooks/useConversationToolAccess";
 
 
 const Section = ({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) => (
@@ -28,6 +29,14 @@ const Settings = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const { hasAccess: premiumAccess, access: premiumInfo } = useConversationToolAccess();
+  const isSubscription = premiumAccess && premiumInfo?.source === "subscription" && !!premiumInfo?.stripe_customer_id;
+  const [premiumPortalLoading, setPremiumPortalLoading] = useState(false);
+  const managePremium = async () => {
+    setPremiumPortalLoading(true);
+    await openConversationToolPortal();
+    setPremiumPortalLoading(false);
+  };
 
   useEffect(() => {
     if (window.location.hash) document.querySelector(window.location.hash)?.scrollIntoView();
@@ -125,6 +134,11 @@ const Settings = () => {
               <Sparkles className="h-5 w-5 text-muted-foreground" />
               <span className="min-w-0"><span className="block text-foreground">Collabor8 Premium</span><span className="block text-xs text-muted-foreground">{PREMIUM_FEATURE_LINE}</span></span>
             </div>
+          ) : isSubscription ? (
+            <button onClick={managePremium} disabled={premiumPortalLoading} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
+              <span className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Manage subscription</span></span>
+              {premiumPortalLoading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+            </button>
           ) : (
           <button onClick={() => navigate("/premium")} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
             <span className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Collabor8 Premium</span></span>
