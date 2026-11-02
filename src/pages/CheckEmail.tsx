@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { isEmailRateLimit, EMAIL_RATE_LIMIT_MESSAGE } from "@/lib/authErrors";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberLastSignupEmail } from "@/lib/lastSignupEmail";
@@ -32,7 +33,7 @@ const CheckEmail = () => {
     setSending(true);
     const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: CONFIRM_REDIRECT } });
     setSending(false);
-    if (error) return toast.error("We couldn't resend the email. Please try again in a minute.");
+    if (error) return toast.error(isEmailRateLimit(error) ? EMAIL_RATE_LIMIT_MESSAGE : "We couldn't resend the email. Please try again in a minute.");
     toast.success("Confirmation email sent");
     setCooldown(60);
   };

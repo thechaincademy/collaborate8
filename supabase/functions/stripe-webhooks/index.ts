@@ -340,11 +340,16 @@ serve(async (req) => {
             event.type === "customer.subscription.deleted" ||
             ["canceled", "incomplete_expired", "unpaid"].includes(subscription.status);
           const isActive = !dead && ["active", "trialing"].includes(subscription.status);
+          // A subscription set to cancel takes no further payment, so clear the due date (stops reminders).
+          const periodEnd = (subscription as any).current_period_end ?? (subscription as any).items?.data?.[0]?.current_period_end;
+          const cancelling =
+            subscription.cancel_at_period_end === true ||
+            (!!subscription.cancel_at && (!periodEnd || subscription.cancel_at <= periodEnd));
           await supabase
             .from("recurring_payments")
             .update({
               is_active: isActive,
-              next_due_date: isActive ? periodEndIso(subscription) : null,
+              next_due_date: isActive && !cancelling ? periodEndIso(subscription) : null,
             })
             .eq("id", arrangement.id);
 

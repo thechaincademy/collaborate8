@@ -566,7 +566,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   if (activeSection === "documents") {
     return (
-      <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md flex-col overflow-y-auto px-6 pt-12 md:max-w-3xl lg:max-w-5xl")}>
+      <div className="mx-auto flex w-full max-w-md flex-col px-6 pt-12 pb-[calc(2rem+env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-5xl">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         {sectionTabs}
@@ -578,7 +578,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   if (!coparentId) {
     return (
 
-      <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col overflow-y-auto px-6 pt-12")}>
+      <div className="mx-auto flex w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         {sectionTabs}
@@ -617,6 +617,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
                 <Textarea
                   value={pendingDraft}
                   onChange={(e) => setPendingDraft(e.target.value)}
+                  aria-label="Write your first message"
                   placeholder="Write your first message…"
                   rows={4}
                   className="mt-3 resize-none rounded-2xl border-border bg-background text-foreground"
@@ -800,7 +801,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       </div>
 
       {user && coparentId && (<>
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-3">
+      <div ref={scrollRef} tabIndex={0} role="log" aria-label="Messages" className="min-h-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex-1 space-y-3 overflow-y-auto pb-3">
         {loading ? (
           <div className="space-y-3">
             <Skeleton className="h-12 w-2/3 rounded-2xl" />
@@ -904,6 +905,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
               handleSendClick();
             }
           }}
+          aria-label="Message"
           placeholder="Type a message…"
           rows={2}
           className="min-h-[48px] flex-1 resize-none rounded-2xl border-border bg-card text-foreground"
@@ -912,7 +914,8 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           onClick={handleSendClick}
           disabled={!draft.trim() || sending || rewriting}
           size="icon"
-          className="h-12 w-12 shrink-0"
+          aria-label="Send message"
+          className="h-12 w-12 shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {rewriting || sending ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -923,11 +926,11 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       </div>
       <div className="-mt-2 mb-2 flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={async () => { if (!(await premium.requireAccess())) return; if (!startersOpen) void track("chatbot_opened", { surface: "prompts" }); setStartersOpen((o) => !o); }}
-          className="h-auto gap-1 px-0 text-xs font-medium text-foreground">
+          className="h-auto min-h-6 gap-1 px-1 py-1 text-xs font-medium text-foreground">
           <MessageCircle className="h-3.5 w-3.5 text-primary" /> {startersOpen ? "Hide AI prompts" : "AI prompts"}
         </Button>
         <Button variant="ghost" size="sm" disabled={!draft.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }}
-          className="h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40">
+          className="h-auto min-h-6 gap-1 px-1 py-1 text-xs font-medium text-foreground disabled:opacity-40">
           <Sparkles className="h-3.5 w-3.5 text-primary" /> Rewrite calmly
         </Button>
       </div>

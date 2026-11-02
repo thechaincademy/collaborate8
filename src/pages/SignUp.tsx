@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
+import { isEmailRateLimit, EMAIL_RATE_LIMIT_MESSAGE } from "@/lib/authErrors";
 import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
 import { META, savePayerProfile } from "@/lib/profileCompletion";
@@ -99,7 +100,9 @@ const SignUp = () => {
       if (error) {
         setIsLoading(false);
         const msg = error.message?.toLowerCase() ?? "";
-        if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        if (isEmailRateLimit(error)) {
+          toast.error(EMAIL_RATE_LIMIT_MESSAGE);
+        } else if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
           setEmailError("An account already exists for this email.");
           setStep("email");
         } else if (msg.includes("password")) {

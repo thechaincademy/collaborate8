@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { toast } from "sonner";
+import { isEmailRateLimit, EMAIL_RATE_LIMIT_MESSAGE } from "@/lib/authErrors";
 import { validateSignupEmail } from "@/lib/emailValidation";
 import { track } from "@/lib/analytics";
 import { META, saveInvitedProfile } from "@/lib/profileCompletion";
@@ -149,7 +150,7 @@ const SignUpInvited = () => {
 
     if (error) {
       setIsLoading(false);
-      toast.error(error.message || "Failed to create account");
+      toast.error(isEmailRateLimit(error) ? EMAIL_RATE_LIMIT_MESSAGE : error.message || "Failed to create account");
       return;
     }
     if (needsConfirmation) {
