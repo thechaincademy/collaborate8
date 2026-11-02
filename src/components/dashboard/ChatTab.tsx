@@ -85,7 +85,7 @@ const SUBHEADING =
 const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "documents" } = {}) => {
   const inApp = useIsInApp();
   // Browser: leave room for the bottom menu. App: only the bottom safe area.
-  const chatHeight = inApp ? "h-[calc(100vh-env(safe-area-inset-bottom)-1.5rem)]" : "h-[calc(100vh-6rem)]";
+  const chatHeight = inApp ? "h-[calc(100vh-env(safe-area-inset-bottom)-1.5rem)] supports-[height:100dvh]:h-[calc(100dvh-env(safe-area-inset-bottom)-1.5rem)]" : "h-[calc(100vh-6rem-env(safe-area-inset-bottom))] supports-[height:100dvh]:h-[calc(100dvh-6rem-env(safe-area-inset-bottom))]";
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
@@ -765,9 +765,9 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12")}>
       <DashboardHeader title="Financial Chat" />
 
-      <div className="-mt-6 mb-3 flex items-start justify-between gap-3">
+      <div className="-mt-6 mb-3 flex shrink-0 items-start justify-between gap-3 max-[399px]:flex-col max-[399px]:gap-2">
         <p className="text-sm text-muted-foreground">{SUBHEADING}</p>
-        <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={handleDownload}>
+        <Button size="sm" variant="outline" className="shrink-0 gap-1.5 max-[399px]:w-full" onClick={handleDownload}>
           <Download className="h-4 w-4" />
           Download chat record
         </Button>
@@ -792,7 +792,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
 
 
-      <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
+      <div className="mb-3 flex shrink-0 items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p className="text-xs text-foreground/80">
           "AI prompts" and "Rewrite calmly" are optional, private writing aids - not legal advice.
@@ -800,7 +800,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       </div>
 
       {user && coparentId && (<>
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto pb-3">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-3">
         {loading ? (
           <div className="space-y-3">
             <Skeleton className="h-12 w-2/3 rounded-2xl" />
@@ -872,7 +872,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         {showNoReplySuggestion && <ConversationToolSuggestionCard onOpen={openTool} />}
       </div>
 
-      <div className="flex items-end gap-2 pb-4">
+      <div className="flex shrink-0 items-end gap-2 pb-4">
         <input
           ref={attachInputRef}
           type="file"
