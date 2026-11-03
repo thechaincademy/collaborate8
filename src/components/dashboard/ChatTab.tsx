@@ -937,11 +937,12 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
                         mine ? "text-right" : "text-left",
                       )}
                     >
-                      {new Date(m.created_at).toLocaleString([], {
-                        day: "2-digit",
+                      {new Date(m.created_at).toLocaleString("en-GB", {
+                        day: "numeric",
                         month: "short",
-                        hour: "numeric",
+                        hour: "2-digit",
                         minute: "2-digit",
+                        hour12: false,
                       })}
                       {mine && (
                         <span className={cn("ml-1.5 font-medium", m.read_at ? "text-primary-ink" : "")}>

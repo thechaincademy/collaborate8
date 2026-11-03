@@ -114,7 +114,7 @@ const Settings = () => {
             </div>
             <div className="flex gap-3">
               <Lock className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-              <p className="text-foreground/90"><span className="font-medium text-foreground">Private to you:</span> these notification settings, your drafts and calm check suggestions are private to you, as are, your bank and card details, your financial health score and your login.</p>
+              <p className="text-foreground/90"><span className="font-medium text-foreground">Private to you:</span> these notification settings, your drafts and calm check suggestions, your bank and card details, your financial health score and your login.</p>
             </div>
             <div className="flex gap-3">
               <Shield className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />

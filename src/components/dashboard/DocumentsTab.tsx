@@ -172,11 +172,12 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {d.sender_id === user?.id ? "Shared by you" : "Shared by your co-parent"} ·{" "}
-                      {new Date(d.created_at).toLocaleString([], {
-                        day: "2-digit",
+                      {new Date(d.created_at).toLocaleString("en-GB", {
+                        day: "numeric",
                         month: "short",
-                        hour: "numeric",
+                        hour: "2-digit",
                         minute: "2-digit",
+                        hour12: false,
                       })}
                     </p>
                   </div>
