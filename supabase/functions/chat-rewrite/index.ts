@@ -1,9 +1,27 @@
 // Deploy target: supabase/functions/chat-rewrite/index.ts
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
+import { getUserFromRequest } from "../_shared/supabase.ts";
+
+const CALM_CHECK_REQUIRES_PREMIUM = (Deno.env.get("CALM_CHECK_REQUIRES_PREMIUM") ?? "true").trim().toLowerCase() !== "false";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+const unauthorized = () =>
+  new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+// Signed-in only (no Premium gate): same 401 body as requirePremium.
+const requireSignedIn = async (req: Request): Promise<Response | null> => {
+  try {
+    await getUserFromRequest(req);
+    return null;
+  } catch {
+    return unauthorized();
+  }
+};
 
 const SYSTEM = `You are a private writing aid for separated co-parents. Rewrite the user's draft message to their co-parent.
 Rules: keep it concise, factual, respectful and child-focused. Preserve the sender's meaning, facts, dates, amounts and the action they are asking for.
@@ -53,9 +71,25 @@ const gatewayError = (resp: Response) => {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const denied = await requirePremium(req, "rewrite");
+    const body = await req.json().catch(() => ({}));
+    const { draft, mode } = body ?? {};
+
+    // Status mode: no draft, no AI call, no logging, no DB writes. Auth is always checked.
+    if (mode === "status") {
+      const denied = await requirePremium(req, "rewrite");
+      if (denied && (denied.status === 401 || denied.status === 503)) return denied;
+      return json({
+        requires_premium: CALM_CHECK_REQUIRES_PREMIUM,
+        has_access: !CALM_CHECK_REQUIRES_PREMIUM || denied === null,
+      });
+    }
+
+    // send: Premium when the switch is on, otherwise signed-in only. Any other mode: always Premium.
+    const denied = mode === "send"
+      ? (CALM_CHECK_REQUIRES_PREMIUM ? await requirePremium(req, "rewrite") : await requireSignedIn(req))
+      : await requirePremium(req, "rewrite");
     if (denied) return denied;
-    const { draft, mode } = await req.json();
+
     if (!draft || typeof draft !== "string" || draft.length > 4000) return json({ error: "Missing draft" }, 400);
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "AI not configured" }, 500);
