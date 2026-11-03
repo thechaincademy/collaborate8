@@ -100,7 +100,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
       <h1 className="text-lg font-semibold text-foreground">{title}</h1>
 
       {/* Notifications Popover */}
-      <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
+      <Popover open={notificationOpen} onOpenChange={setNotificationOpen} modal>
         <PopoverTrigger asChild>
           <button aria-label="Open notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent">
             <Bell className="h-5 w-5 text-foreground" />
@@ -111,12 +111,14 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             )}
           </button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-80 p-0">
+        <PopoverContent align="end" className="w-80 p-0" role="dialog" aria-modal="true" aria-labelledby="notifications-heading">
           <div className="flex items-center justify-between border-b border-border p-4">
-            <h3 className="font-semibold text-foreground">Notifications</h3>
+            <h3 id="notifications-heading" className="font-semibold text-foreground">Notifications</h3>
             <button
+              type="button"
+              aria-label="Close notifications"
               onClick={() => setNotificationOpen(false)}
-              className="text-muted-foreground hover:text-foreground"
+              className="-m-2 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <X className="h-4 w-4" />
             </button>
