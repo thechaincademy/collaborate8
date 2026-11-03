@@ -770,13 +770,23 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-1 flex-col items-center px-2 pt-4 text-center"
+          role="region"
+          aria-labelledby="calm-check-heading"
+          aria-live="polite"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <Sparkles className="h-5 w-5 text-foreground" />
           </div>
-          <h2 className="mt-3 text-base font-semibold text-foreground">Take a breath</h2>
+          <h2
+            id="calm-check-heading"
+            ref={interceptHeadingRef}
+            tabIndex={-1}
+            className="mt-3 rounded text-base font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            A calmer way to say it?
+          </h2>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            This message might come across more strongly than you mean.
+            This might read more strongly than you mean. Keeping the focus on your child usually helps.
           </p>
 
           <div className="mt-5 w-full rounded-2xl border border-border bg-card p-4 text-left">
@@ -788,39 +798,43 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
           <div className="mt-3 w-full rounded-2xl border border-foreground/20 bg-foreground/5 p-4 text-left">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-              A calmer way to say it
+              Suggested version
             </p>
             <p className="mt-1.5 text-sm text-foreground">{intercept.suggestion}</p>
           </div>
 
           <div className="mt-5 flex w-full flex-col gap-2">
             <Button
-              onClick={() =>
+              onClick={() => {
+                focusTextareaRef.current = true;
                 insertMessage(intercept.suggestion, {
                   original: intercept.draft,
                   usedSuggestion: true,
-                })
-              }
+                });
+              }}
               disabled={sending}
-              className="w-full"
+              className="min-h-11 w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              Use the calmer version
+              Send this
             </Button>
             <Button
               variant="outline"
-              onClick={() => insertMessage(intercept.draft, { original: intercept.draft })}
+              onClick={() => closeIntercept(intercept.suggestion)}
               disabled={sending}
-              className="w-full"
+              className="min-h-11 w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              Send my message anyway
+              Edit
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setIntercept(null)}
+              onClick={() => {
+                focusTextareaRef.current = true;
+                insertMessage(intercept.draft, { original: intercept.draft });
+              }}
               disabled={sending}
-              className="w-full"
+              className="min-h-11 w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to edit
+              Send my original
             </Button>
           </div>
         </motion.div>
@@ -862,7 +876,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       <div className="mb-3 flex shrink-0 items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p className="text-xs text-foreground/80">
-          "AI prompts" and "Rewrite calmly" are optional, private writing aids - not legal advice.
+          AI prompts and the calm check on Send are optional, private writing aids - not legal advice.
         </p>
       </div>
 
@@ -970,6 +984,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           {attaching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
         </Button>
         <Textarea
+          ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -987,7 +1002,8 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           onClick={handleSendClick}
           disabled={!draft.trim() || sending || rewriting}
           size="icon"
-          aria-label="Send message"
+          aria-label={rewriting ? "Checking your message" : "Send message"}
+          aria-busy={rewriting}
           className="h-12 w-12 shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {rewriting || sending ? (
@@ -1001,10 +1017,6 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         <Button variant="ghost" size="sm" onClick={async () => { if (!(await premium.requireAccess())) return; if (!startersOpen) void track("chatbot_opened", { surface: "prompts" }); setStartersOpen((o) => !o); }}
           className="h-auto min-h-6 gap-1 px-1 py-1 text-xs font-medium text-foreground">
           <MessageCircle className="h-3.5 w-3.5 text-primary" /> {startersOpen ? "Hide AI prompts" : "AI prompts"}
-        </Button>
-        <Button variant="ghost" size="sm" disabled={!draft.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }}
-          className="h-auto min-h-6 gap-1 px-1 py-1 text-xs font-medium text-foreground disabled:opacity-40">
-          <Sparkles className="h-3.5 w-3.5 text-primary" /> Rewrite calmly
         </Button>
       </div>
       {startersOpen && (
@@ -1020,7 +1032,6 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           </div>
         </div>
       )}
-      <RewriteComposer open={rewriteOpen} draft={draft} onOpenChange={setRewriteOpen} onUse={setDraft} />
       <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
       </>)}
     </div>
