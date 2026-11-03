@@ -42,7 +42,7 @@ const List = ({ items }: { items: ReactNode[] }) => (
 );
 
 const A = ({ href, children }: { href: string; children: ReactNode }) => (
-  <a href={href} className="text-[#1A1A18] hover:underline">{children}</a>
+  <a href={href} className="text-[#1A1A18] underline underline-offset-2">{children}</a>
 );
 
 const L = ({ to, children }: { to: string; children: ReactNode }) => (

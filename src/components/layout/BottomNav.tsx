@@ -35,10 +35,12 @@ const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
           return (
             <button
               key={item.label}
+              type="button"
+              aria-current={isActive ? "page" : undefined}
               onClick={() => onTabChange(item.tab)}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 rounded-xl py-2 transition-all duration-200 active:scale-95",
-                isActive ? "text-primary" : "text-muted-foreground/70 hover:text-muted-foreground"
+                "flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-xl py-2 transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isActive ? "text-primary-ink" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.25 : 1.75} />

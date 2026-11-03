@@ -204,7 +204,7 @@ const SignUp = () => {
       <div className="pb-8 pt-6 text-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
-          <button onClick={() => navigate("/login")} className="font-semibold text-foreground">
+          <button type="button" onClick={() => navigate("/login")} className="inline-flex min-h-6 items-center py-1 font-semibold text-foreground">
             Log in
           </button>
         </p>

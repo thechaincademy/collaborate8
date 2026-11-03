@@ -84,20 +84,20 @@ const About = () => (
         className="relative z-10 mx-auto grid w-full max-w-5xl gap-12 px-6 pb-16 pt-8 md:grid-cols-2 md:items-center md:gap-16 md:px-8 md:py-24"
       >
         <div className="flex flex-col items-start">
-          <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
+          <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary-ink">
             Our Story
           </div>
           <h1 className="text-6xl font-extrabold italic leading-[0.9] tracking-tighter text-foreground md:text-7xl">
             About
             <br />
-            <span className="not-italic text-primary">Us.</span>
+            <span className="not-italic text-primary-ink">Us.</span>
           </h1>
           <div className="mt-6 flex items-center gap-4">
             <div className="h-px w-8 shrink-0 bg-primary" />
             <p className="text-lg font-medium leading-tight text-foreground/90 md:text-xl">
               Built from personal experience.
               <br />
-              <span className="text-primary">Built for you.</span>
+              <span className="text-primary-ink">Built for you.</span>
             </p>
           </div>
         </div>

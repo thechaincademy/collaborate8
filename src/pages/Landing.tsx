@@ -144,7 +144,7 @@ const Landing = () => {
                 Sign up here →
               </Button>
 
-              <Link to="/login" className="mt-4 text-sm text-foreground/80 underline-offset-4 hover:underline">
+              <Link to="/login" className="mt-4 inline-flex min-h-6 items-center py-1 text-sm text-foreground/80 underline-offset-4 hover:underline">
                 Already have an account? Log in
               </Link>
 
@@ -320,12 +320,12 @@ const Landing = () => {
               <span className="text-sm font-semibold text-foreground">Collabor8</span>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <Link to="/child-maintenance-calculator" className="hover:text-foreground">Child Maintenance Calculator</Link>
-              <Link to="/podcast" className="hover:text-foreground">The Blog</Link>
-              <Link to="/resources/child-maintenance-guide" className="hover:text-foreground">Maintenance Guide</Link>
-              <Link to="/resources/child-maintenance-guide#money-help" className="hover:text-foreground">Money Help</Link>
-              <Link to="/faq" className="hover:text-foreground">FAQ</Link>
-              <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
+              <Link to="/child-maintenance-calculator" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">Child Maintenance Calculator</Link>
+              <Link to="/podcast" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">The Blog</Link>
+              <Link to="/resources/child-maintenance-guide" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">Maintenance Guide</Link>
+              <Link to="/resources/child-maintenance-guide#money-help" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">Money Help</Link>
+              <Link to="/faq" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">FAQ</Link>
+              <Link to="/privacy" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">Privacy Policy</Link>
               <span>© {new Date().getFullYear()} Collabor8</span>
             </div>
           </div>

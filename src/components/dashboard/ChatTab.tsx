@@ -898,7 +898,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
                         minute: "2-digit",
                       })}
                       {mine && (
-                        <span className={cn("ml-1.5 font-medium", m.read_at ? "text-primary" : "")}>
+                        <span className={cn("ml-1.5 font-medium", m.read_at ? "text-primary-ink" : "")}>
                           · {m.read_at ? "Read" : "Delivered - unread"}
                         </span>
                       )}

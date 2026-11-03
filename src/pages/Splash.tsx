@@ -125,7 +125,7 @@ const Splash = () => {
                     : "/forgot-password",
                 )
               }
-              className="w-full text-right text-sm font-semibold text-foreground"
+              className="min-h-6 w-full py-1 text-right text-sm font-semibold text-foreground"
             >
               Forgot password?
             </button>

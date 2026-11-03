@@ -187,7 +187,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => navigate("/forgot-password")}
-                className="self-start text-sm font-semibold text-foreground"
+                className="inline-flex min-h-6 items-center self-start py-1 text-sm font-semibold text-foreground"
               >
                 Forgot password?
               </button>
@@ -215,7 +215,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => navigate("/signup/invited")}
-                className="mt-4 w-full text-center text-sm font-semibold text-foreground"
+                className="mt-4 min-h-6 w-full py-1 text-center text-sm font-semibold text-foreground"
               >
                 Have an invite code? Sign up here
               </button>
