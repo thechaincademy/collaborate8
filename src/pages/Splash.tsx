@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -17,6 +17,19 @@ const Splash = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const loginToggleRef = useRef<HTMLButtonElement>(null);
+  const loginOpened = useRef(false);
+
+  // Inline login panel: focus moves in on open, Escape closes and returns focus.
+  useEffect(() => {
+    if (showLogin) {
+      loginOpened.current = true;
+      emailRef.current?.focus();
+    } else if (loginOpened.current) {
+      loginToggleRef.current?.focus();
+    }
+  }, [showLogin]);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -49,6 +62,7 @@ const Splash = () => {
       </Button>
       {!showLogin && (
         <Button
+          ref={loginToggleRef}
           onClick={() => setShowLogin(true)}
           variant="link"
           className="h-auto w-full py-2 text-sm font-normal text-muted-foreground"
@@ -68,11 +82,19 @@ const Splash = () => {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25 }}
             onSubmit={handleLogin}
+            aria-label="Log in"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                setShowLogin(false);
+              }
+            }}
             className="space-y-3 overflow-hidden pt-1"
           >
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input
+                ref={emailRef}
                 type="email"
                 placeholder="Email"
                 aria-label="Email address"
