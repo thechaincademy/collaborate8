@@ -369,6 +369,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     }
     let active = true;
     const pairKey = `${user.id}:${coparentId}`;
+    let resubscribing = false;
 
     let fetchVersion = 0;
     const fetchMessages = async () => {
@@ -429,13 +430,13 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       )
       .subscribe(status => {
         // Close the gap between the initial query and a ready subscription.
-        if (!active) return;
+        if (!active || resubscribing) return;
         if (status === "SUBSCRIBED") void fetchMessages();
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           // Refetch now, then rebuild the subscription.
+          resubscribing = true;
           void fetchMessages();
-          active = false;
-          setTimeout(() => setChannelGen((g) => g + 1), 2000);
+          setTimeout(() => { if (active) setChannelGen((g) => g + 1); }, 2000);
         }
       });
     const refreshMessages = () => { if (active) void fetchMessages(); };
