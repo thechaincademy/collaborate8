@@ -94,6 +94,12 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  // "ok" only after a fetch succeeded for the current user + co-parent pair.
+  const [loadState, setLoadState] = useState<"loading" | "ok" | "error">("loading");
+  const [channelGen, setChannelGen] = useState(0);
+  const fetchMessagesRef = useRef<() => void>(() => {});
+  const loadedPairRef = useRef<string | null>(null);
+  const userId = user?.id ?? null;
   const [draft, setDraft] = useState("");
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
@@ -362,6 +368,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       return;
     }
     let active = true;
+    const pairKey = `${user.id}:${coparentId}`;
 
     let fetchVersion = 0;
     const fetchMessages = async () => {
@@ -375,13 +382,26 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         .order("created_at", { ascending: true })
         .limit(200);
       if (active && version === fetchVersion) {
-        if (error) toast.error("Could not load messages");
-        else setMessages(prev => mergeChatMessages(prev, (data ?? []) as Message[]));
+        if (error) {
+          // Keep any rows already shown; only an empty list shows the retry line.
+          setLoadState((prev) => (prev === "ok" && loadedPairRef.current === pairKey ? prev : "error"));
+        } else {
+          loadedPairRef.current = pairKey;
+          setMessages(prev => mergeChatMessages(prev, (data ?? []) as Message[]));
+          setLoadState("ok");
+        }
         setLoading(false);
       }
     };
-    setMessages([]);
-    setLoading(true);
+    fetchMessagesRef.current = () => { if (active) { setLoading(true); void fetchMessages(); } };
+    // Only reset the list when the account or co-parent actually changes,
+    // not on token refreshes or channel resubscribes.
+    if (loadedPairRef.current !== pairKey) {
+      loadedPairRef.current = null;
+      setMessages([]);
+      setLoadState("loading");
+      setLoading(true);
+    }
     void fetchMessages();
 
     const channel = supabase
@@ -409,9 +429,18 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       )
       .subscribe(status => {
         // Close the gap between the initial query and a ready subscription.
-        if (status === "SUBSCRIBED" && active) void fetchMessages();
+        if (!active) return;
+        if (status === "SUBSCRIBED") void fetchMessages();
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          // Refetch now, then rebuild the subscription.
+          void fetchMessages();
+          active = false;
+          setTimeout(() => setChannelGen((g) => g + 1), 2000);
+        }
       });
     const refreshMessages = () => { if (active) void fetchMessages(); };
+    const onVisible = () => { if (document.visibilityState === "visible") refreshMessages(); };
+    document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", refreshMessages);
     window.addEventListener("c8-profile-refresh", refreshMessages);
     const poll = setInterval(refreshMessages, 10000);
@@ -419,11 +448,13 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     return () => {
       active = false;
       clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", refreshMessages);
       window.removeEventListener("c8-profile-refresh", refreshMessages);
       supabase.removeChannel(channel);
     };
-  }, [user, coparentId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, coparentId, channelGen]);
 
   const markMessageNotificationsRead = useCallback(async () => {
     if (!user || !coparentId || activeSection !== "chat" || document.visibilityState !== "visible") return;
@@ -802,7 +833,14 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
       {user && coparentId && (<>
       <div ref={scrollRef} tabIndex={0} role="log" aria-label="Messages" className="min-h-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex-1 space-y-3 overflow-y-auto pb-3">
-        {loading ? (
+        {messages.length === 0 && loadState === "error" ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center" role="status">
+            <p className="text-sm text-muted-foreground">Could not load messages</p>
+            <Button variant="outline" size="sm" onClick={() => fetchMessagesRef.current()} disabled={loading}>
+              Retry
+            </Button>
+          </div>
+        ) : loadState !== "ok" && messages.length === 0 ? (
           <div className="space-y-3">
             <Skeleton className="h-12 w-2/3 rounded-2xl" />
             <Skeleton className="ml-auto h-12 w-2/3 rounded-2xl" />
