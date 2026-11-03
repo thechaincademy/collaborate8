@@ -374,6 +374,7 @@ const SignUp = () => {
         <meta name="description" content="Create your Collabor8 account. Manage child maintenance payments, track expenses, and earn rewards as a co-parent." />
         <link rel="canonical" href="https://collaborate8.com/signup" />
       </Helmet>
+      <main>
       <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col bg-background">
         <div className="px-6 pt-4">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
@@ -397,6 +398,7 @@ const SignUp = () => {
           </AnimatePresence>
         </div>
       </div>
+      </main>
     </>
   );
 };

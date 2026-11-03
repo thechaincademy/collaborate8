@@ -77,7 +77,7 @@ const Landing = () => {
 
   return (
     <RedirectIfSignedIn>
-    <div className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background">
       <Helmet>
         <title>Collabor8 - Child Maintenance App for UK Parents</title>
         <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free CMS calculator based on the official UK formula." />
@@ -343,7 +343,7 @@ const Landing = () => {
           </a>
         </div>
       </footer>
-    </div>
+    </main>
     </RedirectIfSignedIn>
   );
 };

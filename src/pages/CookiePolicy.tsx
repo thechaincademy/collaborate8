@@ -13,6 +13,7 @@ const CookiePolicy = () => {
         <meta name="description" content="Learn how Collabor8 uses cookies to improve your experience. Manage your preferences for essential and analytics cookies." />
         <link rel="canonical" href="https://collaborate8.com/cookies" />
       </Helmet>
+      <main>
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
       <TopBanner />
       <div className="mx-auto max-w-3xl px-6 py-12">
@@ -110,6 +111,7 @@ const CookiePolicy = () => {
         </div>
       </div>
     </div>
+      </main>
     </>
   );
 };

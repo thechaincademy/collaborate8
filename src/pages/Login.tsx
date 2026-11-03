@@ -96,6 +96,7 @@ const Login = () => {
         <meta name="description" content="Log in to Collabor8 to manage child maintenance payments, track expenses, and stay on top of co-parenting finances." />
         <link rel="canonical" href="https://collaborate8.com/login" />
       </Helmet>
+      <main>
       <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col bg-background px-6">
         {/* Header */}
         <motion.div
@@ -223,6 +224,7 @@ const Login = () => {
           </motion.form>
         </div>
       </div>
+      </main>
     </>
   );
 };
