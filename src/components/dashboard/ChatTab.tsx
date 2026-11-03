@@ -25,7 +25,6 @@ import {
 } from "./ConversationToolPromo";
 
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
-import RewriteComposer from "./RewriteComposer";
 import DocumentsTab from "./DocumentsTab";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 import { mergeChatMessages, pendingMessageDelivery } from "@/lib/chatMessages";
@@ -107,7 +106,6 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const interceptHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusTextareaRef = useRef(false);
   const [sending, setSending] = useState(false);
-  const [rewriteOpen, setRewriteOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"chat" | "documents">(initialSection);
   const [startersOpen, setStartersOpen] = useState(false);
   const [attaching, setAttaching] = useState(false);
