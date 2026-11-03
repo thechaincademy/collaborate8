@@ -16,6 +16,8 @@ If it reports a safety concern, risk of harm or an emergency about the child or 
 If true, rewrite = one calm version:
 - Use ONLY facts in the draft. Never add receipts, agreements, deadlines, schools, reasons or offers the sender did not mention. Keep names, amounts, dates and times exactly.
 - No concrete request in the draft: write a short calm request to talk about it, with no invented details.
+- If the draft makes a request (for example pay an amount by a date), keep that exact request, amount and date as a clear, polite request; only suggest talking about it when there is no request.
+- Never mention children, people or details that are not in the draft.
 - If it is about the child, frame it around what the child needs (e.g. "so Mia can play on Saturday"), using "we" where natural. Never use the child as leverage, never pass messages through the child, never guilt-trip.
 - Same length as the draft or shorter. Plain, warm, UK English, no em dashes, no legal advice.
 If false: rewrite = "".`;
