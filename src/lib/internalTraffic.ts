@@ -25,7 +25,7 @@ export const isInternalDevice = (): boolean => {
 /** Opt trackers already on this page out, where they support it. */
 export const optOutLoadedTrackers = () => {
   try {
-    const w = window as TrackerWindow;
+    const w = window as unknown as TrackerWindow;
     w["ga-disable-G-2YB8M4ZYEG"] = true;
     w["ga-disable-AW-18435476721"] = true;
     if (typeof w.clarity === "function") w.clarity("consent", false);
