@@ -9,12 +9,15 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieConsent from "@/components/CookieConsent";
 import { sendGa4PageView } from "@/lib/ga4";
+import { isAdminPath, optOutLoadedTrackers } from "@/lib/internalTraffic";
 import { useEffect } from "react";
 
 /** Sends one GA4 page_view per route change (deduped inside sendGa4PageView). */
 const Ga4PageTracker = () => {
   const location = useLocation();
   useEffect(() => {
+    // Admin pages are internal: opt out any tracker already on the page.
+    if (isAdminPath(location.pathname)) optOutLoadedTrackers();
     return sendGa4PageView();
   }, [location.pathname, location.search]);
   return null;
