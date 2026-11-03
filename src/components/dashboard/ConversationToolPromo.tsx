@@ -76,7 +76,7 @@ export const ConversationEmailStep = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0" aria-describedby={undefined}>
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <DialogTitle asChild>
             <h2 className="text-lg font-semibold leading-snug">
@@ -221,7 +221,7 @@ export const ConversationCostsStep = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0" aria-describedby={undefined}>
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <DialogTitle asChild>
             <h2 className="text-lg font-semibold leading-snug">
@@ -419,7 +419,7 @@ export const ConversationToolModal = ({
   return (
 
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0" aria-describedby={undefined}>
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <DialogTitle asChild>
             <h2 className="text-lg font-semibold leading-snug">
