@@ -19,7 +19,7 @@ const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
 const FEATURES = [
-  "Rewrite calmly, to help you say things clearly and kindly",
+  "Calm check on Send: before a message goes, Collabor8 suggests a calmer version. You choose Send this, Edit or Send my original",
   "AI prompts to help you start a conversation",
   "Share files and documents in chat",
   "The self-guided financial conversation tool",

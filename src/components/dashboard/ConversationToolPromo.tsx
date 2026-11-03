@@ -430,7 +430,7 @@ export const ConversationToolModal = ({
 
         <div className="space-y-4 p-5 text-sm text-foreground">
           {premiumOnly ? (
-            <p>Premium includes Rewrite calmly, AI prompts, chat and document uploads, and the financial conversation tool.</p>
+            <p>Premium includes the calm check on Send (before a message goes, Collabor8 suggests a calmer version and you choose Send this, Edit or Send my original), AI prompts, chat and document uploads, and the financial conversation tool.</p>
           ) : <>
           <p>
             Sometimes the most difficult part is knowing where to begin. This tool gives both parents a private, structured way to set out what they would like to discuss - before any direct conversation takes place.
