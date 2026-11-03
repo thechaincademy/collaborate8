@@ -565,7 +565,7 @@ export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void 
     <Button
       size="sm"
       onClick={onOpen}
-      className="mt-3 bg-gold text-gold-foreground hover:bg-gold/90"
+      className="mt-3 h-auto min-h-9 max-w-full whitespace-normal bg-gold py-2 text-left text-gold-foreground hover:bg-gold/90"
     >
       {inApp ? "Find out more" : `Unlock for ${CONVERSATION_TOOL_MONTHLY} a month, paid yearly`}
     </Button>
