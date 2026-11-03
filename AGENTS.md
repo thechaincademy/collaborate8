@@ -15,3 +15,4 @@
 - Post-signup payment-direction routing uses the shared maintenance onboarding helpers; automatically assigned viewing roles require local confirmation before Connect, because invite signup does not establish actual maintenance direction.
 - Account deletion runs through one shared server-side routine used by both the signed-in and email-link flows, so every path cancels Stripe, keeps shared co-parent records with null links and removes personal rows the same way.
 - Inside the mobile app (isInApp/useIsInApp: c8-in-app class or Collabor8App user agent), never show Premium prices or buy/manage links; show 'This is a Premium feature.' instead, because app store rules forbid selling outside in-app purchase.
+- Internal traffic (device flag c8_internal, team/QA/test accounts, /admin pages) is excluded through src/lib/internalTraffic.ts plus the inline index.html guard, because trackers must be blocked before any of them loads.
