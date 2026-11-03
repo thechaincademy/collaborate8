@@ -93,6 +93,8 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            {/* First in the DOM so it is within the first Tab stops; still fixed to the bottom. */}
+            <CookieConsent />
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/splash" element={<Splash />} />
@@ -159,7 +161,6 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Ga4PageTracker />
-            <CookieConsent />
           </BrowserRouter>
          </TooltipProvider>
         </SolanaProvider>
