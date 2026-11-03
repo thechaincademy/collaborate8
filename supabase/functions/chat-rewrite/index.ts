@@ -13,7 +13,12 @@ Return ONLY JSON: {"options":[{"tone":"Neutral","text":"..."},{"tone":"Brief","t
 const SEND_SYSTEM = `Check a co-parent's draft message to the other parent.
 needs_rewrite = true if it is aggressive, hostile, passive aggressive, sarcastic, blaming, threatening, or uses the child as leverage or as a messenger against the other parent. Otherwise false (neutral, factual, polite or kind).
 If it reports a safety concern, risk of harm or an emergency about the child or sender: needs_rewrite = false.
-If true: rewrite = one calm, collaborative, child-centred version. Keep all facts, dates, times, amounts and the request. Invent nothing, no legal advice, UK English, no em dashes. If false: rewrite = "".`;
+If true, rewrite = one calm version:
+- Use ONLY facts in the draft. Never add receipts, agreements, deadlines, schools, reasons or offers the sender did not mention. Keep names, amounts, dates and times exactly.
+- No concrete request in the draft: write a short calm request to talk about it, with no invented details.
+- If it is about the child, frame it around what the child needs (e.g. "so Mia can play on Saturday"), using "we" where natural. Never use the child as leverage, never pass messages through the child, never guilt-trip.
+- Same length as the draft or shorter. Plain, warm, UK English, no em dashes, no legal advice.
+If false: rewrite = "".`;
 
 const SEND_SCHEMA = {
   type: "json_schema",
