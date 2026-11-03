@@ -1047,7 +1047,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           aria-label="Message"
           onFocus={() => {
             // Small screens: scroll the header away so the list and composer fill the view.
-            if (compact) setTimeout(() => textareaRef.current?.scrollIntoView({ block: "end", behavior: "smooth" }), 250);
+            if (compact) setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" }), 250);
           }}
           placeholder="Type a message…"
           rows={2}
