@@ -103,6 +103,9 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const [draft, setDraft] = useState("");
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const interceptHeadingRef = useRef<HTMLHeadingElement>(null);
+  const focusTextareaRef = useRef(false);
   const [sending, setSending] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"chat" | "documents">(initialSection);
@@ -550,29 +553,60 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const handleSendClick = async () => {
     const text = draft.trim();
     if (!text || sending) return;
-    if (false) {
-      setRewriting(true);
-      try {
-        const { data, error } = await supabase.functions.invoke("chat-rewrite", {
-          body: { draft: text },
-        });
-        if (error) throw error;
-        const suggestion = (data as { suggestion?: string })?.suggestion?.trim() || "";
-        if (suggestion) {
-          setIntercept({ draft: text, suggestion });
-        } else {
-          await insertMessage(text);
-        }
-      } catch {
-        toast.error("Couldn't fetch a calmer version - sending as-is");
-        await insertMessage(text);
-      } finally {
-        setRewriting(false);
+    if (rewriting) return;
+    if (!premium.hasAccess) {
+      await insertMessage(text);
+      return;
+    }
+    setRewriting(true);
+    let suggestion = "";
+    try {
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
+      const result = await Promise.race([
+        supabase.functions.invoke("chat-rewrite", { body: { draft: text } }),
+        timeout,
+      ]);
+      if (result && !result.error) {
+        const d = result.data as { needs_rewrite?: boolean; rewrite?: string } | null;
+        const rw = d?.rewrite?.trim() || "";
+        if (d?.needs_rewrite === true && rw && rw !== text) suggestion = rw;
+      }
+    } catch {
+      suggestion = "";
+    } finally {
+      setRewriting(false);
+    }
+    if (suggestion) {
+      setIntercept({ draft: text, suggestion });
+    } else {
+      await insertMessage(text);
+    }
+  };
+
+  const closeIntercept = useCallback((restore: string) => {
+    setDraft(restore);
+    setIntercept(null);
+    focusTextareaRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!intercept) {
+      if (focusTextareaRef.current) {
+        focusTextareaRef.current = false;
+        requestAnimationFrame(() => textareaRef.current?.focus());
       }
       return;
     }
-    await insertMessage(text);
-  };
+    requestAnimationFrame(() => interceptHeadingRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeIntercept(intercept.draft);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [intercept, closeIntercept]);
 
   // -------- Render branches
   if (profileLoading) {
