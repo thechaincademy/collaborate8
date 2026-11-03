@@ -398,6 +398,7 @@ const ConversationQuestionnaire = ({
               {stepLabel}
             </p>
             <Progress
+              aria-label="Questionnaire progress"
               value={progress}
               className="mt-1.5 h-2 bg-foreground/10 [&>div]:bg-gold"
             />

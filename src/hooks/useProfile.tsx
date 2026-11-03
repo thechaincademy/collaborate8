@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { isInternalUser, markInternalDevice } from "@/lib/internalTraffic";
 
 interface Profile {
   id: string;
@@ -11,10 +12,16 @@ interface Profile {
   invite_code: string | null;
   created_at: string;
   updated_at: string;
+  is_test_account?: boolean | null;
 }
 
 // Shared in-memory cache so tabs that mount later render instantly
 let profileCache: Profile | null = null;
+
+/** Drop the shared cache (sign-out or account switch in the same tab). */
+export const clearProfileCache = () => {
+  profileCache = null;
+};
 
 export const useProfile = () => {
   const { user } = useAuth();
@@ -29,12 +36,20 @@ export const useProfile = () => {
     });
   };
 
+  const userId = user?.id ?? null;
+  const userEmail = user?.email ?? null;
+
   useEffect(() => {
     if (!user) {
-      setProfile(null);
+      clearProfileCache();
+      setProfileState(null);
       setLoading(false);
       return;
     }
+    // A different account in the same tab: never show the old user's profile
+    // (and its coparent_id) while the new one loads.
+    if (profileCache && profileCache.id !== user.id) clearProfileCache();
+    setProfileState((prev) => (prev && prev.id === user.id ? prev : profileCache));
 
     const fetchProfile = async () => {
       if (!(profileCache?.id === user.id)) setLoading(true);
@@ -46,6 +61,7 @@ export const useProfile = () => {
 
       if (!error && data) {
         setProfile(data as Profile);
+        if (isInternalUser({ email: user.email, isTestAccount: (data as Profile).is_test_account })) markInternalDevice();
       }
       setLoading(false);
     };
@@ -72,7 +88,12 @@ export const useProfile = () => {
       supabase.removeChannel(channel);
       clearInterval(poll);
     };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  useEffect(() => {
+    if (userEmail && isInternalUser({ email: userEmail })) markInternalDevice();
+  }, [userEmail]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error("Not authenticated") };

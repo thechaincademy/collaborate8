@@ -62,12 +62,12 @@ const PrivacyPolicy = () => {
         <div className="pointer-events-none absolute -top-[40%] right-[-10%] h-full w-[50vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,transparent_65%)]" />
         <div className="pointer-events-none absolute -bottom-[30%] -left-[5%] h-[80%] w-[40vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_65%)]" />
         <div className="relative z-10 max-w-[760px]">
-          <div className="mb-5 flex items-center gap-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#1A1A18]">
-            <span className="inline-block h-[1.5px] w-6 bg-foreground" />
+          <div className="mb-5 flex items-center gap-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-primary">
+            <span className="inline-block h-[1.5px] w-6 bg-primary" />
             Legal
           </div>
           <h1 className="mb-5 text-[clamp(2.4rem,5vw,3.6rem)] font-light leading-[1.1] tracking-tight text-white" style={{ fontFamily: "'Fraunces', serif" }}>
-            Your privacy,<br /><em className="italic text-[#1A1A18]">taken seriously.</em>
+            Your privacy,<br /><em className="italic text-primary">taken seriously.</em>
           </h1>
           <div className="flex flex-wrap items-center gap-6 text-[0.85rem] text-white/50">
             <span>Last updated: 26 October 2026</span>
@@ -99,7 +99,7 @@ const PrivacyPolicy = () => {
                   activeId === s.id ? "max-md:border-[#E4D8C6] max-md:bg-secondary" : ""
                 }`}
               >
-                <span className="text-[0.7rem] font-semibold text-[#E4D8C6]">{s.num}</span>
+                <span className="text-[0.7rem] font-semibold text-muted-foreground">{s.num}</span>
                 {s.label}
               </a>
             ))}
@@ -135,7 +135,7 @@ const PrivacyPolicy = () => {
                 <div key={item.label} className="rounded-xl border border-[#E4E2DA] bg-background p-3.5">
                   <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#6B6B64]">{item.label}</div>
                   <div className="text-[0.9rem] font-medium text-[#1A1A18]">
-                    {item.isLink ? <a href={`mailto:${item.val}`} className="text-[#1A1A18] hover:underline">{item.val}</a> : item.val}
+                    {item.isLink ? <a href={`mailto:${item.val}`} className="text-[#1A1A18] underline underline-offset-2">{item.val}</a> : item.val}
                   </div>
                 </div>
               ))}
@@ -322,7 +322,7 @@ const PrivacyPolicy = () => {
                 </li>
               ))}
             </ul>
-            <p className="text-[0.95rem] leading-[1.75] text-[#3D3D38]">You may request a copy of the relevant transfer mechanism by contacting <a href="mailto:privacy@collaborate8.com" className="text-[#1A1A18] hover:underline">privacy@collaborate8.com</a>.</p>
+            <p className="text-[0.95rem] leading-[1.75] text-[#3D3D38]">You may request a copy of the relevant transfer mechanism by contacting <a href="mailto:privacy@collaborate8.com" className="text-[#1A1A18] underline underline-offset-2">privacy@collaborate8.com</a>.</p>
           </section>
 
           {/* 6. Retention */}
@@ -383,14 +383,14 @@ const PrivacyPolicy = () => {
                 </li>
               ))}
             </ul>
-            <p className="text-[0.95rem] leading-[1.75] text-[#3D3D38]">If you discover a vulnerability, please report it responsibly to <a href="mailto:security@collaborate8.com" className="text-[#1A1A18] hover:underline">security@collaborate8.com</a>.</p>
+            <p className="text-[0.95rem] leading-[1.75] text-[#3D3D38]">If you discover a vulnerability, please report it responsibly to <a href="mailto:security@collaborate8.com" className="text-[#1A1A18] underline underline-offset-2">security@collaborate8.com</a>.</p>
           </section>
 
           {/* 8. Your rights */}
           <section ref={setRef("s8")} id="s8" className="mb-14 scroll-mt-[90px]">
             <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#1A1A18]">08</div>
             <h2 className="mb-5 border-b border-[#E4E2DA] pb-3 text-[1.65rem] font-normal leading-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', serif" }}>Your rights under UK GDPR</h2>
-            <p className="mb-4 text-[0.95rem] leading-[1.75] text-[#3D3D38]">You have the following rights in relation to your personal data. Contact us at <a href="mailto:privacy@collaborate8.com" className="text-[#1A1A18] hover:underline">privacy@collaborate8.com</a> to exercise any of them. We will respond within one calendar month.</p>
+            <p className="mb-4 text-[0.95rem] leading-[1.75] text-[#3D3D38]">You have the following rights in relation to your personal data. Contact us at <a href="mailto:privacy@collaborate8.com" className="text-[#1A1A18] underline underline-offset-2">privacy@collaborate8.com</a> to exercise any of them. We will respond within one calendar month.</p>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
@@ -414,7 +414,7 @@ const PrivacyPolicy = () => {
               <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">Right to complain</div>
               <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">
                 You have the right to lodge a complaint with the Information Commissioner's Office (ICO) at{" "}
-                <a href="https://ico.org.uk" target="_blank" rel="noopener" className="text-[#1A1A18] hover:underline">ico.org.uk</a>{" "}
+                <a href="https://ico.org.uk" target="_blank" rel="noopener" className="text-[#1A1A18] underline underline-offset-2">ico.org.uk</a>{" "}
                 or by calling 0303 123 1113. We would appreciate the chance to address your concerns before you contact the ICO.
               </p>
             </div>
@@ -490,7 +490,7 @@ const PrivacyPolicy = () => {
               <li className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
                 <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
                 <strong className="font-semibold text-[#1A1A18]">Email:</strong>{" "}
-                <a href="mailto:privacy@collaborate8.com" className="text-[#1A1A18] hover:underline">privacy@collaborate8.com</a>
+                <a href="mailto:privacy@collaborate8.com" className="text-[#1A1A18] underline underline-offset-2">privacy@collaborate8.com</a>
               </li>
               <li className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
                 <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
@@ -505,7 +505,7 @@ const PrivacyPolicy = () => {
               <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">ICO Registration</div>
               <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">
                 Collaborate Technologies Ltd is registered with the Information Commissioner's Office (ICO) under registration number <strong className="font-semibold text-[#1A1A18]">C1906893</strong>. You can verify this at{" "}
-                <a href="https://ico.org.uk/about-the-ico/what-we-do/register-of-fee-payers/" target="_blank" rel="noopener" className="text-[#1A1A18] hover:underline">ico.org.uk/register-of-fee-payers</a>.
+                <a href="https://ico.org.uk/about-the-ico/what-we-do/register-of-fee-payers/" target="_blank" rel="noopener" className="text-[#1A1A18] underline underline-offset-2">ico.org.uk/register-of-fee-payers</a>.
               </p>
             </div>
           </section>

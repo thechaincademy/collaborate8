@@ -305,7 +305,7 @@ const SignUpInvited = () => {
         <div className="flex flex-col gap-4">
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
+            <Input type="email" placeholder="Email" aria-label="Email address" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
               className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
           </div>
           <div className="relative">
@@ -313,6 +313,8 @@ const SignUpInvited = () => {
             <Input
               type="password"
               placeholder="Enter your password"
+              aria-label="Password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`h-14 rounded-2xl border-2 bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground ${password && !isPasswordValid ? "border-destructive" : "border-border"}`}

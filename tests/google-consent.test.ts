@@ -5,7 +5,7 @@ import { runInNewContext } from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const googleScript = html.split("<!-- Google Consent Mode v2:")[1]?.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 
-const setup = (choice: string | null) => {
+const setup = (choice: string | null, internal = false) => {
   const scripts: unknown[] = [];
   const storage = new Map<string, string>();
   if (choice) storage.set("medi8-cookie-consent", choice);
@@ -14,6 +14,7 @@ const setup = (choice: string | null) => {
     localStorage: { getItem: (k: string) => storage.get(k) ?? null },
     c8LoadHotjar: () => {},
     addEventListener: () => {},
+    c8IsInternal: () => internal,
   };
   context.window = context;
   if (!googleScript) throw new Error("Google consent script missing");
@@ -50,5 +51,10 @@ describe("Google Consent Mode v2", () => {
   it("restores accepted and rejected choices on later visits", () => {
     expect(setup("accepted").commands()[1]).toEqual(["consent", "update", signals("granted")]);
     expect(setup("declined").commands()[1]).toEqual(["consent", "update", signals("denied")]);
+  });
+
+  it("does not load gtag.js on an internal device", () => {
+    const { scripts } = setup("accepted", true);
+    expect(scripts).toHaveLength(0);
   });
 });

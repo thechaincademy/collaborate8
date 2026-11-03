@@ -42,7 +42,7 @@ const List = ({ items }: { items: ReactNode[] }) => (
 );
 
 const A = ({ href, children }: { href: string; children: ReactNode }) => (
-  <a href={href} className="text-[#1A1A18] hover:underline">{children}</a>
+  <a href={href} className="text-[#1A1A18] underline underline-offset-2">{children}</a>
 );
 
 const L = ({ to, children }: { to: string; children: ReactNode }) => (
@@ -105,12 +105,12 @@ const TermsOfService = () => {
         <div className="pointer-events-none absolute -top-[40%] right-[-10%] h-full w-[50vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,transparent_65%)]" />
         <div className="pointer-events-none absolute -bottom-[30%] -left-[5%] h-[80%] w-[40vw] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_65%)]" />
         <div className="relative z-10 max-w-[760px]">
-          <div className="mb-5 flex items-center gap-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[#1A1A18]">
-            <span className="inline-block h-[1.5px] w-6 bg-foreground" />
+          <div className="mb-5 flex items-center gap-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-primary">
+            <span className="inline-block h-[1.5px] w-6 bg-primary" />
             Legal
           </div>
           <h1 className="mb-5 text-[clamp(2.4rem,5vw,3.6rem)] font-light leading-[1.1] tracking-tight text-white" style={{ fontFamily: "'Fraunces', serif" }}>
-            Terms of Service,<br /><em className="italic text-[#1A1A18]">in plain English.</em>
+            Terms of Service,<br /><em className="italic text-primary">in plain English.</em>
           </h1>
           <div className="flex flex-wrap items-center gap-6 text-[0.85rem] text-white/50">
             <span>Last updated: 26 October 2026</span>
@@ -139,7 +139,7 @@ const TermsOfService = () => {
                   activeId === s.id ? "max-md:border-[#E4D8C6] max-md:bg-secondary" : ""
                 }`}
               >
-                <span className="text-[0.7rem] font-semibold text-[#E4D8C6]">{s.num}</span>
+                <span className="text-[0.7rem] font-semibold text-muted-foreground">{s.num}</span>
                 {s.label}
               </a>
             ))}

@@ -83,7 +83,7 @@ const Settings = () => {
 
   return (
 
-    <div className="mx-auto min-h-screen max-w-md bg-background pb-24 md:max-w-2xl">
+    <main className="mx-auto min-h-screen max-w-md bg-background pb-24 md:max-w-2xl">
       <div className="px-6 pt-4">
         <div className="mb-6 flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center" aria-label="Back">
@@ -188,7 +188,7 @@ const Settings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   );
 };
 

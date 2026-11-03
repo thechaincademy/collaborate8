@@ -96,6 +96,7 @@ const Login = () => {
         <meta name="description" content="Log in to Collabor8 to manage child maintenance payments, track expenses, and stay on top of co-parenting finances." />
         <link rel="canonical" href="https://collaborate8.com/login" />
       </Helmet>
+      <main>
       <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col bg-background px-6">
         {/* Header */}
         <motion.div
@@ -177,6 +178,7 @@ const Login = () => {
                   type="password"
                   placeholder="Password"
                   aria-label="Password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
@@ -186,7 +188,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => navigate("/forgot-password")}
-                className="self-start text-sm font-semibold text-foreground"
+                className="inline-flex min-h-6 items-center self-start py-1 text-sm font-semibold text-foreground"
               >
                 Forgot password?
               </button>
@@ -214,7 +216,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => navigate("/signup/invited")}
-                className="mt-4 w-full text-center text-sm font-semibold text-foreground"
+                className="mt-4 min-h-6 w-full py-1 text-center text-sm font-semibold text-foreground"
               >
                 Have an invite code? Sign up here
               </button>
@@ -222,6 +224,7 @@ const Login = () => {
           </motion.form>
         </div>
       </div>
+      </main>
     </>
   );
 };

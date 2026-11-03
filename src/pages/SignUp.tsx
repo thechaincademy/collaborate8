@@ -204,7 +204,7 @@ const SignUp = () => {
       <div className="pb-8 pt-6 text-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
-          <button onClick={() => navigate("/login")} className="font-semibold text-foreground">
+          <button type="button" onClick={() => navigate("/login")} className="inline-flex min-h-6 items-center py-1 font-semibold text-foreground">
             Log in
           </button>
         </p>
@@ -290,6 +290,7 @@ const SignUp = () => {
             type="password"
             placeholder="Enter your password"
             aria-label="Password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={`h-14 rounded-2xl border-2 bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${password && !isPasswordValid ? "border-destructive" : "border-border"}`}
@@ -373,6 +374,7 @@ const SignUp = () => {
         <meta name="description" content="Create your Collabor8 account. Manage child maintenance payments, track expenses, and earn rewards as a co-parent." />
         <link rel="canonical" href="https://collaborate8.com/signup" />
       </Helmet>
+      <main>
       <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col bg-background">
         <div className="px-6 pt-4">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
@@ -396,6 +398,7 @@ const SignUp = () => {
           </AnimatePresence>
         </div>
       </div>
+      </main>
     </>
   );
 };

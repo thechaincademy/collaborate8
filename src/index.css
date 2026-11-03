@@ -18,6 +18,7 @@
 
     /* Primary - Mustard */
     --primary: 45 80% 46%;            /* #D4A017 */
+    --primary-ink: 42 85% 28%;        /* darker mustard for small text on light backgrounds (4.5:1) */
     --primary-foreground: 0 0% 9%;
 
     /* Secondary - same off-white family */
@@ -83,6 +84,7 @@
     --popover-foreground: 0 0% 96%;
 
     --primary: 0 0% 100%;
+    --primary-ink: 0 0% 100%;
     --primary-foreground: 0 0% 9%;
 
     --secondary: 0 0% 15%;

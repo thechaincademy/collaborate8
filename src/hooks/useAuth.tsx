@@ -1,6 +1,7 @@
 import { getAttribution } from "@/lib/attribution";
 import { useState, useEffect, createContext, useContext } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { clearProfileCache } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
@@ -71,6 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    clearProfileCache();
   };
 
   return (

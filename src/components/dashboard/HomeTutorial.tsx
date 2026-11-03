@@ -140,7 +140,7 @@ const HomeTutorial = ({ userId, isLinked, coparentId, inviteEmail, onInvite, onN
       aria-label="Getting started"
       className="mb-4 max-w-md overflow-hidden rounded-xl border border-teal/25 bg-card shadow-sm"
     >
-      <div className="h-1 w-full bg-muted" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
+      <div className="h-1 w-full bg-muted" role="progressbar" aria-label="Profile setup progress" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full bg-teal transition-all duration-500" style={{ width: `${percent}%` }} />
       </div>
       <div className="p-3">

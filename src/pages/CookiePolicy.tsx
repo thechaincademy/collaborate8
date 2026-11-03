@@ -13,10 +13,11 @@ const CookiePolicy = () => {
         <meta name="description" content="Learn how Collabor8 uses cookies to improve your experience. Manage your preferences for essential and analytics cookies." />
         <link rel="canonical" href="https://collaborate8.com/cookies" />
       </Helmet>
+      <main>
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
       <TopBanner />
       <div className="mx-auto max-w-3xl px-6 py-12">
-        <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <button onClick={() => navigate(-1)} className="mb-8 flex min-h-6 items-center gap-2 py-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
 
@@ -110,6 +111,7 @@ const CookiePolicy = () => {
         </div>
       </div>
     </div>
+      </main>
     </>
   );
 };

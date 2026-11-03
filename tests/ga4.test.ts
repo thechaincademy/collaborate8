@@ -289,3 +289,26 @@ describe("sendGa4ConsentedLandingPageView", () => {
     expect(consentAtSend).toEqual(["granted"]);
   });
 });
+
+describe("internal traffic guard", () => {
+  beforeEach(() => setupDom(LANDING));
+
+  it("sends no page_view from a device marked internal", async () => {
+    accept();
+    localStorage.setItem("c8_internal", "1");
+    const { sendGa4PageView, sendGa4ConsentedLandingPageView } = await loadModule(901);
+    sendGa4PageView();
+    sendGa4ConsentedLandingPageView();
+    await fallback();
+    expect(gtagCalls).toHaveLength(0);
+  });
+
+  it("sends no page_view on admin pages", async () => {
+    accept();
+    (globalThis as any).window.location = { href: "https://collaborate8.com/admin/analytics", pathname: "/admin/analytics" };
+    const { sendGa4PageView } = await loadModule(902);
+    sendGa4PageView();
+    await fallback();
+    expect(gtagCalls).toHaveLength(0);
+  });
+});

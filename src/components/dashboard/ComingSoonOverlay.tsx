@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,13 +19,51 @@ const labels: Record<DashboardTab, string> = {
 };
 
 const ComingSoonOverlay = ({ tab, onBack }: ComingSoonOverlayProps) => {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Not Radix based: move focus in, trap Tab, Escape goes back, restore focus.
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    const focusables = () =>
+      Array.from(panel?.querySelectorAll<HTMLElement>('button, [href], input, [tabindex]:not([tabindex="-1"])') ?? []);
+    (focusables()[0] ?? panel)?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onBack) {
+        e.preventDefault();
+        onBack();
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+      const items = focusables();
+      if (items.length === 0) { e.preventDefault(); panel.focus(); return; }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !panel.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (previous && document.contains(previous)) previous.focus();
+    };
+  }, [onBack]);
+
   return (
     <motion.div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="coming-soon-title"
+      tabIndex={-1}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-background/70 px-6 backdrop-blur-sm"
+      className="absolute inset-0 z-40 focus:outline-none flex flex-col items-center justify-center bg-background/70 px-6 backdrop-blur-sm"
     >
       <motion.div
         initial={{ scale: 0.96, opacity: 0, y: 10 }}
@@ -35,7 +74,7 @@ const ComingSoonOverlay = ({ tab, onBack }: ComingSoonOverlayProps) => {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-primary">
           <Sparkles className="h-7 w-7" />
         </div>
-        <h2 className="mt-5 text-xl font-bold text-foreground">Coming soon</h2>
+        <h2 id="coming-soon-title" className="mt-5 text-xl font-bold text-foreground">Coming soon</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           The <span className="font-semibold text-foreground">{labels[tab]}</span> area is
           still being built. We'll let you know as soon as it's ready.

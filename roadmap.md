@@ -52,3 +52,4 @@
 - [x] Sign-up email checks (reserved, disposable, MX), Check your email screen, unconfirmed login hint, branded confirm template file (not wired)
 - [x] Account deletion fix: migration, shared deletion, email-link flow, /delete-account page, privacy and Settings wording, throwaway tests (banned deltest account deliberately left for now)
 - [x] Homepage "See it in action" second block: decorative #F0EBE0 half-circle on right edge
+- [x] QA batch 2 (preview only): password field labels/autofill, dialog focus and names, tap targets, contrast, main landmarks, internal traffic exclusion, chat empty-state/refetch fix

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,11 +76,13 @@ export const ConversationEmailStep = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0" aria-describedby={undefined}>
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
-          <h2 className="text-lg font-semibold leading-snug">
+          <DialogTitle asChild>
+            <h2 className="text-lg font-semibold leading-snug">
             Your co-parent&apos;s invitation
           </h2>
+          </DialogTitle>
         </div>
 
         <div className="space-y-4 p-5 text-sm text-foreground">
@@ -218,11 +221,13 @@ export const ConversationCostsStep = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0" aria-describedby={undefined}>
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
-          <h2 className="text-lg font-semibold leading-snug">
+          <DialogTitle asChild>
+            <h2 className="text-lg font-semibold leading-snug">
             Provide further details on your costs (optional)
           </h2>
+          </DialogTitle>
         </div>
 
         <div className="space-y-4 p-5 text-sm text-foreground">
@@ -414,11 +419,13 @@ export const ConversationToolModal = ({
   return (
 
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto p-0" aria-describedby={undefined}>
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
-          <h2 className="text-lg font-semibold leading-snug">
+          <DialogTitle asChild>
+            <h2 className="text-lg font-semibold leading-snug">
             {premiumOnly ? (inApp ? "Collabor8 Premium" : "Unlock Collabor8 Premium") : "Start the financial conversation."}
           </h2>
+          </DialogTitle>
         </div>
 
         <div className="space-y-4 p-5 text-sm text-foreground">

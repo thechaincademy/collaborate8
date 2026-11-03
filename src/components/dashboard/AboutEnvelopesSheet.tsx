@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
+  DrawerTitle,
   DrawerTrigger,
   DrawerClose,
 } from "@/components/ui/drawer";
@@ -25,7 +26,7 @@ const AboutEnvelopesSheet = ({ children }: AboutEnvelopesSheetProps) => {
             </div>
           </div>
           
-          <h2 className="mb-4 text-3xl font-bold text-foreground">About payments</h2>
+          <DrawerTitle asChild><h2 className="mb-4 text-3xl font-bold text-foreground">About payments</h2></DrawerTitle>
           
           <p className="flex-1 text-muted-foreground leading-relaxed">
             Set aside money for your child's regular costs and keep track of what has been paid and received, so both parents can see where things stand.

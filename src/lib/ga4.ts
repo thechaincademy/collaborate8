@@ -24,6 +24,8 @@
  *    is only sent once until the route actually changes
  */
 
+import { isInternalTraffic } from "./internalTraffic";
+
 export const GA4_MEASUREMENT_ID = "G-2YB8M4ZYEG";
 
 /** Full landing URL (with query string), captured before the router runs. */
@@ -87,7 +89,7 @@ const landingHit = (w: GaWindow) => {
  */
 export const sendGa4ConsentedLandingPageView = () => {
   const w = window as unknown as GaWindow;
-  if (typeof w.gtag !== "function") return;
+  if (typeof w.gtag !== "function" || isInternalTraffic()) return;
   if (landingAlreadySent() || !isConsentGranted()) return;
   w.c8UpdateGoogleConsent?.();
   markLandingSent();
@@ -103,7 +105,7 @@ export const sendGa4PageView = (url?: string) => {
   cancelPending?.();
   const noop = () => {};
   const w = window as unknown as GaWindow;
-  if (typeof w.gtag !== "function") return noop;
+  if (typeof w.gtag !== "function" || isInternalTraffic()) return noop;
   const routeUrl = url ?? window.location.href;
   if (routeUrl === lastSentUrl) return noop;
   const initialTitle = document.title;
@@ -126,7 +128,7 @@ export const sendGa4PageView = (url?: string) => {
     // Consent can change while waiting for the new title. Denied still allows
     // Google's cookieless visit ping, but never grants storage or ad consent.
     w.c8UpdateGoogleConsent?.();
-    if (typeof w.gtag !== "function") return;
+    if (typeof w.gtag !== "function" || isInternalTraffic()) return;
     if (!firstSent && LANDING_URL) {
       firstSent = true;
       lastSentUrl = routeUrl;

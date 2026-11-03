@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
+  DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
@@ -26,7 +27,7 @@ const ActivityFilterSheet = ({ children, filter, onFilterChange }: ActivityFilte
       </DrawerTrigger>
       <DrawerContent className="px-6 pb-8">
         <div className="mb-6 mt-4">
-          <h2 className="text-2xl font-bold text-foreground">Activity</h2>
+          <DrawerTitle asChild><h2 className="text-2xl font-bold text-foreground">Activity</h2></DrawerTitle>
         </div>
         <div className="space-y-0">
           {filters.map((f) => (
