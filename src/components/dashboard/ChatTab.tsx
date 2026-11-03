@@ -552,7 +552,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     const text = draft.trim();
     if (!text || sending) return;
     if (rewriting) return;
-    if (!premium.hasAccess) {
+    if (!premium.loading && !premium.hasAccess) {
       await insertMessage(text);
       return;
     }
@@ -561,11 +561,11 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     try {
       const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
       const result = await Promise.race([
-        supabase.functions.invoke("chat-rewrite", { body: { draft: text } }),
+        supabase.functions.invoke("chat-rewrite", { body: { draft: text, mode: "send" } }),
         timeout,
       ]);
       if (result && !result.error) {
-        const d = result.data as { needs_rewrite?: boolean; rewrite?: string } | null;
+        const d = result.data as { needs_rewrite?: boolean; rewrite?: string | null } | null;
         const rw = d?.rewrite?.trim() || "";
         if (d?.needs_rewrite === true && rw && rw !== text) suggestion = rw;
       }
