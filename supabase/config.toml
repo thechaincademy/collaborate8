@@ -62,3 +62,12 @@ verify_jwt = false
 
 [functions.google-oauth-callback]
 verify_jwt = false
+
+[functions.verify-store-purchase]
+verify_jwt = false
+
+[functions.apple-store-notifications]
+verify_jwt = false
+
+[functions.google-play-rtdn]
+verify_jwt = false
