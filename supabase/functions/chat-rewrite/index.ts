@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
 
     if (mode === "send") {
       const resp = await callGateway(apiKey, {
-        model: "google/gemini-2.5-flash-lite",
+        model: "google/gemini-3.1-flash-lite",
         max_tokens: 600,
         response_format: SEND_SCHEMA,
         messages: [
