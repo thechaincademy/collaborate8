@@ -37,7 +37,7 @@
     <!-- Hotjar Tracking Code for Collabor8 Domain (loads only after analytics consent) -->
     <script>
       window.c8LoadHotjar = function () {
-        if (window.c8HotjarLoaded || window.c8IsInternal()) return;
+        if (window.c8HotjarLoaded || (window.c8IsInternal && window.c8IsInternal())) return;
         window.c8HotjarLoaded = true;
 
       (function(h,o,t,j,a,r){
@@ -54,7 +54,7 @@
     <!-- Microsoft Clarity (loads only after analytics consent) -->
     <script type="text/javascript">
       window.c8LoadClarity = function () {
-        if (window.c8ClarityLoaded || window.c8IsInternal()) return;
+        if (window.c8ClarityLoaded || (window.c8IsInternal && window.c8IsInternal())) return;
         window.c8ClarityLoaded = true;
         (function(c,l,a,r,i,t,y){
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -90,7 +90,7 @@
         });
       };
       window.c8LoadGtag = function () {
-        if (window.c8GtagLoaded || window.c8IsInternal()) return;
+        if (window.c8GtagLoaded || (window.c8IsInternal && window.c8IsInternal())) return;
         window.c8GtagLoaded = true;
         var s = document.createElement('script');
         s.async = true;
