@@ -1248,6 +1248,68 @@ export type Database = {
           },
         ]
       }
+      store_subscriptions: {
+        Row: {
+          auto_renew: boolean | null
+          created_at: string
+          environment: string | null
+          expires_at: string | null
+          id: string
+          last_notification_type: string | null
+          last_verified_at: string | null
+          latest_transaction_id: string | null
+          original_transaction_id: string | null
+          product_id: string
+          purchase_token: string | null
+          status: string
+          store: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          created_at?: string
+          environment?: string | null
+          expires_at?: string | null
+          id?: string
+          last_notification_type?: string | null
+          last_verified_at?: string | null
+          latest_transaction_id?: string | null
+          original_transaction_id?: string | null
+          product_id: string
+          purchase_token?: string | null
+          status: string
+          store: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_renew?: boolean | null
+          created_at?: string
+          environment?: string | null
+          expires_at?: string | null
+          id?: string
+          last_notification_type?: string | null
+          last_verified_at?: string | null
+          latest_transaction_id?: string | null
+          original_transaction_id?: string | null
+          product_id?: string
+          purchase_token?: string | null
+          status?: string
+          store?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
