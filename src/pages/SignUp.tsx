@@ -290,6 +290,7 @@ const SignUp = () => {
             type="password"
             placeholder="Enter your password"
             aria-label="Password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={`h-14 rounded-2xl border-2 bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${password && !isPasswordValid ? "border-destructive" : "border-border"}`}

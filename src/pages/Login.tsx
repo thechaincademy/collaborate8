@@ -177,6 +177,7 @@ const Login = () => {
                   type="password"
                   placeholder="Password"
                   aria-label="Password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"

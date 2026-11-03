@@ -129,6 +129,8 @@ const ResetPassword = () => {
               <Input
                 type="password"
                 placeholder="New password"
+                aria-label="New password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
@@ -140,6 +142,8 @@ const ResetPassword = () => {
               <Input
                 type="password"
                 placeholder="Confirm new password"
+                aria-label="Confirm new password"
+                autoComplete="new-password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
