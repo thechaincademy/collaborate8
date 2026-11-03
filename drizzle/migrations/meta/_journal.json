@@ -85,6 +85,13 @@
       "when": 1793348928028,
       "tag": "0011_message_tone_private",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793746929049,
+      "tag": "0012_create_store_subscriptions",
+      "breakpoints": true
     }
   ]
 }
