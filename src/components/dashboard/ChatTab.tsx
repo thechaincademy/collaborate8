@@ -2,7 +2,7 @@ import DeletedUserMessages from "./DeletedUserMessages";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Sparkles, Loader2, FileText, UserPlus, Download, Check, MessageCircle, FolderOpen, Paperclip } from "lucide-react";
+import { Send, ArrowLeft, Sparkles, ChevronDown, Loader2, FileText, UserPlus, Download, Check, MessageCircle, FolderOpen, Paperclip } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chatPdf";
 import { profileDisplayName } from "@/lib/profileDisplay";
 import DashboardHeader from "./DashboardHeader";
@@ -81,10 +81,26 @@ function toneLabel(score: number): { label: string; tone: "calm" | "tense" | "he
 const SUBHEADING =
   "A dedicated space to discuss finances with your co-parent - separate from everything else.";
 
+const COMPACT_QUERY = "(max-height: 699px), (max-width: 359px)";
+const useCompactChat = () => {
+  const [compact, setCompact] = useState(() => typeof window !== "undefined" && window.matchMedia(COMPACT_QUERY).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(COMPACT_QUERY);
+    const on = () => setCompact(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return compact;
+};
+
 const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "documents" } = {}) => {
   const inApp = useIsInApp();
   // Browser: leave room for the bottom menu. App: only the bottom safe area.
   const chatHeight = inApp ? "h-[calc(100vh-env(safe-area-inset-bottom)-1.5rem)] supports-[height:100dvh]:h-[calc(100dvh-env(safe-area-inset-bottom)-1.5rem)]" : "h-[calc(100vh-6rem-env(safe-area-inset-bottom))] supports-[height:100dvh]:h-[calc(100dvh-6rem-env(safe-area-inset-bottom))]";
+  // Small screens (short or very narrow): header scrolls away, list keeps a readable height.
+  const compact = useCompactChat();
+  const [aiInfoOpen, setAiInfoOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
@@ -841,18 +857,34 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   }
 
   return (
-    <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12")}>
-      <DashboardHeader title="Financial Chat" />
+    <div className={cn("mx-auto flex", compact ? "" : chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6", compact ? "pt-4" : "pt-12")}>
+      {compact ? (
+        <div className="-mb-6">
+          <DashboardHeader title="Financial Chat" />
+        </div>
+      ) : (
+        <DashboardHeader title="Financial Chat" />
+      )}
 
-      <div className="-mt-6 mb-3 flex shrink-0 items-start justify-between gap-3 max-[399px]:flex-col max-[399px]:gap-2">
-        <p className="text-sm text-muted-foreground">{SUBHEADING}</p>
-        <Button size="sm" variant="outline" className="shrink-0 gap-1.5 max-[399px]:w-full" onClick={handleDownload}>
-          <Download className="h-4 w-4" />
-          Download chat record
-        </Button>
-      </div>
-
-      {sectionTabs}
+      {compact ? (
+        <div className="mb-3 flex shrink-0 items-center gap-2 [&>div]:mb-0 [&>div]:flex-1">
+          {sectionTabs}
+          <Button size="icon" variant="outline" className="h-11 w-11 shrink-0" onClick={handleDownload} aria-label="Download chat record" title="Download chat record">
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="-mt-6 mb-3 flex shrink-0 items-start justify-between gap-3 max-[399px]:flex-col max-[399px]:gap-2">
+            <p className="text-sm text-muted-foreground">{SUBHEADING}</p>
+            <Button size="sm" variant="outline" className="shrink-0 gap-1.5 max-[399px]:w-full" onClick={handleDownload}>
+              <Download className="h-4 w-4" />
+              Download chat record
+            </Button>
+          </div>
+          {sectionTabs}
+        </>
+      )}
 
       <ConversationToolModal
 
@@ -871,15 +903,35 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
 
 
-      <div className="mb-3 flex shrink-0 items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
-        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-        <p className="text-xs text-foreground/80">
-          AI prompts and the calm check on Send are optional, private writing aids - not legal advice.
-        </p>
-      </div>
+      {compact ? (
+        <div className="mb-2 shrink-0">
+          <button
+            type="button"
+            aria-expanded={aiInfoOpen}
+            onClick={() => setAiInfoOpen((o) => !o)}
+            className="flex w-full items-center gap-1.5 rounded-md py-1 text-left text-xs text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <span className="flex-1">About AI prompts and the calm check</span>
+            <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", aiInfoOpen && "rotate-180")} />
+          </button>
+          {aiInfoOpen && (
+            <p className="mt-1 rounded-2xl border border-primary/30 bg-primary/10 p-3 text-xs text-foreground/80">
+              AI prompts and the calm check on Send are optional, private writing aids - not legal advice.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="mb-3 flex shrink-0 items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p className="text-xs text-foreground/80">
+            AI prompts and the calm check on Send are optional, private writing aids - not legal advice.
+          </p>
+        </div>
+      )}
 
       {user && coparentId && (<>
-      <div ref={scrollRef} tabIndex={0} role="log" aria-label="Messages" className="min-h-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex-1 space-y-3 overflow-y-auto pb-3">
+      <div ref={scrollRef} tabIndex={0} role="log" aria-label="Messages" className={cn("rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring space-y-3 overflow-y-auto pb-3", compact ? "h-[calc(100vh-6rem-8.5rem)] min-h-[240px] shrink-0 supports-[height:100dvh]:h-[calc(100dvh-6rem-8.5rem)]" : "min-h-0 flex-1")}>
         {messages.length === 0 && loadState === "error" ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center" role="status">
             <p className="text-sm text-muted-foreground">Could not load messages</p>
@@ -937,11 +989,12 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
                         mine ? "text-right" : "text-left",
                       )}
                     >
-                      {new Date(m.created_at).toLocaleString([], {
-                        day: "2-digit",
+                      {new Date(m.created_at).toLocaleString("en-GB", {
+                        day: "numeric",
                         month: "short",
-                        hour: "numeric",
+                        hour: "2-digit",
                         minute: "2-digit",
+                        hour12: false,
                       })}
                       {mine && (
                         <span className={cn("ml-1.5 font-medium", m.read_at ? "text-primary-ink" : "")}>
@@ -958,7 +1011,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         {showNoReplySuggestion && <ConversationToolSuggestionCard onOpen={openTool} />}
       </div>
 
-      <div className="flex shrink-0 items-end gap-2 pb-4">
+      <div className={cn("flex shrink-0 items-end gap-2", compact ? "pb-3" : "pb-4")}>
         <input
           ref={attachInputRef}
           type="file"
@@ -992,6 +1045,10 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
             }
           }}
           aria-label="Message"
+          onFocus={() => {
+            // Small screens: scroll the header away so the list and composer fill the view.
+            if (compact) setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" }), 250);
+          }}
           placeholder="Type a message…"
           rows={2}
           className="min-h-[48px] flex-1 resize-none rounded-2xl border-border bg-card text-foreground"

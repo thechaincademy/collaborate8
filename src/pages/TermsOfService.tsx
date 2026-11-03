@@ -237,7 +237,7 @@ const TermsOfService = () => {
             ] : [
               "Premium unlocks extra features, such as the AI writing tool. It costs £4.99 a month, billed yearly as £59.88, paid through Stripe.",
               "Your Premium renews automatically each year at the price shown to you, unless you cancel before the renewal date. We email you a reminder before each renewal.",
-              "You can cancel at any time before your renewal date in the app under Chat, Manage subscription. You keep Premium until the end of the year you have paid for.",
+              "You can cancel at any time before your renewal date in the app under Settings, Manage subscription. You keep Premium until the end of the year you have paid for.",
               "Premium benefits apply only to the parent who pays for it, not to their linked co-parent.",
               "If we change the Premium price, we will tell you before your next renewal, and you can cancel before it applies.",
             ]} />

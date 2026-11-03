@@ -13,6 +13,7 @@ const NotFound = () => {
     <>
       <Helmet>
         <title>Page Not Found - Collabor8</title>
+        <meta name="robots" content="noindex" />
         <meta name="description" content="The page you are looking for does not exist. Return to Collabor8 to manage child maintenance and co-parenting finances." />
       </Helmet>
     <div className="flex min-h-screen items-center justify-center bg-muted">
