@@ -2,6 +2,8 @@
  * First-touch sign-up attribution. Stored only after analytics cookie consent
  * (same "medi8-cookie-consent" gate as GA4/Clarity). First visit wins.
  */
+import { isInternalTraffic } from "./internalTraffic";
+
 const KEY = "c8_attribution";
 const CONSENT_KEY = "medi8-cookie-consent";
 
@@ -37,7 +39,7 @@ export const buildAttribution = (href: string, referrer: string): Attribution =>
 /** Store attribution once, only with consent. Safe to call repeatedly. */
 export const captureAttribution = () => {
   try {
-    if (localStorage.getItem(CONSENT_KEY) !== "accepted") return;
+    if (localStorage.getItem(CONSENT_KEY) !== "accepted" || isInternalTraffic()) return;
     if (localStorage.getItem(KEY)) return;
     localStorage.setItem(KEY, JSON.stringify(buildAttribution(LANDING_HREF, LANDING_REFERRER)));
   } catch { /* storage unavailable */ }

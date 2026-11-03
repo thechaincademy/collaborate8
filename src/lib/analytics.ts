@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isInternalTraffic } from "@/lib/internalTraffic";
 
 /**
  * Product usage analytics (Product Tracker row 7).
@@ -146,7 +147,7 @@ const sendToClarity = (name: UsageEvent) => {
  * and only for ANON_ALLOWED events.
  */
 export const track = async (name: UsageEvent, props?: UsageProps): Promise<void> => {
-  if (!hasAnalyticsConsent()) return;
+  if (!hasAnalyticsConsent() || isInternalTraffic()) return;
   try {
     sendToClarity(name);
     const { data } = await supabase.auth.getSession();
