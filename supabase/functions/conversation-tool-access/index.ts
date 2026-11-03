@@ -8,6 +8,7 @@ import {
   promoExpiry,
   subscriptionFields,
 } from "../_shared/conversation-tool-access-rule.ts";
+import { activeStoreSubscription } from "../_shared/store-subscription-rule.ts";
 
 // Promotional codes that grant free access (12 months, no renewal)
 const PROMO_CODES = new Set(["4321"]);
@@ -59,6 +60,21 @@ serve(async (req) => {
     if (action === "status") {
       const access = await readAccess();
       if (isActive(access)) return json({ hasAccess: true, access });
+      const store = await activeStoreSubscription(supabase, user.id);
+      if (store) {
+        return json({
+          hasAccess: true,
+          access: {
+            source: store.store === "apple" ? "app_store" : "google_play",
+            expires_at: store.expires_at,
+            current_period_end: store.expires_at,
+            subscription_status: store.status,
+            cancel_at_period_end: !store.auto_renew,
+            stripe_customer_id: null,
+            stripe_subscription_id: null,
+          },
+        });
+      }
       return json({ hasAccess: false, expiredAt: access?.expires_at ?? null });
     }
 

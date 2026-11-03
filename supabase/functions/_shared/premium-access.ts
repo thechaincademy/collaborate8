@@ -1,6 +1,7 @@
 // Deploy target: supabase/functions/_shared/premium-access.ts
 import { createSupabaseAdmin, getUserFromRequest } from "./supabase.ts";
 import { isActive } from "./conversation-tool-access-rule.ts";
+import { activeStoreSubscription } from "./store-subscription-rule.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 export const requirePremium = async (req: Request, feature: string): Promise<Response | null> => {
@@ -19,6 +20,13 @@ export const requirePremium = async (req: Request, feature: string): Promise<Res
     status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
   if (isActive(data)) return null;
+  try {
+    if (await activeStoreSubscription(createSupabaseAdmin(), user.id)) return null;
+  } catch {
+    return new Response(JSON.stringify({ error: "entitlement_unavailable" }), {
+      status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   return new Response(JSON.stringify({ error: "premium_required", feature }), {
     status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
