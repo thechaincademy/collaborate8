@@ -9,7 +9,7 @@ export type StoreStatus =
 
 export const STORE_ACTIVE_STATUSES: StoreStatus[] = ["active", "grace_period", "cancelled"];
 /** Empty = accept any subscription product of our own app; non-empty = enforce. */
-export const STORE_PREMIUM_PRODUCT_IDS: string[] = [];
+export const STORE_PREMIUM_PRODUCT_IDS: string[] = ["c8_premium_monthly", "c8_premium_yearly"];
 
 export interface StoreRow {
   id?: string; user_id?: string; store?: "apple" | "google"; product_id?: string;
@@ -35,6 +35,20 @@ export async function activeStoreSubscription(admin: any, userId: string): Promi
   if (error) throw new Error("store_subscriptions query failed");
   return (data ?? []).find((r: StoreRow) => isStoreActive(r)) ?? null;
 }
+
+/** Access object for a store row, shared by conversation-tool-access `status` and verify-store-purchase. */
+export const storeAccessShape = (row: StoreRow) => ({
+  source: row.store === "apple" ? "app_store" : "google_play",
+  expires_at: row.expires_at,
+  current_period_end: row.expires_at,
+  subscription_status: row.status,
+  cancel_at_period_end: !row.auto_renew,
+  stripe_customer_id: null,
+  stripe_subscription_id: null,
+});
+
+/** True if a row with this store identifier already exists (unique-index race). */
+export const isUniqueViolation = (e: unknown) => (e as any)?.code === "23505";
 
 // ── small utils ──
 export const tokenRef = async (token: string) => {
@@ -278,7 +292,11 @@ export async function saveStoreRow(admin: any, existing: StoreRow | null, row: S
     ? admin.from("store_subscriptions").update(row).eq("id", existing.id)
     : admin.from("store_subscriptions").insert(row);
   const { data, error } = await q.select("*").single();
-  if (error) throw new Error("store_subscriptions save failed");
+  if (error) {
+    const err: any = new Error("store_subscriptions save failed");
+    err.code = error.code;
+    throw err;
+  }
   return data;
 }
 

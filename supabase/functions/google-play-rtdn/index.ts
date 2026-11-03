@@ -3,7 +3,7 @@ import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.9.6";
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
 import {
   fetchGoogleSubscription, findStoreRow, GOOGLE_SECRETS, googleServiceAccount, missingSecrets,
-  profileExists, saveStoreRow, StoreHttpError, tokenRef,
+  productAllowed, profileExists, saveStoreRow, StoreHttpError, tokenRef,
 } from "../_shared/store-subscription-rule.ts";
 
 const json = (body: unknown, status = 200) =>
@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
       throw e;
     }
 
+    if (!productAllowed(g.row.product_id)) { log("product not allowlisted", { token: ref, type: typeName }); return json({ ok: true, ignored: "product" }); }
     const existing = await findStoreRow(admin, "google", token);
     let userId = existing?.user_id ?? null;
     if (!existing) {

@@ -1,6 +1,6 @@
 // App Store Server Notifications V2. Public endpoint; authenticity comes from the Apple-signed JWS.
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
-import { findStoreRow, profileExists, saveStoreRow, StoreStatus, verifyAppleJws } from "../_shared/store-subscription-rule.ts";
+import { findStoreRow, productAllowed, profileExists, saveStoreRow, StoreStatus, verifyAppleJws } from "../_shared/store-subscription-rule.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -32,6 +32,9 @@ Deno.serve(async (req) => {
 
   const otid = String(txn?.originalTransactionId ?? renewal?.originalTransactionId ?? "");
   if (!otid) { log("no transaction", { type }); return json({ ok: true, ignored: "no_transaction" }); }
+
+  const product = String(txn?.productId ?? "");
+  if (product && !productAllowed(product)) { log("product not allowlisted", { originalTransactionId: otid, type }); return json({ ok: true, ignored: "product" }); }
 
   try {
     const admin = createSupabaseAdmin();
