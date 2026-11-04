@@ -41,7 +41,7 @@ Step 2. Always read the draft and fill:
   Write each fact in the language the draft used for it. Do not list the other parent's own past lapse (something they forgot, missed or got wrong) as a fact when the draft also asks for something; that is blame. A child's state or health at that time is still a fact.
   actor = who did, missed or must do the thing in this fact, as the draft refers to them: "you" for the other parent, "I" for the sender, or the person's name. "" if nobody does anything. action = the one verb from the draft for what the actor did, missed or must do, copied as written (for example "missed"), or "".
   For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft in the draft's own language, never translated. Frequency and count words go in keep only when they describe the child's state or are a specific count (twice, three times, third time this week, all night, all week). Words such as again, always, never, as usual or every time that only criticise the other parent are blame, in any language: leave them out of keep and out of the rewrite. A crude or exaggerated word may be replaced by its plain everyday word with the same meaning, and then that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
-- has_ask: true only if the draft itself makes a request: it asks a question, uses words such as please, could you, can you, make sure or let me know, or gives an instruction (for example "bring...", "don't..."), in any language. false if it only states facts, a need, a rule or a warning, reports or complains about what already happened, or only states the sender's own decision; then the rewrite stays statements only.
+- has_ask: true only if the draft itself makes a request: it asks a question, uses words such as please, could you, can you, make sure or let me know, gives an instruction (for example "bring...", "don't..."), or warns the other parent about what they do next ("if you ... again"), in any language. false if it only states facts, a need or a rule, reports or complains about what already happened, or only states the sender's own decision; then the rewrite stays statements only.
 - ask: that ask in plain words, or "". When rewriting, keep the draft's own words for what is asked (its verb and the thing or person it is about); never swap them for a milder or different request.
 - states_decision: true if the sender states something they have decided or will do themselves.
 
@@ -115,7 +115,7 @@ type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unkn
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
 
 const normText = (s: string) =>
-  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+  s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
 
 const numberTokens = (s: string) =>
   new Set(
@@ -131,7 +131,7 @@ const contentWords = (sentence: string) =>
 const KEEP_STOP_WORDS = new Set(["the", "and", "his", "her", "their", "your", "our", "was", "were", "for", "with", "that", "this", "from", "are", "has", "have", "had", "she", "him", "them", "you", "please", "could", "would", "can", "will"]);
 
 const WORD_SPLIT = /[^\p{L}\p{N}£.:%']+/u;
-const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const stripAccents = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 const TIME_WORDS = [
   "tonight", "today", "tomorrow", "yesterday", "this morning", "this afternoon", "this evening", "this week",
   "this weekend", "next week", "next weekend", "next time", "in future", "in the future", "from now on",
@@ -231,7 +231,7 @@ const actorRole = (actor: unknown, names: Set<string>) => {
 };
 // Subjects of each use of a verb (matched on its first 4 letters) in a text.
 const subjectsOf = (text: string, verb: string, names: Set<string>) => {
-  const stem = stripAccents(verb).slice(0, Math.min(4, verb.length));
+  const stem = verbStem(verb);
   const out: (string | null)[] = [];
   for (const sent of text.split(/(?<=[.!?,;])\s+/)) {
     const toks = subjTokens(sent);
@@ -249,6 +249,20 @@ const subjectsOf = (text: string, verb: string, names: Set<string>) => {
     });
   }
   return out;
+};
+const ACTION_EQUIV: Record<string, string[]> = { want: ["like", "wish"] };
+// A rewrite that removes none of the draft's words only restyles it: treat the draft as fine and leave it untouched.
+const removesNothing = (draft: string, rewrite: string) => {
+  const words = (t: string) => expandContractions(normText(t)).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 2 && !KEEP_STOP_WORDS.has(w));
+  const have = new Set(words(rewrite).map(wordStem));
+  return words(draft).every((w) => have.has(wordStem(w)));
+};
+// "letting" -> "let", "missed" -> "miss": the part of a verb shared by its forms.
+const verbStem = (verb: string) => {
+  let b = stripAccents(verb.toLowerCase());
+  if (b.length > 4) b = b.replace(/(?:ing|ed|es|s)$/, "");
+  if (/([b-df-hj-np-tv-z])\1$/.test(b)) b = b.slice(0, -1);
+  return b.slice(0, Math.min(4, b.length));
 };
 const sameActor = (a: string, b: string) =>
   a === b || (a === "third" && b.startsWith("name:")) || (b === "third" && a.startsWith("name:"));
@@ -433,11 +447,22 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     if (!want) continue;
     const draftSaid = subjectsOf(d, action, names).some((s) => s === want);
     const rSubjects = subjectsOf(r, action, names);
+    const rStemsAll = r.split(/[^\p{L}\p{N}']+/u).filter(Boolean).map(wordStem);
+    // The same action in other words that mean the same ("want" -> "would like").
+    if (!rSubjects.length && (ACTION_EQUIV[verbStem(action)] ?? []).some((e) => rStemsAll.includes(e))) continue;
     // Only when the draft just reports it (no ask): then that report is the message and who did it must stay.
     if (!asks && draftSaid && (want === "other" || want === "self") && !rSubjects.some((g) => g === want)) {
       codes.add("actor_dropped");
       const who = want === "other" ? '"you"' : '"I"';
       notes.push(`The draft says ${who} ${action}. Keep that fact with ${who} as the one who ${action}, in the draft's words; do not drop it or make it passive.`);
+      continue;
+    }
+    // The sender's own action (what I did, will do or want), and the other parent's action in a report, must stay.
+    const verbGone = rSubjects.length === 0;
+    if (verbGone && (want === "self" || (want === "other" && !asks))) {
+      codes.add("action_dropped");
+      const who = want === "other" ? '"you"' : '"I"';
+      notes.push(`The draft says ${who} "${action}". Keep that action with ${who} doing it, in the draft's words; do not change it into a different action or a decision.`);
       continue;
     }
     for (const got of rSubjects) {
@@ -590,6 +615,10 @@ Deno.serve(async (req) => {
           languages: Array.isArray(parsed.draft_languages) ? (parsed.draft_languages as unknown[]).filter((l): l is string => typeof l === "string") : [],
         };
         let rewrite = clean(parsed.rewrite as string);
+        if (removesNothing(draft, rewrite)) {
+          log("pass", ["near_identical"], 1);
+          return json(pass);
+        }
         let result = checkRewrite(draft, rewrite, checkInput);
         let attempts = 1;
         if (result.codes.length) {
