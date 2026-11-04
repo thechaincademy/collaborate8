@@ -335,7 +335,8 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     if (!want) continue;
     const draftSaid = subjectsOf(d, action, names).some((s) => s === want);
     const rSubjects = subjectsOf(r, action, names);
-    if (draftSaid && (want === "other" || want === "self") && !rSubjects.some((g) => g === want)) {
+    // Only when the draft just reports it (no ask): then that report is the message and who did it must stay.
+    if (!c.has_ask && draftSaid && (want === "other" || want === "self") && !rSubjects.some((g) => g === want)) {
       codes.add("actor_dropped");
       const who = want === "other" ? '"you"' : '"I"';
       notes.push(`The draft says ${who} ${action}. Keep that fact with ${who} as the one who ${action}, in the draft's words; do not drop it or make it passive.`);
