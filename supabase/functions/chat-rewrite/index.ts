@@ -59,6 +59,7 @@ Step 3. If needs_rewrite is true, write rewrite, one calm version:
 - Add nothing: no new sentence, clause, feeling, reason, importance, thanks or understanding (never "is important to me"). Use only the draft's own words, plus "please" at most once.
 - If the draft makes no plain request, add none: a stated fact or rule stays a statement, and a question stays a question.
 - Remove threats (court, lawyer, solicitor) entirely.
+- Leave out, whole, every sentence that is only blame: a jibe, a rhetorical question ("Are you even capable of...?"), a guess about the other parent's feelings ("isn't important to you", "you don't care") or a sentence built on always or never. Do not turn any part of one into a statement.
 - Say each fact once; do not repeat an item, dose or time in the ask, refer back with it, this or them.
 - Plain, brief and warm. UK English spelling, no em dashes. About the same length as the draft or shorter.
 If needs_rewrite is false: rewrite = "".`;
@@ -411,7 +412,7 @@ const FX_THREAT_FRAME = wordRe("i'll|i will|i'm going to|i am going to|i'm calli
 const fxSentences = (t: string) => t.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
 const fxIsThreat = (s: string) => FX_THREAT.test(normText(s)) && FX_THREAT_FRAME.test(normText(s));
 // Blame words that must never stay in a rewrite, in any language.
-const FX_REPROACH = wordRe("always|never|sempre|nunca|siempre|typical|típico|típica|tipico|pathetic|patético|patética|obviously|clearly|as usual|como sempre|como siempre|useless|inútil|lazy|selfish|irresponsible|irresponsável|irresponsable|do you even|did you even|you even|even bother|do you ever|how hard|not that you|thanks so much|brilliant|honestly|seriously|done being nice|se é que|nem penses|ni se te ocurra|a sério|en serio|ridiculous|ridículo|unbelievable|disgrace|vergonha|vergüenza|incompetent|incompetente|for once|pela primeira vez na vida|por una vez");
+const FX_REPROACH = wordRe("always|never|sempre|nunca|siempre|typical|típico|típica|tipico|pathetic|patético|patética|obviously|clearly|as usual|como sempre|como siempre|useless|inútil|lazy|selfish|irresponsible|irresponsável|irresponsable|do you even|did you even|you even|even bother|do you ever|how hard|not that you|thanks so much|brilliant|honestly|seriously|done being nice|se é que|nem penses|ni se te ocurra|a sério|en serio|ridiculous|ridículo|important to you|importante para ti|importante pra ti|don't care|do not care|doesn't care|does not care|you care|não queres saber|não te importa|no te importa|te da igual|i guess|whatever|capable|capaz|pretend|finges|fingir|finjas|unbelievable|disgrace|vergonha|vergüenza|incompetent|incompetente|for once|pela primeira vez na vida|por una vez");
 const FX_PLEASE = /(?<![\p{L}])(?:please|kindly|por favor|se faz favor|faz favor)(?![\p{L}])/gu;
 const FX_TIMES = wordRe([
   "today", "tonight", "tomorrow", "yesterday", "last night", "this morning", "this afternoon", "this evening", "this week", "this weekend", "this month",
@@ -483,8 +484,11 @@ const FX_SUBJ_SKIP = new Set([...SUBJ_SKIP, "didn't", "hasn't", "haven't", "hadn
 type FxDeed = { key: string; role: string; neg: boolean; word: string };
 const fxDeeds = (text: string, names: Set<string>) => {
   const out: FxDeed[] = [];
+  let prevLast = "";
   for (const sent of text.split(/(?<=[.!?,;])\s+|\s(?:and|but|e|mas|y|pero)\s/u)) {
     const toks = subjTokens(sent);
+    const before = prevLast;
+    prevLast = toks[toks.length - 1] ?? "";
     toks.forEach((t, i) => {
       const hit = FX_KEY.find(([, re]) => re.test(t));
       if (!hit) return;
@@ -502,6 +506,7 @@ const fxDeeds = (text: string, names: Set<string>) => {
         else if (/(?:aste|iste|este)$/.test(stripAccents(t)) && !ascii) role = "other";
         else if (/(?:ei|é|í)$/.test(t) || /^(?:esqueci|perdi)$/.test(t)) role = "self";
         else if (!ascii) role = "3";
+        else if (i === 0 && /ing$/.test(t) && before === "yours") role = "other"; // "another idea of yours, letting Max..."
         else return; // English verb with no subject (an instruction): not a report of who did it
       }
       const neg = toks.slice(Math.max(0, i - 3), i).some((w) => FX_NEG.has(w));
@@ -528,6 +533,12 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   const kept: string[] = [];
   const factDraft = fxSentences(draft).filter((s) => !fxIsThreat(s)).join(" ");
   const d = normText(factDraft);
+  // Blame sentences ("You ALWAYS forget...", "Are you even capable...?", "...isn't important to you. Again.") give no facts that must stay;
+  // money, medicines and deeds are still read from every non-threat sentence.
+  const coreSents = fxSentences(factDraft).filter((s) => !FX_REPROACH.test(normText(s)));
+  const coreText = coreSents.join(" ");
+  const dc = normText(coreText);
+  const dAgain = normText(coreSents.filter((s) => fxAnchored(s)).join(" "));
   const r = normText(rewrite);
   const rStems = new Set(fxToks(rewrite).map(fxStem));
   const need = (code: string, label: string) => { codes.add(code); kept.push(label); };
@@ -536,27 +547,26 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   const rMoney = (r.match(FX_MONEY_G) ?? []).map(squash);
   for (const m of d.match(FX_MONEY_G) ?? []) if (!rMoney.includes(squash(m))) need("money_dropped", m);
   const esDraft = langScore(d, "es") > langScore(d, "pt");
-  for (const m of d.match(FX_NUM_WORDS_G) ?? []) {
+  for (const m of dc.match(FX_NUM_WORDS_G) ?? []) {
     if ((m === "dos" || m === "doce") && !esDraft) continue; // Portuguese "dos" (of the), "doce" (sweet)
     if (!hasWord(r, m)) need("number_dropped", m);
   }
   // Times and dates (days, months, today, last time, weekend ...).
-  for (const m of d.match(FX_TIMES_G) ?? []) if (!hasWord(r, m)) need("time_dropped", m);
-  for (const [key, re] of MONTHS) if (re.test(d) && !re.test(r)) need("time_dropped", key);
+  for (const m of dc.match(FX_TIMES_G) ?? []) if (!hasWord(r, m)) need("time_dropped", m);
+  for (const [key, re] of MONTHS) if (re.test(dc) && !re.test(r)) need("time_dropped", key);
   // Counts and repetition with their period.
   for (const re of [FX_ORD_G, FX_PERIOD_G, FX_EVERY_G]) {
-    for (const m of d.match(re) ?? []) if (!fxPhraseKept(m, rStems)) need("count_dropped", m.trim());
+    for (const m of dc.match(re) ?? []) if (!fxPhraseKept(m, rStems)) need("count_dropped", m.trim());
   }
-  for (const m of d.match(COUNT_RE) ?? []) if (!fxPhraseKept(m, rStems)) need("count_dropped", m);
+  for (const m of dc.match(COUNT_RE) ?? []) if (!fxPhraseKept(m, rStems)) need("count_dropped", m);
   for (const [lang, re] of Object.entries(FX_AGAIN)) {
-    if (re.test(d) && !Object.values(FX_AGAIN).some((x) => x.test(r))) need("count_dropped", lang === "en" ? "again" : lang === "pt" ? "outra vez / de novo" : "otra vez / de nuevo");
+    if (re.test(dAgain) && !Object.values(FX_AGAIN).some((x) => x.test(r))) need("count_dropped", lang === "en" ? "again" : lang === "pt" ? "outra vez / de novo" : "otra vez / de nuevo");
   }
   // Names of people and places, and "at yours"-type places.
-  for (const n of draftNames(factDraft)) if (!hasWord(r, n)) need("name_dropped", n);
-  for (const m of d.match(FX_PLACES_G) ?? []) if (!hasWord(r, m)) need("place_dropped", m);
+  for (const n of draftNames(coreText)) if (!hasWord(r, n)) need("name_dropped", n);
+  for (const m of dc.match(FX_PLACES_G) ?? []) if (!hasWord(r, m)) need("place_dropped", m);
   // Negated statements ("wouldn't say why", "no screens") keep their negation and verb; absolutes and blame sentences aside.
-  for (const sent of fxSentences(factDraft)) {
-    if (FX_REPROACH.test(normText(sent))) continue;
+  for (const sent of coreSents) {
     const ts = fxToks(sent);
     // Only factual sentences (a name, number, time, key deed, or 4+ content words); a bare jibe such as "Seguro que ni apareces" may go.
     if (!fxAnchored(sent)) continue;
@@ -569,15 +579,28 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
       if (!ok) need("negation_dropped", `${w} ${nxt}`);
     });
   }
-  // A rewrite sentence made only from a bare jibe in the draft (no fact, no ask) keeps reproach: "Ni apareces".
-  const dSents = fxSentences(factDraft).map((x) => ({ x, st: new Set(fxToks(x).filter((t) => !FX_STOP.has(t)).map(fxStem)) }));
-  for (const rs of fxSentences(rewrite)) {
+  // A rewrite clause made only from a blame clause of the draft ("You ALWAYS forget...", "Are you even capable of...",
+  // "If you're late again I'm done being nice") or from a bare negative jibe with no fact and no ask ("Ni apareces") keeps reproach.
+  const fxClauses = (t: string) => fxSentences(t).flatMap((x) => x.split(/[,;:]\s*/)).map((x) => x.trim()).filter(Boolean);
+  const dSents = fxSentences(factDraft).flatMap((sent) => {
+    const blameSent = FX_REPROACH.test(normText(sent));
+    return [sent, ...sent.split(/[,;:]\s*/)].map((x, k) => ({
+      x, blame: k === 0 ? blameSent : FX_REPROACH.test(normText(x)), st: new Set(fxToks(x).filter((t) => !FX_STOP.has(t)).map(fxStem)),
+    }));
+  });
+  const blameStems = new Set<string>(), factStems = new Set<string>();
+  for (const ds of dSents) for (const t of ds.st) (ds.blame ? blameStems : factStems).add(t);
+  for (const rs of fxClauses(rewrite)) {
     const rt = fxToks(rs).filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t) && !FX_ALLOWED_NEW.has(t)).map(fxStem);
     if (!rt.length) continue;
-    let best: { x: string; st: Set<string> } | null = null, bs = 0;
-    for (const ds of dSents) { const sc = rt.filter((t) => ds.st.has(t)).length; if (sc > bs) { bs = sc; best = ds; } }
-    if (best && bs === rt.length && !fxAnchored(best.x) && !textHasAsk(best.x)) {
-      codes.add("reproach_kept"); notes.push(`Leave out "${rs}": it only repeats a jibe from the draft.`);
+    const fromBlame = rt.filter((t) => blameStems.has(t) && !factStems.has(t));
+    if (fromBlame.length) {
+      codes.add("reproach_kept"); notes.push(`Leave out "${rs}": it uses words only found in the draft's blame.`);
+      continue;
+    }
+    const covering = dSents.filter((ds) => rt.every((t) => ds.st.has(t)));
+    if (covering.length && covering.every((ds) => ds.blame || (!fxAnchored(ds.x) && !textHasAsk(ds.x) && fxToks(ds.x).some((t) => FX_NEG.has(t))))) {
+      codes.add("reproach_kept"); notes.push(`Leave out "${rs}": it only repeats blame from the draft.`);
     }
   }
   // Medication and health names.
