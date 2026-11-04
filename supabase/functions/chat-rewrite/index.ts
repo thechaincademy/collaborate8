@@ -33,7 +33,7 @@ Return ONLY JSON: {"options":[{"tone":"Neutral","text":"..."},{"tone":"Brief","t
 
 const SEND_SYSTEM = `You check a message a separated parent has drafted to the other parent and, if needed, write one calmer version. Work in three steps and fill every JSON field.
 
-Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggressive, sarcastic, blaming, reproachful, guilt-tripping, threatening, uses absolutes about the other parent (always, never), or uses a child as leverage or as a messenger against the other parent. false if it is neutral, factual, polite, firm but polite, or kind. false if it reports a safety concern, risk of harm or an emergency about a child or the sender.
+Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggressive, sarcastic, blaming, reproachful, guilt-tripping, threatening, uses absolutes about the other parent (always, never), or uses a child as leverage or as a messenger against the other parent. false if it is neutral, factual, polite, firm but polite, or kind; a polite refusal or a polite insistence on an agreed arrangement is firm but polite. false if it reports a safety concern, risk of harm or an emergency about a child or the sender.
 
 Step 2. Always read the draft and fill:
 - draft_languages: every language used in the draft, as ISO 639-1 codes (for example "en", "pt").
@@ -115,7 +115,7 @@ type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unkn
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
 
 const normText = (s: string) =>
-  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+  s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
 
 const numberTokens = (s: string) =>
   new Set(
@@ -131,7 +131,7 @@ const contentWords = (sentence: string) =>
 const KEEP_STOP_WORDS = new Set(["the", "and", "his", "her", "their", "your", "our", "was", "were", "for", "with", "that", "this", "from", "are", "has", "have", "had", "she", "him", "them", "you", "please", "could", "would", "can", "will"]);
 
 const WORD_SPLIT = /[^\p{L}\p{N}£.:%']+/u;
-const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const stripAccents = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 const TIME_WORDS = [
   "tonight", "today", "tomorrow", "yesterday", "this morning", "this afternoon", "this evening", "this week",
   "this weekend", "next week", "next weekend", "next time", "in future", "in the future", "from now on",
@@ -278,6 +278,8 @@ const isAskClause = (cl: string) => {
   const w = ws[i];
   if (!w) return false;
   if (w === "do" && ws[i + 1] === "not") return true;
+  // A warning about what the other parent does next ("if you're late again ...") is a demand.
+  if ((w === "if" || w === "se" || w === "si") && ["you", "you're", "tu", "tú", "você", "voce", "usted", "voltares", "chegares", "vuelves", "llegas"].includes(ws[i + 1] ?? "")) return true;
   if ((w === "no" || w === "não" || w === "nao" || w === "nem") && NEG_IMP_NEXT.has(ws[i + 1] ?? "")) return true;
   return IMP_VERBS.has(w) && ws.length > i + 1;
 };
@@ -292,6 +294,9 @@ const SOFTENED: Record<string, string[]> = {
   lies: ["true", "untr", "accu"], lyin: ["true", "untr", "accu"], liar: ["true", "untr", "accu"],
   ment: ["verd"], // mentiras / mentir -> verdade / verdad
 };
+// Specific counts and durations are facts and must stay (frequency words that only blame are not counts).
+const COUNT_RE = /(?<![\p{L}\p{N}])(?:(?:first|second|third|fourth|fifth|\d+(?:st|nd|rd|th)) time|twice|(?:two|three|four|five|\d+) times|all (?:night|week|day|weekend|morning|afternoon)|(?:a|à) noite toda|toda a noite|a semana toda|toda a semana|toda la noche|toda la semana|duas vezes|três vezes|dos veces|tres veces|pela (?:segunda|terceira|quarta) vez|por (?:segunda|tercera|cuarta) vez)(?![\p{L}\p{N}])/gu;
+
 // Copy check for mixed-language drafts: every word must be the draft's own, in the draft's order (only deletions),
 // so nothing is translated or re-mixed.
 const expandContractions = (t: string) =>
@@ -311,6 +316,21 @@ const copyProblem = (draft: string, rewrite: string) => {
     for (let k = 1; k < ws.length; k++) {
       const a = pos.get(ws[k - 1])!, b = pos.get(ws[k])!;
       if (!a.some((i) => b.some((j) => j > i && j - i <= COPY_GAP))) return `"${ws[k - 1]} ${ws[k]}" does not follow the draft's own wording`;
+    }
+  }
+  // An added please / por favor must be in the language of the words it goes with.
+  const other = (ws: string[]) => Math.max(...Object.keys(LANG_MARKERS).filter((x) => x !== "en").map((x) => langScore(ws.join(" "), x)));
+  for (const sent of expandContractions(normText(rewrite)).split(/[.!?]+/)) {
+    const ws = toks(sent);
+    for (let i = 0; i < ws.length; i++) {
+      if (ws[i] === "please" && !dt.includes("please")) {
+        const next = ws.slice(i + 1, i + 9);
+        if (other(next) > langScore(next.join(" "), "en")) return `"please" is added to words in another language`;
+      }
+      if (ws[i] === "por" && ws[i + 1] === "favor" && !(dt.includes("por") && dt.includes("favor"))) {
+        const next = ws.slice(i + 2, i + 10);
+        if (langScore(next.join(" "), "en") > other(next)) return `"por favor" is added to English words`;
+      }
     }
   }
   return null;
@@ -355,6 +375,7 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
       if (!keepFound(nk, r)) { codes.add("missing_fact"); missing.push(k); }
     }
   }
+  for (const m of d.match(COUNT_RE) ?? []) if (!r.includes(m)) { codes.add("missing_fact"); missing.push(m); }
   if (missing.length) notes.push(`These words from the draft are missing: ${missing.map((k) => `"${k}"`).join(", ")}. Use each of them exactly as the draft writes them, in the draft's language.`);
 
   // Health words from the draft must still be there, in the draft's own words.
