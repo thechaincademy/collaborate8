@@ -37,11 +37,12 @@ Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggress
 
 Step 2. Always read the draft and fill:
 - draft_languages: every language used in the draft, as ISO 639-1 codes (for example "en", "pt").
-- facts: every fact in the draft, each as one short plain sentence of at most ten words. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent. A mention of the other parent's past lapse that is only a side remark to criticise them (next to a separate ask or need) is blame: leave it out. Keep it only when that event is what the draft is reporting.
+- facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent. A mention of the other parent's past lapse that is only a side remark to criticise them (next to a separate ask or need) is blame: leave it out. Keep it only when that event is what the draft is reporting.
   Write each fact in the language the draft used for it. Do not list the other parent's own past lapse (something they forgot, missed or got wrong) as a fact when the draft also asks for something; that is blame. A child's state or health at that time is still a fact.
   actor = who did, missed or must do the thing in this fact, as the draft refers to them: "you" for the other parent, "I" for the sender, or the person's name. "" if nobody does anything. action = the one verb from the draft for what the actor did, missed or must do, copied as written (for example "missed"), or "".
   For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft in the draft's own language, never translated. Frequency and count words go in keep only when they describe the child's state or are a specific count (twice, three times, third time this week, all night, all week). Words such as again, always, never, as usual or every time that only criticise the other parent are blame, in any language: leave them out of keep and out of the rewrite. A crude or exaggerated word may be replaced by its plain everyday word with the same meaning, and then that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
 - has_ask: true only if the draft itself makes a request: it asks a question, uses words such as please, could you, can you, make sure or let me know, gives an instruction (for example "bring...", "don't..."), or warns the other parent about what they do next ("if you ... again"), in any language. false if it only states facts, a need or a rule, reports or complains about what already happened, or only states the sender's own decision; then the rewrite stays statements only.
+- ask: that ask in plain words, or "". When rewriting, keep the draft's own words for what is asked (its verb and the thing or person it is about); never swap them for a milder or different request.
 - states_decision: true if the sender states something they have decided or will do themselves.
 
 Step 3. If needs_rewrite is true, write rewrite, one calm version:
@@ -49,7 +50,7 @@ Step 3. If needs_rewrite is true, write rewrite, one calm version:
 - Keep every fact with the same meaning and tense, using its keep words, in the language the draft used for it.
 - Keep who did what: each fact's actor stays the one who did, missed or must do that same action (you stays you, I stays I, a person stays that person). Never make the child or anyone else the one who did it. Keep date wording such as due, by and on as written, and never turn a future date or deadline into a past one. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
 - If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step.
-- If has_ask is true: keep that same ask in the draft's own words for what is asked (its verb and the thing or person it is about), never a milder or different request, concrete and specific (the same child, person, item, amount, time and date), as one clear polite request. A child's health, safety, medication, school or care need stays a clear direct request, never a suggestion to talk about it. Never add a second ask, an option or a plan.
+- If has_ask is true: keep that same ask, concrete and specific (the same child, person, item, amount, time and date), as one clear polite request. A child's health, safety, medication, school or care need stays a clear direct request, never a suggestion to talk about it. Never add a second ask, an option or a plan.
 - If states_decision is true: the decision stays a calm statement of what the sender will do, in their own terms. Never turn it into a question or a request and never offer alternatives.
 - Remove all blame, reproach, sarcasm, insults, threats, guilt, absolutes and assumptions about the other parent's motives or feelings, including about the past. An accusation may be softened to a neutral word (an accusation of dishonesty becomes "not true"), but keep who and what it is about; never replace it with general wording.
 - Never use a child as leverage or pass messages through a child. Never use the words "police" or "victim". No legal advice.
@@ -83,10 +84,11 @@ const SEND_SCHEMA = {
           },
         },
         has_ask: { type: "boolean" },
+        ask: { type: "string" },
         states_decision: { type: "boolean" },
         rewrite: { type: "string" },
       },
-      required: ["needs_rewrite", "draft_languages", "facts", "has_ask", "states_decision", "rewrite"],
+      required: ["needs_rewrite", "draft_languages", "facts", "has_ask", "ask", "states_decision", "rewrite"],
     },
   },
 };
@@ -106,10 +108,10 @@ const RETRY_SCHEMA = {
 };
 
 // mode:send time budget. The app gives up at about 4s; network and cold start add up to ~1.3s on the client,
-// so the server answers by 2.4s at the latest. Model calls are aborted at 2.3s; a retry starts only with 900ms left.
+// so the server answers by 2.4s at the latest. Model calls are aborted at 2.3s; a retry starts only with 700ms left.
 const SEND_HARD_STOP_MS = 2400;
 const SEND_DEADLINE_MS = 2300;
-const SEND_RETRY_MIN_LEFT_MS = 900;
+const SEND_RETRY_MIN_LEFT_MS = 700;
 
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
