@@ -33,34 +33,58 @@ const NotificationSettings = () => {
       .then(({ data }) => setPrefs(((data as any)?.prefs ?? {}) as Prefs));
   }, [user]);
 
+  const savePrefs = async (next: Prefs) => {
+    if (!user) return false;
+    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
+    if (error) toast.error("Could not save that setting");
+    return !error;
+  };
+
+  const withAll = (patch: (key: string) => { push?: boolean; email?: boolean }): Prefs => {
+    const next: Prefs = {};
+    for (const c of NOTIFICATION_CATEGORIES) next[c.key] = patch(c.key);
+    return next;
+  };
+
   const setPref = async (key: string, channel: "push" | "email", value: boolean) => {
     if (!user) return;
     const next = { ...prefs, [key]: { ...prefs[key], [channel]: value } };
     setPrefs(next);
-    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
-    if (error) toast.error("Could not save that setting");
+    await savePrefs(next);
   };
 
-  const turnOffAll = async () => {
+  const allOn = NOTIFICATION_CATEGORIES.some((c) => prefs[c.key]?.push !== false || prefs[c.key]?.email !== false);
+
+  const setAllAlerts = async (on: boolean) => {
     if (!user) return;
-    await disablePush();
-    const next: Prefs = {};
-    for (const c of NOTIFICATION_CATEGORIES) next[c.key] = { push: false, email: false };
+    const next = withAll(() => ({ push: on, email: on }));
     setPrefs(next);
-    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
-    if (error) { toast.error("Could not save that setting"); return; }
-    setPush("off");
-    toast.success("All notifications turned off");
+    if (await savePrefs(next)) toast.success(on ? "All alerts turned on" : "All alerts turned off");
   };
 
-  const togglePush = async () => {
+  const turnDevicePush = async (on: boolean) => {
     if (!user) return;
     setPushBusy(true);
     try {
-      if (push === "on") { await turnOffAll(); }
-      else { const s = await enablePush(user.id); setPush(s); if (s === "on") toast.success("Push alerts turned on for this device"); else if (s === "denied") toast.error("Alerts are blocked in your browser settings"); }
+      if (!on) {
+        await disablePush();
+        const next = withAll((key) => ({ ...prefs[key], push: false }));
+        setPrefs(next);
+        if (await savePrefs(next)) { setPush("off"); toast.success("Push alerts turned off for this device"); }
+        return;
+      }
+      const s = await enablePush(user.id);
+      setPush(s);
+      if (s === "on") {
+        const next = withAll((key) => ({ ...prefs[key], push: true }));
+        setPrefs(next);
+        await savePrefs(next);
+        toast.success("Push alerts turned on for this device");
+      } else if (s === "denied") {
+        toast.error("Alerts are blocked in your browser settings");
+      }
     } catch (e) {
-      toast.error((e as Error).message || "Could not turn on push alerts");
+      toast.error((e as Error).message || "Could not change push alerts");
     } finally { setPushBusy(false); }
   };
 
