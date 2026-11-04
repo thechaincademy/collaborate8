@@ -311,6 +311,12 @@ const SOFTENED: Record<string, string[]> = {
 // Specific counts and durations are facts and must stay (frequency words that only blame are not counts).
 const COUNT_RE = /(?<![\p{L}\p{N}])(?:(?:first|second|third|fourth|fifth|\d+(?:st|nd|rd|th)) time|twice|(?:two|three|four|five|\d+) times|all (?:night|week|day|weekend|morning|afternoon)|(?:a|à) noite toda|toda a noite|a semana toda|toda a semana|toda la noche|toda la semana|duas vezes|três vezes|dos veces|tres veces|pela (?:segunda|terceira|quarta) vez|por (?:segunda|tercera|cuarta) vez)(?![\p{L}\p{N}])/gu;
 
+const ACCUSE = new Set(["lies", "lie", "lying", "liar", "liars", "mentiras", "mentira", "mentir", "mentiroso", "mentirosa"]);
+// The sender's own stance: a wish stays a wish and a future step stays future (never "I will" for "I want", never "I have told" for "I'll tell").
+const WISH = wordRe("i want|i'd like|i would like|i wish|eu quero|queria|gostaria|yo quiero|quisiera|me gustaría");
+const SELF_FUTURE = wordRe("i'll|i will|i'm going to|i am going to|vou|voy a");
+const SELF_NOW_OR_FUTURE = wordRe("i'll|i will|i'm going to|i am going to|i'm|i am|vou|voy|estou|estoy");
+
 // Copy check for mixed-language drafts: every word must be the draft's own, in the draft's order (only deletions),
 // so nothing is translated or re-mixed.
 const expandContractions = (t: string) =>
@@ -475,6 +481,11 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     }
   }
 
+  if (WISH.test(d) && !WISH.test(r)) { codes.add("stance_changed"); notes.push("The draft says what the sender wants or would like. Keep it as a wish (I want / I would like), not a decision or a statement that it will happen."); }
+  // (A threat at the other parent, "I'll take you to ...", is blame and may go.)
+  const selfFuture = d.split(/[.!?]+|\s(?:or|ou|o)\s/u).some((x) => SELF_FUTURE.test(x) && !x.split(/[^\p{L}\p{N}']+/u).some((w) => ROLE_OTHER.has(w)));
+  if (selfFuture && !SELF_NOW_OR_FUTURE.test(r)) { codes.add("stance_changed"); notes.push("The draft says what the sender will do. Keep it in the future (I will ...), not as something already done or decided."); }
+
   // Repeats: a number, time or dose used more often than in the draft, or two sentences saying the same thing.
   const countOf = (xs: string[]) => xs.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map<string, number>());
   const dCount = countOf(numberTokenList(draft));
@@ -506,6 +517,12 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
       if ((SOFTENED[st] ?? []).some((e) => rWords.includes(e))) return true;
       return rWords.some((x) => x === st || (x.length >= 3 && st.startsWith(x)) || (st.length >= 3 && x.startsWith(st)));
     };
+    // An accusation in the ask (lies) may be softened (not true) but never dropped or made general.
+    const accused = askWords.flat().filter((w) => ACCUSE.has(w) && !kept(w));
+    if (accused.length) {
+      codes.add("ask_changed");
+      notes.push(`The request is about ${accused.map((w) => `"${w}"`).join(", ")}. Keep that, or say "not true", and do not make it more general.`);
+    }
     if (askWords.length && !askWords.some((ws) => ws.some(kept))) {
       codes.add("ask_changed");
       notes.push(`The request must use the draft's own words for what is asked (${[...new Set(askWords.flat())].slice(0, 6).map((w) => `"${w}"`).join(", ")}); do not change it into a different or milder request.`);
