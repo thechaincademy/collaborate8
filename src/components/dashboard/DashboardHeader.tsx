@@ -72,10 +72,6 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             <User className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/notifications")} className="cursor-pointer">
-            <Bell className="mr-2 h-4 w-4" />
-            Notifications
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             Settings
