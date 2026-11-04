@@ -33,34 +33,58 @@ const NotificationSettings = () => {
       .then(({ data }) => setPrefs(((data as any)?.prefs ?? {}) as Prefs));
   }, [user]);
 
+  const savePrefs = async (next: Prefs) => {
+    if (!user) return false;
+    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
+    if (error) toast.error("Could not save that setting");
+    return !error;
+  };
+
+  const withAll = (patch: (key: string) => { push?: boolean; email?: boolean }): Prefs => {
+    const next: Prefs = {};
+    for (const c of NOTIFICATION_CATEGORIES) next[c.key] = patch(c.key);
+    return next;
+  };
+
   const setPref = async (key: string, channel: "push" | "email", value: boolean) => {
     if (!user) return;
     const next = { ...prefs, [key]: { ...prefs[key], [channel]: value } };
     setPrefs(next);
-    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
-    if (error) toast.error("Could not save that setting");
+    await savePrefs(next);
   };
 
-  const turnOffAll = async () => {
+  const allOn = NOTIFICATION_CATEGORIES.some((c) => prefs[c.key]?.push !== false || prefs[c.key]?.email !== false);
+
+  const setAllAlerts = async (on: boolean) => {
     if (!user) return;
-    await disablePush();
-    const next: Prefs = {};
-    for (const c of NOTIFICATION_CATEGORIES) next[c.key] = { push: false, email: false };
+    const next = withAll(() => ({ push: on, email: on }));
     setPrefs(next);
-    const { error } = await supabase.from("notification_preferences" as any).upsert({ user_id: user.id, prefs: next } as any);
-    if (error) { toast.error("Could not save that setting"); return; }
-    setPush("off");
-    toast.success("All notifications turned off");
+    if (await savePrefs(next)) toast.success(on ? "All alerts turned on" : "All alerts turned off");
   };
 
-  const togglePush = async () => {
+  const turnDevicePush = async (on: boolean) => {
     if (!user) return;
     setPushBusy(true);
     try {
-      if (push === "on") { await turnOffAll(); }
-      else { const s = await enablePush(user.id); setPush(s); if (s === "on") toast.success("Push alerts turned on for this device"); else if (s === "denied") toast.error("Alerts are blocked in your browser settings"); }
+      if (!on) {
+        await disablePush();
+        const next = withAll((key) => ({ ...prefs[key], push: false }));
+        setPrefs(next);
+        if (await savePrefs(next)) { setPush("off"); toast.success("Push alerts turned off for this device"); }
+        return;
+      }
+      const s = await enablePush(user.id);
+      setPush(s);
+      if (s === "on") {
+        const next = withAll((key) => ({ ...prefs[key], push: true }));
+        setPrefs(next);
+        await savePrefs(next);
+        toast.success("Push alerts turned on for this device");
+      } else if (s === "denied") {
+        toast.error("Alerts are blocked in your browser settings");
+      }
     } catch (e) {
-      toast.error((e as Error).message || "Could not turn on push alerts");
+      toast.error((e as Error).message || "Could not change push alerts");
     } finally { setPushBusy(false); }
   };
 
@@ -87,13 +111,20 @@ const NotificationSettings = () => {
                 <p className="text-xs text-muted-foreground">{pushLabel}</p>
               </div>
             </div>
-            <Button size="sm" variant={push === "on" ? "outline" : "default"} onClick={togglePush} disabled={pushBusy || push === "unsupported"}>
+            <Button size="sm" variant={push === "on" ? "outline" : "default"} onClick={() => turnDevicePush(push === "on")} disabled={pushBusy || push === "unsupported"}>
               {pushBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : push === "on" ? "Turn off" : "Turn on"}
             </Button>
           </div>
         </Section>
 
         <Section title="What you get alerted about">
+          <div className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-foreground">All alerts</p>
+              <Switch aria-label="All alerts" checked={allOn} onCheckedChange={(v) => setAllAlerts(v)} />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Account emails like sign-in links, password resets, billing receipts and safety notices always send.</p>
+          </div>
           <div className="grid grid-cols-[1fr_52px_52px] items-center gap-2 border-b border-border px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             <span>Alert</span><span className="text-center">Push</span><span className="text-center">Email</span>
           </div>
