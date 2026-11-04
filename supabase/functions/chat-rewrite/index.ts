@@ -107,9 +107,11 @@ const RETRY_SCHEMA = {
   },
 };
 
-// mode:send time budget. The app gives up at about 4s, so the whole round trip must stay near 3s.
-const SEND_DEADLINE_MS = 2700;
-const SEND_RETRY_MIN_LEFT_MS = 700;
+// mode:send time budget. The app gives up at about 4s; network and cold start add up to ~1.3s on the client,
+// so the server answers by 2.4s at the latest. Model calls are aborted at 2.3s; a retry starts only with 900ms left.
+const SEND_HARD_STOP_MS = 2400;
+const SEND_DEADLINE_MS = 2300;
+const SEND_RETRY_MIN_LEFT_MS = 900;
 
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
@@ -621,19 +623,18 @@ Deno.serve(async (req) => {
     if (mode === "send") {
       const pass = { needs_rewrite: false, rewrite: null };
       const deadline = started + SEND_DEADLINE_MS;
+      // One controller for every model call in this request. It is aborted at the deadline, at the hard stop
+      // and when the response is sent, so no fetch or body read outlives the cap.
+      const sendCtrl = new AbortController();
+      const deadlineTimer = setTimeout(() => sendCtrl.abort(), Math.max(0, deadline - Date.now()));
       let settled = false;
       const log = (outcome: string, reasons: string[], attempts: number) => {
         if (!settled) logSend(outcome, reasons, attempts, started);
       };
       const runSend = async (): Promise<Response> => {
         const timed = async (payload: Record<string, unknown>) => {
-          const ctrl = new AbortController();
-          const timer = setTimeout(() => ctrl.abort(), Math.max(0, deadline - Date.now()));
-          try {
-            return await callGateway(apiKey, payload, ctrl.signal);
-          } finally {
-            clearTimeout(timer);
-          }
+          if (sendCtrl.signal.aborted) throw new Error("timeout");
+          return await callGateway(apiKey, payload, sendCtrl.signal);
         };
         const firstMessages = [
           { role: "system", content: SEND_SYSTEM },
@@ -726,12 +727,15 @@ Deno.serve(async (req) => {
         hardTimer = setTimeout(() => {
           if (!settled) logSend("fallback", ["timeout"], 0, started);
           settled = true;
+          sendCtrl.abort();
           resolve(json(pass));
-        }, Math.max(0, deadline + 100 - Date.now()));
+        }, Math.max(0, started + SEND_HARD_STOP_MS - Date.now()));
       });
       const work = runSend().then((r) => { settled = true; return r; }, () => { settled = true; return json(pass); });
       const out = await Promise.race([work, hardStop]);
       clearTimeout(hardTimer);
+      clearTimeout(deadlineTimer);
+      sendCtrl.abort();
       return out;
     }
 
