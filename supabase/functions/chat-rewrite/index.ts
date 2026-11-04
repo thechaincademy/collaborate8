@@ -37,7 +37,7 @@ Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggress
 
 Step 2. Always read the draft and fill:
 - facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent. A mention of the other parent's past lapse that is only a side remark to criticise them (next to a separate ask or need) is blame: leave it out. Keep it only when that event is what the draft is reporting.
-  For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft. A crude or exaggerated word must be replaced by its plain everyday word with the same meaning, and that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
+  For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft. A crude or exaggerated word may be replaced by its plain everyday word with the same meaning, and then that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
 - has_ask: true if the draft asks or tells the other parent to do or not do something (including a demand implied by a stated rule or by a warning about what they do next), asks a question that wants a real answer, or states something a child needs from them. false if it only reports or complains about what already happened (even when the complaint implies the other parent should do better), asks only rhetorical or sarcastic questions, or only states the sender's own decision.
 - ask: that ask in plain words, or "".
 - states_decision: true if the sender states something they have decided or will do themselves.
@@ -97,14 +97,14 @@ const RETRY_SCHEMA = {
 };
 
 // mode:send time budget. The app gives up at about 4s, so the whole round trip must stay near 3s.
-const SEND_DEADLINE_MS = 2700;
-const SEND_RETRY_MIN_LEFT_MS = 1200;
+const SEND_DEADLINE_MS = 2900;
+const SEND_RETRY_MIN_LEFT_MS = 900;
 
 type SendFact = { fact?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean };
 
 const normText = (s: string) =>
-  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+  s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
 
 const numberTokens = (s: string) =>
   new Set(
@@ -124,6 +124,17 @@ const MONTHS: [string, RegExp][] = [
 ];
 const ASK_MARKERS = /\b(please|could you|can you|would you|will you|make sure|ensure|let me know|i would like you|i'd like you)\b/;
 const hasWord = (text: string, w: string) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(text);
+
+const KEEP_STOP = new Set(["a", "an", "the", "of", "to", "at", "in", "on", "for", "with", "and", "or", "his", "her", "their", "my", "your", "our", "is", "was", "were", "be", "by", "from", "that", "this", "it"]);
+const wordStem = (w: string) => w.replace(/'s$/, "").slice(0, 4);
+// A keep entry counts as kept if the exact phrase is there, or every content word appears (same first four letters).
+const keepFound = (keep: string, rewrite: string) => {
+  if (rewrite.includes(keep)) return true;
+  const words = keep.split(/[^a-z0-9£.:%']+/).filter((w) => w && !KEEP_STOP.has(w));
+  if (!words.length) return true;
+  const have = new Set(rewrite.split(/[^a-z0-9£.:%']+/).filter(Boolean).map(wordStem));
+  return words.every((w) => have.has(wordStem(w)));
+};
 
 // Deterministic fact check. Returns failure codes (for logs) and plain notes (for the retry prompt only).
 const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
@@ -150,7 +161,7 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
       if (typeof k !== "string") continue;
       const nk = normText(k).replace(/^[^a-z0-9£]+|[^a-z0-9%]+$/g, "");
       if (!nk || nk.split(" ").length > 6) continue;
-      if (!r.includes(nk)) { codes.add("missing_fact"); notes.push(`Keep "${k}" (fact: ${typeof f.fact === "string" ? f.fact : ""}).`); }
+      if (!keepFound(nk, r)) { codes.add("missing_fact"); notes.push(`Keep "${k}" (fact: ${typeof f.fact === "string" ? f.fact : ""}).`); }
     }
   }
 
@@ -213,94 +224,113 @@ Deno.serve(async (req) => {
     if (mode === "send") {
       const pass = { needs_rewrite: false, rewrite: null };
       const deadline = started + SEND_DEADLINE_MS;
-      const timed = async (payload: Record<string, unknown>) => {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), Math.max(0, deadline - Date.now()));
+      let settled = false;
+      const log = (outcome: string, reasons: string[], attempts: number) => {
+        if (!settled) logSend(outcome, reasons, attempts, started);
+      };
+      const runSend = async (): Promise<Response> => {
+        const timed = async (payload: Record<string, unknown>) => {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), Math.max(0, deadline - Date.now()));
+          try {
+            return await callGateway(apiKey, payload, ctrl.signal);
+          } finally {
+            clearTimeout(timer);
+          }
+        };
+        const firstMessages = [
+          { role: "system", content: SEND_SYSTEM },
+          { role: "user", content: draft },
+        ];
+        let resp: Response;
         try {
-          return await callGateway(apiKey, payload, ctrl.signal);
-        } finally {
-          clearTimeout(timer);
-        }
-      };
-      const firstMessages = [
-        { role: "system", content: SEND_SYSTEM },
-        { role: "user", content: draft },
-      ];
-      let resp: Response;
-      try {
-        resp = await timed({ model: "google/gemini-3.1-flash-lite", max_tokens: 600, response_format: SEND_SCHEMA, messages: firstMessages });
-      } catch {
-        logSend("fallback", ["timeout"], 1, started);
-        return json(pass);
-      }
-      const err = gatewayError(resp);
-      if (err) return err;
-      let parsed: Record<string, unknown>;
-      let raw = "";
-      try {
-        const data = await resp.json();
-        raw = data.choices?.[0]?.message?.content ?? "";
-        parsed = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim());
-      } catch {
-        logSend("fallback", ["parse"], 1, started);
-        return json(pass);
-      }
-      if (parsed?.needs_rewrite !== true || typeof parsed.rewrite !== "string") {
-        logSend("pass", [], 1, started);
-        return json(pass);
-      }
-      const clean = (s: string) => s.replace(/\s*—\s*/g, " - ").trim();
-      const checkInput: SendCheck = {
-        facts: Array.isArray(parsed.facts) ? (parsed.facts as SendFact[]) : [],
-        has_ask: parsed.has_ask === true,
-        states_decision: parsed.states_decision === true,
-      };
-      let rewrite = clean(parsed.rewrite as string);
-      let result = checkRewrite(draft, rewrite, checkInput);
-      let attempts = 1;
-      if (result.codes.length) {
-        if (deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) {
-          logSend("fallback", ["no_time_for_retry", ...result.codes], attempts, started);
+          resp = await timed({ model: "google/gemini-3.1-flash-lite", max_tokens: 600, response_format: SEND_SCHEMA, messages: firstMessages });
+        } catch {
+          log("fallback", ["timeout"], 1);
           return json(pass);
         }
-        attempts = 2;
+        const err = gatewayError(resp);
+        if (err) return err;
+        let parsed: Record<string, unknown>;
+        let raw = "";
         try {
-          const retry = await timed({
-            model: "google/gemini-3.1-flash-lite",
-            max_tokens: 300,
-            response_format: RETRY_SCHEMA,
-            messages: [
-              ...firstMessages,
-              { role: "assistant", content: raw },
-              {
-                role: "user",
-                content: `Your rewrite failed these checks:\n- ${result.notes.join("\n- ")}\nWrite the rewrite again, keeping every fact and following all the rules. Return only JSON {"rewrite":"..."}.`,
-              },
-            ],
-          });
-          if (!retry.ok) throw new Error("retry_http");
-          const rdata = await retry.json();
-          const rraw: string = rdata.choices?.[0]?.message?.content ?? "";
-          const rparsed = JSON.parse(rraw.replace(/^```(?:json)?|```$/g, "").trim());
-          if (typeof rparsed?.rewrite !== "string") throw new Error("retry_parse");
-          rewrite = clean(rparsed.rewrite);
-          result = checkRewrite(draft, rewrite, checkInput);
-        } catch (e) {
-          const reason = e instanceof Error && e.message.startsWith("retry_") ? e.message : "retry_timeout";
-          logSend("fallback", [reason, ...result.codes], attempts, started);
+          const data = await resp.json();
+          raw = data.choices?.[0]?.message?.content ?? "";
+          parsed = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim());
+        } catch {
+          log("fallback", ["parse"], 1);
           return json(pass);
         }
+        if (parsed?.needs_rewrite !== true || typeof parsed.rewrite !== "string") {
+          log("pass", [], 1);
+          return json(pass);
+        }
+        const clean = (s: string) => s.replace(/\s*—\s*/g, " - ").trim();
+        const checkInput: SendCheck = {
+          facts: Array.isArray(parsed.facts) ? (parsed.facts as SendFact[]) : [],
+          has_ask: parsed.has_ask === true,
+          states_decision: parsed.states_decision === true,
+        };
+        let rewrite = clean(parsed.rewrite as string);
+        let result = checkRewrite(draft, rewrite, checkInput);
+        let attempts = 1;
         if (result.codes.length) {
-          logSend("fallback", ["retry_failed", ...result.codes], attempts, started);
+          if (deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) {
+            log("fallback", ["no_time_for_retry", ...result.codes], attempts);
+            return json(pass);
+          }
+          attempts = 2;
+          try {
+            const retry = await timed({
+              model: "google/gemini-3.1-flash-lite",
+              max_tokens: 300,
+              response_format: RETRY_SCHEMA,
+              messages: [
+                ...firstMessages,
+                { role: "assistant", content: raw },
+                {
+                  role: "user",
+                  content: `Your rewrite failed these checks:\n- ${result.notes.join("\n- ")}\nWrite the rewrite again, keeping every fact and following all the rules. Return only JSON {"rewrite":"..."}.`,
+                },
+              ],
+            });
+            if (!retry.ok) throw new Error("retry_http");
+            const rdata = await retry.json();
+            const rraw: string = rdata.choices?.[0]?.message?.content ?? "";
+            const rparsed = JSON.parse(rraw.replace(/^```(?:json)?|```$/g, "").trim());
+            if (typeof rparsed?.rewrite !== "string") throw new Error("retry_parse");
+            rewrite = clean(rparsed.rewrite);
+            result = checkRewrite(draft, rewrite, checkInput);
+          } catch (e) {
+            const reason = e instanceof Error && e.message.startsWith("retry_") ? e.message : "retry_timeout";
+            log("fallback", [reason, ...result.codes], attempts);
+            return json(pass);
+          }
+          if (result.codes.length) {
+            log("fallback", ["retry_failed", ...result.codes], attempts);
+            return json(pass);
+          }
+        }
+        if (!rewrite || rewrite === draft.trim()) {
+          log("pass", ["same_as_draft"], attempts);
           return json(pass);
         }
-      }
-      if (!rewrite || rewrite === draft.trim()) {
-        logSend("pass", ["same_as_draft"], attempts, started);
-        return json(pass);
-      }
-      logSend("rewrite", [], attempts, started);
-      return json({ needs_rewrite: true, rewrite });
+        log("rewrite", [], attempts);
+        return json({ needs_rewrite: true, rewrite });
+      };
+      // Hard stop: whatever happens, answer by the deadline so the app never waits past its own limit.
+      let hardTimer: ReturnType<typeof setTimeout> | undefined;
+      const hardStop = new Promise<Response>((resolve) => {
+        hardTimer = setTimeout(() => {
+          if (!settled) logSend("fallback", ["timeout"], 0, started);
+          settled = true;
+          resolve(json(pass));
+        }, Math.max(0, deadline + 100 - Date.now()));
+      });
+      const work = runSend().then((r) => { settled = true; return r; }, () => { settled = true; return json(pass); });
+      const out = await Promise.race([work, hardStop]);
+      clearTimeout(hardTimer);
+      return out;
     }
 
     const resp = await callGateway(apiKey, {
