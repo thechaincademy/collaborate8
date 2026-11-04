@@ -596,6 +596,8 @@ const fxRuleKept = (rewrite: string, rule: FxRule) => {
   }
   return false;
 };
+const FX_AGREE = /^(?:agree|agreed|agreement|acordamos|acordámos|acordado|acordada|acuerdo|combinámos|combinamos|combinado|combinada|falámos|falamos|hablamos|hablado|decidimos|decided|norma)$/;
+const FX_SAID = /^(?:said|says|told|tells|tell|disse|diz|contou|dijo|dice|contó|avisou|avisaste|avisó)$/;
 const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   const codes = new Set<string>();
   const notes: string[] = [];
@@ -666,6 +668,13 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
     if (fxRuleKept(rewrite, rule)) continue;
     codes.add("rule_changed");
     notes.push(`Keep the rule "${rule.head} ... ${rule.word}" as a rule, in the draft's words or starting "The rule is" / "A regra é" / "La regla es"; never "there are no", "não há" or "no hay".`);
+  }
+  // Who agreed or who said what stays: "we agreed", "lo acordamos", "combinámos", "já falámos disto", "he said", "disse-me que", "me dijo que".
+  // "The rule is ..." does not replace "we agreed".
+  const rToks = fxToks(rewrite);
+  for (const [re, code] of [[FX_AGREE, "agreement_dropped"], [FX_SAID, "report_dropped"]] as const) {
+    const hit = coreSents.flatMap((x) => fxToks(x)).find((t) => re.test(t));
+    if (hit && !rToks.some((t) => re.test(t))) need(code, hit);
   }
   // A rewrite clause made only from a blame clause of the draft ("You ALWAYS forget...", "Are you even capable of...",
   // "If you're late again I'm done being nice") or from a bare negative jibe with no fact and no ask ("Ni apareces") keeps reproach.
