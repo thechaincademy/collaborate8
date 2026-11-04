@@ -583,6 +583,15 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
       const ok = rt.some((x, k) => fxStem(x) === fxStem(nxt) && rt.slice(Math.max(0, k - 4), k).some((y) => FX_NEG.has(y)));
       if (!ok) need("negation_dropped", `${w} ${nxt}`);
     });
+    // "without telling me" / "sem avisar" / "sin avisar" is a fact about what was not done; keep it.
+    ts.forEach((w, i) => {
+      if (!/^(?:without|sem|sin)$/.test(w)) return;
+      const nxt = ts.slice(i + 1).find((x) => !FX_STOP.has(x) && !/^(?:even|sequer|siquiera|just|so|much|mesmo|nem|ni)$/.test(x));
+      if (!nxt || /^\d/.test(nxt)) return;
+      const rt = fxToks(rewrite);
+      const ok = rt.some((x, k) => fxStem(x) === fxStem(nxt) && rt.slice(Math.max(0, k - 4), k).some((y) => /^(?:without|sem|sin)$/.test(y) || FX_NEG.has(y)));
+      if (!ok) need("negation_dropped", `${w} ${nxt}`);
+    });
   }
   // A rewrite clause made only from a blame clause of the draft ("You ALWAYS forget...", "Are you even capable of...",
   // "If you're late again I'm done being nice") or from a bare negative jibe with no fact and no ask ("Ni apareces") keeps reproach.
