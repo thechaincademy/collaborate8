@@ -118,6 +118,13 @@ const NotificationSettings = () => {
         </Section>
 
         <Section title="What you get alerted about">
+          <div className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-foreground">All alerts</p>
+              <Switch aria-label="All alerts" checked={allOn} onCheckedChange={(v) => setAllAlerts(v)} />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Account emails like sign-in links, password resets, billing receipts and safety notices always send.</p>
+          </div>
           <div className="grid grid-cols-[1fr_52px_52px] items-center gap-2 border-b border-border px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             <span>Alert</span><span className="text-center">Push</span><span className="text-center">Email</span>
           </div>
