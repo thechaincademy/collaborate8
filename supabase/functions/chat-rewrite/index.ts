@@ -39,7 +39,7 @@ Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggress
 Step 2. Always read the draft and fill:
 - draft_languages: every language used in the draft, as ISO 639-1 codes (for example "en", "pt").
 - facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent. A mention of the other parent's past lapse that is only a side remark to criticise them (next to a separate ask or need) is blame: leave it out. Keep it only when that event is what the draft is reporting.
-  Write each fact in the language the draft used for it, and set lang to that ISO 639-1 code.
+  Write each fact in the language the draft used for it. Do not list the other parent's own past lapse (something they forgot, missed or got wrong) as a fact when the draft also asks for something; that is blame. A child's state or health at that time is still a fact.
   actor = who did, missed or must do the thing in this fact, as the draft refers to them: "you" for the other parent, "I" for the sender, or the person's name. "" if nobody does anything. action = the one verb from the draft for what the actor did, missed or must do, copied as written (for example "missed"), or "".
   For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft in the draft's own language, never translated. Frequency and count words go in keep only when they describe the child's state or are a specific count (twice, three times, third time this week, all night, all week). Words such as again, always, never, as usual or every time that only criticise the other parent are blame, in any language: leave them out of keep and out of the rewrite. A crude or exaggerated word may be replaced by its plain everyday word with the same meaning, and then that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
 - has_ask: true if the draft asks or tells the other parent to do or not do something (including a demand implied by a stated rule or by a warning about what they do next), asks a question that wants a real answer, or states something a child needs from them. false if it only reports or complains about what already happened (even when the complaint implies the other parent should do better), asks only rhetorical or sarcastic questions, or only states the sender's own decision.
@@ -76,12 +76,11 @@ const SEND_SCHEMA = {
             additionalProperties: false,
             properties: {
               fact: { type: "string" },
-              lang: { type: "string" },
               actor: { type: "string" },
               action: { type: "string" },
               keep: { type: "array", items: { type: "string" } },
             },
-            required: ["fact", "lang", "actor", "action", "keep"],
+            required: ["fact", "actor", "action", "keep"],
           },
         },
         has_ask: { type: "boolean" },
@@ -110,13 +109,13 @@ const RETRY_SCHEMA = {
 
 // mode:send time budget. The app gives up at about 4s, so the whole round trip must stay near 3s.
 const SEND_DEADLINE_MS = 2900;
-const SEND_RETRY_MIN_LEFT_MS = 900;
+const SEND_RETRY_MIN_LEFT_MS = 700;
 
-type SendFact = { fact?: unknown; lang?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
+type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
 
 const normText = (s: string) =>
-  s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
+  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
 
 const numberTokens = (s: string) =>
   new Set(
@@ -132,7 +131,7 @@ const contentWords = (sentence: string) =>
 const KEEP_STOP_WORDS = new Set(["the", "and", "his", "her", "their", "your", "our", "was", "were", "for", "with", "that", "this", "from", "are", "has", "have", "had", "she", "him", "them", "you", "please", "could", "would", "can", "will"]);
 
 const WORD_SPLIT = /[^\p{L}\p{N}£.:%']+/u;
-const stripAccents = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const TIME_WORDS = [
   "tonight", "today", "tomorrow", "yesterday", "this morning", "this afternoon", "this evening", "this week",
   "this weekend", "next week", "next weekend", "next time", "in future", "in the future", "from now on",
@@ -168,6 +167,18 @@ const keepFound = (keep: string, rewrite: string) => {
 // Blame frequency words (about the other parent) never count as facts that must be kept.
 const BLAME_FREQ = new Set(["again", "always", "never", "as usual", "every time", "every single time", "yet again", "once again",
   "outra vez", "de novo", "sempre", "nunca", "como sempre", "otra vez", "de nuevo", "siempre", "como siempre"]);
+
+// Health and welfare words: when the draft uses one, the rewrite must use the same word (any language, never translated or softened).
+const HEALTH_WORDS = new Set([
+  "fever", "temperature", "cough", "coughing", "vomit", "vomited", "vomiting", "sick", "ill", "pain", "hurt", "injured", "bitten", "bleeding",
+  "rash", "allergy", "allergic", "asthma", "inhaler", "epipen", "medicine", "medication", "ibuprofen", "paracetamol", "calpol", "antibiotics",
+  "hospital", "doctor", "gp", "vaccine", "vaccination", "throat", "nightmares", "crying", "sobbing", "worse", "fast",
+  "febre", "temperatura", "tosse", "vomitou", "vómitos", "doente", "dor", "magoou", "magoado", "mordido", "alergia", "alérgico", "alérgica",
+  "asma", "inalador", "remédio", "medicamento", "medicação", "hospital", "médico", "vacina", "garganta", "pesadelos", "chorar", "chorou", "pior", "jejum", "jejuar",
+  "fiebre", "tos", "vomitó", "vómito", "enfermo", "enferma", "dolor", "herido", "herida", "alérgico", "inhalador", "medicina", "vacuna",
+  "pesadillas", "llorando", "lloró", "peor", "ayunas", "ayunar",
+]);
+const healthStem = (w: string) => stripAccents(w).slice(0, Math.min(5, w.length));
 
 // Language markers: common function words that are distinctive enough per language.
 const LANG_MARKERS: Record<string, Set<string>> = {
@@ -279,6 +290,23 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     }
   }
   if (missing.length) notes.push(`These words from the draft are missing: ${missing.map((k) => `"${k}"`).join(", ")}. Use each of them exactly as the draft writes them, in the draft's language.`);
+
+  // Health words from the draft must still be there, in the draft's own words.
+  const rStems = new Set(r.split(/[^\p{L}\p{N}]+/u).filter(Boolean).map(healthStem));
+  // Required when the word is in a draft sentence not addressed to the other parent, or in one of the listed facts
+  // (a health word inside a sentence that only blames "you" may go with the blame).
+  const factText = normText((c.facts ?? []).map((f) => (typeof f?.fact === "string" ? f.fact : "")).join(" "));
+  const healthIn = (t: string) => t.split(/[^\p{L}\p{N}]+/u).filter((w) => HEALTH_WORDS.has(w));
+  const needHealth = new Set<string>(healthIn(factText).filter((w) => d.split(/[^\p{L}\p{N}]+/u).includes(w)));
+  for (const sent of d.split(/(?<=[.!?])\s+/)) {
+    if (sent.split(/[^\p{L}\p{N}']+/u).some((w) => ROLE_OTHER.has(w))) continue;
+    for (const w of healthIn(sent)) needHealth.add(w);
+  }
+  const lostHealth = [...needHealth].filter((w) => !rStems.has(healthStem(w)));
+  if (lostHealth.length) {
+    codes.add("health_word_missing");
+    notes.push(`These health or welfare words from the draft are missing or changed: ${lostHealth.map((w) => `"${w}"`).join(", ")}. Keep each one exactly as the draft writes it, in its own language, with the fact it belongs to.`);
+  }
 
   // Language: every language the draft is written in must still be there (no translating, no dropped parts).
   const langs = new Set<string>(c.languages.map(langCode).filter((l) => LANG_MARKERS[l]));
