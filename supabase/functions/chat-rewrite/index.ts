@@ -32,7 +32,6 @@ Keep the softened ask concrete and specific to what the parent wrote: name the s
 Return ONLY JSON: {"options":[{"tone":"Neutral","text":"..."},{"tone":"Brief","text":"..."},{"tone":"Collaborative","text":"..."}],"changes":"one or two plain sentences on what you changed"}`;
 
 const SEND_SYSTEM = `You check a message a separated parent has drafted to the other parent and, if needed, write one calmer version. Work in three steps and fill every JSON field.
-Language: the rewrite uses the draft's own language or languages. If the draft mixes languages, keep each part in the language the parent wrote it in. Never translate anything, and never drop a sentence or fact because of its language.
 
 Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggressive, sarcastic, blaming, reproachful, guilt-tripping, threatening, uses absolutes about the other parent (always, never), or uses a child as leverage or as a messenger against the other parent. false if it is neutral, factual, polite, firm but polite, or kind. false if it reports a safety concern, risk of harm or an emergency about a child or the sender.
 
@@ -47,6 +46,7 @@ Step 2. Always read the draft and fill:
 - states_decision: true if the sender states something they have decided or will do themselves.
 
 Step 3. If needs_rewrite is true, write rewrite, one calm version:
+- Use the draft's own language or languages. If the draft mixes languages, keep each part in the language the parent wrote it in, word for word where you can. Never translate any part, and never drop a sentence or fact because of its language.
 - Keep every fact with the same meaning and tense, using its keep words, in the language the draft used for it.
 - Keep who did what: each fact's actor stays the one who did, missed or must do that same action (you stays you, I stays I, a person stays that person). Never make the child or anyone else the one who did it. Keep date wording such as due, by and on as written, and never turn a future date or deadline into a past one. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
 - If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step.
@@ -108,7 +108,7 @@ const RETRY_SCHEMA = {
 };
 
 // mode:send time budget. The app gives up at about 4s, so the whole round trip must stay near 3s.
-const SEND_DEADLINE_MS = 2900;
+const SEND_DEADLINE_MS = 2700;
 const SEND_RETRY_MIN_LEFT_MS = 700;
 
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
@@ -310,11 +310,17 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
 
   // Language: every language the draft is written in must still be there (no translating, no dropped parts).
   const langs = new Set<string>(c.languages.map(langCode).filter((l) => LANG_MARKERS[l]));
-  for (const l of Object.keys(LANG_MARKERS)) if (langScore(d, l) >= 2) langs.add(l);
+  for (const l of Object.keys(LANG_MARKERS)) if (langScore(d, l) >= 4) langs.add(l);
+  const dTotal = [...langs].reduce((n, l) => n + langScore(d, l), 0);
+  const rTotal = [...langs].reduce((n, l) => n + langScore(r, l), 0);
+  const mixed = [...langs].filter((l) => langScore(d, l) >= 3).length >= 2;
   for (const l of langs) {
     const ds = langScore(d, l);
     if (ds < 2) continue;
-    if (langScore(r, l) < (ds >= 6 ? 2 : 1)) {
+    const rs = langScore(r, l);
+    // Mixed drafts: a language's share of the rewrite must not shrink to under 60% of its share of the draft (no translating).
+    const shrunk = mixed && ds >= 3 && ds / dTotal >= 0.2 && rTotal > 0 && rs / rTotal < 0.6 * (ds / dTotal);
+    if (rs < (ds >= 6 ? 2 : 1) || shrunk) {
       codes.add("language_changed");
       notes.push(`The draft is written partly or fully in ${LANG_NAMES[l]}. Keep those parts in ${LANG_NAMES[l]} as the parent wrote them, keep the facts they state, and do not translate anything.`);
     }
