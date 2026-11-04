@@ -111,7 +111,7 @@ const NotificationSettings = () => {
                 <p className="text-xs text-muted-foreground">{pushLabel}</p>
               </div>
             </div>
-            <Button size="sm" variant={push === "on" ? "outline" : "default"} onClick={togglePush} disabled={pushBusy || push === "unsupported"}>
+            <Button size="sm" variant={push === "on" ? "outline" : "default"} onClick={() => turnDevicePush(push === "on")} disabled={pushBusy || push === "unsupported"}>
               {pushBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : push === "on" ? "Turn off" : "Turn on"}
             </Button>
           </div>
