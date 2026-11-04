@@ -46,7 +46,7 @@ Step 2. Always read the draft and fill:
 - states_decision: true if the sender states something they have decided or will do themselves.
 
 Step 3. If needs_rewrite is true, write rewrite, one calm version:
-- Use the draft's own language or languages. If the draft mixes languages, keep each part in the language the parent wrote it in, word for word where you can. Never translate any part, and never drop a sentence or fact because of its language.
+- Use the draft's own language or languages. If the draft mixes languages, keep each part in the language the parent wrote it in, word for word where you can. Never translate any part, and never drop a sentence or fact because of its language. When the draft is not all in English, make the fewest changes: keep the parent's own sentences and phrases as written and only delete the blame words; any word you must add (such as please) goes in the language of the words around it.
 - Keep every fact with the same meaning and tense, using its keep words, in the language the draft used for it.
 - Keep who did what: each fact's actor stays the one who did, missed or must do that same action (you stays you, I stays I, a person stays that person). Never make the child or anyone else the one who did it. Keep date wording such as due, by and on as written, and never turn a future date or deadline into a past one. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
 - If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step.
@@ -322,7 +322,7 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     const shrunk = mixed && ds >= 3 && ds / dTotal >= 0.2 && rTotal > 0 && rs / rTotal < 0.6 * (ds / dTotal);
     if (rs < (ds >= 6 ? 2 : 1) || shrunk) {
       codes.add("language_changed");
-      notes.push(`The draft is written partly or fully in ${LANG_NAMES[l]}. Keep those parts in ${LANG_NAMES[l]} as the parent wrote them, keep the facts they state, and do not translate anything.`);
+      notes.push(`The draft is written partly or fully in ${LANG_NAMES[l]} and the rewrite translated or dropped some of it. Copy the draft's own sentences in their own languages, word for word, and only delete the blame words. Do not translate anything.`);
     }
   }
 
@@ -333,7 +333,15 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     if (action.length < 3 || !keepFound(action, d)) continue;
     const want = subjectsOf(d, action, names).find((s) => s) ?? actorRole(f.actor, names);
     if (!want) continue;
-    for (const got of subjectsOf(r, action, names)) {
+    const draftSaid = subjectsOf(d, action, names).some((s) => s === want);
+    const rSubjects = subjectsOf(r, action, names);
+    if (draftSaid && (want === "other" || want === "self") && !rSubjects.some((g) => g === want)) {
+      codes.add("actor_dropped");
+      const who = want === "other" ? '"you"' : '"I"';
+      notes.push(`The draft says ${who} ${action}. Keep that fact with ${who} as the one who ${action}, in the draft's words; do not drop it or make it passive.`);
+      continue;
+    }
+    for (const got of rSubjects) {
       if (got && !sameActor(want, got)) {
         codes.add("actor_changed");
         const who = want === "other" ? '"you"' : want === "self" ? '"I"' : `"${want.replace(/^name:/, "")}"`;
