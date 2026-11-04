@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v4; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -35,13 +35,13 @@ Strike only:
 - threats and ultimatums (solicitor, court, lawyer, "or else", "you'll regret it", "I'll stop the visits")
 - absolutes and generalisations about the other parent ("as always", "como sempre", "como siempre", "it's always the same with you")
 - rhetorical or sarcastic questions and tags ("is that too much to ask?", "o es mucho pedir", "não é difícil, pois não?", "did you even look?")
-- jabs that imply they always fail: "this time", "for once", "actually", "even", "esta vez", "desta vez", "por una vez", "sequer", "siquiera" (strike the jab words; a real request around them stays)
-- a defensive "it wasn't me, it was you" / "não fui eu" / "no fui yo"
+- jabs that imply they always fail: "this time", "for once", "actually", "esta vez", "desta vez", "por una vez" (strike the jab words; a real request around them stays)
+- a defensive "it wasn't me" / "não fui eu" / "no fui yo" (only those words: who did it, such as "it was you who forgot it", stays)
 - around a fact that something was not told, only the blame wrapper ("Típico que", "de nada", "claro que", "of course", "as usual"); the not-told fact itself stays.
 
 Never strike: names, dates, days, times, numbers, amounts of money, counts and repetition words (again, second time, outra vez, de novo, otra vez, de nuevo, still, ainda, todavía), places, what happened and who did it (forgot, missed, was late, didn't pay, left), medicine, doses, health and symptoms, rules ("no screens after 8pm", "bedtime is 7:30"), agreements ("we agreed"), what someone said, a fact that something was not told, and real requests or questions ("please bring", "can you", "let me know", "tens de", "tienes que").
 
-Strike the smallest span that removes the blame. When a whole sentence is blame, strike the whole sentence including its final punctuation. Strike a joining comma or word with the clause it belongs to (", which is typical of you,"), so the rest still reads as a sentence. Never strike part of a word. Never strike a "not", "never", "no", "não" or "nunca" on its own: strike the whole clause or leave it.
+Strike the smallest span that removes the blame. When a whole sentence is blame, strike the whole sentence including its final punctuation. Strike a joining comma or word with the clause it belongs to (", which is typical of you,"), so the rest still reads as a sentence. Never leave a broken sentence: no "If ..." without its main clause (strike the whole threat sentence), no sentence missing its subject or verb, no sentence ending on "and", "to" or "with". Never strike part of a word. Capitals are fixed by code: never strike a word only because it is shouted. Never strike a "not", "never", "no", "não" or "nunca" on its own: strike the whole clause or leave it.
 
 If the draft is already calm, factual or a plain request, return {"strikes":[]}. Never translate; the strikes are in the draft's own language or languages.
 
@@ -369,7 +369,7 @@ const FX_THREAT_FRAME = wordRe("i'll|i will|i'm going to|i am going to|i'm calli
 const fxSentences = (t: string) => t.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
 const fxIsThreat = (s: string) => FX_THREAT.test(normText(s)) && FX_THREAT_FRAME.test(normText(s));
 // Blame words that must never stay in a rewrite, in any language.
-const FX_REPROACH = wordRe("always|never|sempre|nunca|siempre|typical|típico|típica|tipico|pathetic|patético|patética|obviously|clearly|as usual|como sempre|como siempre|useless|inútil|lazy|selfish|irresponsible|irresponsável|irresponsable|do you even|did you even|you even|even bother|do you ever|how hard|not that you|thanks so much|brilliant|honestly|seriously|done being nice|se é que|nem penses|ni se te ocurra|a sério|en serio|ridiculous|ridículo|important to you|importante para ti|importante pra ti|don't care|do not care|doesn't care|does not care|you care|não queres saber|não te importa|no te importa|te da igual|i guess|whatever|capable|capaz|pretend|finges|fingir|finjas|unbelievable|disgrace|vergonha|vergüenza|incompetent|incompetente|for once|pela primeira vez na vida|por una vez|already told you|told you already|i told you already|i've told you|for the hundredth time|já te disse|como te disse|já te tinha dito|ya te lo dije|ya te dije|te lo he dicho|te lo dije|mess it up|mess this up|hazlo bien|no la cagues|não estragues|grow up|get a grip|for god's sake|por amor de deus|por el amor de dios|é muito pedir|es mucho pedir|too much to ask|an excuse|uma desculpa|una excusa|nem apareces|ni apareces|won't even show");
+const FX_REPROACH = wordRe("always|never|sempre|nunca|siempre|typical|típico|típica|tipico|pathetic|patético|patética|obviously|clearly|as usual|como sempre|como siempre|useless|inútil|lazy|selfish|irresponsible|irresponsável|irresponsable|do you even|did you even|you even|even bother|do you ever|how hard|not that you|thanks so much|brilliant|honestly|seriously|done being nice|se é que|nem penses|ni se te ocurra|a sério|en serio|ridiculous|ridículo|important to you|importante para ti|importante pra ti|don't care|do not care|doesn't care|does not care|you care|não queres saber|não te importa|no te importa|te da igual|i guess|whatever|capable|capaz|pretend|finges|fingir|finjas|unbelievable|disgrace|vergonha|vergüenza|incompetent|incompetente|for once|pela primeira vez na vida|por una vez|already told you|told you already|i told you already|i've told you|for the hundredth time|já te disse|como te disse|já te tinha dito|ya te lo dije|ya te dije|te lo he dicho|te lo dije|mess it up|mess this up|desastre|disaster|desleixado|desleixada|irresponsable|irresponsible|irresponsável|hazlo bien|no la cagues|não estragues|grow up|get a grip|for god's sake|por amor de deus|por el amor de dios|é muito pedir|es mucho pedir|too much to ask|an excuse|uma desculpa|una excusa|nem apareces|ni apareces|won't even show");
 const FX_PLEASE = /(?<![\p{L}])(?:please|kindly|por favor|se faz favor|faz favor)(?![\p{L}])/gu;
 const FX_TIMES = wordRe([
   "today", "tonight", "tomorrow", "yesterday", "last night", "this morning", "this afternoon", "this evening", "this week", "this weekend", "this month",
@@ -990,8 +990,8 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck, strike = fal
 };
 
 // ---- strike-only: the model marks blame spans; code deletes them and keeps every other character ----
-type Strike = { ok: true; text: string; struck: string[] } | { ok: false; reason: string };
-const strikeSpans = (draft: string, spans: string[]): Strike => {
+type Strike = { ok: true; text: string; struck: string[]; ranges: [number, number][] } | { ok: false; reason: string };
+const strikeSpans = (draft: string, spans: string[], codeRanges: [number, number][] = []): Strike => {
   const ranges: [number, number][] = [];
   const fold = (s: string) => s.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"');
   const fd = fold(draft), fdl = fd.toLowerCase();
@@ -1018,11 +1018,17 @@ const strikeSpans = (draft: string, spans: string[]): Strike => {
     ranges.push([at, end]);
     struck.push(draft.slice(at, end));
   }
-  if (!ranges.length) return { ok: true, text: draft, struck };
+  // Code strikes (fixed reproach phrases, jab "again") join after the model's spans are found; overlaps merge below.
+  for (const [a, b] of codeRanges) { ranges.push([a, b]); struck.push(draft.slice(a, b)); }
+  if (!ranges.length) return { ok: true, text: draft, struck, ranges: [] };
   ranges.sort((a, b) => a[0] - b[0]);
-  let out = "", last = 0;
+  const merged: [number, number][] = [];
   for (const [a, b] of ranges) {
-    if (a < last) { last = Math.max(last, b); continue; }
+    const m = merged[merged.length - 1];
+    if (m && a <= m[1]) m[1] = Math.max(m[1], b); else merged.push([a, b]);
+  }
+  let out = "", last = 0;
+  for (const [a, b] of merged) {
     out += draft.slice(last, a) + "\u0000";
     last = b;
   }
@@ -1053,7 +1059,7 @@ const strikeSpans = (draft: string, spans: string[]): Strike => {
   if (t && /[.!?]\s*$/.test(draft) && !/[.!?…)"']$/.test(t)) t += ".";
   // Capital at the start of every sentence that was capitalised in the draft style (first letter after a cut).
   t = t.replace(/(^|[.!?]\s+|\n)(["'(¿¡]?)(\p{Ll})/gu, (_m, a: string, q: string, c: string) => a + q + c.toUpperCase());
-  return { ok: true, text: t, struck };
+  return { ok: true, text: t, struck, ranges: merged };
 };
 // Nearly empty: fewer than two content words, or under a fifth of the draft's content words.
 const strikeTooSmall = (draft: string, text: string) => {
@@ -1067,7 +1073,7 @@ const STRIKE_FILL = /^(?:again|once|more|otra|outra|vez|novo|nuevo|mismo|mesmo|s
 // "sick of" / "sick and tired" is a jibe, not health; "your weekends" in general is not a date.
 const STRIKE_FED_UP = /\bsick (?:of|and tired)\b/gu;
 const STRIKE_GENERIC_TIME = /\b(?:weekends|fins de semana|fines de semana)\b/gu;
-const STRIKE_JAB = /(?<![\p{L}])(?:this time|for once|esta vez|desta vez|dessa vez|por una vez|por uma vez|actually|sequer|siquiera)(?![\p{L}])/u;
+const STRIKE_JAB = /(?<![\p{L}])(?:this time|for once|esta vez|desta vez|dessa vez|por una vez|por uma vez|actually)(?![\p{L}])/u;
 // A defensive "not me" may go whole (Jared's ruling); its negation is not a fact the reply must keep.
 const STRIKE_NOT_ME = /\b(?:(?:wasn't|was not|isn't|it's not|not) me|não fui eu|nao fui eu|no fui yo|no he sido yo)\b/iu;
 const strikeSpanProblem = (draft: string, span: string, sentence: string): string | null => {
@@ -1111,9 +1117,11 @@ const strikeGuard = (draft: string, spans: string[]): string[] => {
   return out;
 };
 // Whole-result check: the full fact check, minus what a pure deletion cannot get wrong (asks are guarded per span).
-const STRIKE_IGNORE = new Set(["repeat", "ask_changed", "ask_dropped", "ask_added", "question_added", "decision_as_question"]);
-const strikeCheck = (draft: string, text: string, spans: string[] = []) => {
+// "language_changed" is moot too: a deletion cannot translate, and the blame may be the draft's only English (or Spanish) words.
+const STRIKE_IGNORE = new Set(["repeat", "ask_changed", "ask_dropped", "ask_added", "question_added", "decision_as_question", "language_changed"]);
+const strikeCheck = (draft: string, text: string, spans: string[] = [], jabRanges: [number, number][] = []) => {
   let base = draft;
+  for (const [a, b] of [...jabRanges].sort((x, y) => y[0] - x[0])) base = base.slice(0, a) + " ".repeat(b - a) + base.slice(b);
   for (const sp of spans) if (STRIKE_NOT_ME.test(sp)) base = base.replace(sp, " ");
   const res = checkRewrite(base, text, { facts: [], has_ask: false, states_decision: false, languages: [] }, true);
   const codes = res.codes.filter((c) => !STRIKE_IGNORE.has(c));
@@ -1122,6 +1130,372 @@ const strikeCheck = (draft: string, text: string, spans: string[] = []) => {
   const jab = normText(text).match(STRIKE_JAB);
   if (jab) { codes.push("reproach_kept"); notes.push(`"${jab[0]}" is still a jab; strike it with the blame.`); }
   return { codes, notes };
+};
+
+// ---- v3: code-side strikes that do not depend on the model ----
+// Fixed reproach phrases, struck only when they are a whole clause (between the start or , ; : . ! ? and the end or
+// , ; : . ! ?), so "a typical day" or "as usual, pickup is at 5" style facts inside a clause are never cut.
+const STRIKE_FIXED_PHRASES = [
+  // en
+  "as usual", "as always", "same as always", "same as usual", "same as ever", "here we go again", "same again", "same old story", "same old",
+  "typical", "typical of you", "so typical", "so typical of you", "how typical", "it's so typical of you", "it's typical of you",
+  "it's always the same", "it's always the same with you", "always the same with you", "surprise surprise",
+  // pt
+  "como sempre", "como de costume", "típico", "típico de ti", "típica", "sempre a mesma coisa", "sempre a mesma coisa contigo",
+  "é sempre a mesma coisa", "é sempre a mesma coisa contigo", "de novo a mesma coisa", "outra vez a mesma coisa", "a mesma coisa de sempre",
+  "lá estamos nós outra vez", "lá estamos outra vez", "lá vamos nós outra vez", 
+  // es
+  "como siempre", "como de costumbre", "típico de ti", "otra vez lo mismo", "lo mismo de siempre", "siempre lo mismo",
+  "siempre lo mismo contigo", "es siempre lo mismo", "ya estamos otra vez", 
+  // mixed
+  "it's always the same contigo", "it's so typical contigo", "sempre a mesma coisa with you", "siempre lo mismo with you",
+];
+const STRIKE_FIXED_RE = new RegExp(
+  `(?<=^|[.!?,;:]\\s*)(?:${[...STRIKE_FIXED_PHRASES].sort((a, b) => b.length - a.length).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "['’]").replace(/ /g, "\\s+")).join("|")})(?=\\s*(?:[.!?,;:]|$))`,
+  "giu",
+);
+// "Típico que ..." / "Typical, ..." open a not-told sentence: the wrapper goes, the fact stays (guarded downstream).
+const STRIKE_FIXED_LEAD_RE = /(?<=^|[.!?]\s+)(?:típico|tipico|típica)\s+que(?=\s)/giu;
+// A bare "again" is usually a count fact ("he was sick again"). It is struck only in a pure jab clause: a negative
+// imperative about forgetting or being late, with at most a short object, ending at "again" ("Don't forget otra vez",
+// "Não te esqueças outra vez", "No te olvides la mochila otra vez"). Never after a name, a verb in the past, or an event.
+const STRIKE_JAB_AGAIN_RE = new RegExp(
+  "(?<=^|[.!?,;:]\\s*)(?:please,?\\s+|por favor,?\\s+)?" +
+  "(?:(?:don['’]?t|do not)\\s+(?:forget|be late|miss it)|(?:não|nao)\\s+te\\s+(?:esqueças|esquecas|atrases)|(?:não|nao)\\s+(?:faltes|falhes)|no\\s+te\\s+(?:olvides|retrases)|no\\s+(?:llegues\\s+tarde|faltes))" +
+  "(?:\\s+(?:it|this|that|isso|eso|lo|la|o|a)|\\s+(?:the|her|his|their|o|a|os|as|la|el|los|las|de\\s+la|del|da|do|de)\\s+[\\p{L}-]+)?" +
+  "(\\s+(?:again|once again|otra vez|outra vez|de novo|de nuevo|novamente|nuevamente))(?=\\s*(?:[.!?,;:]|$))",
+  "giu",
+);
+const strikeFixed = (draft: string) => {
+  const ranges: [number, number][] = [];
+  const jab: [number, number][] = [];
+  for (const m of draft.matchAll(STRIKE_FIXED_RE)) {
+    let a = m.index ?? 0;
+    // Take the comma that joins a trailing phrase (", as usual.") with it.
+    const pre = draft.slice(0, a).match(/,\s*$/);
+    if (pre) a -= pre[0].length;
+    ranges.push([a, (m.index ?? 0) + m[0].length]);
+  }
+  for (const m of draft.matchAll(STRIKE_FIXED_LEAD_RE)) ranges.push([m.index ?? 0, (m.index ?? 0) + m[0].length]);
+  for (const m of draft.matchAll(STRIKE_JAB_AGAIN_RE)) {
+    const end = (m.index ?? 0) + m[0].length;
+    const r: [number, number] = [end - m[1].length, end];
+    ranges.push(r);
+    jab.push(r);
+  }
+  // v4: martyr "just" / trailing "as usual" after "I'll do it myself" style clauses.
+  for (const r of strikeMartyr(draft)) { ranges.push(r); jab.push(r); }
+  return { ranges, jab };
+};
+
+// ---- v3: the one word code may add: "Please" / "Por favor" in front of an ask the parent already wrote ----
+const PLEASE_EN_VERBS = new Set([
+  "bring", "take", "pack", "give", "send", "pick", "drop", "stop", "keep", "call", "text", "tell", "remember", "pay", "put", "check",
+  "sign", "return", "let", "make", "get", "leave", "collect", "book", "buy", "help", "try", "be", "come", "wait", "ask", "answer",
+  "reply", "read", "write", "swap", "change", "stay", "don't", "dont", "do", "ensure", "confirm", "sort", "find", "transfer", "update",
+]);
+const PLEASE_EN_REQ = /^(?:can|could|will|would)\s+you\b/i;
+const PLEASE_PTES_VERBS = new Set([
+  "leva", "traz", "dá", "manda", "envia", "liga", "paga", "põe", "deixa", "vem", "lembra", "avisa", "diz", "compra", "busca", "apanha",
+  "confirma", "transfere", "devolve", "trata", "verifica", "arranja", "pára",
+  "dale", "dame", "lleva", "trae", "envía", "llama", "pon", "deja", "ven", "dile", "recuerda", "acuérdate", "recoge", "confirma", "avísame",
+  "paga", "compra", "devuelve", "mira", "revisa", "trata", "manda", "dime", "llévalo", "llévala", "tráelo", "tráela", "avisa",
+]);
+const PLEASE_PTES_LEAD = /^(?:(?:não|nao)\s+te\s+(?:esqueças|esquecas|atrases)|(?:não|nao)\s+(?:faltes|falhes|deixes)|no\s+te\s+(?:olvides|retrases)|no\s+(?:llegues|faltes|dejes)|para\s+de|pára\s+de|deja\s+de|tens\s+de|tienes\s+que)\b/iu;
+const PLEASE_PTES_REQ = /^(?:podes|pode|podias|consegues|puedes|podrías|podrias|me\s+puedes|me\s+podrías|transferes-me|mandas-me|envias-me|me\s+mandas|me\s+avisas)\b/iu;
+const HAS_PLEASE = /(?<![\p{L}])(?:please|pls|por favor|porfa|se faz favor|por favorzinho)(?![\p{L}])/iu;
+// Brush-offs are not asks: "Don't bother." / "Forget it." / "Deixa estar." / "Da igual." never get a "Please".
+const PLEASE_SKIP = /^(?:don['’]t bother|don['’]t worry|forget it|never mind|deixa estar|esquece|deja estar|déjalo|olvídalo|da igual|não te preocupes|no te preocupes)\b/iu;
+const addPlease = (text: string): string => {
+  if (HAS_PLEASE.test(text)) return text;
+  const parts = text.split(/(?<=[.!?])(\s+)/);
+  for (let i = 0; i < parts.length; i += 2) {
+    const sent = parts[i];
+    const q = sent.startsWith("¿") ? "¿" : "";
+    const body = sent.slice(q.length);
+    const first = (body.match(/^[\p{L}'’-]+/u)?.[0] ?? "").toLowerCase().replace("’", "'");
+    if (!first || PLEASE_SKIP.test(body)) continue;
+    const isQ = /\?\s*$/.test(sent);
+    let pre = "";
+    if ((!q && !isQ && PLEASE_EN_VERBS.has(first)) || (isQ && PLEASE_EN_REQ.test(body))) pre = "Please ";
+    else if ((!q && !isQ && (PLEASE_PTES_VERBS.has(first) || PLEASE_PTES_LEAD.test(body))) || (isQ && PLEASE_PTES_REQ.test(body))) pre = "Por favor, ";
+    if (!pre) continue;
+    // Lower-case only the first letter of the parent's first word (a verb here, never a name or "I").
+    parts[i] = pre + q + body.charAt(0).toLowerCase() + body.slice(1);
+    return parts.join("");
+  }
+  return text;
+};
+
+// ---- v4: martyr "just" / "I'll do it myself as usual", struck only in fixed patterns (same approach as the fixed list) ----
+// Only the martyr word goes ("just", the trailing "as usual" / "como sempre" / "como siempre"); who will do it stays.
+const STRIKE_MARTYR_RES: RegExp[] = [
+  // "Fine, I'll just ..." / "Deixa estar, eu é que ..." / "Da igual, ya lo hago yo": the sigh in front of a martyr line.
+  /(?<=^|[.!?]\s+)((?:fine|forget it|never mind|don['’]t worry|deixa estar|esquece|não faz mal|da igual|déjalo|olvídalo|no te preocupes),\s+)(?=(?:I['’]ll|I will|eu|ya\s+lo|yo|faço|lo\s+hago)(?![\p{L}]))/giu,
+  // "I'll just do it myself" -> "I'll do it myself"
+  /(?<![\p{L}])(?:I['’]ll|I will|I['’]d|let me)\s+(just)\s+(?=(?:do|sort|handle|deal|fix|pay|organise|organize|arrange|pick|take|bring|get|cancel|go|ask|tell|leave|buy|book|cover|collect|drop|call|text|send|sign|find|make|cook|wash|pack|stay|keep|look)\b)/giu,
+  // "I'll do it myself as usual" / "I'll sort it myself, as always" (the comma form is the fixed list's)
+  /(?<![\p{L}])I(?:['’]ll| will|['’]m going to| always| have to| had to)?\s+(?:just\s+)?[\p{L}' ]{2,40}?\bmyself(\s+(?:as usual|as always|like always|again as usual))(?=\s*(?:[.!?,;:]|$))/giu,
+  // pt: "faço eu como sempre", "eu é que trato disso como sempre", "vou eu buscá-la como sempre"
+  /(?<![\p{L}])(?:faço|trato|levo|pago|resolvo|vou|busco|apanho|organizo|compro|marco|ligo)\s+eu\b[^.!?,;:\n]{0,40}?(\s+como\s+(?:sempre|de costume))(?=\s*(?:[.!?,;:]|$))/giu,
+  // "eu é que ..." only: a plain "Eu levo-a às 5 como sempre" is a routine, not a martyr line.
+  /(?<![\p{L}])eu\s+é\s+que\s+(?:faço|trato|levo|pago|resolvo|vou|busco|apanho|organizo|compro|marco|ligo)\b[^.!?,;:\n]{0,40}?(\s+como\s+(?:sempre|de costume))(?=\s*(?:[.!?,;:]|$))/giu,
+  // es: "ya lo hago yo como siempre", "me encargo yo como siempre", "lo pago yo, como siempre" (comma form is the fixed list's)
+  /(?<![\p{L}])(?:(?:ya\s+)?(?:lo|la|los|las)\s+)?(?:hago|haré|recojo|llevo|pago|arreglo|organizo|busco|compro|llamo|encargo|me\s+encargo|voy)\s+yo\b[^.!?,;:\n]{0,40}?(\s+como\s+(?:siempre|de costumbre))(?=\s*(?:[.!?,;:]|$))/giu,
+  // "siempre soy yo el que ..." style: only with the emphatic "soy yo" (a plain "Yo la recojo a las 5 como siempre" is a routine).
+  /(?<![\p{L}])(?:soy|seré)\s+yo\s+(?:el|la)\s+que\b[^.!?,;:\n]{0,40}?(\s+como\s+(?:siempre|de costumbre))(?=\s*(?:[.!?,;:]|$))/giu,
+  /(?<![\p{L}])sou\s+eu\s+que\b[^.!?,;:\n]{0,40}?(\s+como\s+(?:sempre|de costume))(?=\s*(?:[.!?,;:]|$))/giu,
+];
+const strikeMartyr = (draft: string): [number, number][] => {
+  const out: [number, number][] = [];
+  for (const re of STRIKE_MARTYR_RES) {
+    for (const m of draft.matchAll(re)) {
+      const g = m[1];
+      if (!g) continue;
+      const at = (m.index ?? 0) + m[0].lastIndexOf(g);
+      out.push([at, at + g.length]);
+    }
+  }
+  return out;
+};
+
+// ---- v4: shouted caps. ALL-CAPS words go to lower case (capital kept at a sentence start), except short acronyms
+// (up to 4 letters, unless a common word), known names and brands, and words the draft also writes in normal case
+// (those take the draft's own form, e.g. "LEO" -> "Leo" when the draft also says "Leo"). ----
+const CAPS_BRANDS = ["EpiPen", "Calpol", "Piriton", "Ben-u-ron", "Nurofen", "Brufen", "Dalsy", "Apiretal", "Calpol", "Ventolin", "Clarityn", "Zirtek", "Benadryl", "Paracetamol", "Ibuprofen", "Ibuprofeno", "Calpol", "WhatsApp", "iPad", "iPhone", "PlayStation", "Xbox", "YouTube", "TikTok"];
+const CAPS_BRAND_MAP = new Map([...CAPS_BRANDS, "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "January",
+  "February", "March", "April", "June", "July", "August", "September", "October", "November", "December", "Christmas", "Easter"].map((b) => [b.toLowerCase(), b]));
+const CAPS_KEEP = new Set(["gp", "er", "pe", "nhs", "a&e", "ae", "pta", "sen", "iep", "adhd", "asd", "sns", "ok", "am", "pm", "uk", "usa", "dbs", "mot", "id", "tv", "pc", "dvd", "pdf", "sms", "faq", "ceo", "hr", "bbc", "ikea", "pin", "cv", "dni", "nif", "iva", "ctt", "inem", "ess"]);
+const CAPS_COMMON_SHORT = new Set([
+  "not", "now", "stop", "late", "ever", "this", "that", "what", "why", "how", "you", "me", "my", "her", "his", "our", "your", "the", "and", "but",
+  "yes", "no", "all", "one", "two", "get", "give", "take", "pay", "call", "text", "tell", "done", "back", "home", "time", "day", "here", "them",
+  "they", "him", "she", "will", "must", "need", "have", "has", "had", "was", "were", "are", "did", "do", "does", "don't", "dont", "can't", "won't",
+  "i'm", "it's", "just", "even", "only", "more", "much", "very", "so", "too", "be", "is", "am", "of", "to", "in", "on", "at", "for", "by", "up",
+  "out", "off", "or", "if", "we", "us", "he", "an", "a", "go", "see", "say", "said", "told", "ask", "once", "last", "next", "again", "ffs", "omg",
+  "não", "nao", "já", "ja", "nada", "nem", "ele", "ela", "tu", "eu", "yo", "tú", "el", "la", "lo", "que", "por", "para", "hoy", "hoje", "ya", "otra",
+  "vez", "mais", "más", "mas", "muy", "sim", "sí", "isso", "eso", "esto", "aqui", "aquí", "todo", "tudo", "dia", "día", "hora", "ver", "dar", "sei",
+  "sé", "foi", "fue", "es", "é", "está", "tem", "vai", "va", "sem", "sin", "com", "con", "pero", "se", "si", "de", "do", "da", "del", "al", "o", "e",
+  "y", "os", "as", "los", "las", "um", "uma", "un", "una", "te", "ti", "nos", "sua", "seu", "tua", "teu", "tus", "tu", "fiz", "faz", "haz", "hace",
+  "pois", "bem", "bien", "mal", "kit", "bag", "coat", "bus", "car", "food", "cash", "fee", "keys", "key", "book", "hat", "home", "work", "mum",
+  "dad", "mom", "mãe", "pai", "papá", "mamá", "ropa", "casa", "late", "early", "sure", "fine", "busy", "sick", "ill", "hurt", "safe", "help",
+  "cold", "hot", "wet", "tired", "rule", "rules", "sign", "form", "fees", "nope", "never", "nunca", "hoje", "logo", "cedo", "tarde", "aqui", "agora",
+]);
+const CAPS_WORD_RE = /(?<![\p{L}\p{N}])[\p{L}][\p{L}'’&-]*(?![\p{L}\p{N}])/gu;
+const isShout = (w: string) => /\p{Lu}/u.test(w) && !/\p{Ll}/u.test(w) && (w.match(/\p{L}/gu) ?? []).length >= 2;
+const shoutForm = (w: string, draft: string, inRun = false): string | null => {
+  const low = w.toLowerCase().replace("’", "'");
+  const brand = CAPS_BRAND_MAP.get(low);
+  if (brand) return brand;
+  // A word the draft also writes in normal case takes that form ("LEO" -> "Leo", "COAT" -> "coat").
+  for (const m of draft.matchAll(CAPS_WORD_RE)) if (!isShout(m[0]) && m[0].toLowerCase() === w.toLowerCase()) return m[0];
+  const letters = (w.match(/\p{L}/gu) ?? []).length;
+  if (CAPS_KEEP.has(low)) return null;
+  if (letters <= 4 && !CAPS_COMMON_SHORT.has(low) && !inRun) return null; // short acronym or name: GP, ER, PE, NHS
+  return low;
+};
+const hasShout = (draft: string) => shoutLeft(draft, draft).length > 0;
+// A short all-caps word next to another shouted word (of 5+ letters or a common word) is part of a shouted phrase
+// ("TODOS LOS DÍAS", "SO HARD"), not an acronym.
+const shoutRuns = (text: string, draft: string) => {
+  const ws = [...text.matchAll(CAPS_WORD_RE)];
+  const loud = ws.map((m) => isShout(m[0]) && (shoutForm(m[0], draft) !== null));
+  const run = new Set<number>();
+  ws.forEach((m, i) => {
+    if (!isShout(m[0])) return;
+    for (const j of [i - 1, i + 1]) {
+      if (j < 0 || j >= ws.length || !loud[j]) continue;
+      const gap = j < i ? text.slice(ws[j].index! + ws[j][0].length, m.index) : text.slice(m.index! + m[0].length, ws[j].index);
+      if (/^[\s-]+$/.test(gap)) run.add(m.index!);
+    }
+  });
+  return run;
+};
+const deShout = (text: string, draft: string): string => {
+  const runs = shoutRuns(text, draft);
+  const out = text.replace(CAPS_WORD_RE, (w: string, off: number) => {
+    if (!isShout(w)) return w;
+    if (/\d$/.test(text.slice(0, off))) return w; // "5PM"
+    const f = shoutForm(w, draft, runs.has(off));
+    if (f === null) return w;
+    // "I'M" / "I'LL" keep their "I".
+    if (/^i['’]/i.test(f)) return "I" + f.slice(1);
+    return f;
+  });
+  // Capital at a sentence start (the first letter after a cut or of the text).
+  return out.replace(/(^|[.!?]\s+|\n)(["'(¿¡]?)(\p{Ll})/gu, (_m, a: string, q: string, c: string) => a + q + c.toUpperCase());
+};
+// A shouted word left in a rewrite (one deShout would change).
+const shoutLeft = (text: string, draft: string) => {
+  const runs = shoutRuns(text, draft);
+  return [...text.matchAll(CAPS_WORD_RE)].filter((m) => isShout(m[0]) && !/\d$/.test(text.slice(0, m.index ?? 0)) && shoutForm(m[0], draft, runs.has(m.index!)) !== null).map((m) => m[0]);
+};
+
+// ---- v4: shape guards on the struck result. Any hit rejects the whole candidate (-> retry, then null). ----
+// Sentences of the draft with their offsets.
+const sentRanges = (t: string): [number, number][] => {
+  const out: [number, number][] = [];
+  const re = /[^.!?\n]*(?:[.!?]+["')\]]*|\n|$)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(t)) && m[0] !== "") {
+    const a = m.index + (m[0].length - m[0].trimStart().length), b = m.index + m[0].trimEnd().length;
+    if (b > a) out.push([a, b]);
+    if (re.lastIndex >= t.length) break;
+  }
+  return out;
+};
+const SHAPE_COND = /^(?:(?:and|or|but|e|ou|mas|y|o|pero)\s+)?(?:if|unless|se|si|caso|a menos que|a no ser que|salvo que|en caso de que|no caso de)(?![\p{L}])/iu;
+const SHAPE_COND_OK = /^(?:se\s+calhar|se\s+faz\s+favor|se\s+puderes|se\s+possível|if\s+possible|if\s+you\s+can|if\s+that's\s+ok|si\s+puedes|si\s+es\s+posible)\b/iu;
+const SHAPE_ELSE_ONLY = /^(?:(?:or|ou|o)\s+)?(?:otherwise|or else|else|senão|senao|caso contrário|si no|sino|de lo contrario|de otro modo)$/iu;
+const SHAPE_DANGLE = new Set([
+  "and", "or", "but", "so", "because", "with", "to", "for", "of", "at", "from", "about", "than", "into", "the", "a", "an", "my", "your", "his",
+  "her", "their", "our", "if", "unless", "when", "while", "until", "otherwise", "else", "which", "who", "that", "like",
+  "e", "ou", "mas", "porque", "pois", "com", "para", "de", "do", "da", "dos", "das", "em", "na", "nas", "nos", "por", "pelo", "pela", "que", "se",
+  "quando", "senão", "o", "os", "as", "um", "uma", "teu", "tua", "seu", "sua", "como",
+  "y", "pero", "con", "del", "en", "si", "cuando", "sino", "el", "la", "los", "las", "un", "una", "al", "tus", "su", "sus", "mi", "mis",
+]);
+const SHAPE_SUBJ_EN = new Set(["i", "you", "he", "she", "they", "we", "you're", "you've", "you'll", "you'd", "i'm", "i've", "i'll", "he's", "she's", "they're", "we're"]);
+const VERB_WORDS = new Set([
+  // en
+  "is", "are", "was", "were", "be", "been", "am", "has", "have", "had", "do", "does", "did", "will", "would", "can", "could", "should", "must",
+  "may", "might", "shall", "need", "needs", "let", "get", "gets", "got", "go", "goes", "went", "come", "comes", "came", "take", "takes", "took",
+  "bring", "brings", "brought", "forget", "forgets", "forgot", "leave", "leaves", "left", "miss", "misses", "pick", "picks", "drop", "pay", "pays",
+  "paid", "send", "sent", "tell", "tells", "told", "say", "says", "said", "know", "knew", "make", "makes", "made", "give", "gives", "gave",
+  "keep", "keeps", "kept", "put", "see", "saw", "think", "thought", "want", "wants", "lost", "broke", "starts", "ends", "finishes", "begins",
+  "sat", "ran", "felt", "feels", "hurt", "hurts", "costs", "cost", "owe", "owes", "bother", "listen", "care", "remember", "help", "stop",
+  // pt
+  "é", "são", "está", "estás", "estão", "foi", "foram", "era", "eras", "tem", "tens", "têm", "tinha", "vai", "vais", "vou", "vão", "há",
+  "fica", "ficas", "ficou", "pode", "podes", "posso", "precisa", "precisas", "preciso", "quer", "queres", "quero", "sabe", "sabes", "sei", "deve",
+  "deves", "chega", "chegas", "começa", "acaba", "sai", "toma", "tomas", "faz", "fazes", "fiz", "fez", "disse", "dizes", "diz", "ligo", "liga",
+  "levo", "leva", "trago", "traz", "pago", "paga", "volta", "voltou", "voltar", "esteve", "estive", "deixa", "custa", "dá", "dou",
+  // es
+  "es", "eres", "son", "fue", "fueron", "estás", "están", "tiene", "tienes", "tienen", "tenía", "va", "vas", "voy", "van", "hay", "puede",
+  "puedes", "puedo", "necesita", "necesitas", "necesito", "quiere", "quieres", "quiero", "sé", "debe", "debes", "llega", "llegas", "empieza",
+  "termina", "sale", "toca", "hace", "haces", "hice", "hizo", "dijo", "dices", "dice", "llamo", "llama", "llevo", "lleva", "traigo", "trae",
+  "pago", "vuelve", "volvió", "estuvo", "deja", "cuesta", "doy", "da",
+  // first person "I'll do it" forms (pt / es)
+  "faço", "farei", "trato", "busco", "apanho", "compro", "resolvo", "organizo", "sou", "hago", "haré", "recojo", "arreglo", "encargo", "soy",
+  "compro", "llevaré", "recogeré", "pagaré",
+]);
+const hasFiniteVerb = (s: string) => {
+  const toks = s.toLowerCase().replace(/[’]/g, "'").split(/[^\p{L}']+/u).filter(Boolean);
+  return toks.some((t) =>
+    VERB_WORDS.has(t) || FX_KEY.some(([, re]) => re.test(t)) || /^(?:esque[çc]|olvid|atras|retras|falt|falh|lleg|cheg|lembr|acord|recuerd)\p{L}*$/u.test(t) || PLEASE_EN_VERBS.has(t) || PLEASE_PTES_VERBS.has(t) || /(?:n't|'ll|'re|'ve|'m|'d)$/.test(t) ||
+    /^i'm$|^it's$|^that's$|^there's$|^he's$|^she's$/.test(t) ||
+    (t.length >= 5 && /ed$/.test(t)) ||
+    (t.length >= 4 && /(?:aste|este|iste|ou|eu|iu|ámos|aram|eram|iram|ava|avas|aba|abas|ió|aron|ieron|aremos|eremos|iremos|arás|erás|irás|ará|erá|irá)$/.test(t))
+  );
+};
+const NOT_ME_OR_YOU = /(?<![\p{L}])(?:(?:wasn't|was not|isn't|it's not|not) me|it was you|you did|was you|não fui eu|nao fui eu|foste tu|foi você|tu é que|no fui yo|no he sido yo|fuiste tú|fuiste tu|has sido tú|tú eres (?:el|la) que)(?![\p{L}])/iu;
+// Blame words that must not stay in a struck result (no "always" / "never": those also state not-told facts).
+const STRIKE_BLAME_LEFT = wordRe(
+  "typical|típico|típica|tipico|pathetic|patético|patética|obviously|clearly|as usual|como sempre|como siempre|useless|inútil|lazy|selfish|" +
+  "irresponsible|irresponsável|irresponsable|do you even|did you even|you even|even bother|how hard|not that you|thanks so much|honestly|seriously|" +
+  "ridiculous|ridículo|ridícula|don't care|do not care|doesn't care|não queres saber|não te importa|no te importa|te da igual|whatever|pretend|finges|" +
+  "unbelievable|disgrace|vergonha|vergüenza|incompetent|incompetente|for once|por una vez|already told you|told you already|i've told you|" +
+  "for the hundredth time|já te disse|como te disse|ya te lo dije|ya te dije|te lo he dicho|desastre|disaster|desleixado|desleixada|grow up|" +
+  "get a grip|for god's sake|por amor de deus|por el amor de dios|é muito pedir|es mucho pedir|too much to ask|idiot|idiota|stupid|estúpido|" +
+  "estúpida|parvo|parva|hopeless|a joke|uma piada|un chiste|great parenting|bom pai|boa mãe|buen padre|buena madre|como de costume|como de costumbre|" +
+  "same old|sempre a mesma|siempre lo mismo|típico de ti|typical of you|you'll regret|vais arrepender|te arrepentirás",
+);
+// Who did what, for guard 2: each deed verb (FX_KEY) with its doer, found before it (skipping auxiliaries, "who/que/quien"
+// pointing back to the doer), from a PT/ES person ending, or from "it was you / foste tu / fuiste tú" in the same sentence.
+// Deeds inside an "If/Se/Si" clause or a threat are hypothetical and skipped.
+const ACTOR_SKIP = new Set([...FX_SUBJ_SKIP, "who", "that", "que", "quien", "quem", "the", "one", "el", "la", "o", "a", "were", "was", "is", "are", "really", "actually", "completely", "it"]);
+const ACTOR_ROLE: Record<string, string> = {
+  you: "other", "você": "other", voce: "other", tu: "other", "tú": "other", usted: "other", ti: "other",
+  i: "self", me: "self", eu: "self", yo: "self", mim: "self", "mí": "self",
+  he: "third", she: "third", they: "third", ele: "third", ela: "third", eles: "third", elas: "third", "él": "third", ella: "third", ellos: "third", ellas: "third",
+};
+const IT_WAS = /(?:it was you|was you|you did|foste tu|foi você|fuiste tú|fuiste tu|has sido tú|it was me|fui eu|fui yo)(?![\p{L}])/iu;
+const actorDeeds = (text: string, names: Set<string>) => {
+  const out: { key: string; role: string }[] = [];
+  for (const sent of fxSentences(text)) {
+    if (fxIsThreat(sent)) continue;
+    const itWas = sent.match(IT_WAS)?.[0].toLowerCase() ?? "";
+    const wasRole = itWas ? (/(?:me|eu|yo)$/.test(itWas) ? "self" : "other") : "";
+    for (const clause of sent.split(/\s*[,;:]\s*/)) {
+      if (SHAPE_COND.test(clause.replace(/^[¿¡"'(]+/, ""))) continue;
+      const raw = clause.split(/[^\p{L}\p{N}'’]+/u).filter(Boolean);
+      const toks = raw.map((w) => w.toLowerCase().replace(/[’]/g, "'").replace(/'(ve|ll|d|re|s|m)$/, ""));
+      toks.forEach((t, i) => {
+        const hit = FX_KEY.find(([, re]) => re.test(t));
+        if (!hit || (i > 0 && toks[i - 1] === "to")) return;
+        let role = "";
+        for (let j = i - 1; !role && j >= Math.max(0, i - 6); j--) {
+          if (ACTOR_SKIP.has(toks[j])) continue;
+          if (ACTOR_ROLE[toks[j]]) role = ACTOR_ROLE[toks[j]];
+          else if (names.has(toks[j]) || (/^\p{Lu}\p{Ll}+$/u.test(raw[j]) && !CAP_SKIP.has(toks[j]))) role = "name:" + toks[j];
+          else break;
+        }
+        if (!role) {
+          if (/(?:aste|iste|este)$/.test(stripAccents(t))) role = "other";
+          else if (/(?:ei|é|í)$/.test(t) || /^(?:esqueci|perdi)$/.test(t)) role = "self";
+        }
+        if (wasRole && (!role || role === "self")) role = wasRole; // "It wasn't me who forgot it, it was you."
+        if (role) out.push({ key: hit[0], role });
+      });
+    }
+  }
+  return out;
+};
+// Returns problem notes; empty = the shape is fine.
+const strikeShape = (draft: string, ranges: [number, number][], text: string): string[] => {
+  const out: string[] = [];
+  const names = draftNames(draft);
+  const lastTok = (s: string) => (s.toLowerCase().replace(/[’]/g, "'").match(/[\p{L}'-]+(?=[^\p{L}]*$)/u)?.[0] ?? "");
+  // (1d) A subject struck right before its verb: "[You] forgot her bag" -> "Forgot her bag".
+  for (const [a, b] of ranges) {
+    const struckLast = lastTok(draft.slice(a, b));
+    const after = draft.slice(b);
+    // Only a strike that ends on the pronoun itself (no comma after it) and runs into a lower-case word.
+    if ((SHAPE_SUBJ_EN.has(struckLast) || names.has(struckLast)) && /\p{L}$/u.test(draft.slice(a, b).trimEnd()) && /^\s*\p{Ll}/u.test(after) && !/^\s*(?:and|or|but|e|ou|y|o)\b/iu.test(after))
+      out.push(`no_subject: the strike "${draft.slice(a, b).trim()}" takes the subject of "${after.trim().split(/\s+/).slice(0, 3).join(" ")}"`);
+  }
+  const touchedDeedsLost: { key: string; role: string }[] = [];
+  let notMeStruck = false;
+  for (const [s, e] of sentRanges(draft)) {
+    const local = ranges.filter(([a, b]) => a < e && b > s).map(([a, b]) => [Math.max(a, s) - s, Math.min(b, e) - s] as [number, number]);
+    if (!local.length) continue;
+    const orig = draft.slice(s, e);
+    for (const [a, b] of local) if (NOT_ME_OR_YOU.test(orig.slice(a, b))) notMeStruck = true;
+    const r = strikeSpans(orig, [], local);
+    const rem = r.ok ? r.text.trim() : "";
+    // (2) deeds that lose who did them in this sentence
+    const dOrig = actorDeeds(orig, names), dRem = rem ? actorDeeds(rem, names) : [];
+    for (const d of dOrig) if (!dRem.some((x) => x.key === d.key && x.role === d.role)) touchedDeedsLost.push({ key: d.key, role: d.role });
+    if (!rem) continue;
+    const clauses = rem.replace(/[.!?…]+["')\]]*$/u, "").split(/\s*[,;:–]\s*|\s+-\s+/).map((c) => c.trim().replace(/^[¿¡"'(]+/, "")).filter(Boolean);
+    // (1a) A hanging conditional: "If you're late again." / "..., and if you don't."
+    const firstCond = clauses.length && SHAPE_COND.test(clauses[0]) && !SHAPE_COND_OK.test(clauses[0]);
+    const lastAndIf = clauses.length > 1 && /^(?:and|or|e|ou|y|o)\s+(?:if|se|si|unless|caso)(?![\p{L}])/iu.test(clauses[clauses.length - 1]);
+    if ((firstCond && clauses.length === 1) || (firstCond && clauses.slice(1).every((c) => SHAPE_COND.test(c) || !hasFiniteVerb(c))) || lastAndIf)
+      out.push(`hanging_conditional: "${rem}" is an if-clause with no main clause; strike the whole threat sentence or nothing`);
+    if (clauses.some((c) => SHAPE_ELSE_ONLY.test(c))) out.push(`dangling: "${rem}" keeps an "otherwise" with nothing after it`);
+    // (1c) A cut that ends a clause right after a joiner, preposition or article: "... at 2pm with [cut]." -> "... with."
+    for (const [a, b] of local) {
+      const lt = lastTok(orig.slice(0, a).replace(/[\s,;:–-]+$/u, ""));
+      if (!lt || !SHAPE_DANGLE.has(lt) || !/^\s*(?:[.!?;:,]|$)/u.test(orig.slice(b))) continue;
+      if (clauses.some((c) => lastTok(c) === lt)) out.push(`dangling: "${rem}" now ends a clause on "${lt}"`);
+    }
+    // (1b) No finite verb left where the sentence had one.
+    if (local.some(([a, b]) => hasFiniteVerb(orig.slice(a, b))) && !hasFiniteVerb(rem)) out.push(`no_verb: "${rem}" is left with no verb`);
+  }
+  // (2) Who did it: a deed whose doer was struck must still be said (same deed, same person) somewhere in the result.
+  const dText = actorDeeds(text, names);
+  for (const d of touchedDeedsLost) {
+    if (!dText.some((x) => x.key === d.key && x.role === d.role))
+      out.push(`actor_dropped: the strike removes who did "${d.key}" (${d.role}); keep who did it`);
+  }
+  // (2) A struck "not me / it was you" must not take the only mention of who did a deed the draft reports.
+  if (notMeStruck && !dText.some((x) => x.role === "other"))
+    out.push(`actor_dropped: the struck "not me / it was you" was the only mention of who did it`);
+  // (3) Blame words left in the result.
+  for (const sent of fxSentences(text)) {
+    const m = normText(sent).match(STRIKE_BLAME_LEFT);
+    if (m) out.push(`blame_left: "${sent}" still has "${m[0].trim()}"`);
+    else if (fxIsThreat(sent)) out.push(`blame_left: "${sent}" is still a threat`);
+  }
+  return [...new Set(out)];
 };
 
 const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) =>
@@ -1212,19 +1586,32 @@ Deno.serve(async (req) => {
         | { kind: "timeout" | "parse" }
         | { kind: "error"; resp: Response }
         | { kind: "none" }
-        | { kind: "cand"; raw: string; text: string; problems: string[] };
+        | { kind: "cand"; raw: string; text: string; problems: string[]; codeOnly?: boolean };
+      // Code strikes: fixed reproach phrases and the jab "again", whatever the model returns.
+      const fixed = strikeFixed(draft);
+      // v4: shouted words are lower-cased by code (acronyms, names and brands kept).
+      const shout = hasShout(draft);
       // Apply the strikes and run every guard. Any problem rejects the whole candidate; it is never partly applied.
+      // The model's spans are guarded one by one; the fixed code strikes are not (they are whole reproach phrases),
+      // but the whole result still goes through every check.
       const judge = (raw: string, strikes: string[]): Got => {
         const spans = strikes.filter((s) => typeof s === "string" && s.trim());
-        if (!spans.length) return { kind: "none" };
-        const st = strikeSpans(draft, spans);
+        if (!spans.length && !fixed.ranges.length && !shout) return { kind: "none" };
+        const st = strikeSpans(draft, spans, fixed.ranges);
         if (!st.ok) return { kind: "cand", raw, text: "", problems: [st.reason ?? "span_not_found"] };
         const g = strikeGuard(draft, spans);
         if (g.length) return { kind: "cand", raw, text: st.text, problems: g };
         // Nothing (or almost nothing) left: the draft is all blame, so there is nothing to send in its place.
-        if (strikeTooSmall(draft, st.text)) return { kind: "none" };
-        const c = strikeCheck(draft, st.text, spans);
-        return { kind: "cand", raw, text: st.text, problems: c.codes.length ? c.notes.length ? c.notes : c.codes : [] };
+        if (st.ranges.length && strikeTooSmall(draft, st.text)) return { kind: "none" };
+        const text = shout ? deShout(st.text, draft) : st.text;
+        // v4 shape guards: no fragment, no lost doer, no blame left, no shouting left. Any hit rejects the candidate.
+        const shape = strikeShape(draft, st.ranges, text);
+        const loud = shoutLeft(text, draft);
+        if (loud.length) shape.push(`shout_left: ${loud.join(", ")}`);
+        if (shape.length) return { kind: "cand", raw, text, problems: shape };
+        const c = strikeCheck(draft, text, spans, fixed.jab);
+        // codeOnly: the model struck nothing and only the fixed phrases / capitals changed; such a result never wins at once.
+        return { kind: "cand", raw, text, problems: c.codes.length ? c.notes.length ? c.notes : c.codes : [], codeOnly: !spans.length };
       };
       const ask = async (msgs: unknown[], maxTokens: number, signal: AbortSignal): Promise<Got> => {
         if (signal.aborted) return { kind: "timeout" };
@@ -1253,7 +1640,8 @@ Deno.serve(async (req) => {
       const ctrls = Array.from({ length: SEND_FIRST_CALLS }, () => new AbortController());
       const onAbort = () => ctrls.forEach((c) => c.abort());
       sendCtrl.signal.addEventListener("abort", onAbort);
-      const isWin = (f: Got) => f.kind === "cand" && !f.problems.length;
+      const isWin = (f: Got) => f.kind === "cand" && !f.problems.length && !f.codeOnly;
+      const isCodeOnlyPass = (f: Got) => f.kind === "cand" && !f.problems.length && f.codeOnly === true;
       const all: Got[] = [];
       const first: Got = await new Promise<Got>((resolve) => {
         let done = 0;
@@ -1265,7 +1653,8 @@ Deno.serve(async (req) => {
               ctrls.forEach((o) => { if (o !== c) o.abort(); });
               resolve(f);
             } else if (done === ctrls.length) {
-              resolve(all.find((x) => x.kind === "none") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
+              // A code-only result is used only when every call struck nothing itself (the model saw no other blame).
+              resolve((all.every(isCodeOnlyPass) ? all[0] : undefined) ?? all.find((x) => x.kind === "none") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
             }
           });
         });
@@ -1293,7 +1682,7 @@ Deno.serve(async (req) => {
           { role: "assistant", content: first.raw },
           {
             role: "user",
-            content: `Those strikes failed these checks:\n- ${first.problems.join("\n- ")}\nList the strikes again. Copy each one exactly from the draft. Never strike a fact, name, number, time, place, medicine, rule, agreement, repetition word or real request; strike only the blame around them. Return only JSON {"strikes":[...]}.`,
+            content: `Those strikes failed these checks:\n- ${first.problems.join("\n- ")}\nList the strikes again. Copy each one exactly from the draft. Never strike a fact, name, number, time, place, medicine, rule, agreement, repetition word, real request or who did something; strike only the blame around them, and never leave a broken sentence (strike a whole sentence or leave it). Return only JSON {"strikes":[...]}.`,
           },
         ], 300, sendCtrl.signal);
         if (got.kind !== "cand" || got.problems.length) {
@@ -1302,8 +1691,10 @@ Deno.serve(async (req) => {
         }
       }
       if (got.kind !== "cand") return json(pass);
-      log("rewrite", [], attempts);
-      return json({ needs_rewrite: true, rewrite: got.text });
+      // The one word code may add: "Please" / "Por favor" before an ask the parent already wrote, if none is there.
+      const rewrite = addPlease(got.text);
+      log("rewrite", rewrite === got.text ? [] : ["please_added"], attempts);
+      return json({ needs_rewrite: true, rewrite });
     };
     // Hard stop: whatever happens, answer by the deadline so the app never waits past its own limit.
     let hardTimer: ReturnType<typeof setTimeout> | undefined;
