@@ -31,23 +31,26 @@ Never add a request, topic, plan, suggestion or commitment the parent did not wr
 Keep the softened ask concrete and specific to what the parent wrote: name the same child, person and thing the parent objects to, and never replace it with general wording such as "conversations remain neutral", "personal matters", "adult matters" or "her well-being"; never reuse a stock sentence. If the draft only reports something that already happened to the child and asks for nothing, keep it as a calm statement of fact in the draft's own plain terms with no request added.
 Return ONLY JSON: {"options":[{"tone":"Neutral","text":"..."},{"tone":"Brief","text":"..."},{"tone":"Collaborative","text":"..."}],"changes":"one or two plain sentences on what you changed"}`;
 
-const SEND_SYSTEM = `Check a co-parent's draft message to the other parent.
-needs_rewrite = true if it is aggressive, hostile, passive aggressive, sarcastic, blaming, reproachful, guilt-tripping, threatening, uses absolutes about the other parent (always, never), or uses the child as leverage or as a messenger against the other parent. Otherwise false (neutral, factual, polite or kind).
-If it reports a safety concern, risk of harm or an emergency about the child or sender: needs_rewrite = false.
-If true, rewrite = one calm version:
-- Use ONLY facts in the draft. Keep names, dates, times, amounts, medication and items word for word. Never add times, places, deadlines, receipts, agreements, schools, reasons or offers the sender did not mention.
-- A child's health, safety, medication, school or care need stays a clear, direct, polite statement or request. Keep the need, the item, any time given and who does what. For example "Leo needs his inhaler" stays "Leo needs his inhaler" followed by a clear polite ask such as "Could you make sure he has it, please?". Never turn such a need into a suggestion to talk about it: never write "could we discuss", "can we talk about" or "could we please talk about" for a health, safety, medication, school or care need.
-- If the draft makes any other request (for example pay an amount by a date), keep that exact request, amount and date as a clear, polite request. Keep date words such as "due", "by" and "on" as the draft has them, and never change whether a date is in the past or the future (never turn "due 12 Nov" into "was due").
-- Never add a request, topic, plan, suggestion or commitment the parent did not write (for example never add "Could we focus on our parenting plan?" or "Could we talk about how we communicate?"). Only soften what is already there. A stated child need (for example "Leo needs his inhaler") may end with a polite ask for that same need.
-- When the draft states a fact or event with no request, keep it as a calm statement, or as a simple question about that same thing (for example a school play becomes a question about attending it). Add nothing new.
-- If the draft only reports something that already happened to the child and asks for nothing, return only the calm statement of that fact and nothing else. Keep the welfare facts in the draft's own plain terms (for example "starving" becomes "hungry", "filthy" becomes "dirty"); do not swap them for other details or new phrases (for example not "in need of a bath" or "in need of a wash"). Do not add any question, request, suggestion or next step after it.
-- Keep the softened ask concrete and specific to what the parent wrote. Name the same child, the same person and the same thing the parent objects to (for example what is being said about the parent, about a relative, or about money), and turn the demand into a short polite "Please don't ..." or "Please ..." about exactly that. An accusation such as "lies" may be softened to "untrue things", but keep who and what it is about. Never replace it with general wording such as "conversations remain neutral", "personal matters", "adult matters", "her well-being", "focused on her" or "remain positive". Drop insults, accusations and threats. Word it fresh from the draft each time; never reuse a stock sentence.
-- Remove all blame and reproach, including about the past: no disappointment, sarcasm, guilt, accusations, assumptions about the other parent's feelings, motives or future behaviour, absolutes (always, never) or threats. Never write "I am disappointed", "you cannot make it", "in the future" or "make sure you can". Keep only the request and the next step.
-- Never mention children, people or details that are not in the draft.
-- If it is about the child, frame it around what the child needs, using "we" where natural. Never use the child as leverage, never pass messages through the child.
-- Never use the words "police" or "victim". Drop threats of police or court.
-- Same length as the draft or shorter. Plain, warm, brief, UK English spelling, no em dashes, no legal advice.
-If false: rewrite = "".`;
+const SEND_SYSTEM = `You check a message a separated parent has drafted to the other parent and, if needed, write one calmer version. Work in three steps and fill every JSON field.
+
+Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggressive, sarcastic, blaming, reproachful, guilt-tripping, threatening, uses absolutes about the other parent (always, never), or uses a child as leverage or as a messenger against the other parent. false if it is neutral, factual, polite, firm but polite, or kind. false if it reports a safety concern, risk of harm or an emergency about a child or the sender.
+
+Step 2. Always read the draft and fill:
+- facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent.
+  For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft. Only a crude or exaggerated word may be replaced by its plain everyday word in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
+- has_ask: true if the draft asks or tells the other parent to do or not do something (including a demand implied by a stated rule or by a warning about what they do next), asks a question that wants a real answer, or states something a child needs from them. false if it only reports or complains about what already happened, asks only rhetorical or sarcastic questions, or only states the sender's own decision.
+- ask: that ask in plain words, or "".
+- states_decision: true if the sender states something they have decided or will do themselves.
+
+Step 3. If needs_rewrite is true, write rewrite, one calm version:
+- Keep every fact with the same meaning and tense, using its keep words. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
+- If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step.
+- If has_ask is true: keep that same ask, concrete and specific (the same child, person, item, amount, time and date), as one clear polite request. A child's health, safety, medication, school or care need stays a clear direct request, never a suggestion to talk about it. Never add a second ask, an option or a plan.
+- If states_decision is true: the decision stays a calm statement of what the sender will do, in their own terms. Never turn it into a question or a request and never offer alternatives.
+- Remove all blame, reproach, sarcasm, insults, threats, guilt, absolutes and assumptions about the other parent's motives or feelings, including about the past. An accusation may be softened to a neutral word, but keep who and what it is about; never replace it with general wording.
+- Never use a child as leverage or pass messages through a child. Never use the words "police" or "victim". No legal advice.
+- Plain, brief and warm. UK English spelling, no em dashes. About the same length as the draft or shorter.
+If needs_rewrite is false: rewrite = "".`;
 
 const SEND_SCHEMA = {
   type: "json_schema",
@@ -57,17 +60,116 @@ const SEND_SCHEMA = {
     schema: {
       type: "object",
       additionalProperties: false,
-      properties: { needs_rewrite: { type: "boolean" }, rewrite: { type: "string" } },
-      required: ["needs_rewrite", "rewrite"],
+      properties: {
+        needs_rewrite: { type: "boolean" },
+        facts: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: { fact: { type: "string" }, keep: { type: "array", items: { type: "string" } } },
+            required: ["fact", "keep"],
+          },
+        },
+        has_ask: { type: "boolean" },
+        ask: { type: "string" },
+        states_decision: { type: "boolean" },
+        rewrite: { type: "string" },
+      },
+      required: ["needs_rewrite", "facts", "has_ask", "ask", "states_decision", "rewrite"],
     },
   },
 };
 
-const callGateway = (apiKey: string, body: Record<string, unknown>) =>
+const RETRY_SCHEMA = {
+  type: "json_schema",
+  json_schema: {
+    name: "calm_retry",
+    strict: true,
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      properties: { rewrite: { type: "string" } },
+      required: ["rewrite"],
+    },
+  },
+};
+
+// mode:send time budget. The app gives up at about 4s, so the whole round trip must stay near 3s.
+const SEND_DEADLINE_MS = 3000;
+const SEND_RETRY_MIN_LEFT_MS = 1300;
+
+type SendFact = { fact?: unknown; keep?: unknown };
+type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean };
+
+const normText = (s: string) =>
+  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+
+const numberTokens = (s: string) =>
+  new Set(
+    (normText(s).match(/£?\d+(?:[.:,]\d+)*(?:\s?(?:am|pm|ml|mg|kg|g|p|st|nd|rd|th|%))?(?![a-z0-9])/g) ?? [])
+      .map((t) => t.replace(/\s/g, "")),
+  );
+
+const TIME_WORDS = [
+  "tonight", "today", "tomorrow", "yesterday", "this morning", "this afternoon", "this evening", "this week",
+  "this weekend", "next week", "next weekend", "next time", "in future", "in the future", "from now on",
+  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+];
+const MONTHS: [string, RegExp][] = [
+  ["jan", /\bjan(uary)?\b/], ["feb", /\bfeb(ruary)?\b/], ["mar", /\bmarch\b/], ["apr", /\bapr(il)?\b/],
+  ["jun", /\bjune?\b/], ["jul", /\bjuly?\b/], ["aug", /\baug(ust)?\b/], ["sep", /\bsept?(ember)?\b/],
+  ["oct", /\boct(ober)?\b/], ["nov", /\bnov(ember)?\b/], ["dec", /\bdec(ember)?\b/],
+];
+const ASK_MARKERS = /\b(please|could you|can you|would you|will you|make sure|ensure|let me know|i would like you|i'd like you)\b/;
+const hasWord = (text: string, w: string) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(text);
+
+// Deterministic fact check. Returns failure codes (for logs) and plain notes (for the retry prompt only).
+const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
+  const codes = new Set<string>();
+  const notes: string[] = [];
+  const d = normText(draft);
+  const r = normText(rewrite);
+  if (!r) return { codes: ["empty"], notes: ["The rewrite was empty."] };
+  if (/\b(police|victim)\b/.test(r)) { codes.add("banned_word"); notes.push('Do not use "police" or "victim".'); }
+
+  const dn = numberTokens(draft), rn = numberTokens(rewrite);
+  for (const t of rn) if (!dn.has(t)) { codes.add("new_number"); notes.push(`"${t}" is not written that way in the draft. Write numbers, times and units exactly as the draft does.`); }
+  for (const t of dn) if (!rn.has(t)) { codes.add("dropped_number"); notes.push(`"${t}" from the draft is missing.`); }
+
+  for (const w of TIME_WORDS) if (hasWord(r, w) && !hasWord(d, w)) { codes.add("new_time_word"); notes.push(`"${w}" is not in the draft. Do not add it.`); }
+  for (const [key, re] of MONTHS) if (re.test(r) && !re.test(d)) { codes.add("new_time_word"); notes.push(`A month (${key}) was added that is not in the draft.`); }
+
+  for (const f of c.facts ?? []) {
+    const keep = Array.isArray(f?.keep) ? f.keep : [];
+    for (const k of keep) {
+      if (typeof k !== "string") continue;
+      const nk = normText(k).replace(/^[^a-z0-9£]+|[^a-z0-9%]+$/g, "");
+      if (!nk || nk.split(" ").length > 6) continue;
+      if (!r.includes(nk)) { codes.add("missing_fact"); notes.push(`Keep "${k}" (fact: ${typeof f.fact === "string" ? f.fact : ""}).`); }
+    }
+  }
+
+  if (!c.has_ask) {
+    if (r.includes("?")) { codes.add("question_added"); notes.push("The draft asks for nothing, so the rewrite must not ask a question."); }
+    if (ASK_MARKERS.test(r)) { codes.add("ask_added"); notes.push("The draft asks for nothing, so the rewrite must not add a request. Write only calm statements of the facts."); }
+  }
+  if (c.states_decision && r.includes("?") && !d.includes("?")) {
+    codes.add("decision_as_question");
+    notes.push("The sender's decision must stay a statement, not a question.");
+  }
+  return { codes: [...codes], notes };
+};
+
+const logSend = (outcome: string, reasons: string[], attempts: number, started: number) =>
+  console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome, reasons, attempts, ms: Date.now() - started }));
+
+const callGateway = (apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) =>
   fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify(body),
+    signal,
   });
 
 const gatewayError = (resp: Response) => {
@@ -79,6 +181,7 @@ const gatewayError = (resp: Response) => {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const started = Date.now();
   try {
     const body = await req.json().catch(() => ({}));
     const { draft, mode } = body ?? {};
@@ -104,29 +207,96 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: "AI not configured" }, 500);
 
     if (mode === "send") {
-      const resp = await callGateway(apiKey, {
-        model: "google/gemini-3.1-flash-lite",
-        max_tokens: 600,
-        response_format: SEND_SCHEMA,
-        messages: [
-          { role: "system", content: SEND_SYSTEM },
-          { role: "user", content: draft },
-        ],
-      });
-      const err = gatewayError(resp);
-      if (err) return err;
       const pass = { needs_rewrite: false, rewrite: null };
+      const deadline = started + SEND_DEADLINE_MS;
+      const timed = async (payload: Record<string, unknown>) => {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), Math.max(0, deadline - Date.now()));
+        try {
+          return await callGateway(apiKey, payload, ctrl.signal);
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+      const firstMessages = [
+        { role: "system", content: SEND_SYSTEM },
+        { role: "user", content: draft },
+      ];
+      let resp: Response;
       try {
-        const data = await resp.json();
-        const raw: string = data.choices?.[0]?.message?.content ?? "";
-        const parsed = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim());
-        if (parsed?.needs_rewrite !== true || typeof parsed.rewrite !== "string") return json(pass);
-        const rewrite = parsed.rewrite.replace(/\s*—\s*/g, " - ").trim();
-        if (!rewrite || rewrite === draft.trim()) return json(pass);
-        return json({ needs_rewrite: true, rewrite });
+        resp = await timed({ model: "google/gemini-3.1-flash-lite", max_tokens: 600, response_format: SEND_SCHEMA, messages: firstMessages });
       } catch {
+        logSend("fallback", ["timeout"], 1, started);
         return json(pass);
       }
+      const err = gatewayError(resp);
+      if (err) return err;
+      let parsed: Record<string, unknown>;
+      let raw = "";
+      try {
+        const data = await resp.json();
+        raw = data.choices?.[0]?.message?.content ?? "";
+        parsed = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim());
+      } catch {
+        logSend("fallback", ["parse"], 1, started);
+        return json(pass);
+      }
+      if (parsed?.needs_rewrite !== true || typeof parsed.rewrite !== "string") {
+        logSend("pass", [], 1, started);
+        return json(pass);
+      }
+      const clean = (s: string) => s.replace(/\s*—\s*/g, " - ").trim();
+      const checkInput: SendCheck = {
+        facts: Array.isArray(parsed.facts) ? (parsed.facts as SendFact[]) : [],
+        has_ask: parsed.has_ask === true,
+        states_decision: parsed.states_decision === true,
+      };
+      let rewrite = clean(parsed.rewrite as string);
+      let result = checkRewrite(draft, rewrite, checkInput);
+      let attempts = 1;
+      if (result.codes.length) {
+        if (deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) {
+          logSend("fallback", ["no_time_for_retry", ...result.codes], attempts, started);
+          return json(pass);
+        }
+        attempts = 2;
+        try {
+          const retry = await timed({
+            model: "google/gemini-3.1-flash-lite",
+            max_tokens: 300,
+            response_format: RETRY_SCHEMA,
+            messages: [
+              ...firstMessages,
+              { role: "assistant", content: raw },
+              {
+                role: "user",
+                content: `Your rewrite failed these checks:\n- ${result.notes.join("\n- ")}\nWrite the rewrite again, keeping every fact and following all the rules. Return only JSON {"rewrite":"..."}.`,
+              },
+            ],
+          });
+          if (!retry.ok) throw new Error("retry_http");
+          const rdata = await retry.json();
+          const rraw: string = rdata.choices?.[0]?.message?.content ?? "";
+          const rparsed = JSON.parse(rraw.replace(/^```(?:json)?|```$/g, "").trim());
+          if (typeof rparsed?.rewrite !== "string") throw new Error("retry_parse");
+          rewrite = clean(rparsed.rewrite);
+          result = checkRewrite(draft, rewrite, checkInput);
+        } catch (e) {
+          const reason = e instanceof Error && e.message.startsWith("retry_") ? e.message : "retry_timeout";
+          logSend("fallback", [reason, ...result.codes], attempts, started);
+          return json(pass);
+        }
+        if (result.codes.length) {
+          logSend("fallback", ["retry_failed", ...result.codes], attempts, started);
+          return json(pass);
+        }
+      }
+      if (!rewrite || rewrite === draft.trim()) {
+        logSend("pass", ["same_as_draft"], attempts, started);
+        return json(pass);
+      }
+      logSend("rewrite", [], attempts, started);
+      return json({ needs_rewrite: true, rewrite });
     }
 
     const resp = await callGateway(apiKey, {
