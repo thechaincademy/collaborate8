@@ -112,6 +112,10 @@ const RETRY_SCHEMA = {
 const SEND_HARD_STOP_MS = 2400;
 const SEND_DEADLINE_MS = 2300;
 const SEND_RETRY_MIN_LEFT_MS = 700;
+const SEND_MODEL = "openai/gpt-5.6-luna";
+// OpenAI models take max_completion_tokens; reasoning off keeps the first call near flash-lite latency.
+const sendModel = (maxTokens: number) => ({ model: SEND_MODEL, max_completion_tokens: maxTokens, reasoning_effort: "none" });
+const SEND_FIRST_CALLS = 2; // parallel first calls; the first that passes the checks wins, the rest are aborted.
 
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
@@ -319,7 +323,8 @@ const ACCUSE = new Set(["lies", "lie", "lying", "liar", "liars", "mentiras", "me
 // The sender's own stance: a wish stays a wish and a future step stays future (never "I will" for "I want", never "I have told" for "I'll tell").
 const WISH = wordRe("i want|i'd like|i would like|i wish|eu quero|queria|gostaria|yo quiero|quisiera|me gustaría");
 const SELF_FUTURE = wordRe("i'll|i will|i'm going to|i am going to|vou|voy a");
-const SELF_NOW_OR_FUTURE = wordRe("i'll|i will|i'm going to|i am going to|i'm|i am|vou|voy|estou|estoy");
+// English needs future wording ("I am informing" is not "I'll tell"); pt/es keep present forms.
+const SELF_NOW_OR_FUTURE = wordRe("i'll|i will|i'm going to|i am going to|vou|voy|estou|estoy");
 
 // Copy check for mixed-language drafts: every word must be the draft's own, in the draft's order (only deletions),
 // so nothing is translated or re-mixed.
@@ -642,50 +647,88 @@ Deno.serve(async (req) => {
         if (!settled) logSend(outcome, reasons, attempts, started);
       };
       const runSend = async (): Promise<Response> => {
-        const timed = async (payload: Record<string, unknown>) => {
-          if (sendCtrl.signal.aborted) throw new Error("timeout");
-          return await callGateway(apiKey, payload, sendCtrl.signal);
+        const timed = async (payload: Record<string, unknown>, signal: AbortSignal = sendCtrl.signal) => {
+          if (signal.aborted) throw new Error("timeout");
+          return await callGateway(apiKey, payload, signal);
         };
         const firstMessages = [
           { role: "system", content: SEND_SYSTEM },
           { role: "user", content: draft },
         ];
-        let resp: Response;
-        try {
-          resp = await timed({ model: "google/gemini-3.1-flash-lite", max_tokens: 800, response_format: SEND_SCHEMA, messages: firstMessages });
-        } catch {
+        const clean = (s: string) => s.replace(/\s*—\s*/g, " - ").trim();
+        type First =
+          | { kind: "timeout" | "parse" }
+          | { kind: "error"; resp: Response }
+          | { kind: "pass"; reasons: string[] }
+          | { kind: "cand"; raw: string; rewrite: string; checkInput: SendCheck; result: ReturnType<typeof checkRewrite> };
+        const firstOnce = async (signal: AbortSignal): Promise<First> => {
+          let resp: Response;
+          try {
+            resp = await timed({ ...sendModel(800), response_format: SEND_SCHEMA, messages: firstMessages }, signal);
+          } catch {
+            return { kind: "timeout" };
+          }
+          const err = gatewayError(resp);
+          if (err) return { kind: "error", resp: err };
+          let parsed: Record<string, unknown>;
+          let raw = "";
+          try {
+            const data = await resp.json();
+            raw = data.choices?.[0]?.message?.content ?? "";
+            parsed = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim());
+          } catch {
+            return { kind: signal.aborted ? "timeout" : "parse" };
+          }
+          if (parsed?.needs_rewrite !== true || typeof parsed.rewrite !== "string") return { kind: "pass", reasons: [] };
+          const checkInput: SendCheck = {
+            facts: Array.isArray(parsed.facts) ? (parsed.facts as SendFact[]) : [],
+            has_ask: parsed.has_ask === true,
+            states_decision: parsed.states_decision === true,
+            languages: Array.isArray(parsed.draft_languages) ? (parsed.draft_languages as unknown[]).filter((l): l is string => typeof l === "string") : [],
+          };
+          const rewrite = clean(parsed.rewrite as string);
+          if (removesNothing(draft, rewrite)) return { kind: "pass", reasons: ["near_identical"] };
+          return { kind: "cand", raw, rewrite, checkInput, result: checkRewrite(draft, rewrite, checkInput) };
+        };
+        // Parallel first calls: take the first one that passes (no rewrite needed, or a rewrite with no failed checks)
+        // and abort the others. If none passes, use the first failed rewrite for the retry.
+        const ctrls = Array.from({ length: SEND_FIRST_CALLS }, () => new AbortController());
+        const onAbort = () => ctrls.forEach((c) => c.abort());
+        sendCtrl.signal.addEventListener("abort", onAbort);
+        const isWin = (f: First) => f.kind === "pass" || (f.kind === "cand" && !f.result.codes.length);
+        const all: First[] = [];
+        const first: First = await new Promise<First>((resolve) => {
+          let done = 0;
+          ctrls.forEach((c) => {
+            firstOnce(c.signal).then((f) => {
+              all.push(f);
+              done++;
+              if (isWin(f)) {
+                ctrls.forEach((o) => { if (o !== c) o.abort(); });
+                resolve(f);
+              } else if (done === ctrls.length) {
+                resolve(all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
+              }
+            });
+          });
+        });
+        sendCtrl.signal.removeEventListener("abort", onAbort);
+        if (first.kind === "timeout") {
           log("fallback", ["timeout"], 1);
           return json(pass);
         }
-        const err = gatewayError(resp);
-        if (err) return err;
-        let parsed: Record<string, unknown>;
-        let raw = "";
-        try {
-          const data = await resp.json();
-          raw = data.choices?.[0]?.message?.content ?? "";
-          parsed = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim());
-        } catch {
+        if (first.kind === "error") return first.resp;
+        if (first.kind === "parse") {
           log("fallback", ["parse"], 1);
           return json(pass);
         }
-        if (parsed?.needs_rewrite !== true || typeof parsed.rewrite !== "string") {
-          log("pass", [], 1);
+        if (first.kind === "pass") {
+          log("pass", first.reasons, 1);
           return json(pass);
         }
-        const clean = (s: string) => s.replace(/\s*—\s*/g, " - ").trim();
-        const checkInput: SendCheck = {
-          facts: Array.isArray(parsed.facts) ? (parsed.facts as SendFact[]) : [],
-          has_ask: parsed.has_ask === true,
-          states_decision: parsed.states_decision === true,
-          languages: Array.isArray(parsed.draft_languages) ? (parsed.draft_languages as unknown[]).filter((l): l is string => typeof l === "string") : [],
-        };
-        let rewrite = clean(parsed.rewrite as string);
-        if (removesNothing(draft, rewrite)) {
-          log("pass", ["near_identical"], 1);
-          return json(pass);
-        }
-        let result = checkRewrite(draft, rewrite, checkInput);
+        const { raw, checkInput } = first;
+        let rewrite = first.rewrite;
+        let result = first.result;
         let attempts = 1;
         if (result.codes.length) {
           if (deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) {
@@ -695,8 +738,7 @@ Deno.serve(async (req) => {
           attempts = 2;
           try {
             const retry = await timed({
-              model: "google/gemini-3.1-flash-lite",
-              max_tokens: 300,
+              ...sendModel(300),
               response_format: RETRY_SCHEMA,
               messages: [
                 ...firstMessages,
