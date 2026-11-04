@@ -311,6 +311,7 @@ const SOFTENED: Record<string, string[]> = {
 // Specific counts and durations are facts and must stay (frequency words that only blame are not counts).
 const COUNT_RE = /(?<![\p{L}\p{N}])(?:(?:first|second|third|fourth|fifth|\d+(?:st|nd|rd|th)) time|twice|(?:two|three|four|five|\d+) times|all (?:night|week|day|weekend|morning|afternoon)|(?:a|à) noite toda|toda a noite|a semana toda|toda a semana|toda la noche|toda la semana|duas vezes|três vezes|dos veces|tres veces|pela (?:segunda|terceira|quarta) vez|por (?:segunda|tercera|cuarta) vez)(?![\p{L}\p{N}])/gu;
 
+const ASK_WRAP = new Set(["please", "ensure", "make", "sure", "that", "the", "kindly", "could", "can", "you", "would"]);
 const RESTATE_FREE = new Set(["there", "until", "with", "agreed", "should", "also", "have", "has", "had", "been", "being", "are", "was", "were", "this", "that", "and"]);
 const ACCUSE = new Set(["lies", "lie", "lying", "liar", "liars", "mentiras", "mentira", "mentir", "mentiroso", "mentirosa"]);
 // The sender's own stance: a wish stays a wish and a future step stays future (never "I will" for "I want", never "I have told" for "I'll tell").
@@ -548,6 +549,20 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
       if (fresh.length) {
         codes.add("ask_dropped");
         notes.push("Keep the draft's question or request as a calm request; do not replace it with a new statement.");
+      }
+    }
+    // A fact or rule the draft states must not become a new request ("Bedtime is 8pm" never becomes "Please ensure bedtime is 8pm").
+    if (!plainAsks.length) {
+      const toks = (t: string) => clauseWords(expandContractions(t)).map((w) => w.replace(/'s$/, ""));
+      const stated = draft.split(/(?<=[.!?])\s+/).filter((x) => !x.trim().endsWith("?"))
+        .flatMap((x) => clausesOf(x)).filter((cl) => !isAskClause(cl)).map((cl) => toks(cl).map(wordStem));
+      const turned = clausesOf(rewrite).filter(isAskClause).some((cl) => {
+        const core = toks(cl).filter((w) => !ASK_WRAP.has(w)).map(wordStem);
+        return core.length >= 2 && stated.some((sc) => core.every((st) => sc.includes(st)));
+      });
+      if (turned) {
+        codes.add("ask_added");
+        notes.push("The draft states that as a fact or rule, not a request. Keep it a statement in the draft's words; do not add please, ensure or make sure to it.");
       }
     }
   }
