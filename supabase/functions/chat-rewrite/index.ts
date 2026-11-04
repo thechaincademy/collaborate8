@@ -41,12 +41,12 @@ Step 2. Always read the draft and fill:
   Write each fact in the language the draft used for it. Do not list the other parent's own past lapse (something they forgot, missed or got wrong) as a fact when the draft also asks for something; that is blame. A child's state or health at that time is still a fact.
   actor = who did, missed or must do the thing in this fact, as the draft refers to them: "you" for the other parent, "I" for the sender, or the person's name. "" if nobody does anything. action = the one verb from the draft for what the actor did, missed or must do, copied as written (for example "missed"), or "".
   For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft in the draft's own language, never translated. Frequency and count words go in keep only when they describe the child's state or are a specific count (twice, three times, third time this week, all night, all week). Words such as again, always, never, as usual or every time that only criticise the other parent are blame, in any language: leave them out of keep and out of the rewrite. A crude or exaggerated word may be replaced by its plain everyday word with the same meaning, and then that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
-- has_ask: true if the draft asks or tells the other parent to do or not do something (including a demand implied by a stated rule or by a warning about what they do next), asks a question that wants a real answer, or states something a child needs from them. false if it only reports or complains about what already happened (even when the complaint implies the other parent should do better), asks only rhetorical or sarcastic questions, or only states the sender's own decision.
-- ask: that ask in plain words, or "".
+- has_ask: true only if the draft itself makes a request: it asks a question, uses words such as please, could you, can you, make sure or let me know, or gives an instruction (for example "bring...", "don't..."), in any language. false if it only states facts, a need, a rule or a warning, reports or complains about what already happened, or only states the sender's own decision; then the rewrite stays statements only.
+- ask: that ask in plain words, or "". When rewriting, keep the draft's own words for what is asked (its verb and the thing or person it is about); never swap them for a milder or different request.
 - states_decision: true if the sender states something they have decided or will do themselves.
 
 Step 3. If needs_rewrite is true, write rewrite, one calm version:
-- Use the draft's own language or languages. If the draft mixes languages, keep each part in the language the parent wrote it in, word for word where you can. Never translate any part, and never drop a sentence or fact because of its language. When the draft is not all in English, make the fewest changes: keep the parent's own sentences and phrases as written and only delete the blame words; any word you must add (such as please) goes in the language of the words around it.
+- Use the draft's own language or languages. If the draft mixes languages, keep each part in the language the parent wrote it in, word for word where you can. Never translate any part, and never drop a sentence or fact because of its language. When the draft is not all in English, make the fewest changes: keep the parent's own sentences and phrases as written and only delete the blame words; any word you must add (such as please) goes in the language of the words around it. Never write a sentence or phrase that mixes languages where the draft's own one did not.
 - Keep every fact with the same meaning and tense, using its keep words, in the language the draft used for it.
 - Keep who did what: each fact's actor stays the one who did, missed or must do that same action (you stays you, I stays I, a person stays that person). Never make the child or anyone else the one who did it. Keep date wording such as due, by and on as written, and never turn a future date or deadline into a past one. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
 - If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step.
@@ -115,7 +115,7 @@ type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unkn
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
 
 const normText = (s: string) =>
-  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+  s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
 
 const numberTokens = (s: string) =>
   new Set(
@@ -131,7 +131,7 @@ const contentWords = (sentence: string) =>
 const KEEP_STOP_WORDS = new Set(["the", "and", "his", "her", "their", "your", "our", "was", "were", "for", "with", "that", "this", "from", "are", "has", "have", "had", "she", "him", "them", "you", "please", "could", "would", "can", "will"]);
 
 const WORD_SPLIT = /[^\p{L}\p{N}£.:%']+/u;
-const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const stripAccents = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 const TIME_WORDS = [
   "tonight", "today", "tomorrow", "yesterday", "this morning", "this afternoon", "this evening", "this week",
   "this weekend", "next week", "next weekend", "next time", "in future", "in the future", "from now on",
@@ -253,6 +253,69 @@ const subjectsOf = (text: string, verb: string, names: Set<string>) => {
 const sameActor = (a: string, b: string) =>
   a === b || (a === "third" && b.startsWith("name:")) || (b === "third" && a.startsWith("name:"));
 
+
+// Asks found by code in a text (the model's has_ask is not trusted on its own).
+const IMP_VERBS = new Set([
+  "bring", "take", "pack", "give", "send", "pick", "drop", "stop", "keep", "call", "text", "tell", "remember", "pay", "put", "check",
+  "sign", "return", "let", "make", "get", "leave", "collect", "book", "buy", "help", "try", "be", "come", "go", "wait", "ask", "answer",
+  "reply", "read", "write", "swap", "change", "stay", "don't", "dont", "never", "ensure", "confirm", "tell",
+  "leva", "levem", "traz", "traga", "dá", "dê", "manda", "envia", "liga", "paga", "põe", "deixa", "vem", "vai", "lembra", "avisa", "diz",
+  "compra", "busca", "apanha", "confirma", "para",
+  "dale", "dame", "da", "lleva", "llévalo", "llévala", "trae", "tráelo", "tráela", "envía", "llama", "pon", "deja", "ven", "dile",
+  "recuerda", "acuérdate", "recoge", "confirma",
+]);
+const NEG_IMP_NEXT = new Set(["le", "les", "lo", "la", "te", "se", "lhe", "des", "dês", "dejes", "deixes", "olvides", "esqueças", "esqueces", "esquece", "penses", "llegues", "chegues"]);
+const OBLIGATION = wordRe("you need to|you have to|you must|you should|i need you to|i need it|i need them|i need this|i want you to|i'd like you to|i would like you to|tens de|tens que|precisas de|tienes que|necesito que|preciso que|nem penses|lembra-te|no te olvides|não te esqueças|não esqueças|não esquece");
+const CLAUSE_LEAD = new Set(["and", "so", "but", "or", "just", "also", "then", "hi", "hey", "oh", "olha", "fine", "e", "y", "pois", "entonces", "now", "ok", "okay", "honestly"]);
+const clausesOf = (t: string) =>
+  normText(t).split(/[.!?;,:]+|\s(?:or|and|but|ou|e|y|o|mas|pero)\s/u).map((x) => x.trim()).filter(Boolean);
+const clauseWords = (cl: string) => cl.split(/[^\p{L}\p{N}']+/u).filter(Boolean);
+const isAskClause = (cl: string) => {
+  if (ASK_MARKERS.test(cl) || OBLIGATION.test(cl)) return true;
+  const ws = clauseWords(cl);
+  let i = 0;
+  while (i < ws.length && CLAUSE_LEAD.has(ws[i])) i++;
+  const w = ws[i];
+  if (!w) return false;
+  if (w === "do" && ws[i + 1] === "not") return true;
+  if ((w === "no" || w === "não" || w === "nao" || w === "nem") && NEG_IMP_NEXT.has(ws[i + 1] ?? "")) return true;
+  return IMP_VERBS.has(w) && ws.length > i + 1;
+};
+const textHasAsk = (t: string) => t.includes("?") || clausesOf(t).some(isAskClause);
+// Words that say how something is asked, not what is asked.
+const ASK_GENERIC = new Set(["please", "stop", "make", "sure", "ensure", "keep", "let", "don't", "dont", "not", "just", "also", "you", "your", "yours",
+  "can", "could", "would", "will", "know", "need", "want", "like", "i'd", "about", "again", "always", "never", "more", "anything", "something",
+  "this", "that", "them", "these", "those", "there", "here", "time", "last", "por", "favor", "pode", "podes", "puedes", "outra", "otra", "vez"]);
+
+// An accusation softened the way the prompt allows ("lies" -> "not true") still counts as the same thing asked about.
+const SOFTENED: Record<string, string[]> = {
+  lies: ["true", "untr", "accu"], lyin: ["true", "untr", "accu"], liar: ["true", "untr", "accu"],
+  ment: ["verd"], // mentiras / mentir -> verdade / verdad
+};
+// Copy check for mixed-language drafts: every word must be the draft's own, in the draft's order (only deletions),
+// so nothing is translated or re-mixed.
+const expandContractions = (t: string) =>
+  t.replace(/\bcan't\b|\bcannot\b/g, "can not").replace(/\bwon't\b/g, "will not").replace(/n't\b/g, " not")
+    .replace(/'s\b/g, " is").replace(/'re\b/g, " are").replace(/'m\b/g, " am").replace(/'ll\b/g, " will")
+    .replace(/'ve\b/g, " have").replace(/'d\b/g, " would");
+const COPY_FREE = new Set(["please", "por", "favor", "the", "is", "it"]);
+const COPY_GAP = 6;
+const copyProblem = (draft: string, rewrite: string) => {
+  const toks = (t: string) => t.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const dt = toks(expandContractions(normText(draft)));
+  const pos = new Map<string, number[]>();
+  dt.forEach((w, i) => pos.set(w, [...(pos.get(w) ?? []), i]));
+  for (const cl of expandContractions(normText(rewrite)).split(/[.!?;,:]+/)) {
+    const ws = toks(cl).filter((w) => !COPY_FREE.has(w));
+    for (const w of ws) if (!pos.has(w)) return `"${w}" is not one of the draft's own words`;
+    for (let k = 1; k < ws.length; k++) {
+      const a = pos.get(ws[k - 1])!, b = pos.get(ws[k])!;
+      if (!a.some((i) => b.some((j) => j > i && j - i <= COPY_GAP))) return `"${ws[k - 1]} ${ws[k]}" does not follow the draft's own wording`;
+    }
+  }
+  return null;
+};
+
 // Deterministic fact check. Returns failure codes (for logs) and plain notes (for the retry prompt only).
 const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
   const codes = new Set<string>();
@@ -260,6 +323,9 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
   const d = normText(draft);
   const r = normText(rewrite);
   if (!r) return { codes: ["empty"], notes: ["The rewrite was empty."] };
+  // An ask counts only when the code finds one in the draft and the model agrees.
+  const draftAsk = textHasAsk(draft);
+  const asks = c.has_ask && draftAsk;
   if (/\b(police|victim)\b/.test(r)) { codes.add("banned_word"); notes.push('Do not use "police" or "victim".'); }
 
   const dn = numberTokens(draft), rn = numberTokens(rewrite);
@@ -326,6 +392,17 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     }
   }
 
+  for (const l of Object.keys(LANG_MARKERS)) {
+    if (!langs.has(l) && langScore(d, l) === 0 && langScore(r, l) >= 2) { codes.add("language_changed"); notes.push("Do not add words in a language the draft does not use."); }
+  }
+  if (mixed) {
+    const problem = copyProblem(draft, rewrite);
+    if (problem) {
+      codes.add("partial_translation");
+      notes.push(`The draft mixes languages, so build the rewrite only from the draft's own words in the draft's order, deleting the blame words: ${problem}. Do not translate or reword anything.`);
+    }
+  }
+
   // Who did what: the subject of each fact's action must not change to someone else.
   const names = draftNames(draft);
   for (const f of c.facts ?? []) {
@@ -336,7 +413,7 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     const draftSaid = subjectsOf(d, action, names).some((s) => s === want);
     const rSubjects = subjectsOf(r, action, names);
     // Only when the draft just reports it (no ask): then that report is the message and who did it must stay.
-    if (!c.has_ask && draftSaid && (want === "other" || want === "self") && !rSubjects.some((g) => g === want)) {
+    if (!asks && draftSaid && (want === "other" || want === "self") && !rSubjects.some((g) => g === want)) {
       codes.add("actor_dropped");
       const who = want === "other" ? '"you"' : '"I"';
       notes.push(`The draft says ${who} ${action}. Keep that fact with ${who} as the one who ${action}, in the draft's words; do not drop it or make it passive.`);
@@ -369,9 +446,24 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     }
   }
 
-  if (!c.has_ask) {
+  if (!asks) {
     if (r.includes("?")) { codes.add("question_added"); notes.push("The draft asks for nothing, so the rewrite must not ask a question."); }
-    if (ASK_MARKERS.test(r)) { codes.add("ask_added"); notes.push("The draft asks for nothing, so the rewrite must not add a request. Write only calm statements of the facts."); }
+    if (clausesOf(rewrite).some(isAskClause)) { codes.add("ask_added"); notes.push("The draft asks for nothing, so the rewrite must not add a request, instruction or please. Write only calm statements of the facts."); }
+  } else {
+    // What is asked must stay what the draft asked: at least one of the draft's own words for it must be there.
+    const rWords = clauseWords(r).map(wordStem);
+    const askWords = clausesOf(draft).filter(isAskClause)
+      .map((cl) => clauseWords(cl).map((w) => w.replace(/'s$/, "")).filter((w) => w.length > 2 && !ASK_GENERIC.has(w) && !KEEP_STOP_WORDS.has(w) && !names.has(w)))
+      .filter((ws) => ws.length);
+    const kept = (w: string) => {
+      const st = wordStem(w);
+      if ((SOFTENED[st] ?? []).some((e) => rWords.includes(e))) return true;
+      return rWords.some((x) => x === st || (x.length >= 3 && st.startsWith(x)) || (st.length >= 3 && x.startsWith(st)));
+    };
+    if (askWords.length && !askWords.some((ws) => ws.some(kept))) {
+      codes.add("ask_changed");
+      notes.push(`The request must use the draft's own words for what is asked (${[...new Set(askWords.flat())].slice(0, 6).map((w) => `"${w}"`).join(", ")}); do not change it into a different or milder request.`);
+    }
   }
   if (c.states_decision && r.includes("?") && !d.includes("?")) {
     codes.add("decision_as_question");
