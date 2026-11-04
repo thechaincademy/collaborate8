@@ -127,7 +127,7 @@ type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unkn
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
 
 const normText = (s: string) =>
-  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+  s.toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
 
 const numberTokens = (s: string) =>
   new Set(
@@ -143,7 +143,7 @@ const contentWords = (sentence: string) =>
 const KEEP_STOP_WORDS = new Set(["the", "and", "his", "her", "their", "your", "our", "was", "were", "for", "with", "that", "this", "from", "are", "has", "have", "had", "she", "him", "them", "you", "please", "could", "would", "can", "will"]);
 
 const WORD_SPLIT = /[^\p{L}\p{N}£.:%']+/u;
-const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const stripAccents = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 const TIME_WORDS = [
   "tonight", "today", "tomorrow", "yesterday", "this morning", "this afternoon", "this evening", "this week",
   "this weekend", "next week", "next weekend", "next time", "in future", "in the future", "from now on",
@@ -396,7 +396,7 @@ const FX_IRREG: Record<string, string> = {
 };
 // Tokens for comparing words: n't becomes "not", other contractions drop, possessive 's drops.
 const fxToks = (t: string) =>
-  normText(t).replace(/n't\b/g, " not").replace(/\bcannot\b/g, "can not").split(/[^\p{L}\p{N}']+/u)
+  normText(t).replace(/\bcan't\b/g, "can not").replace(/\bwon't\b/g, "will not").replace(/n't\b/g, " not").replace(/\bcannot\b/g, "can not").split(/[^\p{L}\p{N}']+/u)
     .map((w) => w.replace(/^'+|'+$/g, "").replace(/'(s|ve|ll|re|m|d)$/, "")).filter(Boolean);
 const fxBase = (w: string) => FX_IRREG[w] ?? w;
 const fxStem = (w: string) => wordStem(fxBase(w));
@@ -449,7 +449,7 @@ const FX_DOSE_UNIT = /^(?:\d+(?:[.,]\d+)?(?:ml|mg|mcg|g)|ml|mg|mcg|gotas|drops|c
 const FX_DOSE_SKIP = new Set(["de", "of", "do", "da", "del", "the", "a", "his", "her", "seu", "sua", "su", "dose"]);
 const fxMedNames = (draft: string) => {
   const out = new Set<string>();
-  const raw = draft.replace(/[\u2018\u2019]/g, "'").split(/[^\p{L}\p{N}.,'-]+/u).map((w) => w.replace(/^[.,'-]+|[.,'-]+$/g, "")).filter(Boolean);
+  const raw = draft.replace(/[‘’]/g, "'").split(/[^\p{L}\p{N}.,'-]+/u).map((w) => w.replace(/^[.,'-]+|[.,'-]+$/g, "")).filter(Boolean);
   const low = raw.map((w) => w.toLowerCase());
   low.forEach((w, i) => { if (FX_MEDS.has(w) || FX_MEDS.has(stripAccents(w))) out.add(w); });
   low.forEach((w, i) => {
@@ -525,7 +525,8 @@ const fxPhraseKept = (phrase: string, rStems: Set<string>) => {
 const fxAnchored = (sent: string) => {
   const ts = fxToks(sent);
   return /\d/.test(sent) || FX_TIMES.test(normText(sent)) || draftNames(sent).size > 0 ||
-    ts.some((t) => FX_KEY.some(([, re]) => re.test(t))) || ts.filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t)).length >= 4;
+    ts.some((t) => FX_KEY.some(([, re]) => re.test(t))) || ts.filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t) && !/^(?:again|once|more|otra|outra|vez|novo|nuevo|mismo|mesmo|same)$/.test(t)).length >= 3 ||
+    ts.some((t) => /^(?:he|she|they|ele|ela|eles|elas|él|ella|ellos|ellas)$/.test(t)); // about the child: "or he can't play"
 };
 const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   const codes = new Set<string>();
@@ -535,10 +536,14 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   const d = normText(factDraft);
   // Blame sentences ("You ALWAYS forget...", "Are you even capable...?", "...isn't important to you. Again.") give no facts that must stay;
   // money, medicines and deeds are still read from every non-threat sentence.
-  const coreSents = fxSentences(factDraft).filter((s) => !FX_REPROACH.test(normText(s)));
+  // Read clause by clause, so "Don't forget otra vez, it's so typical of you" still keeps "otra vez".
+  const coreSents = fxSentences(factDraft).flatMap((s) => s.split(/[,;:]\s+/)).filter((s) => !FX_REPROACH.test(normText(s)));
   const coreText = coreSents.join(" ");
   const dc = normText(coreText);
-  const dAgain = normText(coreSents.filter((s) => fxAnchored(s)).join(" "));
+  // "Again" counts unless its clause has nothing else in it ("Again.", "Otra vez lo mismo.").
+  const FX_AGAIN_FILLER = /^(?:again|once|more|otra|outra|vez|novo|nuevo|mismo|mesmo|same|lo|o|the|y|e|and|de)$/;
+  const dAgain = normText(coreSents.filter((s) => fxAnchored(s) ||
+    fxToks(s).filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t) && !FX_AGAIN_FILLER.test(t)).length >= 2).join(" "));
   const r = normText(rewrite);
   const rStems = new Set(fxToks(rewrite).map(fxStem));
   const need = (code: string, label: string) => { codes.add(code); kept.push(label); };
@@ -568,7 +573,7 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   // Negated statements ("wouldn't say why", "no screens") keep their negation and verb; absolutes and blame sentences aside.
   for (const sent of coreSents) {
     const ts = fxToks(sent);
-    // Only factual sentences (a name, number, time, key deed, or 4+ content words); a bare jibe such as "Seguro que ni apareces" may go.
+    // Only factual sentences (a name, number, time, key deed, he/she, or 3+ content words); a bare jibe such as "Seguro que ni apareces" may go.
     if (!fxAnchored(sent)) continue;
     ts.forEach((w, i) => {
       if (!FX_NEG.has(w) || w === "never" || w === "nunca") return;
