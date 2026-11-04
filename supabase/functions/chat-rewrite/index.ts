@@ -36,19 +36,20 @@ const SEND_SYSTEM = `You check a message a separated parent has drafted to the o
 Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggressive, sarcastic, blaming, reproachful, guilt-tripping, threatening, uses absolutes about the other parent (always, never), or uses a child as leverage or as a messenger against the other parent. false if it is neutral, factual, polite, firm but polite, or kind. false if it reports a safety concern, risk of harm or an emergency about a child or the sender.
 
 Step 2. Always read the draft and fill:
-- facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent.
-  For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft. Only a crude or exaggerated word may be replaced by its plain everyday word in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
-- has_ask: true if the draft asks or tells the other parent to do or not do something (including a demand implied by a stated rule or by a warning about what they do next), asks a question that wants a real answer, or states something a child needs from them. false if it only reports or complains about what already happened, asks only rhetorical or sarcastic questions, or only states the sender's own decision.
+- facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent. A mention of the other parent's past lapse that is only a side remark to criticise them (next to a separate ask or need) is blame: leave it out. Keep it only when that event is what the draft is reporting.
+  For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft. A crude or exaggerated word must be replaced by its plain everyday word with the same meaning, and that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
+- has_ask: true if the draft asks or tells the other parent to do or not do something (including a demand implied by a stated rule or by a warning about what they do next), asks a question that wants a real answer, or states something a child needs from them. false if it only reports or complains about what already happened (even when the complaint implies the other parent should do better), asks only rhetorical or sarcastic questions, or only states the sender's own decision.
 - ask: that ask in plain words, or "".
 - states_decision: true if the sender states something they have decided or will do themselves.
 
 Step 3. If needs_rewrite is true, write rewrite, one calm version:
-- Keep every fact with the same meaning and tense, using its keep words. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
+- Keep every fact with the same meaning and tense, using its keep words. Keep date wording such as due, by and on as written, and never turn a future date or deadline into a past one. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
 - If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step.
 - If has_ask is true: keep that same ask, concrete and specific (the same child, person, item, amount, time and date), as one clear polite request. A child's health, safety, medication, school or care need stays a clear direct request, never a suggestion to talk about it. Never add a second ask, an option or a plan.
 - If states_decision is true: the decision stays a calm statement of what the sender will do, in their own terms. Never turn it into a question or a request and never offer alternatives.
-- Remove all blame, reproach, sarcasm, insults, threats, guilt, absolutes and assumptions about the other parent's motives or feelings, including about the past. An accusation may be softened to a neutral word, but keep who and what it is about; never replace it with general wording.
+- Remove all blame, reproach, sarcasm, insults, threats, guilt, absolutes and assumptions about the other parent's motives or feelings, including about the past. An accusation may be softened to a neutral word (an accusation of dishonesty becomes "not true"), but keep who and what it is about; never replace it with general wording.
 - Never use a child as leverage or pass messages through a child. Never use the words "police" or "victim". No legal advice.
+- Say each fact once; do not repeat an item, dose or time in the ask, refer back with it, this or them.
 - Plain, brief and warm. UK English spelling, no em dashes. About the same length as the draft or shorter.
 If needs_rewrite is false: rewrite = "".`;
 
@@ -96,8 +97,8 @@ const RETRY_SCHEMA = {
 };
 
 // mode:send time budget. The app gives up at about 4s, so the whole round trip must stay near 3s.
-const SEND_DEADLINE_MS = 3000;
-const SEND_RETRY_MIN_LEFT_MS = 1300;
+const SEND_DEADLINE_MS = 2700;
+const SEND_RETRY_MIN_LEFT_MS = 1200;
 
 type SendFact = { fact?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean };
@@ -138,6 +139,9 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
   for (const t of dn) if (!rn.has(t)) { codes.add("dropped_number"); notes.push(`"${t}" from the draft is missing.`); }
 
   for (const w of TIME_WORDS) if (hasWord(r, w) && !hasWord(d, w)) { codes.add("new_time_word"); notes.push(`"${w}" is not in the draft. Do not add it.`); }
+  for (const w of ["was due", "were due", "had been due", "was supposed to", "was meant to"]) {
+    if (r.includes(w) && !d.includes(w)) { codes.add("tense_changed"); notes.push(`"${w}" changes the tense of the draft. Keep the draft's own date wording and tense.`); }
+  }
   for (const [key, re] of MONTHS) if (re.test(r) && !re.test(d)) { codes.add("new_time_word"); notes.push(`A month (${key}) was added that is not in the draft.`); }
 
   for (const f of c.facts ?? []) {
