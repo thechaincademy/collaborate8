@@ -37,10 +37,10 @@ Step 1. needs_rewrite: true if the draft is aggressive, hostile, passive aggress
 
 Step 2. Always read the draft and fill:
 - draft_languages: every language used in the draft, as ISO 639-1 codes (for example "en", "pt").
-- facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent. A mention of the other parent's past lapse that is only a side remark to criticise them (next to a separate ask or need) is blame: leave it out. Keep it only when that event is what the draft is reporting.
-  Write each fact in the language the draft used for it. Do not list the other parent's own past lapse (something they forgot, missed or got wrong) as a fact when the draft also asks for something; that is blame. A child's state or health at that time is still a fact.
+- facts: every fact in the draft, each as one short plain sentence. Include what happened or is happening to a child, how the child was or is (feelings and behaviour as described), anything that was not done, times, dates, days, amounts, doses, numbers, frequencies and durations, places, items, and who did or must do what. Leave out insults, sarcasm, blame and opinions about the other parent. What someone forgot, missed, did not pay or did late is a fact: list it with that person as actor. Threats (court, lawyer, solicitor) are not facts.
+  Write each fact in the language the draft used for it. A child's state or health is a fact.
   actor = who did, missed or must do the thing in this fact, as the draft refers to them: "you" for the other parent, "I" for the sender, or the person's name. "" if nobody does anything. action = the one verb from the draft for what the actor did, missed or must do, copied as written (for example "missed"), or "".
-  For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft in the draft's own language, never translated. Frequency and count words go in keep only when they describe the child's state or are a specific count (twice, three times, third time this week, all night, all week). Words such as again, always, never, as usual or every time that only criticise the other parent are blame, in any language: leave them out of keep and out of the rewrite. A crude or exaggerated word may be replaced by its plain everyday word with the same meaning, and then that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
+  For each fact, keep = the words that carry it and must appear unchanged in the rewrite: names, numbers with units exactly as written, days, dates, frequency and duration phrases, and the word for the child's state or what happened. Copy them from the draft in the draft's own language, never translated. Repetition and count words are facts and go in keep with what they describe (again, second weekend running, third month in a row, every weekend, outra vez, de novo, seguidos, otra vez). Only absolutes such as always, never, as usual and words such as typical are blame: leave them out. A crude or exaggerated word may be replaced by its plain everyday word with the same meaning, and then that plain word goes in keep; otherwise keep the parent's word and never weaken it. Each keep entry is one to four words.
 - has_ask: true only if the draft itself makes a request: it asks a question, uses words such as please, could you, can you, make sure or let me know, gives an instruction (for example "bring...", "don't..."), or warns the other parent about what they do next ("if you ... again"), in any language. false if it only states facts, a need or a rule, reports or complains about what already happened, or only states the sender's own decision; then the rewrite stays statements only.
 - ask: that ask in plain words, or "". When rewriting, keep the draft's own words for what is asked (its verb and the thing or person it is about); never swap them for a milder or different request.
 - states_decision: true if the sender states something they have decided or will do themselves.
@@ -49,11 +49,16 @@ Step 3. If needs_rewrite is true, write rewrite, one calm version:
 - Use the draft's own language or languages. If the draft mixes languages, keep each part in the language the parent wrote it in, word for word where you can. Never translate any part, and never drop a sentence or fact because of its language. When the draft is not all in English, make the fewest changes: keep the parent's own sentences and phrases as written and only delete the blame words; any word you must add (such as please) goes in the language of the words around it. Never write a sentence or phrase that mixes languages where the draft's own one did not.
 - Keep every fact with the same meaning and tense, using its keep words, in the language the draft used for it.
 - Keep who did what: each fact's actor stays the one who did, missed or must do that same action (you stays you, I stays I, a person stays that person). Never make the child or anyone else the one who did it. Keep date wording such as due, by and on as written, and never turn a future date or deadline into a past one. Never add a time, day, date, number, unit, place, person, reason, option or detail that is not in the draft. Never add words such as tonight, today, next time or in future, and never add am or pm to a bare number.
-- If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step.
-- If has_ask is true: keep that same ask, concrete and specific (the same child, person, item, amount, time and date), as one clear polite request. A child's health, safety, medication, school or care need stays a clear direct request, never a suggestion to talk about it. Never add a second ask, an option or a plan.
+- If has_ask is false: write only calm statements of the facts. No question, no "please", no request, no suggestion and no next step. A stated need (someone needs, has to or must have something) stays the same statement; never turn it into a request such as "Please give ...".
+- If has_ask is true: keep that same ask, concrete and specific (the same child, person, item, amount, time and date), as one clear polite request; a question stays a question. A child's health, safety, medication, school or care need stays a clear direct request, never a suggestion to talk about it. Never add a second ask, an option or a plan.
 - If states_decision is true: the decision stays a calm statement of what the sender will do, in their own terms. Never turn it into a question or a request and never offer alternatives.
 - Remove all blame, reproach, sarcasm, insults, threats, guilt, absolutes and assumptions about the other parent's motives or feelings, including about the past. An accusation may be softened to a neutral word (an accusation of dishonesty becomes "not true"), but keep who and what it is about; never replace it with general wording.
 - Never use a child as leverage or pass messages through a child. Never use the words "police" or "victim". No legal advice.
+- Keep every fact, including what the other parent forgot, missed, did not pay or did late, said calmly with the same person doing it (for example "You forgot Jack's boots last time."). Never drop it and never make it passive.
+- Keep every amount with its currency, number, time, day, date, repetition word (again, running, in a row, outra vez, otra vez, seguidos) and medicine name word for word.
+- Add nothing: no new sentence, clause, feeling, reason, importance, thanks or understanding (never "is important to me"). Use only the draft's own words, plus "please" at most once.
+- If the draft makes no plain request, add none: a stated fact or rule stays a statement, and a question stays a question.
+- Remove threats (court, lawyer, solicitor) entirely.
 - Say each fact once; do not repeat an item, dose or time in the ask, refer back with it, this or them.
 - Plain, brief and warm. UK English spelling, no em dashes. About the same length as the draft or shorter.
 If needs_rewrite is false: rewrite = "".`;
@@ -280,7 +285,7 @@ const IMP_VERBS = new Set([
   "sign", "return", "let", "make", "get", "leave", "collect", "book", "buy", "help", "try", "be", "come", "go", "wait", "ask", "answer",
   "reply", "read", "write", "swap", "change", "stay", "don't", "dont", "never", "ensure", "confirm", "tell",
   "leva", "levem", "traz", "traga", "dá", "dê", "manda", "envia", "liga", "paga", "põe", "deixa", "vem", "vai", "lembra", "avisa", "diz",
-  "compra", "busca", "apanha", "confirma", "para",
+  "compra", "busca", "apanha", "confirma", "para", "pára",
   "dale", "dame", "da", "lleva", "llévalo", "llévala", "trae", "tráelo", "tráela", "envía", "llama", "pon", "deja", "ven", "dile",
   "recuerda", "acuérdate", "recoge", "confirma",
 ]);
@@ -365,6 +370,233 @@ const copyProblem = (draft: string, rewrite: string) => {
   return null;
 };
 
+// ---- fix11: facts the code finds in the draft itself, independent of the model's list ----
+// Every one of these must survive the rewrite. The model's facts stay as an extra check on top.
+const FX_NEG = new Set(["not", "didn't", "hasn't", "haven't", "hadn't", "wasn't", "weren't", "doesn't", "don't", "won't", "can't", "never", "não", "nao", "nunca", "nem", "no", "ni"]);
+const FX_STOP = new Set([
+  "a", "an", "the", "this", "that", "these", "those", "it", "its", "i", "me", "my", "mine", "we", "us", "our", "you", "your", "yours", "he", "him", "his",
+  "she", "her", "hers", "they", "them", "their", "is", "are", "am", "was", "were", "be", "been", "being", "do", "does", "did", "have", "has", "had",
+  "will", "would", "shall", "should", "can", "could", "may", "might", "must", "to", "of", "in", "on", "at", "by", "for", "with", "from", "up", "as",
+  "so", "and", "or", "but", "if", "then", "than", "there", "here", "what", "which", "who", "when", "where", "how", "also", "just", "very", "only", "still",
+  "o", "os", "as", "um", "uma", "uns", "umas", "de", "do", "da", "dos", "das", "na", "nas", "nos", "em", "ao", "à", "aos", "às", "por", "para",
+  "com", "que", "se", "e", "ou", "mas", "eu", "tu", "ele", "ela", "nós", "eles", "elas", "você", "voce", "vocês", "te", "lhe", "seu", "sua", "seus", "suas",
+  "meu", "minha", "teu", "tua", "é", "são", "foi", "era", "está", "estão", "estava", "ser", "estar", "ter", "tem", "tinha", "há", "isso", "isto", "esse",
+  "essa", "este", "esta", "também", "já", "el", "la", "los", "las", "un", "unos", "unas", "del", "al", "en", "con", "y", "pero", "yo", "tú",
+  "él", "ella", "nosotros", "ellos", "ellas", "usted", "le", "les", "lo", "su", "sus", "mi", "mis", "es", "son", "fue", "está", "están", "estaba",
+  "tener", "tiene", "tenía", "hay", "eso", "esto", "ese", "esa", "ya",
+]);
+// Words a calm rewrite may add that carry no new fact: politeness and the frame of a request.
+const FX_ALLOWED_NEW = new Set(["please", "kindly", "ensure", "make", "sure", "let", "know", "favor", "favour", "podes", "pode", "puedes", "puede", "podrías", "poderias", "podia", "faz"]);
+const FX_IRREG: Record<string, string> = {
+  brought: "bring", bought: "buy", caught: "catch", taught: "teach", thought: "think", left: "leave", lost: "lose", paid: "pay", came: "come",
+  took: "take", taken: "take", gave: "give", given: "give", told: "tell", sent: "send", went: "go", gone: "go", kept: "keep", slept: "sleep", ate: "eat",
+  eaten: "eat", broke: "break", broken: "break", made: "make", said: "say", saw: "see", seen: "see", got: "get", felt: "feel", met: "meet", ran: "run",
+  woke: "wake", wore: "wear", drove: "drive", wrote: "write", children: "child", kids: "kid", owed: "owe",
+};
+// Tokens for comparing words: n't becomes "not", other contractions drop, possessive 's drops.
+const fxToks = (t: string) =>
+  normText(t).replace(/n't\b/g, " not").replace(/\bcannot\b/g, "can not").split(/[^\p{L}\p{N}']+/u)
+    .map((w) => w.replace(/^'+|'+$/g, "").replace(/'(s|ve|ll|re|m|d)$/, "")).filter(Boolean);
+const fxBase = (w: string) => FX_IRREG[w] ?? w;
+const fxStem = (w: string) => wordStem(fxBase(w));
+const fxHasStem = (stems: Set<string>, w: string) => {
+  const st = fxStem(w);
+  if (stems.has(st)) return true;
+  for (const x of stems) if ((x.length >= 3 && st.length >= 3) && (x.startsWith(st) || st.startsWith(x))) return true;
+  return false;
+};
+// Threats are reproach: they may go, and their words are never facts to keep.
+const FX_THREAT = wordRe("court|courts|lawyer|lawyers|solicitor|solicitors|legal action|judge|tribunal|tribunais|advogad[oa]s?|juiz|abogad[oa]s?|juez|juzgado|sue|processar|demandar|denunciar|polícia|police|policía");
+const FX_THREAT_FRAME = wordRe("i'll|i will|i'm going to|i am going to|i'm calling|i am calling|we'll|we will|or|otherwise|or else|if|vou|vamos|ou|senão|se|falo|voy a|vamos a|o|si|si no|como sigas|hablo|see you in|nos vemos");
+const fxSentences = (t: string) => t.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
+const fxIsThreat = (s: string) => FX_THREAT.test(normText(s)) && FX_THREAT_FRAME.test(normText(s));
+// Blame words that must never stay in a rewrite, in any language.
+const FX_REPROACH = wordRe("always|never|sempre|nunca|siempre|typical|típico|típica|tipico|pathetic|patético|patética|obviously|clearly|as usual|como sempre|como siempre|useless|inútil|lazy|selfish|irresponsible|irresponsável|irresponsable|do you even|did you even|you even|even bother|do you ever|how hard|not that you|thanks so much|brilliant|honestly|seriously|done being nice|se é que|nem penses|ni se te ocurra|a sério|en serio|ridiculous|ridículo|unbelievable|disgrace|vergonha|vergüenza|incompetent|incompetente|for once|pela primeira vez na vida|por una vez");
+const FX_PLEASE = /(?<![\p{L}])(?:please|kindly|por favor|se faz favor|faz favor)(?![\p{L}])/gu;
+const FX_TIMES = wordRe([
+  "today", "tonight", "tomorrow", "yesterday", "last night", "this morning", "this afternoon", "this evening", "this week", "this weekend", "this month",
+  "last week", "last weekend", "last month", "last time", "next week", "next weekend", "next month", "next time", "midnight", "noon", "weekend", "weekends",
+  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+  "hoje", "amanhã", "ontem", "anteontem", "esta noite", "esta manhã", "esta tarde", "esta semana", "este fim de semana", "fim de semana", "fins de semana",
+  "semana passada", "mês passado", "última vez", "meia-noite", "meio-dia", "segunda-feira", "terça-feira", "terça", "quarta-feira", "quinta-feira", "sexta-feira", "sexta", "sábado", "domingo",
+  "hoy", "mañana", "ayer", "anoche", "anteayer", "esta noche", "fin de semana", "fines de semana", "semana pasada", "mes pasado", "vez pasada",
+  "medianoche", "mediodía", "lunes", "martes", "miércoles", "jueves", "viernes",
+].join("|"));
+const FX_TIMES_G = new RegExp(FX_TIMES.source, "gu");
+const FX_PLACES_G = new RegExp(wordRe("at yours|from yours|at your place|at your house|at your mum's|em tua casa|na tua casa|da tua casa|em casa do pai|em casa da mãe|en tu casa|de tu casa").source, "gu");
+const FX_NUM_WORDS = wordRe("two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|half|dois|duas|três|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|vinte|trinta|quarenta|cinquenta|cem|metade|dos|tres|cuatro|siete|ocho|nueve|diez|doce|veinte|treinta|cuarenta|cincuenta|cien|mitad");
+const FX_NUM_WORDS_G = new RegExp(FX_NUM_WORDS.source, "gu");
+const FX_MONEY_G = /(?:r\$|us\$|£|€|\$)\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s?(?:€|euros?|pounds?|quid|libras?|reais|pesos?|dólares|dolares|dollars?)(?![\p{L}])/gu;
+const FX_AGAIN: Record<string, RegExp> = {
+  en: wordRe("again|once more"),
+  still: wordRe("still|ainda|todavía|aún"),
+  pt: wordRe("de novo|outra vez|novamente|mais uma vez"),
+  es: wordRe("otra vez|de nuevo|nuevamente|una vez más"),
+};
+const FX_ORDINAL = "first|second|third|fourth|fifth|sixth|seventh|\\d+(?:st|nd|rd|th)|primeir[oa]|segund[oa]|terceir[oa]|quart[oa]|quint[oa]|sext[oa]|primer[oa]?|tercer[oa]?|cuart[oa]";
+const FX_ORD_G = new RegExp(`(?<![\\p{L}\\p{N}])(?:${FX_ORDINAL})(?![\\p{L}\\p{N}])(?:\\s+[\\p{L}\\p{N}-]+){0,2}`, "gu");
+const FX_PERIOD_G = /(?:[\p{L}\p{N}£.,-]+\s+){0,3}(?:running|in a row|on the trot|consecutive|seguid[oa]s?|consecutiv[oa]s?|de seguida|sin parar)(?![\p{L}])/gu;
+const FX_EVERY_G = /(?<![\p{L}])(?:every|each|cada|todos os|todas as|todos los|todas las)(?:\s+[\p{L}\p{N}-]+){1,2}/gu;
+// Medication: listed names, plus a capitalised or listed word right next to a dose.
+const FX_MEDS = new Set(["calpol", "nurofen", "ibuprofen", "ibuprofeno", "paracetamol", "benuron", "ben-u-ron", "brufen", "amoxicillin", "amoxicilina",
+  "penicillin", "penicilina", "antibiotic", "antibiotics", "antibiótico", "antibióticos", "inhaler", "inalador", "inhalador", "epipen", "ventolin", "salbutamol",
+  "piriton", "cetirizine", "cetirizina", "loratadine", "loratadina", "antihistamine", "antihistamínico", "anti-histamínico", "melatonin", "melatonina",
+  "omeprazole", "omeprazol", "insulin", "insulina", "dalsy", "apiretal", "xarope", "jarabe", "syrup", "eyedrops", "colírio", "colirio", "medicine",
+  "medication", "remédio", "medicamento", "medicação", "medicina", "pomada", "cream", "creme", "crema", "gotas", "drops", "spray", "puffer", "dipirona",
+  "aspirina", "aspirin", "clarityn", "zyrtec", "movicol", "gaviscon", "strepsils", "fenistil", "atarax", "voltaren"]);
+const FX_DOSE_UNIT = /^(?:\d+(?:[.,]\d+)?(?:ml|mg|mcg|g)|ml|mg|mcg|gotas|drops|comprimidos?|tablets?|pills?|puffs?|pastillas?|sachets?|saquetas?|colher(?:es)?|cucharadas?|cucharaditas?|teaspoons?|spoonfuls?)$/u;
+const FX_DOSE_SKIP = new Set(["de", "of", "do", "da", "del", "the", "a", "his", "her", "seu", "sua", "su", "dose"]);
+const fxMedNames = (draft: string) => {
+  const out = new Set<string>();
+  const raw = draft.replace(/[\u2018\u2019]/g, "'").split(/[^\p{L}\p{N}.,'-]+/u).map((w) => w.replace(/^[.,'-]+|[.,'-]+$/g, "")).filter(Boolean);
+  const low = raw.map((w) => w.toLowerCase());
+  low.forEach((w, i) => { if (FX_MEDS.has(w) || FX_MEDS.has(stripAccents(w))) out.add(w); });
+  low.forEach((w, i) => {
+    const isDose = FX_DOSE_UNIT.test(w) || (/^\d+(?:[.,]\d+)?$/.test(w) && FX_DOSE_UNIT.test(low[i + 1] ?? ""));
+    if (!isDose) return;
+    for (const dir of [-1, 1]) {
+      let j = i + dir;
+      while (j >= 0 && j < low.length && (FX_DOSE_SKIP.has(low[j]) || FX_DOSE_UNIT.test(low[j]) || /^\d/.test(low[j]))) j += dir;
+      if (j < 0 || j >= low.length) continue;
+      if (FX_MEDS.has(low[j]) || (/^\p{Lu}/u.test(raw[j]) && !CAP_SKIP.has(low[j]) && j > 0)) out.add(low[j]);
+    }
+  });
+  return out;
+};
+// Who did what: the person and the key verb (forgot, missed, didn't pay ...), with its negation.
+const FX_KEY: [string, RegExp][] = [
+  ["forget", /^(?:forg[eo]t(?:s|ten|ting)?|esquec\p{L}*|esqueç\p{L}*|olvid\p{L}*)$/u],
+  ["miss", /^(?:miss|missed|misses|falt(?:ou|aste|aram|ei|ó|aron|é)|falh(?:ou|aste|aram|ei))$/u],
+  ["pay", /^(?:paid|pay|pays|pag(?:ou|aste|aram|uei|ó|aron|ué|aste))$/u],
+  ["owe", /^(?:owe|owes)$/u],
+  ["bring", /^(?:brought|trouxe|trouxeste|trouxeram|trajo|trajiste|trajeron)$/u],
+  ["leave", /^(?:left|deixou|deixaste|deixei|deixaram|dejó|dejaste|dejé|dejaron)$/u],
+  ["lose", /^(?:lost|perdeu|perdeste|perdi|perdió|perdiste|perdí)$/u],
+  ["break", /^(?:broke|broken|partiu|partiste|rompió|rompiste)$/u],
+  ["cancel", /^(?:cancell?ed|cancelou|cancelaste|canceló)$/u],
+  ["collect", /^(?:collected|picked|recolheu|recolheste|recogió|recogiste|buscou|buscaste)$/u],
+  ["late", /^(?:late|atrasad[oa]s?|atrasou|atrasaste|atrasó)$/u],
+  ["let", /^(?:let|lets|letting|allowed|deixaste|dejaste)$/u],
+];
+const FX_CLITIC: Record<string, string> = { te: "other", me: "self", le: "third", lhe: "third" };
+const FX_SUBJ_SKIP = new Set([...SUBJ_SKIP, "didn't", "hasn't", "haven't", "hadn't", "still", "even", "completely", "totally", "ni", "nem", "se", "te", "me", "lhe", "le", "then", "once"]);
+type FxDeed = { key: string; role: string; neg: boolean; word: string };
+const fxDeeds = (text: string, names: Set<string>) => {
+  const out: FxDeed[] = [];
+  for (const sent of text.split(/(?<=[.!?,;])\s+|\s(?:and|but|e|mas|y|pero)\s/u)) {
+    const toks = subjTokens(sent);
+    toks.forEach((t, i) => {
+      const hit = FX_KEY.find(([, re]) => re.test(t));
+      if (!hit) return;
+      const key = hit[0];
+      if (i > 0 && toks[i - 1] === "to") return; // "to pay": an infinitive, part of an ask
+      let role: string | null = null;
+      if (key !== "late" && i > 0 && PASSIVE_AUX.has(toks[i - 1])) role = "passive";
+      for (let j = i - 1; !role && j >= Math.max(0, i - 5); j--) {
+        if (FX_SUBJ_SKIP.has(toks[j])) continue;
+        role = (toks[j] === "yours" ? "other" : roleOf(toks[j], names)) ?? "none";
+      }
+      if (!role || role === "none") {
+        const ascii = /^[a-z']+$/.test(t) && !/(?:aste|iste|este|ou|ei|ó|é|í)$/.test(t);
+        if (FX_CLITIC[toks[i - 1]] && key === "forget") role = FX_CLITIC[toks[i - 1]];
+        else if (/(?:aste|iste|este)$/.test(stripAccents(t)) && !ascii) role = "other";
+        else if (/(?:ei|é|í)$/.test(t) || /^(?:esqueci|perdi)$/.test(t)) role = "self";
+        else if (!ascii) role = "3";
+        else return; // English verb with no subject (an instruction): not a report of who did it
+      }
+      const neg = toks.slice(Math.max(0, i - 3), i).some((w) => FX_NEG.has(w));
+      out.push({ key, role, neg, word: t });
+    });
+  }
+  return out;
+};
+const fxSameRole = (a: string, b: string) =>
+  a === b || sameActor(a, b) || (a === "3" && (b === "third" || b.startsWith("name:"))) || (b === "3" && (a === "third" || a.startsWith("name:")));
+const fxPhraseKept = (phrase: string, rStems: Set<string>) => {
+  const ws = fxToks(phrase).filter((w) => !FX_STOP.has(w));
+  return ws.every((w) => /^\d/.test(w) || fxHasStem(rStems, w));
+};
+
+const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
+  const codes = new Set<string>();
+  const notes: string[] = [];
+  const kept: string[] = [];
+  const factDraft = fxSentences(draft).filter((s) => !fxIsThreat(s)).join(" ");
+  const d = normText(factDraft);
+  const r = normText(rewrite);
+  const rStems = new Set(fxToks(rewrite).map(fxStem));
+  const need = (code: string, label: string) => { codes.add(code); kept.push(label); };
+  // Money with its currency, numbers written as words.
+  const squash = (s: string) => s.replace(/\s+/g, "").replace(",", ".");
+  const rMoney = (r.match(FX_MONEY_G) ?? []).map(squash);
+  for (const m of d.match(FX_MONEY_G) ?? []) if (!rMoney.includes(squash(m))) need("money_dropped", m);
+  const esDraft = langScore(d, "es") > langScore(d, "pt");
+  for (const m of d.match(FX_NUM_WORDS_G) ?? []) {
+    if ((m === "dos" || m === "doce") && !esDraft) continue; // Portuguese "dos" (of the), "doce" (sweet)
+    if (!hasWord(r, m)) need("number_dropped", m);
+  }
+  // Times and dates (days, months, today, last time, weekend ...).
+  for (const m of d.match(FX_TIMES_G) ?? []) if (!hasWord(r, m)) need("time_dropped", m);
+  for (const [key, re] of MONTHS) if (re.test(d) && !re.test(r)) need("time_dropped", key);
+  // Counts and repetition with their period.
+  for (const re of [FX_ORD_G, FX_PERIOD_G, FX_EVERY_G]) {
+    for (const m of d.match(re) ?? []) if (!fxPhraseKept(m, rStems)) need("count_dropped", m.trim());
+  }
+  for (const m of d.match(COUNT_RE) ?? []) if (!fxPhraseKept(m, rStems)) need("count_dropped", m);
+  for (const [lang, re] of Object.entries(FX_AGAIN)) {
+    if (re.test(d) && !Object.values(FX_AGAIN).some((x) => x.test(r))) need("count_dropped", lang === "en" ? "again" : lang === "pt" ? "outra vez / de novo" : "otra vez / de nuevo");
+  }
+  // Names of people and places, and "at yours"-type places.
+  for (const n of draftNames(factDraft)) if (!hasWord(r, n)) need("name_dropped", n);
+  for (const m of d.match(FX_PLACES_G) ?? []) if (!hasWord(r, m)) need("place_dropped", m);
+  // Negated statements ("wouldn't say why", "no screens") keep their negation and verb; absolutes and blame sentences aside.
+  for (const sent of fxSentences(factDraft)) {
+    if (FX_REPROACH.test(normText(sent))) continue;
+    const ts = fxToks(sent);
+    ts.forEach((w, i) => {
+      if (!FX_NEG.has(w) || w === "never" || w === "nunca") return;
+      const nxt = ts.slice(i + 1).find((x) => !FX_STOP.has(x) && !FX_NEG.has(x));
+      if (!nxt || /^\d/.test(nxt)) return;
+      const rt = fxToks(rewrite);
+      const ok = rt.some((x, k) => fxStem(x) === fxStem(nxt) && rt.slice(Math.max(0, k - 4), k).some((y) => FX_NEG.has(y)));
+      if (!ok) need("negation_dropped", `${w} ${nxt}`);
+    });
+  }
+  // Medication and health names.
+  for (const m of fxMedNames(factDraft)) if (!hasWord(r, m)) need("medication_dropped", m);
+  // Who did what.
+  const names = draftNames(draft);
+  const rDeeds = fxDeeds(rewrite, names);
+  for (const dd of fxDeeds(factDraft, names)) {
+    if (dd.role === "passive") continue;
+    const ok = rDeeds.some((x) => x.key === dd.key && x.neg === dd.neg && x.role !== "passive" && fxSameRole(dd.role, x.role));
+    if (!ok) need("deed_dropped", `${dd.role === "other" ? "you" : dd.role === "self" ? "I" : dd.role.replace(/^name:/, "")} ${dd.neg ? "not " : ""}${dd.word}`);
+  }
+  if (kept.length) notes.push(`Keep these from the draft, word for word and with the same person doing them: ${kept.map((k) => `"${k}"`).join(", ")}.`);
+  // Nothing added: every content word of the rewrite must come from the draft (only please and the frame of a request may be new).
+  const dStems = new Set(fxToks(draft).map(fxStem));
+  const added = new Set<string>();
+  const dNeg = fxToks(draft).some((w) => FX_NEG.has(w));
+  for (const w of fxToks(rewrite)) {
+    if (FX_STOP.has(w) || FX_ALLOWED_NEW.has(w) || /^\d/.test(w) || w.length < 2) continue;
+    if (w === "not" && dNeg) continue; // "never" -> "did not"
+    if (!fxHasStem(dStems, w)) added.add(w);
+  }
+  if (added.size) { codes.add("added_content"); notes.push(`These words are not in the draft: ${[...added].slice(0, 8).map((w) => `"${w}"`).join(", ")}. Add nothing: no new sentence, feeling, reason or detail.`); }
+  // Threats: removed entirely, never kept.
+  if (fxSentences(draft).some(fxIsThreat) && FX_THREAT.test(r)) { codes.add("threat_kept"); notes.push("Remove the threat entirely."); }
+  if (FX_REPROACH.test(r)) { codes.add("reproach_kept"); notes.push("Remove every blame word (always, never, typical, and the like)."); }
+  const dPlease = (normText(draft).match(FX_PLEASE) ?? []).length;
+  const rPlease = (r.match(FX_PLEASE) ?? []).length;
+  if (rPlease > 1 && rPlease > dPlease) { codes.add("repeat"); notes.push('Say "please" at most once.'); }
+  // A request in the rewrite needs a plain request in the draft (a question stays a question; a fact or rule never becomes a request).
+  if (!asksPlain) {
+    const plainR = fxSentences(rewrite).filter((s) => !s.trim().endsWith("?")).some((s) => clausesOf(expandContractions(s)).some(isAskClause));
+    if (plainR) { codes.add("ask_added"); notes.push("The draft makes no plain request, so the rewrite must not add one."); }
+  }
+  return { codes: [...codes], notes };
+};
+
 // Deterministic fact check. Returns failure codes (for logs) and plain notes (for the retry prompt only).
 const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
   const codes = new Set<string>();
@@ -379,7 +611,8 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
   const plainDraftAsk = draftAsk && draft.split(/(?<=[.!?])\s+/).filter((x) => !x.trim().endsWith("?"))
     .flatMap((x) => x.split(/\s(?:or|ou|o)\s/u)).filter((x) => !SELF_FUTURE.test(normText(x)))
     .some((x) => clausesOf(expandContractions(x)).some(isAskClause));
-  const asks = (c.has_ask && draftAsk) || plainDraftAsk;
+  // fix11: the code decides whether the draft asks; the model's has_ask is not used.
+  const asks = draftAsk;
   if (/\b(police|victim)\b/.test(r)) { codes.add("banned_word"); notes.push('Do not use "police" or "victim".'); }
 
   const dn = numberTokens(draft), rn = numberTokens(rewrite);
@@ -587,11 +820,14 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     codes.add("decision_as_question");
     notes.push("The sender's decision must stay a statement, not a question.");
   }
+  const fx = codeFactCheck(draft, rewrite, plainDraftAsk);
+  for (const x of fx.codes) codes.add(x);
+  notes.push(...fx.notes);
   return { codes: [...codes], notes };
 };
 
-const logSend = (outcome: string, reasons: string[], attempts: number, started: number) =>
-  console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome, reasons, attempts, ms: Date.now() - started }));
+const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) =>
+  console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome, reasons, attempts, ms: Date.now() - started, ...timing }));
 
 const callGateway = (apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) =>
   fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -625,15 +861,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // send: Premium when the switch is on, otherwise signed-in only. Any other mode: always Premium.
-    const denied = mode === "send"
-      ? (CALM_CHECK_REQUIRES_PREMIUM ? await requirePremium(req, "rewrite") : await requireSignedIn(req))
-      : await requirePremium(req, "rewrite");
-    if (denied) return denied;
+    // send: signed-in check first (no model call before the user is confirmed), then the Premium check runs
+    // alongside the model calls; its answer is awaited before any response, so the 402 gate still comes first.
+    // Any other mode: always Premium, before anything else.
+    const timing: Record<string, number> = {};
+    let premiumCheck: Promise<Response | null> = Promise.resolve(null);
+    if (mode === "send") {
+      const signedOut = await requireSignedIn(req);
+      timing.auth_ms = Date.now() - started;
+      if (signedOut) return signedOut;
+      if (CALM_CHECK_REQUIRES_PREMIUM) {
+        const p0 = Date.now();
+        premiumCheck = requirePremium(req, "rewrite").then((d) => { timing.premium_ms = Date.now() - p0; return d; });
+      }
+    } else {
+      const denied = await requirePremium(req, "rewrite");
+      if (denied) return denied;
+    }
 
-    if (!draft || typeof draft !== "string" || draft.length > 4000) return json({ error: "Missing draft" }, 400);
+    if (!draft || typeof draft !== "string" || draft.length > 4000) {
+      const denied = await premiumCheck;
+      if (denied) return denied;
+      return json({ error: "Missing draft" }, 400);
+    }
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) return json({ error: "AI not configured" }, 500);
+    if (!apiKey) {
+      const denied = await premiumCheck;
+      if (denied) return denied;
+      return json({ error: "AI not configured" }, 500);
+    }
 
     if (mode === "send") {
       const pass = { needs_rewrite: false, rewrite: null };
@@ -643,8 +899,13 @@ Deno.serve(async (req) => {
       const sendCtrl = new AbortController();
       const deadlineTimer = setTimeout(() => sendCtrl.abort(), Math.max(0, deadline - Date.now()));
       let settled = false;
+      // Nothing from a send is logged until Premium is confirmed; on a denial the model reply is thrown away unlogged.
+      let premiumOk = false;
+      let pendingLog: (() => void) | null = null;
       const log = (outcome: string, reasons: string[], attempts: number) => {
-        if (!settled) logSend(outcome, reasons, attempts, started);
+        if (settled) return;
+        const write = () => logSend(outcome, reasons, attempts, started, timing);
+        if (premiumOk) write(); else pendingLog = write;
       };
       const runSend = async (): Promise<Response> => {
         const timed = async (payload: Record<string, unknown>, signal: AbortSignal = sendCtrl.signal) => {
@@ -663,8 +924,10 @@ Deno.serve(async (req) => {
           | { kind: "cand"; raw: string; rewrite: string; checkInput: SendCheck; result: ReturnType<typeof checkRewrite> };
         const firstOnce = async (signal: AbortSignal): Promise<First> => {
           let resp: Response;
+          const m0 = Date.now();
           try {
             resp = await timed({ ...sendModel(800), response_format: SEND_SCHEMA, messages: firstMessages }, signal);
+            if (timing.model_ms === undefined) timing.model_ms = Date.now() - m0;
           } catch {
             return { kind: "timeout" };
           }
@@ -690,12 +953,13 @@ Deno.serve(async (req) => {
           if (removesNothing(draft, rewrite)) return { kind: "pass", reasons: ["near_identical"] };
           return { kind: "cand", raw, rewrite, checkInput, result: checkRewrite(draft, rewrite, checkInput) };
         };
-        // Parallel first calls: take the first one that passes (no rewrite needed, or a rewrite with no failed checks)
-        // and abort the others. If none passes, use the first failed rewrite for the retry.
+        // Parallel first calls: a rewrite that passes every check wins at once and the others are aborted.
+        // A "no change" result does not win at once: the other call may still bring a passing rewrite within the budget.
+        // If none brings one, "no change" is used, then the first failed rewrite (for the retry).
         const ctrls = Array.from({ length: SEND_FIRST_CALLS }, () => new AbortController());
         const onAbort = () => ctrls.forEach((c) => c.abort());
         sendCtrl.signal.addEventListener("abort", onAbort);
-        const isWin = (f: First) => f.kind === "pass" || (f.kind === "cand" && !f.result.codes.length);
+        const isWin = (f: First) => f.kind === "cand" && !f.result.codes.length;
         const all: First[] = [];
         const first: First = await new Promise<First>((resolve) => {
           let done = 0;
@@ -707,7 +971,7 @@ Deno.serve(async (req) => {
                 ctrls.forEach((o) => { if (o !== c) o.abort(); });
                 resolve(f);
               } else if (done === ctrls.length) {
-                resolve(all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
+                resolve(all.find((x) => x.kind === "pass") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
               }
             });
           });
@@ -777,13 +1041,27 @@ Deno.serve(async (req) => {
       let hardTimer: ReturnType<typeof setTimeout> | undefined;
       const hardStop = new Promise<Response>((resolve) => {
         hardTimer = setTimeout(() => {
-          if (!settled) logSend("fallback", ["timeout"], 0, started);
+          if (!settled) log("fallback", ["timeout"], 0);
           settled = true;
           sendCtrl.abort();
           resolve(json(pass));
         }, Math.max(0, started + SEND_HARD_STOP_MS - Date.now()));
       });
       const work = runSend().then((r) => { settled = true; return r; }, () => { settled = true; return json(pass); });
+      let denied: Response | null;
+      try {
+        denied = await premiumCheck;
+      } catch (e) {
+        settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
+        throw e;
+      }
+      if (denied) {
+        // 401/402/503: stop the model calls, throw their reply away, log nothing from it.
+        settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
+        return denied;
+      }
+      premiumOk = true;
+      if (pendingLog) { const w = pendingLog; pendingLog = null; w(); }
       const out = await Promise.race([work, hardStop]);
       clearTimeout(hardTimer);
       clearTimeout(deadlineTimer);
