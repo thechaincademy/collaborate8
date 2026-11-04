@@ -311,6 +311,7 @@ const SOFTENED: Record<string, string[]> = {
 // Specific counts and durations are facts and must stay (frequency words that only blame are not counts).
 const COUNT_RE = /(?<![\p{L}\p{N}])(?:(?:first|second|third|fourth|fifth|\d+(?:st|nd|rd|th)) time|twice|(?:two|three|four|five|\d+) times|all (?:night|week|day|weekend|morning|afternoon)|(?:a|à) noite toda|toda a noite|a semana toda|toda a semana|toda la noche|toda la semana|duas vezes|três vezes|dos veces|tres veces|pela (?:segunda|terceira|quarta) vez|por (?:segunda|tercera|cuarta) vez)(?![\p{L}\p{N}])/gu;
 
+const RESTATE_FREE = new Set(["there", "until", "with", "agreed", "should", "also", "have", "has", "had", "been", "being", "are", "was", "were", "this", "that", "and"]);
 const ACCUSE = new Set(["lies", "lie", "lying", "liar", "liars", "mentiras", "mentira", "mentir", "mentiroso", "mentirosa"]);
 // The sender's own stance: a wish stays a wish and a future step stays future (never "I will" for "I want", never "I have told" for "I'll tell").
 const WISH = wordRe("i want|i'd like|i would like|i wish|eu quero|queria|gostaria|yo quiero|quisiera|me gustaría");
@@ -526,6 +527,28 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     if (askWords.length && !askWords.some((ws) => ws.some(kept))) {
       codes.add("ask_changed");
       notes.push(`The request must use the draft's own words for what is asked (${[...new Set(askWords.flat())].slice(0, 6).map((w) => `"${w}"`).join(", ")}); do not change it into a different or milder request.`);
+    }
+    // Every plain request (not a question) must still be there in the draft's words; a request is never silently dropped.
+    // (A threat, "or I'll take you to court and get the police involved", is not a request.)
+    const plainAsks = draft.split(/(?<=[.!?])\s+/).filter((x) => !x.trim().endsWith("?"))
+      .flatMap((x) => x.split(/\s(?:or|ou|o)\s/u)).filter((x) => !SELF_FUTURE.test(normText(x)))
+      .flatMap((x) => clausesOf(x).filter(isAskClause))
+      .map((cl) => clauseWords(cl).map((w) => w.replace(/'s$/, "")).filter((w) => w.length > 2 && !ASK_GENERIC.has(w) && !KEEP_STOP_WORDS.has(w) && !names.has(w)))
+      .filter((ws) => ws.length);
+    const lost = plainAsks.filter((ws) => !ws.some(kept));
+    if (lost.length) {
+      codes.add("ask_dropped");
+      notes.push(`Keep every request the draft makes, in its own words (${lost.flat().slice(0, 6).map((w) => `"${w}"`).join(", ")}).`);
+    }
+    // If the rewrite asks nothing, it may only restate what the draft says; it must not turn a question into a new claim.
+    if (!plainAsks.length && !textHasAsk(rewrite)) {
+      const dStems = clauseWords(d).map(wordStem);
+      const fresh = clauseWords(r).filter((w) => w.length > 2 && !KEEP_STOP_WORDS.has(w) && !RESTATE_FREE.has(w) && !names.has(w) && !/^\d/.test(w))
+        .map(wordStem).filter((st) => !dStems.some((x) => x === st || (x.length >= 3 && st.startsWith(x)) || (st.length >= 3 && x.startsWith(st))));
+      if (fresh.length) {
+        codes.add("ask_dropped");
+        notes.push("Keep the draft's question or request as a calm request; do not replace it with a new statement.");
+      }
     }
   }
   if (c.states_decision && r.includes("?") && !d.includes("?")) {
