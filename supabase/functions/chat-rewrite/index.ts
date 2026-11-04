@@ -58,6 +58,7 @@ Step 3. If needs_rewrite is true, write rewrite, one calm version:
 - Keep every amount with its currency, number, time, day, date, repetition word (again, running, in a row, outra vez, otra vez, seguidos) and medicine name word for word.
 - Add nothing: no new sentence, clause, feeling, reason, importance, thanks or understanding (never "is important to me"). Use only the draft's own words, plus "please" at most once.
 - If the draft makes no plain request, add none: a stated fact or rule stays a statement, and a question stays a question.
+- A rule both parents follow ("no fizzy drinks after 5pm", "phones aren't allowed at the table", "nada de telemóvel depois do jantar", "não pode", "sin tablet después de cenar", "no se puede", "prohibido", "only", "must") stays a rule: keep its own rule words, or start it with "The rule is" / "A regra é" / "La regla es". Never reword it as what there is or is not ("there are no ...", "we have none", "não há ...", "no hay ...").
 - Remove threats (court, lawyer, solicitor) entirely.
 - Leave out, whole, every sentence that is only blame: a jibe, a rhetorical question ("Are you even capable of...?"), a guess about the other parent's feelings ("isn't important to you", "you don't care") or a sentence built on always or never. Do not turn any part of one into a statement.
 - Say each fact once; do not repeat an item, dose or time in the ask, refer back with it, this or them.
@@ -387,7 +388,7 @@ const FX_STOP = new Set([
   "tener", "tiene", "tenía", "hay", "eso", "esto", "ese", "esa", "ya",
 ]);
 // Words a calm rewrite may add that carry no new fact: politeness and the frame of a request.
-const FX_ALLOWED_NEW = new Set(["please", "kindly", "ensure", "make", "sure", "let", "know", "favor", "favour", "podes", "pode", "puedes", "puede", "podrías", "poderias", "podia", "faz"]);
+const FX_ALLOWED_NEW = new Set(["please", "kindly", "ensure", "make", "sure", "let", "know", "favor", "favour", "podes", "pode", "puedes", "puede", "podrías", "poderias", "podia", "faz", "rule", "regra", "regla"]);
 const FX_IRREG: Record<string, string> = {
   brought: "bring", bought: "buy", caught: "catch", taught: "teach", thought: "think", left: "leave", lost: "lose", paid: "pay", came: "come",
   took: "take", taken: "take", gave: "give", given: "give", told: "tell", sent: "send", went: "go", gone: "go", kept: "keep", slept: "sleep", ate: "eat",
@@ -528,6 +529,73 @@ const fxAnchored = (sent: string) => {
     ts.some((t) => FX_KEY.some(([, re]) => re.test(t))) || ts.filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t) && !/^(?:again|once|more|otra|outra|vez|novo|nuevo|mismo|mesmo|same)$/.test(t)).length >= 3 ||
     ts.some((t) => /^(?:he|she|they|ele|ela|eles|elas|él|ella|ellos|ellas)$/.test(t)); // about the child: "or he can't play"
 };
+// Rules both parents follow: "no fizzy drinks after 5pm", "nada de telemóvel depois do jantar", "sin tablet después de cenar",
+// "phones aren't allowed at the table", "não pode", "no se puede", "prohibido", "only ... after 6", "must".
+type FxRule = { head: string; word: string };
+// A limit word (when or where the rule applies) marks "no X" / "sem X" / "sin X" / "only" as a rule rather than a plain "no".
+const FX_RULE_LIMIT = wordRe("after|before|until|till|past|during|at|in|on|by|depois|antes|até|durante|em|na|nas|à|después|despues|hasta|en|por la noche|de noche|à noite|entre semana|hour|hours|minutes|hora|horas|minutos|meia|media");
+const FX_RULE_SKIP = new Set(["one", "idea", "way", "problem", "need", "longer", "worries", "doubt", "matter", "le", "lo", "la", "les", "los", "las", "me", "te",
+  "se", "nos", "os", "lhe", "lhes", "o", "a", "sé", "sei", "sabe", "hay", "há", "es", "está", "puedo", "posso", "quiero", "quero"]);
+const FX_RULE_JOIN = /^(?:and|but|or|also|plus|e|y|mas|pero|también|também)$/;
+// "There are no ...", "we have no ...", "no hay ...", "não há ..." turn a rule into a statement of what there is.
+const FX_RULE_THERE = /^(?:there|have|has|had|got|hay|há|tem|têm|tiene|tienen|tenemos|temos|existe|existem|existen)$/;
+const FX_RULE_BE = /^(?:are|is|were|was|be|son|es|está|están|são|é|estão)$/;
+const FX_RULE_FRAME = wordRe("the rule is|the rule's|our rule is|the rule:|a regra é|a nossa regra é|regra:|la regla es|nuestra regla es|regla:");
+const fxRuleWord = (ts: string[], from: number, to: number) => {
+  const after = ts.slice(from).find((x) => !FX_STOP.has(x) && !FX_NEG.has(x) && !/^(?:more|any|mais|más|de|del|el)$/.test(x));
+  if (after) return after;
+  return ts.slice(0, to).reverse().find((x) => !FX_STOP.has(x) && !FX_NEG.has(x));
+};
+const fxRules = (clauses: string[]): FxRule[] => {
+  const out: FxRule[] = [];
+  for (const c of clauses) {
+    const n = normText(c), ts = fxToks(c);
+    const limited = FX_RULE_LIMIT.test(n) || /\d/.test(n) || FX_NUM_WORDS.test(n);
+    ts.forEach((w, i) => {
+      const prev = ts[i - 1] ?? "", prev2 = ts[i - 2] ?? "";
+      let head = "", at = i + 1, from = i;
+      if ((w === "no" || w === "sem" || w === "sin") && (i === 0 || FX_RULE_JOIN.test(prev))) {
+        const nx = ts[i + 1] ?? "";
+        if (!limited || !nx || FX_RULE_SKIP.has(nx) || /^\d/.test(nx) || (w !== "no" && /(?:ar|er|ir)$/.test(nx))) return;
+        head = w;
+      } else if (w === "nada" && ts[i + 1] === "de") { head = "nada de"; at = i + 2; }
+      else if (/^(?:proibid|prohibid)[oa]s?$/.test(w)) head = w;
+      else if (w === "allowed" && prev === "not") { head = "not allowed"; from = i - 1; }
+      else if ((w === "pode" || w === "podem") && prev === "não") { head = `não ${w}`; from = i - 1; }
+      else if (w === "puede" && prev === "se" && prev2 === "no") { head = "no se puede"; from = i - 2; }
+      else if (/^permitid[oa]s?$/.test(w) && (prev2 === "não" || prev2 === "no") && FX_RULE_BE.test(prev)) { head = `${prev2} ${prev} ${w}`; from = i - 2; }
+      else if (/^(?:only|só|solo|sólo)$/.test(w) && limited) head = w;
+      else if (w === "must" && prev !== "you" && prev !== "i") head = w;
+      if (!head) return;
+      // "Sweets are not allowed ...", "Phones aren't permitted ...": the thing the rule is about comes before the rule words.
+      const before = /allowed|permitid/.test(head) ? ts.slice(0, from).reverse().find((x) => !FX_STOP.has(x) && !FX_NEG.has(x)) : undefined;
+      const word = before ?? fxRuleWord(ts, at, from);
+      if (word && !out.some((r) => r.head === head && r.word === word)) out.push({ head, word });
+    });
+  }
+  return out;
+};
+const fxRuleKept = (rewrite: string, rule: FxRule) => {
+  const st = fxStem(rule.word), headToks = rule.head.split(" ");
+  const loose = /^(?:no|sem|sin|nada de|only|só|solo|sólo)$/.test(rule.head);
+  for (const s of fxSentences(rewrite).flatMap((x) => x.split(/;\s*/))) {
+    const ts = fxToks(s);
+    const wIdx = ts.map((x, k) => (fxStem(x) === st ? k : -1)).filter((k) => k >= 0);
+    if (!wIdx.length) continue;
+    const fm = normText(s).match(FX_RULE_FRAME);
+    if (fm && normText(s).indexOf(fm[0]) < normText(s).search(new RegExp(`(?<![\\p{L}\\p{N}])${rule.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "u")) ) return true;
+    for (let h = 0; h + headToks.length <= ts.length; h++) {
+      if (!headToks.every((t, j) => ts[h + j] === t)) continue;
+      if (!wIdx.some((k) => Math.abs(k - h) <= 6)) continue;
+      if (loose) {
+        const p1 = ts[h - 1] ?? "", p2 = ts[h - 2] ?? "";
+        if (FX_RULE_THERE.test(p1) || FX_RULE_THERE.test(p2) || (!/^(?:only|só|solo|sólo)$/.test(rule.head) && FX_RULE_BE.test(p1))) continue;
+      }
+      return true;
+    }
+  }
+  return false;
+};
 const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   const codes = new Set<string>();
   const notes: string[] = [];
@@ -592,6 +660,12 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
       const ok = rt.some((x, k) => fxStem(x) === fxStem(nxt) && rt.slice(Math.max(0, k - 4), k).some((y) => /^(?:without|sem|sin)$/.test(y) || FX_NEG.has(y)));
       if (!ok) need("negation_dropped", `${w} ${nxt}`);
     });
+  }
+  // A rule stays a rule: its own rule words, or "The rule is ..." / "A regra é ..." / "La regla es ...". "There are no ..." fails.
+  for (const rule of fxRules(coreSents)) {
+    if (fxRuleKept(rewrite, rule)) continue;
+    codes.add("rule_changed");
+    notes.push(`Keep the rule "${rule.head} ... ${rule.word}" as a rule, in the draft's words or starting "The rule is" / "A regra é" / "La regla es"; never "there are no", "não há" or "no hay".`);
   }
   // A rewrite clause made only from a blame clause of the draft ("You ALWAYS forget...", "Are you even capable of...",
   // "If you're late again I'm done being nice") or from a bare negative jibe with no fact and no ask ("Ni apareces") keeps reproach.
