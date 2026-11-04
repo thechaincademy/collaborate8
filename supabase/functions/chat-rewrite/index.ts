@@ -112,6 +112,13 @@ const numberTokens = (s: string) =>
       .map((t) => t.replace(/\s/g, "")),
   );
 
+const numberTokenList = (s: string) =>
+  (normText(s).match(/£?\d+(?:[.:,]\d+)*(?:\s?(?:am|pm|ml|mg|kg|g|p|st|nd|rd|th|%))?(?![a-z0-9])/g) ?? [])
+    .map((t) => t.replace(/\s/g, ""));
+const contentWords = (sentence: string) =>
+  new Set(sentence.split(/[^a-z0-9£.:%']+/).map((w) => w.replace(/^[.:]+|[.:]+$/g, "")).filter((w) => w.length > 2 && !KEEP_STOP_WORDS.has(w)));
+const KEEP_STOP_WORDS = new Set(["the", "and", "his", "her", "their", "your", "our", "was", "were", "for", "with", "that", "this", "from", "are", "has", "have", "had", "she", "him", "them", "you", "please", "could", "would", "can", "will"]);
+
 const TIME_WORDS = [
   "tonight", "today", "tomorrow", "yesterday", "this morning", "this afternoon", "this evening", "this week",
   "this weekend", "next week", "next weekend", "next time", "in future", "in the future", "from now on",
@@ -162,6 +169,23 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
       const nk = normText(k).replace(/^[^a-z0-9£]+|[^a-z0-9%]+$/g, "");
       if (!nk || nk.split(" ").length > 6) continue;
       if (!keepFound(nk, r)) { codes.add("missing_fact"); notes.push(`Keep "${k}" (fact: ${typeof f.fact === "string" ? f.fact : ""}).`); }
+    }
+  }
+
+  // Repeats: a number, time or dose used more often than in the draft, or two sentences saying the same thing.
+  const countOf = (xs: string[]) => xs.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map<string, number>());
+  const dCount = countOf(numberTokenList(draft));
+  for (const [t, n] of countOf(numberTokenList(rewrite))) {
+    if (n > 1 && n > (dCount.get(t) ?? 0)) { codes.add("repeat"); notes.push(`"${t}" is written ${n} times. Say it once and refer back with it, this or them.`); }
+  }
+  const sentences = r.split(/(?<=[.!?])\s+/).map(contentWords).filter((w) => w.size >= 3);
+  for (let i = 0; i < sentences.length; i++) {
+    for (let j = i + 1; j < sentences.length; j++) {
+      const shared = [...sentences[i]].filter((w) => sentences[j].has(w)).length;
+      if (shared / Math.min(sentences[i].size, sentences[j].size) >= 0.66) {
+        codes.add("repeat");
+        notes.push("Two sentences say the same thing. State the fact once and make the ask short, referring back with it, this or them.");
+      }
     }
   }
 
