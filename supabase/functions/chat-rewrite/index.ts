@@ -517,6 +517,11 @@ const fxPhraseKept = (phrase: string, rStems: Set<string>) => {
   return ws.every((w) => /^\d/.test(w) || fxHasStem(rStems, w));
 };
 
+const fxAnchored = (sent: string) => {
+  const ts = fxToks(sent);
+  return /\d/.test(sent) || FX_TIMES.test(normText(sent)) || draftNames(sent).size > 0 ||
+    ts.some((t) => FX_KEY.some(([, re]) => re.test(t))) || ts.filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t)).length >= 4;
+};
 const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   const codes = new Set<string>();
   const notes: string[] = [];
@@ -553,6 +558,8 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   for (const sent of fxSentences(factDraft)) {
     if (FX_REPROACH.test(normText(sent))) continue;
     const ts = fxToks(sent);
+    // Only factual sentences (a name, number, time, key deed, or 4+ content words); a bare jibe such as "Seguro que ni apareces" may go.
+    if (!fxAnchored(sent)) continue;
     ts.forEach((w, i) => {
       if (!FX_NEG.has(w) || w === "never" || w === "nunca") return;
       const nxt = ts.slice(i + 1).find((x) => !FX_STOP.has(x) && !FX_NEG.has(x));
@@ -561,6 +568,17 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
       const ok = rt.some((x, k) => fxStem(x) === fxStem(nxt) && rt.slice(Math.max(0, k - 4), k).some((y) => FX_NEG.has(y)));
       if (!ok) need("negation_dropped", `${w} ${nxt}`);
     });
+  }
+  // A rewrite sentence made only from a bare jibe in the draft (no fact, no ask) keeps reproach: "Ni apareces".
+  const dSents = fxSentences(factDraft).map((x) => ({ x, st: new Set(fxToks(x).filter((t) => !FX_STOP.has(t)).map(fxStem)) }));
+  for (const rs of fxSentences(rewrite)) {
+    const rt = fxToks(rs).filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t) && !FX_ALLOWED_NEW.has(t)).map(fxStem);
+    if (!rt.length) continue;
+    let best: { x: string; st: Set<string> } | null = null, bs = 0;
+    for (const ds of dSents) { const sc = rt.filter((t) => ds.st.has(t)).length; if (sc > bs) { bs = sc; best = ds; } }
+    if (best && bs === rt.length && !fxAnchored(best.x) && !textHasAsk(best.x)) {
+      codes.add("reproach_kept"); notes.push(`Leave out "${rs}": it only repeats a jibe from the draft.`);
+    }
   }
   // Medication and health names.
   for (const m of fxMedNames(factDraft)) if (!hasWord(r, m)) need("medication_dropped", m);
