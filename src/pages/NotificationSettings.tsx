@@ -53,7 +53,7 @@ const NotificationSettings = () => {
     await savePrefs(next);
   };
 
-  const allOn = NOTIFICATION_CATEGORIES.some((c) => prefs[c.key]?.push !== false || prefs[c.key]?.email !== false);
+  const allOn = NOTIFICATION_CATEGORIES.every((c) => prefs[c.key]?.push !== false && prefs[c.key]?.email !== false);
 
   const setAllAlerts = async (on: boolean) => {
     if (!user) return;
