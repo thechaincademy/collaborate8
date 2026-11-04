@@ -369,7 +369,12 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
   if (!r) return { codes: ["empty"], notes: ["The rewrite was empty."] };
   // An ask counts only when the code finds one in the draft and the model agrees.
   const draftAsk = textHasAsk(draft);
-  const asks = c.has_ask && draftAsk;
+  // A plain request (not a question) that the code finds in the draft is an ask even when the model says has_ask:false,
+  // so a rewrite can never drop it ("Make sure ... pack her EpiPen"). Questions still need the model to agree.
+  const plainDraftAsk = draftAsk && draft.split(/(?<=[.!?])\s+/).filter((x) => !x.trim().endsWith("?"))
+    .flatMap((x) => x.split(/\s(?:or|ou|o)\s/u)).filter((x) => !SELF_FUTURE.test(normText(x)))
+    .some((x) => clausesOf(expandContractions(x)).some(isAskClause));
+  const asks = (c.has_ask && draftAsk) || plainDraftAsk;
   if (/\b(police|victim)\b/.test(r)) { codes.add("banned_word"); notes.push('Do not use "police" or "victim".'); }
 
   const dn = numberTokens(draft), rn = numberTokens(rewrite);
@@ -535,9 +540,14 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     // (A threat, "or I'll take you to court and get the police involved", is not a request.)
     const plainAsks = draft.split(/(?<=[.!?])\s+/).filter((x) => !x.trim().endsWith("?"))
       .flatMap((x) => x.split(/\s(?:or|ou|o)\s/u)).filter((x) => !SELF_FUTURE.test(normText(x)))
-      .flatMap((x) => clausesOf(x).filter(isAskClause))
+      .flatMap((x) => clausesOf(expandContractions(x)).filter(isAskClause))
       .map((cl) => clauseWords(cl).map((w) => w.replace(/'s$/, "")).filter((w) => w.length > 2 && !ASK_GENERIC.has(w) && !KEEP_STOP_WORDS.has(w) && !names.has(w)))
       .filter((ws) => ws.length);
+    // The draft asked for something plainly, so the rewrite must still ask it; a bare statement drops the ask.
+    if (plainDraftAsk && !r.includes("?") && !clausesOf(expandContractions(rewrite)).some(isAskClause)) {
+      codes.add("ask_dropped");
+      notes.push("The draft asks for something. Keep it as a calm request in the draft's own words; do not turn it into a statement or leave it out.");
+    }
     const lost = plainAsks.filter((ws) => !ws.some(kept));
     if (lost.length) {
       codes.add("ask_dropped");
