@@ -35,6 +35,7 @@ Strike only:
 - threats and ultimatums (solicitor, court, lawyer, "or else", "you'll regret it", "I'll stop the visits")
 - absolutes and generalisations about the other parent ("as always", "como sempre", "como siempre", "it's always the same with you")
 - rhetorical or sarcastic questions and tags ("is that too much to ask?", "o es mucho pedir", "não é difícil, pois não?", "did you even look?")
+- jabs that imply they always fail: "this time", "for once", "actually", "even", "esta vez", "desta vez", "por una vez", "sequer", "siquiera" (strike the jab words; a real request around them stays)
 - a defensive "it wasn't me, it was you" / "não fui eu" / "no fui yo"
 - around a fact that something was not told, only the blame wrapper ("Típico que", "de nada", "claro que", "of course", "as usual"); the not-told fact itself stays.
 
@@ -51,6 +52,10 @@ Draft: "Como já te disse, a reunião da escola é quinta às 18h. Mas claro, tu
 {"strikes":["Como já te disse,","Mas claro, tu nunca te lembras de nada."]}
 Draft: "Lola volvió con tos y no me dijiste nada, como siempre. Si vuelve a pasar, hablaré con mi abogado."
 {"strikes":[", como siempre","Si vuelve a pasar, hablaré con mi abogado."]}
+Draft: "Stop letting Jake play 18-rated games. If you carry on, I'll take this to court."
+{"strikes":["If you carry on, I'll take this to court."]}
+Draft: "¿Puedes traer a Nico a las 19h esta vez, o es mucho pedir?"
+{"strikes":[" esta vez, o es mucho pedir"]}
 Draft: "Can you pick Mia up at 4pm on Thursday? Her dentist is at 4:30."
 {"strikes":[]}`;
 
@@ -75,7 +80,6 @@ const SEND_MODEL = "openai/gpt-5.6-luna";
 // OpenAI models take max_completion_tokens; reasoning off keeps the call fast.
 const sendModel = (maxTokens: number) => ({ model: SEND_MODEL, max_completion_tokens: maxTokens, reasoning_effort: "none" });
 const SEND_FIRST_CALLS = 2; // parallel first calls; the first whose strikes pass every check wins, the rest are aborted.
-
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
 
@@ -1004,8 +1008,15 @@ const strikeSpans = (draft: string, spans: string[]): Strike => {
       if (at >= 0) break;
     }
     if (at < 0) return { ok: false, reason: "span_not_found" };
-    ranges.push([at, at + sp.length]);
-    struck.push(draft.slice(at, at + sp.length));
+    let end = at + sp.length;
+    // A question stays a question: when the strike takes the tail of a question but its start stays, keep the "?".
+    if (sp.endsWith("?")) {
+      const head = draft.slice(0, at);
+      const sentStart = Math.max(head.lastIndexOf(". "), head.lastIndexOf("! "), head.lastIndexOf("? "), head.lastIndexOf("\n")) + 1;
+      if (/[\p{L}\p{N}]/u.test(head.slice(sentStart).replace(/[¿¡]/g, ""))) end -= 1;
+    }
+    ranges.push([at, end]);
+    struck.push(draft.slice(at, end));
   }
   if (!ranges.length) return { ok: true, text: draft, struck };
   ranges.sort((a, b) => a[0] - b[0]);
@@ -1056,6 +1067,7 @@ const STRIKE_FILL = /^(?:again|once|more|otra|outra|vez|novo|nuevo|mismo|mesmo|s
 // "sick of" / "sick and tired" is a jibe, not health; "your weekends" in general is not a date.
 const STRIKE_FED_UP = /\bsick (?:of|and tired)\b/gu;
 const STRIKE_GENERIC_TIME = /\b(?:weekends|fins de semana|fines de semana)\b/gu;
+const STRIKE_JAB = /(?<![\p{L}])(?:this time|for once|esta vez|desta vez|dessa vez|por una vez|por uma vez|actually|sequer|siquiera)(?![\p{L}])/u;
 // A defensive "not me" may go whole (Jared's ruling); its negation is not a fact the reply must keep.
 const STRIKE_NOT_ME = /\b(?:(?:wasn't|was not|isn't|it's not|not) me|não fui eu|nao fui eu|no fui yo|no he sido yo)\b/iu;
 const strikeSpanProblem = (draft: string, span: string, sentence: string): string | null => {
@@ -1104,7 +1116,12 @@ const strikeCheck = (draft: string, text: string, spans: string[] = []) => {
   let base = draft;
   for (const sp of spans) if (STRIKE_NOT_ME.test(sp)) base = base.replace(sp, " ");
   const res = checkRewrite(base, text, { facts: [], has_ask: false, states_decision: false, languages: [] }, true);
-  return { codes: res.codes.filter((c) => !STRIKE_IGNORE.has(c)), notes: res.notes };
+  const codes = res.codes.filter((c) => !STRIKE_IGNORE.has(c));
+  const notes = [...res.notes];
+  // A jab such as "this time" / "for once" / "esta vez" left in a struck draft is reproach left in.
+  const jab = normText(text).match(STRIKE_JAB);
+  if (jab) { codes.push("reproach_kept"); notes.push(`"${jab[0]}" is still a jab; strike it with the blame.`); }
+  return { codes, notes };
 };
 
 const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) =>
