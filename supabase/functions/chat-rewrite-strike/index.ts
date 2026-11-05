@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v5.1; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v6; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -38,6 +38,8 @@ Strike only:
 - jabs that imply they always fail: "this time", "for once", "actually", "esta vez", "desta vez", "por una vez" (strike the jab words; a real request around them stays)
 - a defensive "it wasn't me" / "não fui eu" / "no fui yo" (only those words: who did it, such as "it was you who forgot it", stays)
 - brush-offs and martyr lines ("Don't bother.", "Não te incomodes.", "No te molestes.", "Fine, I'll just do it myself"): strike the brush-off; "I'll do it" / "ya lo hago yo" stays.
+- mild blame counts too: a sigh or dig ("No worries, I'll sort it like always", "Não faz mal, eu trato disso", "No pasa nada, ya me encargo yo"), "just a gentle reminder", "per my last message", a sarcastic thanks or opener ("Oh great,", "Wow,", "Well done.", "Parabéns,", "Qué sorpresa,"), "even" / "sequer" / "siquiera" used as a jab.
+- sarcasm: strike the sarcastic words; if what is left of that sentence would have no subject ("Great job forgetting her bag."), strike the whole sentence.
 - around a fact that something was not told, only the blame wrapper ("Típico que", "de nada", "claro que", "of course", "as usual"); the not-told fact itself stays.
 
 Never strike: names, dates, days, times, numbers, amounts of money, counts and repetition words (again, second time, outra vez, de novo, otra vez, de nuevo, still, ainda, todavía), places, what happened and who did it (forgot, missed, was late, didn't pay, left), medicine, doses, health and symptoms, rules ("no screens after 8pm", "bedtime is 7:30"), agreements ("we agreed"), what someone said, a fact that something was not told, and real requests or questions ("please bring", "can you", "let me know", "tens de", "tienes que").
@@ -57,6 +59,8 @@ Draft: "Stop letting Jake play 18-rated games. If you carry on, I'll take this t
 {"strikes":["If you carry on, I'll take this to court."]}
 Draft: "¿Puedes traer a Nico a las 19h esta vez, o es mucho pedir?"
 {"strikes":[" esta vez, o es mucho pedir"]}
+Draft: "Oh brilliant, you forgot the swimming bag again. Well done. The lesson is at 9 on Saturday."
+{"strikes":["Oh brilliant, ","Well done. "]}
 Draft: "Can you pick Mia up at 4pm on Thursday? Her dentist is at 4:30."
 {"strikes":[]}`;
 
@@ -1030,7 +1034,14 @@ const strikeSpans = (draft: string, spans: string[], codeRanges: [number, number
   }
   let out = "", last = 0;
   for (const [a, b] of merged) {
-    out += draft.slice(last, a) + "\u0000";
+    // v6: a cut that takes the end of a sentence ("..., it's not hard.") but not its start keeps that sentence's full stop.
+    let keptHead = draft.slice(last, a);
+    // v6b: a parenthetical cut with its closing comma ("The £60[, which you forgot,] is due") takes the opening comma too.
+    if (/,\s*$/.test(draft.slice(a, b)) && /^\s*(?:which|who|whom|que|quien|quem|o qual|a qual|el cual|la cual)(?![\p{L}])/iu.test(draft.slice(a, b)) && /,\s*$/.test(keptHead) && /^\s*\p{Ll}/u.test(draft.slice(b))) keptHead = keptHead.replace(/,(\s*)$/, "$1");
+    const cutEnd = draft.slice(a, b).trimEnd();
+    const headSent = (out.replace(/\u0000/g, "") + keptHead).split(/[.!?…]\s+/).pop() ?? "";
+    const needStop = /[.!?…]["')\]]*$/u.test(cutEnd) && b < draft.length && /\p{L}/u.test(headSent) && !/[.!?…]["')\]]*\s*$/u.test(keptHead);
+    out += keptHead + "\u0000" + (needStop ? (/^\s*¿/.test(headSent) ? "?" : ".") : "");
     last = b;
   }
   out += draft.slice(last);
@@ -1160,6 +1171,29 @@ const STRIKE_FIXED_PHRASES = [
   // mixed
   "it's always the same contigo", "it's so typical contigo", "sempre a mesma coisa with you", "siempre lo mismo with you",
 ];
+// v6: a sigh ("No worries", "Não faz mal", "No pasa nada", "It's fine") is struck only when the same or the next sentence is a
+// martyr line or a "don't reply" dig (see STRIKE_SIGH_RE); a plain "No worries, see you at 5" stays.
+const SIGH_WORDS = "no worries|no problem|it['’]s fine|that['’]s fine|fine|whatever|não faz mal|tudo bem|está bem|deixa|no pasa nada|vale|tranquilo|tranquila|está bien|da igual";
+const SIGH_MARTYR = "(?:I['’]ll|I will|I['’]m the one|I always|I guess I['’]ll|myself|eu trato|eu faço|eu é que|eu resolvo|eu levo|trato eu|faço eu|trato disso|ya me encargo|me encargo yo|ya lo hago|lo hago yo|ya lo pago|lo pago yo|ya voy yo|like I always|like always|as usual|as always|como sempre|como siempre|don['’]t (?:reply|answer)|não respondas|no contestes|no respondas)";
+const STRIKE_SIGH_RE = new RegExp(
+  `(?<=^|[.!?]\\s+)((?:(?:oh|ok|okay|ah|pronto|bueno|vale),?\\s+)?(?:${SIGH_WORDS})(?:,?\\s+(?:honestly|really|a sério|de verdad|en serio))?(?:,?\\s+(?:${SIGH_WORDS}))?\\s*[,.!]\\s*(?:honestly,?\\s+(?:it['’]s fine|fine)[.!]\\s*)?)(?=[^.!?]{0,80}?${SIGH_MARTYR})`,
+  "giu",
+);
+// v6b: a sigh said twice ("It's fine. Honestly, it's fine." / "Tudo bem. Tudo bem.") is a sigh whatever follows.
+const STRIKE_SIGH_REPEAT_RE = new RegExp(
+  `(?<=^|[.!?]\\s+)((?:${SIGH_WORDS})\\s*[.!…]+\\s+(?:(?:honestly|really|a sério|de verdad|en serio),?\\s+)?(?:${SIGH_WORDS})\\s*[.!…]+\\s*)`,
+  "giu",
+);
+// v6: "don't reply" digs as a whole clause, with an optional sigh in front ("Tudo bem, não respondas." / "Vale, tranquilo, no contestes.").
+const STRIKE_NOREPLY_RE = new RegExp(
+  `(?<=^|[.!?]\\s+)(?:(?:${SIGH_WORDS}|ok|okay|sure),\\s+)*(?:don['’]t (?:reply|answer)(?: then)?|don['’]t bother replying|não respondas|não precisas de responder|no contestes|no respondas)\\s*[.!]\\s*`,
+  "giu",
+);
+// v6: reproach "even" (only as "didn't even / did you even ..." before a verb, never before a number) and its PT/ES
+// "sequer" / "siquiera" (the "nem" / "ni" stays: it is the negation).
+const STRIKE_EVEN_RE = /(?<=(?<![\p{L}])(?:didn['’]?t|did not|don['’]?t|do not|doesn['’]?t|does not|can['’]?t|cannot|couldn['’]?t|wouldn['’]?t|won['’]?t|haven['’]?t|hasn['’]?t|did you|do you|have you|nem|ni|não))(\s+(?:even|sequer|siquiera))(?=\s+(?![\d£€$]|one|two|three|four|five|six|seven|eight|nine|ten|um|uma|dois|duas|uno|una|dos)[\p{L}])/giu;
+// v6: a sentence that is only "Again?!" / "Otra vez." / "¿Otra vez?" / "De novo?" / "Yet again." (pure reproach, no count).
+const STRIKE_AGAIN_ALONE_RE = /(?<=^|[.!?]\s+)(?:¡|¿)?(?:again|yet again|once again|otra vez|outra vez|de novo|de nuevo|mais uma vez|una vez más|otra vez más)(?:[.!?…]+)\s*/giu;
 const STRIKE_BRUSH_RE = /^(?:don['’]t (?:even )?bother|do not bother|never mind|forget it|não te (?:incomodes|dês)|não precisas de te incomodar|deixa estar|esquece|(?:no|ni) te molestes|no hace falta que te molestes|déjalo|olvídalo|da igual)/iu;
 const STRIKE_FIXED_RE = new RegExp(
   `(?<=^|[.!?,;:]\\s*)(?:${[...STRIKE_FIXED_PHRASES].sort((a, b) => b.length - a.length).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "['’]").replace(/ /g, "\\s+")).join("|")})(?=\\s*(?:[.!?,;:]|$))`,
@@ -1190,6 +1224,21 @@ const strikeFixed = (draft: string) => {
     if (STRIKE_BRUSH_RE.test(m[0])) jab.push([a, (m.index ?? 0) + m[0].length]);
   }
   for (const m of draft.matchAll(STRIKE_FIXED_LEAD_RE)) ranges.push([m.index ?? 0, (m.index ?? 0) + m[0].length]);
+  // v6: sighs before a martyr line, "don't reply" digs, standalone "Again?!", reproach "even" / "sequer" / "siquiera".
+  for (const re of [STRIKE_SIGH_RE, STRIKE_SIGH_REPEAT_RE, STRIKE_NOREPLY_RE, STRIKE_AGAIN_ALONE_RE]) {
+    for (const m of draft.matchAll(re)) {
+      const g = m[1] ?? m[0];
+      const at = (m.index ?? 0) + m[0].indexOf(g);
+      const r: [number, number] = [at, at + g.length];
+      ranges.push(r);
+      jab.push(r);
+    }
+  }
+  for (const m of draft.matchAll(STRIKE_EVEN_RE)) {
+    const at = (m.index ?? 0) + m[0].lastIndexOf(m[1]);
+    ranges.push([at, at + m[1].length]);
+    jab.push([at, at + m[1].length]);
+  }
   for (const m of draft.matchAll(STRIKE_JAB_AGAIN_RE)) {
     const end = (m.index ?? 0) + m[0].length;
     const r: [number, number] = [end - m[1].length, end];
@@ -1201,6 +1250,22 @@ const strikeFixed = (draft: string) => {
   return { ranges, jab };
 };
 
+// ---- v6: log reasons are codes from this fixed set only; never draft text, spans or snippets ----
+const REASON_CODES = new Set([
+  "pass", "rewrite", "please_added", "timeout", "parse", "error", "no_time_for_retry", "retry_timeout", "retry_parse", "retry_error",
+  "retry_none", "retry_cand", "span_not_found", "too_small", "no_subject", "hanging_conditional", "dangling", "no_verb", "actor_dropped",
+  "blame_left", "sarcasm_left", "shout_left", "name", "number", "time", "place", "medicine", "health", "rule", "not_told", "agreement",
+  "report", "count", "deed", "ask", "negation", "reproach_kept", "threat_kept", "added_content", "dropped_number", "new_time_word",
+  "tense_changed", "actor_changed", "action_dropped", "stance_changed", "rule_changed", "missing_fact", "new_number", "banned_word",
+  "health_word_missing", "not_told_dropped", "partial_translation", "language_changed", "negation_dropped", "ask_added", "ask_changed",
+  "ask_dropped", "question_added", "decision_as_question", "repeat", "count_dropped", "deed_dropped", "medication_dropped",
+  "money_dropped", "name_dropped", "number_dropped", "place_dropped", "time_dropped", "empty", "other",
+]);
+const reasonCode = (p: string) => {
+  const c = (p.match(/^[a-z_]+/)?.[0] ?? "other");
+  return REASON_CODES.has(c) ? c : "other";
+};
+const reasonCodes = (ps: string[]) => [...new Set(ps.map(reasonCode))];
 // ---- v3: the one word code may add: "Please" / "Por favor" in front of an ask the parent already wrote ----
 const PLEASE_EN_VERBS = new Set([
   "bring", "take", "pack", "give", "send", "pick", "drop", "stop", "keep", "call", "text", "tell", "remember", "pay", "put", "check",
@@ -1219,10 +1284,17 @@ const PLEASE_PTES_REQ = /^(?:podes|pode|podias|consegues|puedes|podrías|podrias
 const HAS_PLEASE = /(?<![\p{L}])(?:please|pls|por favor|porfa|se faz favor|por favorzinho)(?![\p{L}])/iu;
 // Brush-offs are not asks: "Don't bother." / "Forget it." / "Deixa estar." / "Da igual." never get a "Please".
 const PLEASE_SKIP = /^(?:don['’]t bother|don['’]t worry|forget it|never mind|deixa estar|esquece|deja estar|déjalo|olvídalo|da igual|não te preocupes|no te preocupes)\b/iu;
-const addPlease = (text: string): string => {
+// v6: only an ask in or after the first struck span gets a "Please" (fromSent = that sentence's index); a curt draft with
+// nothing struck ("Pay it.") is left as written.
+const pleaseFrom = (draft: string, ranges: [number, number][]): number => {
+  if (!ranges.length) return Infinity;
+  const head = draft.slice(0, Math.min(...ranges.map(([a]) => a)));
+  return head.trim() ? head.split(/(?<=[.!?])\s+/).length - 1 : 0;
+};
+const addPlease = (text: string, fromSent = 0): string => {
   if (HAS_PLEASE.test(text)) return text;
   const parts = text.split(/(?<=[.!?])(\s+)/);
-  for (let i = 0; i < parts.length; i += 2) {
+  for (let i = 2 * Math.max(0, fromSent); i < parts.length; i += 2) {
     const sent = parts[i];
     const q = sent.startsWith("¿") ? "¿" : "";
     const body = sent.slice(q.length);
@@ -1416,6 +1488,57 @@ const STRIKE_BLAME_LEFT = wordRe(
   "don't bother|do not bother|deu ao trabalho|deste ao trabalho|dês ao trabalho|dignou|dignaste|não te incomodes|" +
   "se molestó|te molestaste|te molestes|se dignó|te dignaste|tomó la molestia|tomaste la molestia",
 );
+// v6: sarcasm left in a struck result (anywhere) or a sarcastic opener left at a sentence start.
+const SARC_LEFT = wordRe(
+  "love that for|gold star|well done|nice one|great job|good job|brilliant parenting|great parenting|parent of the year|father of the year|" +
+  "dad of the year|mother of the year|mum of the year|thanks a lot|thanks for nothing|what a surprise|who knew|shocking|lol|lmao|🙄|" +
+  "parabéns|grande ajuda|que surpresa|pai do ano|mãe do ano|obrigado por nada|obrigada por nada|muito obrigado mesmo|" +
+  "qué sorpresa|que sorpresa|enhorabuena|campeón|campeona|padre del año|madre del año|gracias por nada|menuda ayuda|" +
+  "work out great|that'll work|vai correr lindamente|saldrá genial|just a gentle reminder|gentle reminder|per my last message|como já disse|" +
+  "como ya te dije|tão ocupado|tão ocupada|tan ocupado|tan ocupada|so busy|o pai do ano|el padre del año",
+);
+const SARC_OPENER = /^(?:¡|¿)?(?:oh\s+)?(?:great|wow|brilliant|fantastic|amazing|lovely|perfect|nice|cool|sure|bravo|genial|perfecto|perfeito|fantástico|fantástica|estupendo|ótimo|boa|claro|ah\s+claro|ah,\s+claro|muy bien|muito bem|vaya|olha)(?=[\s,.!?]|$)/iu;
+// A fragment left after a cut: an EN sentence that now opens on a gerund, a past-tense verb, or a joiner/preposition with
+// no subject ("[Great job] forgetting her bag." / "[Gold star] for remembering."); PT/ES: a gerund or a joiner.
+const FRAG_EN_PAST = new Set(["forgot", "forgetting", "missed", "left", "sent", "lost", "broke", "ignored", "remembered", "turned", "came", "went", "showed", "managed", "decided", "let", "made", "gave", "took", "brought"]);
+const FRAG_JOIN = new Set(["for", "to", "with", "because", "which", "who", "that", "and", "but", "so", "of", "by", "como", "para", "por", "com", "con", "que", "porque", "y", "e", "pero", "mas", "de"]);
+const fragStart = (s: string) => {
+  const w = (s.replace(/^[¿¡"'(\s]+/, "").match(/^[\p{L}'’-]+/u)?.[0] ?? "").toLowerCase().replace(/’/g, "'");
+  if (!w) return "";
+  if (FRAG_JOIN.has(w)) return w;
+  if (/^[a-z]+ing$/.test(w) && w.length > 5 && !/^\S+\s+(?:is|was|are|were|has|isn't|wasn't|will|won't|can|can't|should|must|needs|takes|counts|helps|matters|starts|finishes|ends)\b/i.test(s.replace(/^[¿¡"'(\s]+/, "")) && !/^(?:morning|evening|thing|nothing|something|anything|everything|swimming|spring|king|ring|wedding|building|during|training|bring|sing)$/.test(w)) return w;
+  if (FRAG_EN_PAST.has(w) || (/^[a-z]{4,}ed$/.test(w) && !/^(?:need|speed|bed|seed|feed|shed|red|wed)$/.test(w))) return w;
+  // PT/ES gerunds; first-person verbs and names that end the same way are not fragments.
+  if (/^\p{L}{4,}(?:ando|endo|indo)$/u.test(w) && !/^(?:fernando|orlando|armando|rolando|rosendo|entiendo|comprendo|pretendo|recomiendo|defiendo|aprendo|sorprendo|enciendo|desciendo|atiendo|extiendo|ofendo|dependo|recomendo|compreendo|surpreendo|estendo|acendo)$/.test(w)) return w;
+  return "";
+};
+// v6b: only right after a cut that opens a sentence: a PT/ES infinitive ("[Achas normal] ela voltar ...", "[Gracias a tu
+// idea de] dejarle el móvil ..."), a verbless "Another Monday where ..." / "Otra vez sin la mochila.".
+const INF_NOT = /^(?:lugar|mar|par|bar|por|ser|ver|mujer|taller|alquiler|azúcar|hogar|mayor|menor|mejor|peor|amor|dolor|calor|color|favor|señor|senhor|doctor|doutor|motor|tutor|interior|exterior|anterior|posterior|superior|inferior|flor|mar|oscar|óscar|amir|ester|esther|pilar|edgar|baltasar|gaspar|cesar|césar|víctor|vitor|héctor|nestor|néstor|aitor|igor|leonor|lior|tamar|omar|samir|yasir|naomir)$/u;
+const EN_ER = /^(?:never|remember|after|other|either|neither|whether|under|dinner|water|rather|later|sooner|together|their|clear|number|whatever|however|wherever|whenever|consider|deliver|register|order|enter|offer|answer|cover|gather|matter|wonder|summer|winter|similar|regular|particular|popular|dollar|sugar|calendar|grammar|seminar|chair|stair|repair|affair|unfair|teacher|mother|father|brother|sister|daughter|another|letter|better|monster|poster|charger|player|trainer|sweater|jumper|counter|corner|paper|super|member|partner|lawyer|doctor|mujer|jantar|almoçar|lanchar|colher|mulher|prazer|poder|haber|placer|deber)$/;
+const fragAfterCut = (s: string) => {
+  const t = s.replace(/^[¿¡"'(\s]+/, "");
+  if (/^(?:another|yet another|otra vez sin|otro día (?:sin|más)|de novo sem|outra vez sem|mais um dia (?:sem|em que)|again without)(?![\p{L}])/iu.test(t)) return "another";
+  const w = (t.match(/^[\p{L}]+/u)?.[0] ?? "").toLowerCase();
+  if (w.length >= 5 && /^\p{Ll}/u.test(t) && /(?:ar|er|ir|ír)(?:le|la|lo|les|las|los|me|te|se|nos)?$/u.test(w) && !INF_NOT.test(w) && !EN_ER.test(w)) return w;
+  if (w.length >= 5 && /(?:ar|er|ir)(?:-(?:lhe|lo|la|me|te|se|nos))$/u.test(t.match(/^[\p{L}-]+/u)?.[0]?.toLowerCase() ?? "")) return w;
+  return "";
+};
+const CUT_COMPLEMENT = new Set(["que", "that", "whether", "if", "si", "se", "de", "normal"]);
+// What follows a cut "que / that / normal" is only a tail when it opens on a bare verb ("vuelva con fiebre") or a pronoun
+// plus an infinitive ("ela voltar com piolhos"); "A Matilde voltou ..." / "the bag is ..." is a whole clause and stays.
+const DET_PRON = new Set(["a", "o", "as", "os", "el", "la", "los", "las", "the", "his", "her", "my", "your", "their", "our", "this", "that", "um", "uma", "un", "una", "meu", "minha", "mi", "tu", "tú", "you", "i", "he", "she", "they", "we", "it", "eu", "yo", "ele", "ela", "él", "ella", "eles", "elas", "ellos", "ellas", "ninguém", "nadie", "nobody", "no", "não", "isto", "esto", "eso", "isso"]);
+const complementTail = (s: string) => {
+  const ws = s.replace(/^[¿¡"'(\s]+/, "").split(/\s+/);
+  const w0 = (ws[0] ?? "").replace(/[^\p{L}'’-]/gu, "");
+  if (!w0 || /^\p{Lu}/u.test(w0) && !/^(?:Ela|Ele|Él|Ella|He|She|They|You)$/.test(w0)) return false;
+  const l0 = w0.toLowerCase();
+  if (SUBJ_PRON.has(l0)) return !!fragAfterCut(ws.slice(1).join(" "));
+  return !DET_PRON.has(l0);
+};
+const REL_START = /^(?:which|who|that|que|quien|quem|o qual|a qual|el cual|la cual|lo cual)(?![\p{L}])/iu;
+const CONNECTOR_ONLY = /^(?:so|and|then|and then|but|así que|asi que|entonces|por eso|y|e|pero|mas|então|por isso|portanto)$/iu;
+const SUBJ_PRON = new Set(["you", "he", "she", "they", "we", "i", "tu", "tú", "ele", "ela", "él", "ella", "eles", "ellos", "nós", "nosotros"]);
 // Who did what, for guard 2: each deed verb (FX_KEY) with its doer, found before it (skipping auxiliaries, "who/que/quien"
 // pointing back to the doer), from a PT/ES person ending, or from "it was you / foste tu / fuiste tú" in the same sentence.
 // Deeds inside an "If/Se/Si" clause or a threat are hypothetical and skipped.
@@ -1476,7 +1599,8 @@ const actorDeeds = (text: string, names: Set<string>) => {
 const strikeShape = (draft: string, ranges: [number, number][], text: string): string[] => {
   const out: string[] = [];
   const names = draftNames(draft);
-  const lastTok = (s: string) => (s.toLowerCase().replace(/[’]/g, "'").match(/[\p{L}'-]+(?=[^\p{L}]*$)/u)?.[0] ?? "");
+  // v6: a clause ending on a number ("a las 9") ends on the number, not on the word before it.
+  const lastTok = (s: string) => (s.toLowerCase().replace(/[’]/g, "'").match(/[\p{L}\p{N}'-]+(?=[^\p{L}\p{N}]*$)/u)?.[0] ?? "");
   // (1d) A subject struck right before its verb: "[You] forgot her bag" -> "Forgot her bag".
   for (const [a, b] of ranges) {
     const struckLast = lastTok(draft.slice(a, b));
@@ -1523,17 +1647,70 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
   // (2) A struck "not me / it was you" must not take the only mention of who did a deed the draft reports.
   if (notMeStruck && !dText.some((x) => x.role === "other"))
     out.push(`actor_dropped: the struck "not me / it was you" was the only mention of who did it`);
+  // (1e) v6: a cut that leaves a kept sentence opening on a fragment (no subject): "[Great job] forgetting her bag."
+  for (const [a, b] of ranges) {
+    const before = draft.slice(0, a).replace(/[\s"'(]+$/u, "");
+    const after = draft.slice(b);
+    const cut = draft.slice(a, b).trim();
+    // Only a cut that opens a sentence (or is a sarcastic opener) and stops mid-sentence.
+    if (!(before === "" || /[.!?…]$/.test(before) || SARC_OPENER.test(cut))) continue;
+    if (/[.!?…]["')\]]*$/u.test(cut)) continue;
+    const nextSent = after.replace(/^[\s,;:–-]+/u, "");
+    if (!nextSent || /^[.!?]/.test(nextSent)) continue;
+    const f = fragStart(nextSent) || fragAfterCut(nextSent);
+    if (f) out.push(`no_subject: the cut leaves a sentence opening on "${f}" with no subject`);
+    // v6b: an opening cut that ends on "que / that / de": what is left is the tail of its sentence.
+    else if (CUT_COMPLEMENT.has(lastTok(cut)) && complementTail(nextSent)) out.push(`no_subject: the cut ends on "${lastTok(cut)}" and leaves its clause`);
+  }
+  // v6b: mid-sentence cuts that break the clause around them.
+  for (const [a, b] of ranges) {
+    const cut = draft.slice(a, b).trim();
+    const before = draft.slice(0, a), after = draft.slice(b);
+    const midBefore = /[\p{L}\p{N}€£%)]["'’]?[,]?\s*$/u.test(before) && !/[.!?…]\s*$/.test(before);
+    const midAfter = /^\s*[\p{L}\p{N}]/u.test(after);
+    if (!midBefore || !midAfter) continue;
+    // "..., which by the way still smells" -> "..., still smells": the relative pronoun was the subject.
+    if (REL_START.test(cut) && !/[,.;:!?…]$/.test(cut)) out.push(`no_subject: the cut "${cut.split(/\s+/)[0]}" takes the subject of what follows`);
+    // "... lo ignoraste [así que] necesito ...": only the joiner was cut, so two clauses run together.
+    if (CONNECTOR_ONLY.test(cut.replace(/[,]+$/, ""))) out.push(`dangling: only the joiner "${cut}" was cut`);
+    // "the ones you [somehow managed] not to give her": a subject pronoun now runs into "not / to / the".
+    const prev = lastTok(before.replace(/[\s,]+$/u, ""));
+    const next = (after.trim().match(/^[\p{L}'’]+/u)?.[0] ?? "").toLowerCase();
+    if (SUBJ_PRON.has(prev) && /^(?:not|to|the|a|an|não|no|a|o|el|la)$/.test(next) && !/^(?:not|to)$/.test(lastTok(cut)))
+      out.push(`no_verb: the cut leaves "${prev} ${next}" with no verb`);
+  }
+  // (1f) v6: any sentence of a struck result that opens on a subject-less verb ("Forgot the bag again.", "Leaving her
+  // coat at yours, again.") is a fragment; the sarcasm it hung from is gone, so the result is refused.
+  for (const sent of fxSentences(text)) {
+    const f = fragStart(sent);
+    if (f && !FRAG_JOIN.has(f)) out.push(`no_subject: a sentence opens on "${f}" with no subject`);
+  }
   // (3) Blame words left in the result.
   for (const sent of fxSentences(text)) {
     const m = normText(sent).match(STRIKE_BLAME_LEFT);
+    const sarc = normText(sent).match(SARC_LEFT);
+    const sigh = new RegExp(`^(?:${SIGH_WORDS})\\b[^.!?]{0,80}?${SIGH_MARTYR}`, "iu").test(sent.trim());
     if (m) out.push(`blame_left: "${sent}" still has "${m[0].trim()}"`);
+    else if (sarc) out.push(`sarcasm_left: "${sent}" still has "${sarc[0].trim()}"`);
+    else if (SARC_OPENER.test(sent.trim()) && !/^(?:sure|claro|boa|ótimo|perfect|perfecto|perfeito|great|genial|lovely|cool|nice)[,.!]?\s+(?:thanks|thank you|obrigad[oa]|gracias|see you|até|hasta|that works|works for me|combinado|de acuerdo)/iu.test(sent.trim())) out.push(`sarcasm_left: "${sent}" opens on a sarcastic word`);
+    else if (sigh) out.push(`blame_left: "${sent}" is a sigh before a martyr line`);
     else if (fxIsThreat(sent)) out.push(`blame_left: "${sent}" is still a threat`);
   }
   return [...new Set(out)];
 };
 
-const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) =>
-  console.log(JSON.stringify({ fn: "chat-rewrite-strike", event: "calm_check", outcome, reasons, attempts, ms: Date.now() - started, ...timing }));
+// v6: "reason" / "reasons" carry only codes from REASON_CODES (never draft text, spans or snippets).
+const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) => {
+  const codes = reasonCodes(reasons);
+  console.log(JSON.stringify({ fn: "chat-rewrite-strike", event: "calm_check", outcome, reason: codes[0] ?? outcome, reasons: codes, attempts, ms: Date.now() - started, ...timing }));
+};
+// v6: every await before the model calls is capped too, so nothing can hold a send past SEND_HARD_STOP_MS.
+const capped = <T,>(p: Promise<T>, ms: number, onTimeout: T): Promise<T> => {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  return Promise.race([p.finally(() => clearTimeout(t)), new Promise<T>((r) => { t = setTimeout(() => r(onTimeout), Math.max(0, ms)); })]);
+};
+const TIMED_OUT = Symbol("timed_out");
+const NON_SEND_CAP_MS = 8000;
 
 const callGateway = (apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) =>
   fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -1554,12 +1731,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const started = Date.now();
   try {
-    const body = await req.json().catch(() => ({}));
+    // v6: the body read is capped; a body that does not arrive in time is treated as a send with nothing to check.
+    const body = await capped(req.json().catch(() => ({})), SEND_HARD_STOP_MS - 300, { mode: "send", draft: null, _timeout: true });
     const { draft, mode } = body ?? {};
+    const unavailable = () => json({ error: "entitlement_unavailable" }, 503);
 
     // Status mode: no draft, no AI call, no logging, no DB writes. Auth is always checked.
     if (mode === "status") {
-      const denied = await requirePremium(req, "rewrite");
+      const denied = await capped(requirePremium(req, "rewrite"), NON_SEND_CAP_MS, unavailable());
       if (denied && (denied.status === 401 || denied.status === 503)) return denied;
       return json({
         requires_premium: CALM_CHECK_REQUIRES_PREMIUM,
@@ -1573,27 +1752,35 @@ Deno.serve(async (req) => {
     const timing: Record<string, number> = {};
     let premiumCheck: Promise<Response | null> = Promise.resolve(null);
     if (mode === "send") {
-      const signedOut = await requireSignedIn(req);
+      if ((body as { _timeout?: boolean })._timeout) { logSend("fallback", ["timeout"], 0, started); return json({ needs_rewrite: false, rewrite: null }); }
+      // v6: sign-in is capped at the hard stop. A sign-in that does not answer in time gets the plain pass (no model call
+      // was made, so nothing is shown or logged from a draft).
+      const signedOut = await capped<Response | null | typeof TIMED_OUT>(requireSignedIn(req), started + SEND_HARD_STOP_MS - 150 - Date.now(), TIMED_OUT);
       timing.auth_ms = Date.now() - started;
+      if (signedOut === TIMED_OUT) { logSend("fallback", ["timeout"], 0, started, timing); return json({ needs_rewrite: false, rewrite: null }); }
       if (signedOut) return signedOut;
       if (CALM_CHECK_REQUIRES_PREMIUM) {
         const p0 = Date.now();
         premiumCheck = requirePremium(req, "rewrite").then((d) => { timing.premium_ms = Date.now() - p0; return d; });
       }
     } else {
-      const denied = await requirePremium(req, "rewrite");
+      const denied = await capped(requirePremium(req, "rewrite"), NON_SEND_CAP_MS, unavailable());
       if (denied) return denied;
       return json({ error: "Unsupported mode" }, 400);
     }
+    // v6: from here on every wait on the Premium check is capped at the hard stop (it was awaited uncapped before the race).
+    const premiumCapped = () => capped<Response | null | typeof TIMED_OUT>(premiumCheck, started + SEND_HARD_STOP_MS - Date.now(), TIMED_OUT);
 
     if (!draft || typeof draft !== "string" || draft.length > 4000) {
-      const denied = await premiumCheck;
+      const denied = await premiumCapped();
+      if (denied === TIMED_OUT) return json({ needs_rewrite: false, rewrite: null });
       if (denied) return denied;
       return json({ error: "Missing draft" }, 400);
     }
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
-      const denied = await premiumCheck;
+      const denied = await premiumCapped();
+      if (denied === TIMED_OUT) return json({ needs_rewrite: false, rewrite: null });
       if (denied) return denied;
       return json({ error: "AI not configured" }, 500);
     }
@@ -1620,7 +1807,7 @@ Deno.serve(async (req) => {
         | { kind: "timeout" | "parse" }
         | { kind: "error"; resp: Response }
         | { kind: "none" }
-        | { kind: "cand"; raw: string; text: string; problems: string[]; codeOnly?: boolean };
+        | { kind: "cand"; raw: string; text: string; problems: string[]; codeOnly?: boolean; pleaseFrom?: number };
       // Code strikes: fixed reproach phrases and the jab "again", whatever the model returns.
       const fixed = strikeFixed(draft);
       // v4: shouted words are lower-cased by code (acronyms, names and brands kept).
@@ -1645,7 +1832,8 @@ Deno.serve(async (req) => {
         if (shape.length) return { kind: "cand", raw, text, problems: shape };
         const c = strikeCheck(draft, text, spans, fixed.jab);
         // codeOnly: the model struck nothing and only the fixed phrases / capitals changed; such a result never wins at once.
-        return { kind: "cand", raw, text, problems: c.codes.length ? c.notes.length ? c.notes : c.codes : [], codeOnly: !spans.length };
+        // v6: the model gets the notes on a retry; the log gets only the codes (see logSend).
+        return { kind: "cand", raw, text, problems: c.codes.length ? c.notes.length ? [...c.codes, ...c.notes] : c.codes : [], codeOnly: !spans.length, pleaseFrom: pleaseFrom(draft, st.ranges) };
       };
       const ask = async (msgs: unknown[], maxTokens: number, signal: AbortSignal): Promise<Got> => {
         if (signal.aborted) return { kind: "timeout" };
@@ -1720,13 +1908,14 @@ Deno.serve(async (req) => {
           },
         ], 300, sendCtrl.signal);
         if (got.kind !== "cand" || got.problems.length) {
-          log("fallback", ["retry_" + got.kind], attempts);
+          log("fallback", ["retry_" + got.kind, ...first.problems, ...(got.kind === "cand" ? got.problems : [])], attempts);
           return json(pass);
         }
       }
       if (got.kind !== "cand") return json(pass);
       // The one word code may add: "Please" / "Por favor" before an ask the parent already wrote, if none is there.
-      const rewrite = addPlease(got.text);
+      // v6: "Please" only for an ask in or after the first struck span; nothing struck (capitals only) -> never.
+      const rewrite = addPlease(got.text, got.pleaseFrom ?? Infinity);
       log("rewrite", rewrite === got.text ? [] : ["please_added"], attempts);
       return json({ needs_rewrite: true, rewrite });
     };
@@ -1741,12 +1930,19 @@ Deno.serve(async (req) => {
       }, Math.max(0, started + SEND_HARD_STOP_MS - Date.now()));
     });
     const work = runSend().then((r) => { settled = true; return r; }, () => { settled = true; return json(pass); });
-    let denied: Response | null;
+    let denied: Response | null | typeof TIMED_OUT;
     try {
-      denied = await premiumCheck;
+      // v6: capped at the hard stop; before v6 this await sat outside the race, so a slow Premium lookup held the reply.
+      denied = await premiumCapped();
     } catch (e) {
       settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
       throw e;
+    }
+    if (denied === TIMED_OUT) {
+      // Premium not confirmed in time: the model reply is thrown away and the plain pass goes back.
+      settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
+      logSend("fallback", ["timeout"], 0, started, timing);
+      return json(pass);
     }
     if (denied) {
       // 401/402/503: stop the model calls, throw their reply away, log nothing from it.
