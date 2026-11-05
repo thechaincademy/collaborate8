@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.1; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1118,6 +1118,10 @@ const strikeSpanProblem = (draft: string, span: string, sentence: string): strin
   const whole = normText(sentence).replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   const part = n.replace(/[^\p{L}\p{N}]+/gu, " ").trim();
   if (ts.some((t) => FX_NEG.has(t)) && part !== whole && !sentence.split(/[,;:]\s*/).some((c) => normText(c).replace(/[^\p{L}\p{N}]+/gu, " ").trim() === part)) return "negation";
+  // v7.1: a negative pronoun ("nada", "nothing", "nadie") is the negation too: "no me dijeras nada" -> "no me dijeras" changes
+  // the sentence.
+  // Only a bare negative pronoun struck on its own; a whole clause ("because nobody washed it") is not this.
+  if (/^(?:nada|nothing|nadie|nobody|ninguém|ninguem|nenhum|nenhuma|ninguno|ninguna|none|anything)$/u.test(part) && part !== whole) return "negation";
   return null;
 };
 const strikeGuard = (draft: string, spans: string[]): string[] => {
@@ -1787,6 +1791,19 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
         out.push(`dangling: "${c.split(/\s+/).slice(0, 3).join(" ")}" is a comma clause left without its verb`);
     }
   }
+  // v7.1 (1c): a relative clause is struck whole or not at all; cutting only its opener (", which by the way") leaves
+  // its verb ("still smells") glued to the clause before it.
+  for (const [a, b] of ranges) {
+    const cut = draft.slice(a, b), before = draft.slice(0, a), after = draft.slice(b);
+    if (!/^\s*,?\s*(?:which|who|whom|whose|que|quien|quienes|cuyo|cuya|onde|donde)(?![\p{L}])/iu.test(cut)) continue;
+    if (!/,\s*$/.test(before) && !/^\s*,/.test(cut)) continue;
+    if (!/^\s*[\p{L}\p{N}£€$]/u.test(after) || /[,;:.!?…]["')\]]*\s*$/u.test(cut) || JOIN_NEXT.test(after.trim())) continue;
+    out.push(`dangling: the cut takes "${cut.trim().split(/\s+/).slice(0, 2).join(" ")}" but leaves the rest of its clause`);
+  }
+  // v7.1 (1d): a cut that leaves two joiners side by side that do not go together ("y así que", "and but", "e mas").
+  const BAD_JOIN = /(?<![\p{L}])(?:y|e|and|o|or|ou)\s+(?:así que|asi que|pero|but|mas|porém|sin embargo|aunque|although|however)(?![\p{L}])/giu;
+  const joinCount = (t: string) => (t.toLowerCase().match(BAD_JOIN) ?? []).length;
+  if (joinCount(text) > joinCount(draft)) out.push(`dangling: the cut leaves two joiners side by side`);
   // v7 (2): a subject pronoun ("e tu", "and you", "y tú") left with no verb before the next clause.
   const SUBJ_ANY = new Set([...SUBJ_PRON, "eu", "yo", "nós", "nosotros", "vocês", "ustedes", "você", "usted", "elas", "ellas", "they"]);
   for (const [a, b] of ranges) {
