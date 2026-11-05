@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.3; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.3.1; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1106,7 +1106,10 @@ const strikeSpanProblem = (draft: string, span: string, sentence: string): strin
   if (fxToks(n.replace(STRIKE_FED_UP, " ")).some((w) => HEALTH_WORDS.has(w))) return "health";
   if (fxRules(span.split(/[,;:]\s+/)).length) return "rule";
   if (fxNotTold(span).length) return "not_told";
-  const blame = FX_REPROACH.test(n) || fxIsThreat(sentence);
+  // v7.3: a jab ("actually", "this time", "desta vez") makes the span blame only when something else in it is blame too;
+  // "actually reply this time" is still the ask "reply".
+  const nNoJab = n.replace(new RegExp(STRIKE_JAB.source, "giu"), " ");
+  const blame = (FX_REPROACH.test(nNoJab) && nNoJab.trim() !== "") || fxIsThreat(sentence);
   if (ts.some((t) => FX_AGREE.test(t))) return "agreement";
   if (!blame && ts.some((t) => FX_SAID.test(t))) return "report";
   if (!blame) {
@@ -2048,6 +2051,9 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
     const f = fragStart(sent);
     if (f && !FRAG_JOIN.has(f)) out.push(`no_subject: a sentence opens on "${f}" with no subject`);
   }
+  // v7.3: a numbered or lettered list item left empty ("and (3). Deadline Friday.") lost its whole ask.
+  const EMPTY_ITEM = /(?:\(\s*(?:\d{1,2}|[a-z])\s*\)|(?<![\p{L}\p{N}])\d{1,2}\))\s*(?=[.,;:!?…]|$)/gu;
+  if ((text.match(EMPTY_ITEM) ?? []).length > (draft.match(EMPTY_ITEM) ?? []).length) out.push(`dangling: the cut leaves an empty list item`);
   // v7.3 (c): a rule sentence keeps who the rule is about. When every subject before the rule words ("The kids", "Isla",
   // "You", "A Isla", "Los niños") is struck and none is left before them, the rule has no subject -> null.
   for (const p of ruleSubjectLost(draft, ranges, names)) out.push(`no_subject: the strike takes who the rule "${p}" is about`);
