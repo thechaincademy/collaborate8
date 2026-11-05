@@ -2170,7 +2170,7 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
         // Narrow: wrappers / reproach / blame / sarcasm only — not FACT_YOU (every "you haven't paid" would look like a jab).
         const sent = (sentRanges(draft).map(([s, e]) => draft.slice(s, e)).find((s) => s.includes(f.raw)) ?? f.raw);
         return FX_REPROACH.test(sent) || STRIKE_BLAME_LEFT.test(sent) || SARC_LEFT.test(sent) ||
-          /as always|como siempre|como siempre|otra vez|outra vez|\bagain\b|de novo|de nuevo/iu.test(sent);
+          /as always|como sempre|como siempre|otra vez|outra vez|\bagain\b|de novo|de nuevo/iu.test(sent);
       };
       // A different surface form of non-payment that the draft never used → rephrase.
       for (const t of textFacts) {
