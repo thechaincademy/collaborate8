@@ -1,5 +1,5 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.4; the live chat-rewrite is untouched)
-// v7.4.4: calm lock + soft-code second-signal; finalBroken every path; budget 2000/1900/1000 (reverted from 2400 after >3.2s); span meta logging (no text).
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.6; the live chat-rewrite is untouched)
+// v7.4.6: budget back to Jared 2400/2300/1000 slack 800; Jian ping mode ({"mode":"ping"} → 200 {ok:true}, JWT only, no Premium/model, log event=ping+ms only); calm lock + soft-code second-signal + finalBroken kept.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -81,15 +81,15 @@ const STRIKE_SCHEMA = {
   },
 };
 
-// v7.4.4b: reverted hard stop to 2000 after live rerun (sar-en4#1 = 7.34s on 2400).
-// Deadline 1900, retry-min 1000, slack 1000 (hard+slack=3000 < 3200). Keep calm lock + finalBroken.
-const SEND_HARD_STOP_MS = 2000;
-const SEND_DEADLINE_MS = 1900;
+// v7.4.6 (Jared): hard stop back to 2400, deadline 2300, retry only if ≥1000ms left (b65f8bc settings).
+// Network slack 800 so hard+slack fits the app's 3.2s ceiling. Overall hard-stop check before retry kept.
+const SEND_HARD_STOP_MS = 2400;
+const SEND_DEADLINE_MS = 2300;
 const SEND_RETRY_MIN_LEFT_MS = 1000;
 /** App-facing ceiling the send path must respect once network slack is reserved. */
 const SEND_CLIENT_BUDGET_MS = 3200;
-/** Reserved for auth/egress/RTT after the server returns (observed hard-set slack). */
-const SEND_NETWORK_SLACK_MS = 1000;
+/** Reserved for auth/egress/RTT after the server returns (fit 2400+800=3200). */
+const SEND_NETWORK_SLACK_MS = 800;
 // Static guard: hard stop + reserved network slack must fit the app's 3.2s ceiling.
 if (SEND_HARD_STOP_MS + SEND_NETWORK_SLACK_MS > SEND_CLIENT_BUDGET_MS) {
   throw new Error("send budget misconfigured: hard stop + network slack exceeds client budget");
@@ -2504,6 +2504,23 @@ Deno.serve(async (req) => {
     const { draft, mode } = body ?? {};
     const unavailable = () => json({ error: "entitlement_unavailable" }, 503);
 
+    // v7.4.6 (Jian): exact {"mode":"ping"} — JWT only, no Premium, no model, no draft/message in logs.
+    // Body was already read under the existing capped body parse above.
+    if (
+      body && typeof body === "object" && !Array.isArray(body) &&
+      Object.keys(body as object).length === 1 && (body as { mode?: unknown }).mode === "ping"
+    ) {
+      const signedOut = await capped<Response | null | typeof TIMED_OUT>(
+        requireSignedIn(req),
+        Math.max(0, started + SEND_HARD_STOP_MS - 150 - Date.now()),
+        TIMED_OUT,
+      );
+      if (signedOut === TIMED_OUT) return unauthorized();
+      if (signedOut) return signedOut;
+      console.log(JSON.stringify({ fn: "chat-rewrite-strike", event: "ping", ms: Date.now() - started }));
+      return json({ ok: true });
+    }
+
     // Status mode: no draft, no AI call, no logging, no DB writes. Auth is always checked.
     if (mode === "status") {
       const denied = await capped(requirePremium(req, "rewrite"), NON_SEND_CAP_MS, unavailable());
@@ -2516,7 +2533,7 @@ Deno.serve(async (req) => {
 
     // send: signed-in check first (no model call before the user is confirmed), then the Premium check runs
     // alongside the model calls; its answer is awaited before any response, so the 402 gate still comes first.
-    // Any other mode: Premium first, then 400 (this prototype only serves status and send).
+    // Any other mode: Premium first, then 400 (this prototype serves ping, status and send).
     const timing: Record<string, number | string> = {};
     let premiumCheck: Promise<Response | null> = Promise.resolve(null);
     if (mode === "send") {
