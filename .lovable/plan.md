@@ -1,51 +1,45 @@
-# Premium gating - status report (read-only, nothing to build)
+# chat-rewrite-strike logs (read-only, nothing changed)
 
-Approving or skipping this changes nothing. It is the report requested.
+Visible range: 09:44:00.721 to 09:44:34.054 UTC, 5 Nov 2026 (25 lines in total).
+calm_check lines: 18. Max ms: 2303. Error lines: none. Boot lines: 7.
 
-## (a) Files
-Preview frontend changed:
-- src/components/dashboard/ChatTab.tsx (upload button, AI prompt starters, Rewrite calmly gated)
-- src/components/dashboard/DocumentsTab.tsx (upload gated)
-- src/components/dashboard/DecisionThreads.tsx (photo/document upload gated)
-- src/components/dashboard/RewriteComposer.tsx (rewrite gated, handles 402)
-- src/components/dashboard/PremiumGate.tsx (new: usePremiumGate + PremiumPaywall, reuses ConversationToolModal)
-- src/lib/premium.ts (new: isPremiumRequired parser)
-- tests/premium.test.ts (new), AGENTS.md, roadmap.md
+## calm_check lines (newest first, verbatim)
 
-New in .lovable/pending/:
-- _shared.premium-access.ts -> supabase/functions/_shared/premium-access.ts
-- chat-rewrite.index.ts -> supabase/functions/chat-rewrite/index.ts
-- premium-chat-storage.sql (migration, not applied)
-- premium-gates.DEPLOY.md
+```text
+09:44:34.054 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":889,"auth_ms":108,"premium_ms":413,"model_ms":775}
+09:44:32.970 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":1169,"auth_ms":156,"premium_ms":465,"model_ms":827}
+09:44:31.450 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":1139,"auth_ms":120,"premium_ms":537,"model_ms":931}
+09:44:30.118 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":1508,"auth_ms":318,"premium_ms":618,"model_ms":1078}
+09:44:28.220 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":891,"auth_ms":127,"premium_ms":428,"model_ms":759}
+09:44:27.148 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":1114,"auth_ms":150,"premium_ms":474,"model_ms":803}
+09:44:25.552 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"fallback","reason":"retry_timeout","reasons":["retry_timeout","name","count"],"attempts":2,"ms":2301,"auth_ms":294,"premium_ms":426,"model_ms":838}
+09:44:23.112 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"fallback","reason":"retry_none","reasons":["retry_none","count"],"attempts":2,"ms":2068,"auth_ms":119,"premium_ms":246,"model_ms":906}
+09:44:20.868 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"fallback","reason":"retry_timeout","reasons":["retry_timeout","count"],"attempts":2,"ms":2302,"auth_ms":289,"premium_ms":237,"model_ms":905}
+09:44:18.416 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"please_added","reasons":["please_added"],"attempts":1,"ms":1155,"auth_ms":302,"premium_ms":617,"model_ms":850}
+09:44:17.162 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"please_added","reasons":["please_added"],"attempts":1,"ms":1257,"auth_ms":315,"premium_ms":421,"model_ms":937}
+09:44:15.756 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"please_added","reasons":["please_added"],"attempts":1,"ms":1273,"auth_ms":312,"premium_ms":617,"model_ms":954}
+09:44:14.279 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":1174,"auth_ms":318,"premium_ms":251,"model_ms":828}
+09:44:12.931 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":1630,"auth_ms":316,"premium_ms":619,"model_ms":1203}
+09:44:10.953 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"rewrite","reason":"rewrite","reasons":[],"attempts":1,"ms":1227,"auth_ms":319,"premium_ms":687,"model_ms":840}
+09:44:09.517 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"fallback","reason":"no_time_for_retry","reasons":["no_time_for_retry"],"attempts":1,"ms":1641,"auth_ms":310,"premium_ms":541,"model_ms":1284}
+09:44:07.559 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"fallback","reason":"retry_timeout","reasons":["retry_timeout","time"],"attempts":2,"ms":2303,"auth_ms":318,"premium_ms":750,"model_ms":952}
+09:44:04.820 {"fn":"chat-rewrite-strike","event":"calm_check","outcome":"fallback","reason":"retry_timeout","reasons":["retry_timeout","report","time"],"attempts":2,"ms":2301,"auth_ms":312,"premium_ms":543,"model_ms":969}
+```
 
-## (b) Git output
-`git status --porcelain supabase/functions supabase/migrations`: empty.
+## Boot lines (verbatim)
 
-`git diff HEAD~3 --stat -- supabase/` lists 13 files (config.toml, conversation-tool-access-rule.ts, founder-signature/founder-welcome/premium-renewal-reminder/product-update/registry/user-welcome templates, conversation-tool-access, founder-welcome-email, stripe-webhooks), 506 insertions, 44 deletions. These are NOT from this task: `git log -- supabase/` shows the last commits touching supabase/ at 14:29 and 14:29:55 UTC, which is the earlier approved publish step (copy pending files + deploy). The premium gating commits are 15:42-15:45 UTC and touch only .lovable/pending/, src/, tests/, AGENTS.md, roadmap.md. No migration files changed. No SQL was run on the live database in this task (only a read of pg_policies).
+```text
+09:44:31.634 booted (time: 49ms)
+09:44:28.449 booted (time: 48ms)
+09:44:25.839 booted (time: 67ms)
+09:44:11.128 booted (time: 47ms)
+09:44:07.775 booted (time: 45ms)
+09:44:05.071 booted (time: 46ms)
+09:44:00.721 booted (time: 75ms)
+```
 
-## (c) Entitlement check
-Endpoint: edge function `conversation-tool-access` (authenticated, user's bearer token).
-Request: `{ "action": "status" }`
-Allowed: `{ "hasAccess": true, "access": { ...access row } }`
-Locked or expired: `{ "hasAccess": false, "expiredAt": "<ISO date or null>" }`
-
-## (d) Blocked responses
-- AI rewrite (pending chat-rewrite): HTTP 402 `{ "error": "premium_required", "feature": "rewrite" }`. Not live yet; live chat-rewrite still runs for everyone server-side.
-- AI prompts: no server call exists. They are fixed starter prompts in ChatTab, so they are gated in the UI only. No 402 applies.
-- Uploads: go straight to storage (bucket chat-attachments), so gated by the pending SQL file premium-chat-storage.sql: SECURITY DEFINER `public.has_premium_access(uid)` plus a RESTRICTIVE INSERT policy "Chat attachments require premium insert". When applied, a denied upload returns storage's HTTP 403 (not the 402 JSON); the UI rechecks access and opens the paywall. Reads, deletes and receipts unchanged. Until applied, uploads are only blocked in the UI.
-
-## (e) Paywall wording (existing pop-up, reused)
-- Heading: "Start the financial conversation."
-- Price line: "£4.99 a month, billed as £59.88 a year. Renews automatically each year. Cancel anytime. Only one parent pays. Your co-parent joins for free."
-- Pay button: "Subscribe for £59.88 a year"
-- Expired: "Your access ended on {date}. Subscribe for £59.88 a year to unlock again."
-- Promo entry button: "Unlock for £4.99 a month, paid yearly"
-
-## (f) Product tracker
-No product tracker found (no file, table or page; search for "tracker" only hit analytics, FAQ and tool pages). roadmap.md is a task list without numbered item #16. Item #16 and Rafa's approval cannot be verified.
-
-## (g) Not done / caveats
-- Server enforcement is pending only: chat-rewrite gate and storage policy are not deployed or applied.
-- Access is per paying parent (caller's own row); the linked co-parent does not inherit Premium, which conflicts with "Your co-parent joins for free". Needs a decision before deploy.
-- Real signed-in linked-parent flow not tested end to end (paywall checked with sample data only).
-- Webhook still missing customer.subscription.created, invoice.paid, invoice.upcoming in Stripe (from earlier).
+## Summary
+- Earliest visible: 09:44:00.721 (boot). Earliest calm_check: 09:44:04.820.
+- Latest visible: 09:44:34.054.
+- calm_check count: 18 (rewrite 11, fallback 7).
+- Max ms: 2303 (09:44:07.559). No error or warning lines.
