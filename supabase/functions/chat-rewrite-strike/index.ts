@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v4; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v5; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -37,11 +37,12 @@ Strike only:
 - rhetorical or sarcastic questions and tags ("is that too much to ask?", "o es mucho pedir", "não é difícil, pois não?", "did you even look?")
 - jabs that imply they always fail: "this time", "for once", "actually", "esta vez", "desta vez", "por una vez" (strike the jab words; a real request around them stays)
 - a defensive "it wasn't me" / "não fui eu" / "no fui yo" (only those words: who did it, such as "it was you who forgot it", stays)
+- brush-offs and martyr lines ("Don't bother.", "Não te incomodes.", "No te molestes.", "Fine, I'll just do it myself"): strike the brush-off; "I'll do it" / "ya lo hago yo" stays.
 - around a fact that something was not told, only the blame wrapper ("Típico que", "de nada", "claro que", "of course", "as usual"); the not-told fact itself stays.
 
 Never strike: names, dates, days, times, numbers, amounts of money, counts and repetition words (again, second time, outra vez, de novo, otra vez, de nuevo, still, ainda, todavía), places, what happened and who did it (forgot, missed, was late, didn't pay, left), medicine, doses, health and symptoms, rules ("no screens after 8pm", "bedtime is 7:30"), agreements ("we agreed"), what someone said, a fact that something was not told, and real requests or questions ("please bring", "can you", "let me know", "tens de", "tienes que").
 
-Strike the smallest span that removes the blame. When a whole sentence is blame, strike the whole sentence including its final punctuation. Strike a joining comma or word with the clause it belongs to (", which is typical of you,"), so the rest still reads as a sentence. Never leave a broken sentence: no "If ..." without its main clause (strike the whole threat sentence), no sentence missing its subject or verb, no sentence ending on "and", "to" or "with". Never strike part of a word. Capitals are fixed by code: never strike a word only because it is shouted. Never strike a "not", "never", "no", "não" or "nunca" on its own: strike the whole clause or leave it.
+Strike the smallest span that removes the blame. A request with blame tagged on keeps the request ("Não te esqueças do casaco outra vez, honestly." -> strike only ", honestly"). When a whole sentence is blame, strike the whole sentence including its final punctuation. Strike a joining comma or word with the clause it belongs to (", which is typical of you,"), so the rest still reads as a sentence. Never leave a broken sentence: no "If ..." without its main clause (strike the whole threat sentence), no sentence missing its subject or verb, no sentence ending on "and", "to" or "with". Never strike part of a word. Capitals are fixed by code: never strike a word only because it is shouted. Never strike a "not", "never", "no", "não" or "nunca" on its own: strike the whole clause or leave it.
 
 If the draft is already calm, factual or a plain request, return {"strikes":[]}. Never translate; the strikes are in the draft's own language or languages.
 
@@ -1109,7 +1110,12 @@ const strikeSpanProblem = (draft: string, span: string, sentence: string): strin
 const strikeGuard = (draft: string, spans: string[]): string[] => {
   const sents = fxSentences(draft);
   const out: string[] = [];
+  const fx = strikeFixed(draft).ranges;
+  const core = (t: string) => t.replace(/[\s,;:.!?¡¿]+/gu, "");
   for (const sp of spans) {
+    // v5: a span that is only words the fixed list strikes anyway ("Da igual,", " Don't bother.") needs no guard.
+    const at = draft.indexOf(sp);
+    if (at >= 0 && core(sp) && fx.some(([a, b]) => at < b && at + sp.length > a && core(draft.slice(a, b)).includes(core(sp)))) continue;
     const sentence = sents.find((s) => s.includes(sp.trim())) ?? sp;
     const p = strikeSpanProblem(draft, sp, sentence);
     if (p) out.push(`${p}:${sp}`);
@@ -1140,16 +1146,21 @@ const STRIKE_FIXED_PHRASES = [
   "as usual", "as always", "same as always", "same as usual", "same as ever", "here we go again", "same again", "same old story", "same old",
   "typical", "typical of you", "so typical", "so typical of you", "how typical", "it's so typical of you", "it's typical of you",
   "it's always the same", "it's always the same with you", "always the same with you", "surprise surprise",
+  // v5: brush-offs, only as a whole clause or sentence ("Don't bother." / ", don't bother.")
+  "don't bother", "do not bother", "don't bother then", "don't even bother", "don't bother yourself", "never mind", "forget it",
   // pt
   "como sempre", "como de costume", "típico", "típico de ti", "típica", "sempre a mesma coisa", "sempre a mesma coisa contigo",
   "é sempre a mesma coisa", "é sempre a mesma coisa contigo", "de novo a mesma coisa", "outra vez a mesma coisa", "a mesma coisa de sempre",
   "lá estamos nós outra vez", "lá estamos outra vez", "lá vamos nós outra vez", 
+  "não te incomodes", "não te incomodes mais", "não te dês ao trabalho", "não precisas de te incomodar", "deixa estar", "esquece", "esquece isso",
   // es
   "como siempre", "como de costumbre", "típico de ti", "otra vez lo mismo", "lo mismo de siempre", "siempre lo mismo",
   "siempre lo mismo contigo", "es siempre lo mismo", "ya estamos otra vez", 
+  "no te molestes", "no te molestes más", "no hace falta que te molestes", "ni te molestes", "déjalo", "olvídalo", "da igual",
   // mixed
   "it's always the same contigo", "it's so typical contigo", "sempre a mesma coisa with you", "siempre lo mismo with you",
 ];
+const STRIKE_BRUSH_RE = /^(?:don['’]t (?:even )?bother|do not bother|never mind|forget it|não te (?:incomodes|dês)|não precisas de te incomodar|deixa estar|esquece|(?:no|ni) te molestes|no hace falta que te molestes|déjalo|olvídalo|da igual)/iu;
 const STRIKE_FIXED_RE = new RegExp(
   `(?<=^|[.!?,;:]\\s*)(?:${[...STRIKE_FIXED_PHRASES].sort((a, b) => b.length - a.length).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "['’]").replace(/ /g, "\\s+")).join("|")})(?=\\s*(?:[.!?,;:]|$))`,
   "giu",
@@ -1175,6 +1186,8 @@ const strikeFixed = (draft: string) => {
     const pre = draft.slice(0, a).match(/,\s*$/);
     if (pre) a -= pre[0].length;
     ranges.push([a, (m.index ?? 0) + m[0].length]);
+    // v5: a struck brush-off's "don't" / "não" / "no" is not a fact the result must keep.
+    if (STRIKE_BRUSH_RE.test(m[0])) jab.push([a, (m.index ?? 0) + m[0].length]);
   }
   for (const m of draft.matchAll(STRIKE_FIXED_LEAD_RE)) ranges.push([m.index ?? 0, (m.index ?? 0) + m[0].length]);
   for (const m of draft.matchAll(STRIKE_JAB_AGAIN_RE)) {
@@ -1236,6 +1249,8 @@ const STRIKE_MARTYR_RES: RegExp[] = [
   /(?<![\p{L}])(?:I['’]ll|I will|I['’]d|let me)\s+(just)\s+(?=(?:do|sort|handle|deal|fix|pay|organise|organize|arrange|pick|take|bring|get|cancel|go|ask|tell|leave|buy|book|cover|collect|drop|call|text|send|sign|find|make|cook|wash|pack|stay|keep|look)\b)/giu,
   // "I'll do it myself as usual" / "I'll sort it myself, as always" (the comma form is the fixed list's)
   /(?<![\p{L}])I(?:['’]ll| will|['’]m going to| always| have to| had to)?\s+(?:just\s+)?[\p{L}' ]{2,40}?\bmyself(\s+(?:as usual|as always|like always|again as usual))(?=\s*(?:[.!?,;:]|$))/giu,
+  // v5: "I'll do the forms myself" -> "I'll do the forms" (who does it stays in "I'll")
+  /(?<![\p{L}])(?:I['’]ll|I will|I['’]m going to|I have to|I had to|I always)\s+(?:just\s+)?(?:do|sort|handle|deal|fix|pay|organise|organize|arrange|pick|take|bring|get|cancel|go|ask|tell|buy|book|cover|collect|drop|call|text|send|sign|find|make|cook|wash|pack|fill|look)\b[^.!?;:\n]{0,60}?(\s+myself)(?![\p{L}])/giu,
   // pt: "faço eu como sempre", "eu é que trato disso como sempre", "vou eu buscá-la como sempre"
   /(?<![\p{L}])(?:faço|trato|levo|pago|resolvo|vou|busco|apanho|organizo|compro|marco|ligo)\s+eu\b[^.!?,;:\n]{0,40}?(\s+como\s+(?:sempre|de costume))(?=\s*(?:[.!?,;:]|$))/giu,
   // "eu é que ..." only: a plain "Eu levo-a às 5 como sempre" is a routine, not a martyr line.
@@ -1395,7 +1410,11 @@ const STRIKE_BLAME_LEFT = wordRe(
   "for the hundredth time|já te disse|como te disse|ya te lo dije|ya te dije|te lo he dicho|desastre|disaster|desleixado|desleixada|grow up|" +
   "get a grip|for god's sake|por amor de deus|por el amor de dios|é muito pedir|es mucho pedir|too much to ask|idiot|idiota|stupid|estúpido|" +
   "estúpida|parvo|parva|hopeless|a joke|uma piada|un chiste|great parenting|bom pai|boa mãe|buen padre|buena madre|como de costume|como de costumbre|" +
-  "same old|sempre a mesma|siempre lo mismo|típico de ti|typical of you|you'll regret|vais arrepender|te arrepentirás",
+  "same old|sempre a mesma|siempre lo mismo|típico de ti|typical of you|you'll regret|vais arrepender|te arrepentirás|" +
+  // v5: "nobody bothered to" style blame verbs and brush-offs (never left in; the strike is rejected -> null)
+  "bothered to|bother to|bothering to|bothered telling|bothered letting|bothered checking|could be bothered|can't be bothered|" +
+  "don't bother|do not bother|deu ao trabalho|deste ao trabalho|dês ao trabalho|dignou|dignaste|não te incomodes|" +
+  "se molestó|te molestaste|te molestes|se dignó|te dignaste|tomó la molestia|tomaste la molestia",
 );
 // Who did what, for guard 2: each deed verb (FX_KEY) with its doer, found before it (skipping auxiliaries, "who/que/quien"
 // pointing back to the doer), from a PT/ES person ending, or from "it was you / foste tu / fuiste tú" in the same sentence.
@@ -1407,6 +1426,9 @@ const ACTOR_ROLE: Record<string, string> = {
   he: "third", she: "third", they: "third", ele: "third", ela: "third", eles: "third", elas: "third", "él": "third", ella: "third", ellos: "third", ellas: "third",
 };
 const IT_WAS = /(?:it was you|was you|you did|foste tu|foi você|fuiste tú|fuiste tu|has sido tú|it was me|fui eu|fui yo)(?![\p{L}])/iu;
+const COMMIT_SELF = new Set(["faço", "farei", "hago", "haré", "encargo", "encarrego"]);
+const COMMIT_PTES = new Set(["levo", "trato", "pago", "busco", "apanho", "resolvo", "llevo", "recojo", "arreglo", "organizo", "compro"]);
+const COMMIT_EN = new Set(["do", "sort", "handle", "deal", "fix", "pay", "organise", "organize", "arrange", "pick", "take", "bring", "collect", "drop", "book", "buy", "cover", "fill", "sign"]);
 const actorDeeds = (text: string, names: Set<string>) => {
   const out: { key: string; role: string }[] = [];
   for (const sent of fxSentences(text)) {
@@ -1418,7 +1440,17 @@ const actorDeeds = (text: string, names: Set<string>) => {
       const raw = clause.split(/[^\p{L}\p{N}'’]+/u).filter(Boolean);
       const toks = raw.map((w) => w.toLowerCase().replace(/[’]/g, "'").replace(/'(ve|ll|d|re|s|m)$/, ""));
       toks.forEach((t, i) => {
-        const hit = FX_KEY.find(([, re]) => re.test(t));
+        let hit = FX_KEY.find(([, re]) => re.test(t));
+        // v5: "ya lo hago yo" / "faço eu" / "I'll do it": a first-person commitment is a deed whose doer must stay.
+        if (!hit && COMMIT_SELF.has(t)) { out.push({ key: "commit", role: "self" }); return; }
+        if (!hit && COMMIT_PTES.has(t) && toks.some((w) => w === "eu" || w === "yo")) { out.push({ key: "commit", role: "self" }); return; }
+        if (!hit && COMMIT_EN.has(t)) {
+          for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
+            if (toks[j] === "i") { out.push({ key: "commit", role: "self" }); return; }
+            if (!/^(?:just|will|always|then|also|have|had|going|to|am)$/.test(toks[j])) break;
+          }
+          return;
+        }
         if (!hit || (i > 0 && toks[i - 1] === "to")) return;
         let role = "";
         for (let j = i - 1; !role && j >= Math.max(0, i - 6); j--) {
