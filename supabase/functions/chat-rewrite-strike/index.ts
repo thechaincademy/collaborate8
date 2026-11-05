@@ -1,5 +1,6 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.6; the live chat-rewrite is untouched)
-// v7.4.6: budget back to Jared 2400/2300/1000 slack 800; Jian ping mode ({"mode":"ping"} → 200 {ok:true}, JWT only, no Premium/model, log event=ping+ms only); calm lock + soft-code second-signal + finalBroken kept.
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.7; the live chat-rewrite is untouched)
+// v7.4.7: HARD_STOP_FROM_ARRIVAL — hard stop armed at request start, races body/auth/premium/model; ms stamped at decision (pendingLog cannot inflate); discard rewrite if past hard stop.
+// Jared multi-attempt: if ANY attempt is calm → untouched; if attempts disagree on span sets → no rewrite (never strike on disagreement). Calm lock + soft-code second-signal + finalBroken kept. Budget 2400/2300/1000 slack 800; Jian ping kept.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -81,7 +82,7 @@ const STRIKE_SCHEMA = {
   },
 };
 
-// v7.4.6 (Jared): hard stop back to 2400, deadline 2300, retry only if ≥1000ms left (b65f8bc settings).
+// v7.4.7 (Jared): hard stop 2400 from arrival, deadline 2300, retry only if ≥1000ms left; any-calm / disagree→null.
 // Network slack 800 so hard+slack fits the app's 3.2s ceiling. Overall hard-stop check before retry kept.
 const SEND_HARD_STOP_MS = 2400;
 const SEND_DEADLINE_MS = 2300;
@@ -1406,7 +1407,7 @@ const fixedWith = (fixed: { ranges: [number, number][]; jab: [number, number][];
 // ---- v6: log reasons are codes from this fixed set only; never draft text, spans or snippets ----
 const REASON_CODES = new Set([
   "pass", "rewrite", "please_added", "timeout", "parse", "error", "no_time_for_retry", "retry_timeout", "retry_parse", "retry_error",
-  "retry_none", "retry_cand", "span_not_found", "too_small", "no_subject", "hanging_conditional", "dangling", "no_verb", "actor_dropped", "uncertain_calm", "final_broken",
+  "retry_none", "retry_cand", "span_not_found", "too_small", "no_subject", "hanging_conditional", "dangling", "no_verb", "actor_dropped", "uncertain_calm", "final_broken", "disagree", "any_calm",
   "blame_left", "sarcasm_left", "shout_left", "name", "number", "time", "place", "medicine", "health", "rule", "not_told", "agreement",
   "report", "count", "deed", "ask", "negation", "reproach_kept", "threat_kept", "added_content", "dropped_number", "new_time_word",
   "tense_changed", "actor_changed", "action_dropped", "stance_changed", "rule_changed", "missing_fact", "new_number", "banned_word",
@@ -2467,6 +2468,58 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
   return [...new Set(out)];
 };
 
+
+// ---- v7.4.7 (Jared): multi-attempt pick — any calm → untouched; disagreeing span sets → no rewrite. ----
+type AttemptKind747 = "timeout" | "parse" | "error" | "none" | "cand";
+type AttemptView747 = {
+  kind: AttemptKind747;
+  spans?: string[];
+  problems?: string[];
+  codeOnly?: boolean;
+  guard?: string;
+  raw?: string;
+  text?: string;
+  pleaseFrom?: number;
+  meta?: { span_n: number; span_len_sum: number; span_model_n: number; span_code_n: number; span_src: string; guard: string };
+};
+const spanSetKey747 = (spans: string[] | undefined | null): string => {
+  const cleaned = (spans ?? []).map((s) => (typeof s === "string" ? s.trim() : "")).filter(Boolean);
+  return JSON.stringify([...cleaned].sort());
+};
+const isCalmAttempt747 = (a: AttemptView747): boolean => {
+  // Calm = no strikes / not rough. uncertain_calm counts; too_small does not (draft was rough, cut too small).
+  if (a.kind === "none") {
+    const g = a.guard ?? "calm";
+    return g === "calm" || g === "uncertain_calm";
+  }
+  if (a.kind === "cand" && spanSetKey747(a.spans) === "[]") return true;
+  return false;
+};
+const isCleanWin747 = (a: AttemptView747): boolean =>
+  a.kind === "cand" && !(a.problems?.length) && a.codeOnly !== true && spanSetKey747(a.spans) !== "[]";
+type PickResult747 =
+  | { action: "pass"; reason: "any_calm" | "disagree" | "no_win"; calmGuard?: string }
+  | { action: "rewrite"; chosen: AttemptView747; reason: "agree" };
+const pickAttempts = (attempts: AttemptView747[]): PickResult747 => {
+  const calm = attempts.find(isCalmAttempt747);
+  if (calm) return { action: "pass", reason: "any_calm", calmGuard: calm.guard ?? "calm" };
+  const opinions = attempts.filter((a) => a.kind === "cand");
+  const keys = new Set(opinions.map((a) => spanSetKey747(a.spans)));
+  if (keys.size > 1) return { action: "pass", reason: "disagree" };
+  const win = attempts.find(isCleanWin747);
+  if (win) return { action: "rewrite", chosen: win, reason: "agree" };
+  return { action: "pass", reason: "no_win" };
+};
+const shouldRetry747 = (firstWave: AttemptView747[]): boolean => {
+  if (firstWave.some(isCalmAttempt747)) return false;
+  if (firstWave.some(isCleanWin747)) return false;
+  const opinions = firstWave.filter((a) => a.kind === "cand");
+  if (!opinions.length) return false;
+  if (new Set(opinions.map((a) => spanSetKey747(a.spans))).size > 1) return false;
+  return opinions.every((a) => (a.problems?.length ?? 0) > 0);
+};
+const pastHardStop = (started: number, now = Date.now()) => now - started >= SEND_HARD_STOP_MS;
+
 // v6: "reason" / "reasons" carry only codes from REASON_CODES (never draft text, spans or snippets).
 const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number | string> = {}) => {
   const codes = reasonCodes(reasons);
@@ -2580,7 +2633,9 @@ Deno.serve(async (req) => {
     let pendingLog: (() => void) | null = null;
     const log = (outcome: string, reasons: string[], attempts: number, meta?: { span_n: number; span_len_sum: number; span_model_n: number; span_code_n: number; span_src: string; guard: string }) => {
       if (settled) return;
-      const t: Record<string, number | string> = { ...timing };
+      // v7.4.7: stamp ms at decision; pendingLog flush must reuse it (was Date.now()-started at flush → 3075/3332 inflation).
+      const msAtDecision = Date.now() - started;
+      const t: Record<string, number | string> = { ...timing, ms: msAtDecision };
       if (meta) {
         t.span_n = meta.span_n;
         t.span_len_sum = meta.span_len_sum;
@@ -2601,8 +2656,8 @@ Deno.serve(async (req) => {
       type Got =
         | { kind: "timeout" | "parse" }
         | { kind: "error"; resp: Response }
-        | { kind: "none"; meta?: SpanMeta }
-        | { kind: "cand"; raw: string; text: string; problems: string[]; codeOnly?: boolean; pleaseFrom?: number; meta?: SpanMeta };
+        | { kind: "none"; meta?: SpanMeta; spans?: string[] }
+        | { kind: "cand"; raw: string; text: string; problems: string[]; spans?: string[]; codeOnly?: boolean; pleaseFrom?: number; meta?: SpanMeta };
       // Code strikes: fixed reproach phrases and the jab "again", whatever the model returns.
       const fixed = strikeFixed(draft);
       // v4: shouted words are lower-cased by code (acronyms, names and brands kept).
@@ -2619,41 +2674,42 @@ Deno.serve(async (req) => {
         // v7.4.4: model's own flag says calm (empty strikes) → untouched. No code path around it
         // (caps/martyr/brush-off/fixed alone never win). Shouting-rough still allows caps normalisation only.
         if (!spans.length) {
-          if (!isShoutingRough(draft) || !hasShout(draft)) return { kind: "none", meta: spanMeta([], "calm") };
+          if (!isShoutingRough(draft) || !hasShout(draft)) return { kind: "none", spans: [], meta: spanMeta([], "calm") };
           const text = deShout(draft, draft);
-          if (text === draft) return { kind: "none", meta: spanMeta([], "calm") };
+          if (text === draft) return { kind: "none", spans: [], meta: spanMeta([], "calm") };
           const shape = strikeShape(draft, [], text);
           const loud = shoutLeft(text, draft);
           if (loud.length) shape.push(`shout_left: ${loud.join(", ")}`);
-          if (shape.length) return { kind: "cand", raw, text, problems: shape, meta: spanMeta([], reasonCode(shape[0])) };
+          if (shape.length) return { kind: "cand", raw, text, problems: shape, spans: [], meta: spanMeta([], reasonCode(shape[0])) };
           const c = strikeCheck(draft, text, [], []);
-          if (c.codes.length) return { kind: "cand", raw, text, problems: c.codes.length && c.notes.length ? [...c.codes, ...c.notes] : c.codes, meta: spanMeta([], c.codes[0]) };
-          return { kind: "cand", raw, text, problems: [], codeOnly: false, pleaseFrom: undefined, meta: spanMeta([], "ok-shout") };
+          if (c.codes.length) return { kind: "cand", raw, text, problems: c.codes.length && c.notes.length ? [...c.codes, ...c.notes] : c.codes, spans: [], meta: spanMeta([], c.codes[0]) };
+          return { kind: "cand", raw, text, problems: [], spans: [], codeOnly: false, pleaseFrom: undefined, meta: spanMeta([], "ok-shout") };
         }
         // v7.4.4: model flagged rough but every span is a soft code-list phrase and there is no
         // unambiguous code reproach → prefer null (uncertain). A real model span OR an unambiguous
         // reproach (brush / sigh+martyr / dig / ignore / Again?!) is the second signal.
         const classified = classifySpans(spans, draft, fixed);
         if (classified.span_model_n === 0 && !unambiguousCodeReproach(draft, fixed)) {
-          return { kind: "none", meta: { ...classified, guard: "uncertain_calm" } };
+          return { kind: "none", spans, meta: { ...classified, guard: "uncertain_calm" } };
         }
         const fw = fixedWith(fixed, spans);
         const st = strikeSpans(draft, spans, fw.ranges);
-        if (!st.ok) return { kind: "cand", raw, text: "", problems: [st.reason ?? "span_not_found"], meta: { ...classified, guard: st.reason ?? "span_not_found" } };
+        if (!st.ok) return { kind: "cand", raw, text: "", problems: [st.reason ?? "span_not_found"], spans, meta: { ...classified, guard: st.reason ?? "span_not_found" } };
         const g = strikeGuard(draft, spans);
-        if (g.length) return { kind: "cand", raw, text: st.text, problems: g, meta: { ...classified, guard: reasonCode(g[0]) } };
-        if (st.ranges.length && strikeTooSmall(draft, st.text)) return { kind: "none", meta: { ...classified, guard: "too_small" } };
+        if (g.length) return { kind: "cand", raw, text: st.text, problems: g, spans, meta: { ...classified, guard: reasonCode(g[0]) } };
+        if (st.ranges.length && strikeTooSmall(draft, st.text)) return { kind: "none", spans, meta: { ...classified, guard: "too_small" } };
         const text = shout ? deShout(st.text, draft) : st.text;
         const shape = strikeShape(draft, st.ranges, text);
         const loud = shoutLeft(text, draft);
         if (loud.length) shape.push(`shout_left: ${loud.join(", ")}`);
-        if (shape.length) return { kind: "cand", raw, text, problems: shape, meta: { ...classified, guard: reasonCode(shape[0]) } };
+        if (shape.length) return { kind: "cand", raw, text, problems: shape, spans, meta: { ...classified, guard: reasonCode(shape[0]) } };
         const c = strikeCheck(draft, text, spans, fw.jab);
         const problems = c.codes.length ? (c.notes.length ? [...c.codes, ...c.notes] : c.codes) : [];
-        return { kind: "cand", raw, text, problems, codeOnly: !spans.length, pleaseFrom: pleaseFrom(draft, st.ranges), meta: { ...classified, guard: problems.length ? reasonCode(problems[0]) : "ok" } };
+        return { kind: "cand", raw, text, problems, spans, codeOnly: !spans.length, pleaseFrom: pleaseFrom(draft, st.ranges), meta: { ...classified, guard: problems.length ? reasonCode(problems[0]) : "ok" } };
       };
       const ask = async (msgs: unknown[], maxTokens: number, signal: AbortSignal): Promise<Got> => {
-        if (signal.aborted) return { kind: "timeout" };
+        // v7.4.7: wall-clock hard stop — do not start or finish a model call past arrival+HARD.
+        if (signal.aborted || pastHardStop(started)) return { kind: "timeout" };
         let resp: Response;
         const m0 = Date.now();
         try {
@@ -2662,6 +2718,7 @@ Deno.serve(async (req) => {
         } catch {
           return { kind: "timeout" };
         }
+        if (pastHardStop(started) || signal.aborted) return { kind: "timeout" };
         const err = gatewayError(resp);
         if (err) return { kind: "error", resp: err };
         let raw = "";
@@ -2676,74 +2733,115 @@ Deno.serve(async (req) => {
         if (!Array.isArray(parsed?.strikes)) return { kind: "parse" };
         return judge(raw, parsed.strikes as string[]);
       };
+      const toView = (g: Got): AttemptView747 => {
+        if (g.kind === "cand") {
+          return {
+            kind: "cand",
+            spans: g.spans ?? [],
+            problems: g.problems,
+            codeOnly: g.codeOnly,
+            guard: g.meta?.guard,
+            raw: g.raw,
+            text: g.text,
+            pleaseFrom: g.pleaseFrom,
+            meta: g.meta,
+          };
+        }
+        if (g.kind === "none") return { kind: "none", spans: g.spans ?? [], guard: g.meta?.guard, meta: g.meta };
+        if (g.kind === "error") return { kind: "error" };
+        return { kind: g.kind };
+      };
+      const finishRewrite = (got: AttemptView747, attempts: number) => {
+        if (pastHardStop(started)) {
+          log("fallback", ["timeout"], attempts, got.meta);
+          return json(pass);
+        }
+        if (got.kind !== "cand" || got.text === undefined) return json(pass);
+        const rewrite = addPlease(got.text, got.pleaseFrom ?? Infinity);
+        log("rewrite", rewrite === got.text ? [] : ["please_added"], attempts, got.meta);
+        return json({ needs_rewrite: true, rewrite });
+      };
       const ctrls = Array.from({ length: SEND_FIRST_CALLS }, () => new AbortController());
       const onAbort = () => ctrls.forEach((c) => c.abort());
       sendCtrl.signal.addEventListener("abort", onAbort);
-      const isWin = (f: Got) => f.kind === "cand" && !f.problems.length && !f.codeOnly;
-      const isCodeOnlyPass = (f: Got) => f.kind === "cand" && !f.problems.length && f.codeOnly === true;
-      const all: Got[] = [];
-      const first: Got = await new Promise<Got>((resolve) => {
-        let done = 0;
-        ctrls.forEach((c) => {
-          ask(messages, 400, c.signal).then((f) => {
-            all.push(f);
-            done++;
-            if (isWin(f)) {
-              ctrls.forEach((o) => { if (o !== c) o.abort(); });
-              resolve(f);
-            } else if (done === ctrls.length) {
-              // v7.4: code-only wins are gone (rough-gate). Prefer none, then any cand/parse/error.
-              resolve(all.find((x) => x.kind === "none") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
-            }
-          });
-        });
-      });
+      // v7.4.7 (Jared): wait for EVERY first-wave attempt. A clean win must not abort a sibling that may say calm
+      // or return a different span set — any calm → untouched; disagree → no rewrite.
+      const all: Got[] = await Promise.all(ctrls.map((c) => ask(messages, 400, c.signal)));
       sendCtrl.signal.removeEventListener("abort", onAbort);
-      if (first.kind === "timeout" || first.kind === "parse") {
-        log("fallback", [first.kind], 1);
+
+      const errGot = all.find((x): x is Extract<Got, { kind: "error" }> => x.kind === "error");
+      // Prefer a real gateway error only when nothing else is usable.
+      const views = all.map(toView);
+      const pick = pickAttempts(views);
+      if (pick.action === "pass" && pick.reason === "any_calm") {
+        const calmGot = all.find((x) => x.kind === "none");
+        // Plain model-calm (guard calm) keeps empty reasons like v7.4.6; uncertain_calm stays tagged;
+        // a calm veto against a sibling win logs any_calm so the log shows Jared's rule fired.
+        const logReasons = pick.calmGuard === "uncertain_calm" ? ["uncertain_calm"] : (pick.calmGuard === "calm" && all.filter((x) => x.kind === "none").length === all.length ? [] : ["any_calm"]);
+        log("pass", logReasons, 1, calmGot?.meta ?? all.find((x) => x.kind === "cand" && !(x.spans?.length))?.meta);
         return json(pass);
       }
-      if (first.kind === "error") return first.resp;
-      if (first.kind === "none") {
-        log("pass", first.meta?.guard === "uncertain_calm" ? ["uncertain_calm"] : [], 1, first.meta);
+      if (pick.action === "pass" && pick.reason === "disagree") {
+        log("pass", ["disagree"], 1, all.find((x) => x.kind === "cand")?.meta);
         return json(pass);
       }
-      let got: Got = first;
-      let attempts = 1;
-      if (first.problems.length) {
-        // v7.4.2: overall deadline check before the retry — use the hard stop (not only the
-        // model-abort deadline), so a retry cannot push the server reply into the network
-        // slack the client needs to stay under SEND_CLIENT_BUDGET_MS.
-        const now = Date.now();
-        const leftHard = started + SEND_HARD_STOP_MS - now;
-        const leftDeadline = deadline - now;
-        timing.retry_left_ms = Math.min(leftHard, leftDeadline);
-        if (timing.retry_left_ms < SEND_RETRY_MIN_LEFT_MS || leftHard < SEND_RETRY_MIN_LEFT_MS) {
-          log("fallback", ["no_time_for_retry"], attempts, first.kind === "cand" ? first.meta : undefined);
-          return json(pass);
-        }
-        attempts = 2;
-        got = await ask([
-          ...messages,
-          { role: "assistant", content: first.raw },
-          {
-            role: "user",
-            content: `Those strikes failed these checks:\n- ${first.problems.join("\n- ")}\nList the strikes again. Copy each one exactly from the draft. Never strike a fact, name, number, time, place, medicine, rule, agreement, repetition word, real request or who did something; strike only the blame around them, and never leave a broken sentence (strike a whole sentence or leave it). Return only JSON {"strikes":[...]}.`,
-          },
-        ], 300, sendCtrl.signal);
-        if (got.kind !== "cand" || got.problems.length) {
-          log("fallback", ["retry_" + got.kind, ...first.problems, ...(got.kind === "cand" ? got.problems : [])], attempts, got.kind === "cand" ? got.meta : (first.kind === "cand" ? first.meta : undefined));
-          return json(pass);
-        }
+      if (pick.action === "rewrite") {
+        return finishRewrite(pick.chosen, 1);
       }
-      if (got.kind !== "cand") return json(pass);
-      // The one word code may add: "Please" / "Por favor" before an ask the parent already wrote, if none is there.
-      // v6: "Please" only for an ask in or after the first struck span; nothing struck (capitals only) -> never.
-      const rewrite = addPlease(got.text, got.pleaseFrom ?? Infinity);
-      log("rewrite", rewrite === got.text ? [] : ["please_added"], attempts, got.meta);
-      return json({ needs_rewrite: true, rewrite });
+      // no_win: timeout/parse only, or agreeing problem-cands (maybe retry)
+      if (all.every((x) => x.kind === "timeout" || x.kind === "parse")) {
+        log("fallback", [all[0]?.kind ?? "timeout"], 1);
+        return json(pass);
+      }
+      if (errGot && !all.some((x) => x.kind === "cand" || x.kind === "none")) return errGot.resp;
+
+      if (!shouldRetry747(views)) {
+        const cand = all.find((x) => x.kind === "cand");
+        log("fallback", cand?.problems?.length ? cand.problems : ["no_win"], 1, cand?.meta);
+        return json(pass);
+      }
+
+      const firstCand = all.find((x) => x.kind === "cand");
+      if (!firstCand || firstCand.kind !== "cand") {
+        log("fallback", ["no_win"], 1);
+        return json(pass);
+      }
+      const now = Date.now();
+      const leftHard = started + SEND_HARD_STOP_MS - now;
+      const leftDeadline = deadline - now;
+      timing.retry_left_ms = Math.min(leftHard, leftDeadline);
+      if (timing.retry_left_ms < SEND_RETRY_MIN_LEFT_MS || leftHard < SEND_RETRY_MIN_LEFT_MS || pastHardStop(started)) {
+        log("fallback", ["no_time_for_retry"], 1, firstCand.meta);
+        return json(pass);
+      }
+      const retryGot = await ask([
+        ...messages,
+        { role: "assistant", content: firstCand.raw },
+        {
+          role: "user",
+          content: `Those strikes failed these checks:\n- ${firstCand.problems.join("\n- ")}\nList the strikes again. Copy each one exactly from the draft. Never strike a fact, name, number, time, place, medicine, rule, agreement, repetition word, real request or who did something; strike only the blame around them, and never leave a broken sentence (strike a whole sentence or leave it). Return only JSON {"strikes":[...]}.`,
+        },
+      ], 300, sendCtrl.signal);
+      const pick2 = pickAttempts([...views, toView(retryGot)]);
+      if (pick2.action === "pass" && pick2.reason === "any_calm") {
+        log("pass", pick2.calmGuard === "uncertain_calm" ? ["uncertain_calm"] : ["any_calm"], 2,
+          retryGot.kind === "none" ? retryGot.meta : firstCand.meta);
+        return json(pass);
+      }
+      if (pick2.action === "pass" && pick2.reason === "disagree") {
+        log("pass", ["disagree"], 2, retryGot.kind === "cand" ? retryGot.meta : firstCand.meta);
+        return json(pass);
+      }
+      if (pick2.action === "rewrite") {
+        return finishRewrite(pick2.chosen, 2);
+      }
+      log("fallback", ["retry_" + retryGot.kind, ...firstCand.problems, ...(retryGot.kind === "cand" ? retryGot.problems : [])], 2,
+        retryGot.kind === "cand" ? retryGot.meta : firstCand.meta);
+      return json(pass);
     };
-    // Hard stop: whatever happens, answer by the deadline so the app never waits past its own limit.
+    // v7.4.7 HARD_STOP_FROM_ARRIVAL: timer is anchored at `started` (request arrival). Premium is INSIDE the
+    // same race as work (v7.4.6 awaited premiumCapped before Promise.race, so a slow Premium + late timer
+    // could surface as attempts:0 ms:3075/3332). Wall-clock pastHardStop also discards a late rewrite.
     let hardTimer: ReturnType<typeof setTimeout> | undefined;
     const hardStop = new Promise<Response>((resolve) => {
       hardTimer = setTimeout(() => {
@@ -2753,29 +2851,42 @@ Deno.serve(async (req) => {
         resolve(json(pass));
       }, Math.max(0, started + SEND_HARD_STOP_MS - Date.now()));
     });
-    const work = runSend().then((r) => { settled = true; return r; }, () => { settled = true; return json(pass); });
-    let denied: Response | null | typeof TIMED_OUT;
-    try {
-      // v6: capped at the hard stop; before v6 this await sat outside the race, so a slow Premium lookup held the reply.
-      denied = await premiumCapped();
-    } catch (e) {
-      settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
-      throw e;
-    }
-    if (denied === TIMED_OUT) {
-      // Premium not confirmed in time: the model reply is thrown away and the plain pass goes back.
-      settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
-      logSend("fallback", ["timeout"], 0, started, timing);
-      return json(pass);
-    }
-    if (denied) {
-      // 401/402/503: stop the model calls, throw their reply away, log nothing from it.
-      settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
-      return denied;
-    }
-    premiumOk = true;
-    if (pendingLog) { const w = pendingLog; pendingLog = null; w(); }
-    const out = await Promise.race([work, hardStop]);
+    const work = runSend().then((r) => r, () => json(pass));
+    const gated = (async (): Promise<Response> => {
+      let denied: Response | null | typeof TIMED_OUT;
+      try {
+        denied = await premiumCapped();
+      } catch (e) {
+        settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
+        throw e;
+      }
+      if (denied === TIMED_OUT) {
+        settled = true; sendCtrl.abort();
+        log("fallback", ["timeout"], 0);
+        return json(pass);
+      }
+      if (denied) {
+        settled = true; sendCtrl.abort();
+        return denied;
+      }
+      premiumOk = true;
+      if (pendingLog) { const w = pendingLog; pendingLog = null; w(); }
+      const out = await work;
+      if (pastHardStop(started)) {
+        // Timer may fire late under load; never return a rewrite past the hard stop.
+        try {
+          const body = await out.clone().json() as { needs_rewrite?: boolean };
+          if (body?.needs_rewrite) {
+            if (!settled) log("fallback", ["timeout"], 0);
+            settled = true;
+            return json(pass);
+          }
+        } catch { /* keep out */ }
+      }
+      settled = true;
+      return out;
+    })();
+    const out = await Promise.race([gated, hardStop]);
     clearTimeout(hardTimer);
     clearTimeout(deadlineTimer);
     sendCtrl.abort();
