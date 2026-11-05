@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.3.1; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.3.2; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1247,7 +1247,15 @@ const IGNORE_BODY =
   "ignoraste|ignoras|ignora-me|ignoras-me|ignorou|ignorou-me|ignoram|me ignoras|me ignoraste|" +
   "nem (?:sequer )?(?:me )?(?:respondeste|respondes|respondeu|disseste nada|atendeste|atendes|leste|ligaste)|deixaste-me a falar sozinh[ao]|" +
   "ignoró|lo ignoraste|la ignoraste|me ignoraste|pasaste de mí|pasas de mí|pasaste del tema|" +
-  "ni (?:siquiera )?(?:me )?(?:contestaste|contestas|respondiste|respondes|dijiste nada|cogiste el teléfono|leíste)|me dejaste en visto";
+  "ni (?:siquiera )?(?:me )?(?:contestaste|contestas|respondiste|respondes|dijiste nada|cogiste el teléfono|leíste)|me dejaste en visto|" +
+  // v7.3.2: the "didn't notice" family (Jared): second person only, so "I didn't notice the time" is not blame.
+  "(?:you|u) (?:just )?(?:didn'?t|did not|never) even (?:notice|noticed|check|checked|look|looked|ask|asked)|" +
+  "(?:you|u) (?:just )?(?:didn'?t|did not|never) (?:notice|noticed|realise|realize|realised|realized)|" +
+  "(?:you|u) (?:don'?t|do not|never) even notice|" +
+  "(?:you|u) (?:just )?(?:didn'?t|did not|never|couldn'?t|could not) (?:even )?(?:bother|bothered|be bothered)(?: to (?:check|look|ask|read|reply|answer|call|text|notice|tell me))?|" +
+  "nem (?:sequer )?(?:reparaste|notaste|te deste conta|deste por isso|viste|olhaste|verificaste|perguntaste)|nem te deste ao trabalho de (?:ver|verificar|perguntar|ler|responder)|nunca reparas|" +
+  "ni (?:siquiera )?te (?:diste cuenta|fijaste|enteraste)|ni (?:siquiera )?(?:miraste|revisaste|preguntaste)|no te diste ni cuenta|nunca te das cuenta|" +
+  "ni (?:siquiera )?te molestaste en (?:mirar|revisar|preguntar|leer|contestar)";
 const IGNORE_LEFT_RE = wordRe(IGNORE_BODY);
 const IGNORE_G = new RegExp(`(?<![\\p{L}\\p{N}])(?:${IGNORE_BODY})(?![\\p{L}\\p{N}])`, "giu");
 // Words that may share a clause with the ignore phrase when the clause goes whole ("and you just ignored it like you
@@ -1258,6 +1266,8 @@ const IGNORE_CLAUSE_OK = new Set([
   "fazes", "haces", "lo", "la", "o", "a", "mí", "mim", "my", "minhas", "mis", "mensagens", "mensajes", "messages", "texts", "message", "text",
   "even", "sequer", "siquiera", "outra", "otra", "vez", "de", "novo", "nuevo", "as", "usual", "else", "also", "também", "también", "y", "e", "and",
 ]);
+// v7.3.2: reported speech around an ignore phrase ("he said you didn't notice"): the frame goes with the clause.
+const REPORT_LEAD = /(?:^|\s)(?:he|she|they|ele|ela|eles|elas|él|ella|ellos|ellas|\p{Lu}\p{Ll}+)\s+(?:said|says|told me|tells me|reckons|disse|diz|contou|me disse|dijo|dice|me dijo|contó)(?:\s+(?:that|que))?\s*$/u;
 const ignoreClauses = (draft: string): [number, number][] => {
   const out: [number, number][] = [];
   const words = (s: string) => s.toLowerCase().replace(/[’]/g, "'").split(/[^\p{L}'-]+/u).filter(Boolean);
@@ -1268,7 +1278,8 @@ const ignoreClauses = (draft: string): [number, number][] => {
     // The clause opens at the last joiner or comma before the phrase, or at the sentence start.
     const j = [...pre.matchAll(/(?:,|\s(?:and|but|e|mas|y|pero))\s/giu)].pop();
     const a = j ? sentStart + (j.index ?? 0) : sentStart;
-    const lead = draft.slice(j ? a + j[0].length : a, at);
+    const lead0 = draft.slice(j ? a + j[0].length : a, at);
+    const lead = lead0.replace(REPORT_LEAD, " ");
     if (!words(lead).every((w) => IGNORE_CLAUSE_OK.has(w))) continue;
     // ... and runs to the next joiner, comma or sentence end.
     const rest = draft.slice(end);
@@ -2052,6 +2063,25 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
     if (f && !FRAG_JOIN.has(f)) out.push(`no_subject: a sentence opens on "${f}" with no subject`);
   }
   // v7.3: a numbered or lettered list item left empty ("and (3). Deadline Friday.") lost its whole ask.
+  // v7.3.2 (Jared): a cut that takes a clause connector and leaves two finite clauses run together with no connector
+  // or punctuation between them -> null ("tengo una reunión [y lo ignoraste ... así que] necesito ...").
+  const RUN_CONN = /(?<![\p{L}])(?:así que|asi que|so|por isso|then|entonces|então|entao|and|e|y)(?![\p{L}])/iu;
+  const RUN_SPLIT = /(?<![\p{L}])(?:and|so|but|or|because|then|e|ou|mas|porque|por isso|então|entao|y|o|pero|así que|asi que|entonces|por eso)(?![\p{L}])/giu;
+  // First-person present verbs the general verb test does not know ("necesito", "preciso", "tengo").
+  const RUN_V1 = "necesito|preciso|tengo|tenho|quiero|quero|puedo|posso|voy|vou|estoy|estou|sé|sei|hay|há|creo|acho|pienso|espero|vuelvo|volto|llego|chego|pago|recojo|vengo|venho|digo|hago|faço|dejo|deixo|llevo|levo|traigo|trago|mando|envío|envio|aviso";
+  const RUN_VERB1 = new RegExp(`^(?:(?:yo|eu|i|we|nós|nosotros)\\s+)?(?:${RUN_V1})(?![\\p{L}])`, "iu");
+  const RUN_VERB_ANY = new RegExp(`(?<![\\p{L}])(?:${RUN_V1})(?![\\p{L}])`, "iu");
+  for (const [a, b] of ranges) {
+    const cut = draft.slice(a, b), before = draft.slice(0, a), after = draft.slice(b);
+    if (!RUN_CONN.test(cut)) continue;
+    if (!before.trim() || /[.,;:!?…–\-(]\s*$/u.test(before) || /[.,;:!?…–]\s*$/u.test(cut)) continue;
+    if (!/^\s*[\p{L}\p{N}]/u.test(after) || JOIN_NEXT.test(after.trim())) continue;
+    const leftSeg = (before.split(/[,;:.!?…]/u).pop() ?? "").split(RUN_SPLIT).pop() ?? "";
+    const rightSeg = (after.trim().split(/[,;:.!?…]/u)[0] ?? "").split(RUN_SPLIT)[0] ?? "";
+    const fin = (x: string) => hasFiniteVerb(x) || RUN_VERB_ANY.test(x);
+    if (fin(leftSeg) && (hasFiniteVerb(rightSeg) || RUN_VERB1.test(rightSeg.trim())))
+      out.push(`dangling: the cut takes the joiner and runs "${leftSeg.trim().split(/\s+/).slice(-2).join(" ")}" into "${rightSeg.trim().split(/\s+/).slice(0, 2).join(" ")}"`);
+  }
   const EMPTY_ITEM = /(?:\(\s*(?:\d{1,2}|[a-z])\s*\)|(?<![\p{L}\p{N}])\d{1,2}\))\s*(?=[.,;:!?…]|$)/gu;
   if ((text.match(EMPTY_ITEM) ?? []).length > (draft.match(EMPTY_ITEM) ?? []).length) out.push(`dangling: the cut leaves an empty list item`);
   // v7.3 (c): a rule sentence keeps who the rule is about. When every subject before the rule words ("The kids", "Isla",
@@ -2292,7 +2322,9 @@ Deno.serve(async (req) => {
       let got: Got = first;
       let attempts = 1;
       if (first.problems.length) {
-        if (deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) {
+        // v7.3.2: log how much time the retry would have (the 700 ms floor is unchanged).
+        timing.retry_left_ms = deadline - Date.now();
+        if (timing.retry_left_ms < SEND_RETRY_MIN_LEFT_MS) {
           log("fallback", ["no_time_for_retry"], attempts);
           return json(pass);
         }
