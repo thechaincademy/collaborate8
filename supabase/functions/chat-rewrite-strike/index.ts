@@ -1,5 +1,5 @@
 // Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.4; the live chat-rewrite is untouched)
-// v7.4.4: calm lock + soft-code second-signal; finalBroken every path; budget 2400/2300/1000; span meta logging (no text).
+// v7.4.4: calm lock + soft-code second-signal; finalBroken every path; budget 2000/1900/1000 (reverted from 2400 after >3.2s); span meta logging (no text).
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -81,18 +81,15 @@ const STRIKE_SCHEMA = {
   },
 };
 
-// v7.4.4: client app budget is 3200ms. Jared: hard 2400 / deadline 2300 / retry ≥1000ms.
-// Slack 800 keeps hard+slack ≤3200. Live reruns must stay ≤3.2s or revert hard to 2000.
-// v7.4.4 (Jared): hard stop 2400, deadline 2300, retry only if ≥1000ms left.
-// Network slack 800 so hard+slack fits the app's 3.2s ceiling. Keep 2400 only if live
-// reruns stay ≤3.2s e2e; otherwise revert hard stop to 2000.
-const SEND_HARD_STOP_MS = 2400;
-const SEND_DEADLINE_MS = 2300;
+// v7.4.4b: reverted hard stop to 2000 after live rerun (sar-en4#1 = 7.34s on 2400).
+// Deadline 1900, retry-min 1000, slack 1000 (hard+slack=3000 < 3200). Keep calm lock + finalBroken.
+const SEND_HARD_STOP_MS = 2000;
+const SEND_DEADLINE_MS = 1900;
 const SEND_RETRY_MIN_LEFT_MS = 1000;
 /** App-facing ceiling the send path must respect once network slack is reserved. */
 const SEND_CLIENT_BUDGET_MS = 3200;
-/** Reserved for auth/egress/RTT after the server returns (fit 2400+800=3200). */
-const SEND_NETWORK_SLACK_MS = 800;
+/** Reserved for auth/egress/RTT after the server returns (observed hard-set slack). */
+const SEND_NETWORK_SLACK_MS = 1000;
 // Static guard: hard stop + reserved network slack must fit the app's 3.2s ceiling.
 if (SEND_HARD_STOP_MS + SEND_NETWORK_SLACK_MS > SEND_CLIENT_BUDGET_MS) {
   throw new Error("send budget misconfigured: hard stop + network slack exceeds client budget");
