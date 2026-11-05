@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.3.2; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1070,6 +1070,7 @@ const strikeSpans = (draft: string, spans: string[], codeRanges: [number, number
   t = t.split(/(?<=[.!?])\s+/).map((s) => (/[¿]/.test(s) && !/[?]/.test(s) ? s.replace(/¿\s*/g, "") : s))
     .map((s) => (/[¡]/.test(s) && !/[!]/.test(s) ? s.replace(/¡\s*/g, "") : s)).join(" ");
   t = t.replace(/[\s,;:–-]+$/u, "");
+  // v7.4: restore a closing full stop the cut removed.
   if (t && /[.!?]\s*$/.test(draft) && !/[.!?…)"']$/.test(t)) t += ".";
   // Capital at the start of every sentence that was capitalised in the draft style (first letter after a cut).
   t = t.replace(/(^|[.!?]\s+|\n)(["'(¿¡]?)(\p{Ll})/gu, (_m, a: string, q: string, c: string) => a + q + c.toUpperCase());
@@ -1871,31 +1872,49 @@ const RULE_WHO = new Set(["kids", "children", "child", "boys", "girls", "son", "
 const RULE_SUBJ = new Set(["i", "you", "he", "she", "they", "we", "it", "eu", "tu", "tú", "ele", "ela", "eles", "elas", "nós", "você", "vocês", "yo", "él", "ella", "ellos", "ellas", "nosotros", "nosotras", "usted", "ustedes"]);
 const ruleSubjectLost = (draft: string, ranges: [number, number][], names: Set<string>): string[] => {
   const out: string[] = [];
-  const isWho = (w: string) => RULE_SUBJ.has(w) || RULE_WHO.has(w) || names.has(w);
   for (const [s, e] of sentRanges(draft)) {
     const local = ranges.filter(([a, b]) => a < e && b > s).map(([a, b]) => [Math.max(a, s), Math.min(b, e)] as [number, number]);
     if (!local.length) continue;
     const sent = draft.slice(s, e);
-    const struck = (i: number) => local.some(([a, b]) => i >= a && i < b);
-    // the first rule words that stay
+    // First rule words in the sentence (whether kept or struck): defines the subject region before them.
     let head = -1, headTxt = "";
-    for (const m of sent.matchAll(new RegExp(RULE_HEAD_RE.source, "giu"))) { if (!struck(s + (m.index ?? 0))) { head = s + (m.index ?? 0); headTxt = m[0]; break; } }
+    for (const m of sent.matchAll(new RegExp(RULE_HEAD_RE.source, "giu"))) { head = s + (m.index ?? 0); headTxt = m[0]; break; }
     if (head < 0) continue;
-    // the subject region: after the last rule frame ("we agreed", "o médico disse que") before the rule words
     let from = s;
     for (const m of sent.slice(0, head - s).matchAll(RULE_FRAME_RE)) from = s + (m.index ?? 0) + m[0].length;
-    const words = [...draft.slice(from, head).matchAll(/[\p{L}][\p{L}'’]*/gu)].map((m) => ({ w: m[0].toLowerCase().replace(/[’]/g, "'").replace(/'(?:d|s|re|ve|ll|m)$/, ""), at: from + (m.index ?? 0) }));
-    const who = words.filter((x) => isWho(x.w));
-    if (!who.length) continue;
-    const keptWho = who.filter((x) => !struck(x.at));
-    if (keptWho.length) continue;
-    // PT/ES: a struck "tu / tú" before a second-person verb ("tienes que", "tens de", "debes") is still said by the verb.
-    if (who.every((x) => /^(?:tu|tú)$/.test(x.w)) && /^(?:tienes|tens|debes|deves|precisas|necesitas|no puedes|não podes)/iu.test(headTxt)) continue;
-    out.push(`${headTxt}`);
+    // v7.4 (Jared): any strike overlapping the subject/actor region of a rule sentence -> null. No safe-subject exceptions.
+    if (!/[\p{L}]/u.test(draft.slice(from, head))) continue;
+    if (local.some(([a, b]) => a < head && b > from)) out.push(`${headTxt}`);
   }
   return out;
 };
 // Returns problem notes; empty = the shape is fine.
+// v7.3.3 helpers (Jared's limits).
+const RQ_FRAME = /(?<![\p{L}])(?:(?:so|that|too|this|how|really) (?:hard|difficult)(?: is it| was it| is that| was that)?|would it kill you|too much to ask|(?:tão|tao|muito) difícil(?: é| foi| era)?|custa(?: assim| lá)? tanto|é (?:pedir muito|muito pedir)|(?:tan|muy) difícil(?: es| era| resulta)?|(?:tanto|mucho)(?: te)? cuesta|es (?:mucho pedir|pedir mucho))(?![\p{L}])/iu;
+const RQ_REST_STOP = new Set(["to", "for", "you", "it", "that", "this", "para", "pra", "ti", "você", "voce", "te", "que", "usted", "es", "é", "ser", "mesmo", "really", "realmente", "assim", "así", "then", "entonces", "então"]);
+const rqAsk = (sent: string): boolean => {
+  const n = normText(sent);
+  const m = n.match(RQ_FRAME);
+  if (!m) return false;
+  const rest = n.slice((m.index ?? 0) + m[0].length);
+  return (rest.match(/[\p{L}][\p{L}'-]*/gu) ?? []).some((w) => w.length >= 3 && !RQ_REST_STOP.has(w));
+};
+// A threat that states a real action: an ultimatum ("if you don't…", "se não…", "si no…", "or else") plus a first-person action.
+const ACT_COND = /(?<![\p{L}])(?:if you (?:still )?(?:don't|do not|won't|will not|haven't|have not|didn't|did not)(?! (?:mind|want|need|have time|feel))|unless you|or else|otherwise|se (?:tu )?(?:não|nao) (?!(?:te |se )?(?:importa|puder|conseguir|quiser|der |dá |tiver tempo))|senão|caso (?:não|nao)|si (?:tú )?no (?!(?:te |le )?(?:importa|puede|quiere|viene|va bien|da tiempo))|o si no|como no|de lo contrario)/iu;
+const ACT_FIRST = /(?<![\p{L}])(?:i'll|i will|i'm going to|i am going to|i'm taking|i'm calling|i'm booking|myself|vou|vamos|levo|marco|trato|falo|ligo|peço|faço|eu mesm[oa]|voy a|vamos a|llevo|pido|hablo|llamo|hago|yo mism[oa])(?![\p{L}])/iu;
+const fxIsActThreat = (s: string) => ACT_COND.test(normText(s)) && ACT_FIRST.test(normText(s));
+const SUBJ_PREP = new Set(["para", "pra", "com", "de", "por", "sem", "a", "con", "sin", "entre", "contra", "hacia", "según", "segun"]);
+// The first word kept after a struck "tu / tú" must be a second-person verb (negation and clitics skipped).
+const secondPersonNext = (after: string): boolean => {
+  const ws = (after.toLowerCase().match(/[\p{L}][\p{L}-]*/gu) ?? []);
+  let i = 0;
+  while (i < ws.length && /^(?:não|nao|no|nunca|já|ja|ya|também|también|te|me|lo|la|le|nos|o|a|se)$/u.test(ws[i])) i++;
+  const w = ws[i] ?? "";
+  if (!w) return false;
+  if (/^(?:és|eres|estás|vas|vais|tens|tienes|podes|puedes|deves|debes|sabes|queres|quieres|foste|fuiste|fazes|haces|dizes|dices|vens|vienes|has|hás)$/u.test(w)) return true;
+  // -s present / -ste preterite (PT "esqueceste(-te)", ES "olvidaste"), with an optional clitic tail.
+  return /^\p{L}{2,}(?:as|es|ás|és|ste|aste|iste)(?:-(?:te|me|lo|la|o|a|nos))?$/u.test(w);
+};
 const strikeShape = (draft: string, ranges: [number, number][], text: string): string[] => {
   const out: string[] = [];
   const names = draftNames(draft);
@@ -2107,6 +2126,40 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
       if (lost.length) out.push(`missing_fact: the strike takes what "${next.split(/\s+/)[0]}" refers to`);
     }
   }
+  // v7.3.3 (Jared, limit 1): a rhetorical question that carries an ask ("Is it so hard to text me when you land?",
+  // "¿Tanto cuesta mandarme un mensaje?") or an amount can't be struck whole; only a bare one ("Is that so hard?") can.
+  // A threat that states a real action ("I'll take Leo to the GP myself", "vou falar com o advogado") is a decision:
+  // striking it drops the decision, and keeping it keeps the threat, so both are null.
+  for (const [s, e] of sentRanges(draft)) {
+    const raw = draft.slice(s, e), sent = raw.trim();
+    const lead = raw.match(/^\s*/)?.[0].length ?? 0;
+    const struckWhole = ranges.some(([a, b]) => a <= s + lead && b >= s + lead + sent.length);
+    const touched = ranges.some(([a, b]) => a < s + lead + sent.length && b > s + lead);
+    if (struckWhole && /\?\s*$/.test(sent)) {
+      if (/\d/.test(sent) || (normText(sent).match(FX_MONEY_G) ?? []).length) out.push(`number: the strike takes a whole rhetorical question with an amount`);
+      else if (rqAsk(sent)) out.push(`ask: the strike takes a whole rhetorical question that carries an ask`);
+    }
+    if (fxIsThreat(sent) || fxIsActThreat(sent)) {
+      if (touched) out.push(`action_dropped: the strike takes from a threat that states an action (a decision)`);
+      else if (fxIsActThreat(sent)) out.push(`threat_kept: "${sent}" is a threat that states an action`);
+    }
+  }
+  // v7.3.3 (Jared, limit 2): "tu / tú" may go only before a clearly second-person verb; "você / usted" never as a subject.
+  for (const [a, b] of ranges) {
+    const cut = draft.slice(a, b);
+    let flagged = false;
+    for (const m of cut.matchAll(/(?<![\p{L}])(você|voce|usted|tu|tú)(?![\p{L}])/giu)) {
+      if (flagged) break;
+      const at = m.index ?? 0;
+      const prev = (draft.slice(0, a) + cut.slice(0, at)).toLowerCase().match(/([\p{L}]+)[^\p{L}]*$/u)?.[1] ?? "";
+      if (SUBJ_PREP.has(prev)) continue;
+      const w = m[1].toLowerCase();
+      if (w === "você" || w === "voce" || w === "usted") { out.push(`no_subject: the strike takes "${m[1]}" (a subject with a third-person verb)`); flagged = true; continue; }
+      // tu / tú with its own verb (or the ES possessive "tu" + noun) inside the cut: nothing kept needs it.
+      if (/[\p{L}]/u.test(cut.slice(at + m[0].length).split(/[,;:.!?]/)[0])) continue;
+      if (!secondPersonNext(draft.slice(b))) { out.push(`no_subject: the strike takes "${m[1]}" and what follows is not a second-person verb`); flagged = true; }
+    }
+  }
   // (3) Blame words left in the result.
   for (const sent of fxSentences(text)) {
     const m = normText(sent).match(STRIKE_BLAME_LEFT);
@@ -2243,7 +2296,8 @@ Deno.serve(async (req) => {
       // but the whole result still goes through every check.
       const judge = (raw: string, strikes: string[]): Got => {
         const spans = strikes.filter((s) => typeof s === "string" && s.trim());
-        if (!spans.length && !fixed.ranges.length && !shout) return { kind: "none" };
+        // v7.4 (Jared): hard rough-gate. Empty model strikes => pass; never caps/martyr/brush-off/fixed/Please alone.
+        if (!spans.length) return { kind: "none" };
         // v7: grudging tails ("if you can fit it in") are struck only with another strike.
         const fw = fixedWith(fixed, spans);
         const st = strikeSpans(draft, spans, fw.ranges);
@@ -2303,8 +2357,8 @@ Deno.serve(async (req) => {
               ctrls.forEach((o) => { if (o !== c) o.abort(); });
               resolve(f);
             } else if (done === ctrls.length) {
-              // A code-only result is used only when every call struck nothing itself (the model saw no other blame).
-              resolve((all.every(isCodeOnlyPass) ? all[0] : undefined) ?? all.find((x) => x.kind === "none") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
+              // v7.4: code-only wins are gone (rough-gate). Prefer none, then any cand/parse/error.
+              resolve(all.find((x) => x.kind === "none") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
             }
           });
         });
