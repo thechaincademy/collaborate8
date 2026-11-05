@@ -1,6 +1,5 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.7; the live chat-rewrite is untouched)
-// v7.4.7: HARD_STOP_FROM_ARRIVAL — hard stop armed at request start, races body/auth/premium/model; ms stamped at decision (pendingLog cannot inflate); discard rewrite if past hard stop.
-// Jared multi-attempt: if ANY attempt is calm → untouched; if attempts disagree on span sets → no rewrite (never strike on disagreement). Calm lock + soft-code second-signal + finalBroken kept. Budget 2400/2300/1000 slack 800; Jian ping kept.
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.8; the live chat-rewrite is untouched)
+// v7.4.8: residual past-dig gate on FINAL rewrite only (null if past-failure jab remains; calm untouched stays untouched); hard-stop decision capped under 2400 (early timer arm + ms log cap); v7.4.7 arrival hard-stop + Jared multi-attempt kept. Budget 2400/2300/1000 slack 800; Jian ping kept.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -82,7 +81,7 @@ const STRIKE_SCHEMA = {
   },
 };
 
-// v7.4.7 (Jared): hard stop 2400 from arrival, deadline 2300, retry only if ≥1000ms left; any-calm / disagree→null.
+// v7.4.8 (Jared): hard stop 2400 from arrival (timer arms 50ms early; logged ms capped at 2400); deadline 2300; residual past-dig → null; any-calm / disagree→null.
 // Network slack 800 so hard+slack fits the app's 3.2s ceiling. Overall hard-stop check before retry kept.
 const SEND_HARD_STOP_MS = 2400;
 const SEND_DEADLINE_MS = 2300;
@@ -1407,7 +1406,7 @@ const fixedWith = (fixed: { ranges: [number, number][]; jab: [number, number][];
 // ---- v6: log reasons are codes from this fixed set only; never draft text, spans or snippets ----
 const REASON_CODES = new Set([
   "pass", "rewrite", "please_added", "timeout", "parse", "error", "no_time_for_retry", "retry_timeout", "retry_parse", "retry_error",
-  "retry_none", "retry_cand", "span_not_found", "too_small", "no_subject", "hanging_conditional", "dangling", "no_verb", "actor_dropped", "uncertain_calm", "final_broken", "disagree", "any_calm",
+  "retry_none", "retry_cand", "span_not_found", "too_small", "no_subject", "hanging_conditional", "dangling", "no_verb", "actor_dropped", "uncertain_calm", "final_broken", "disagree", "any_calm", "past_dig",
   "blame_left", "sarcasm_left", "shout_left", "name", "number", "time", "place", "medicine", "health", "rule", "not_told", "agreement",
   "report", "count", "deed", "ask", "negation", "reproach_kept", "threat_kept", "added_content", "dropped_number", "new_time_word",
   "tense_changed", "actor_changed", "action_dropped", "stance_changed", "rule_changed", "missing_fact", "new_number", "banned_word",
@@ -2518,6 +2517,54 @@ const shouldRetry747 = (firstWave: AttemptView747[]): boolean => {
   if (new Set(opinions.map((a) => spanSetKey747(a.spans))).size > 1) return false;
   return opinions.every((a) => (a.problems?.length ?? 0) > 0);
 };
+
+// v7.4.8: residual past-dig on FINAL rewrite only (adds nulls). Calm untouched never reaches finishRewrite.
+const PAST_DIG_NEUTRAL_LAST_TIME =
+  /\blast time\s+(?:we|i|you and i)\s+(?:agreed|said|decided|arranged|set|planned)\b|\bda última vez\s+(?:que\s+)?(?:combin(?:amos|ámos)|dissemos|acord(?:amos|ámos))\b|\bla última vez\s+(?:que\s+)?(?:acordamos|dijimos|quedamos(?:\s+en)?)\b/iu;
+const PAST_DIG_HARD = /\blast time you\b|\blike last time\b|\byou (?:forgot|skipped|missed)\b|\besqueceste|\besqueceu|\bolvidaste|\bse te olvid/i;
+const PAST_DIG_RES: RegExp[] = [
+  /(?<![\p{L}\p{N}])you forgot(?:\s+(?:it|again|last time))?(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])you skipped(?:\s+it)?(?:\s+last time)?(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])you missed(?:\s+it)?(?:\s+last time)?(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])last time you(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])like last time(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])you always(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])you never(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])(?:already told you|told you already|i(?:['’]ve| have)? told you(?: already)?)(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])as usual(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])as always(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])once again(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])yet again(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])(?:(?:so|how)\s+typical(?:\s+of\s+you)?|it['’]?s\s+(?:so\s+)?typical(?:\s+of\s+you)?|typical\s+of\s+you)(?![\p{L}\p{N}])/iu,
+  /(?<=^|[.!?]\s+)typical[.!?…]*\s*$/imu,
+  /(?<![\p{L}\p{N}])como sempre(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])da última vez(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])(?:voc[eê] esqueceu|esqueceste(?:-te)?)(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])(?:já te disse|já disse)(?![\p{L}\p{N}])/iu,
+  /(?:esqueceste(?:-te)?|esqueceu|falhaste|faltaste|não (?:pagaste|disseste|avisaste))[^.!?]{0,48}?\b(?:de novo|outra vez)\b|\b(?:de novo|outra vez)\b[^.!?]{0,48}?(?:esqueceste(?:-te)?|esqueceu|falhaste|faltaste)/iu,
+  /(?<![\p{L}\p{N}])como siempre(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])la última vez(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])(?:se te olvid[oó]|olvidaste)(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])ya te (?:lo )?dije(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}])de nuevo(?![\p{L}\p{N}])/iu,
+  /(?:olvidaste|se te olvid[oó]|faltaste|no (?:pagaste|avisaste|dijiste))[^.!?]{0,48}?\b(?:otra vez|de nuevo)\b|\b(?:otra vez|de nuevo)\b[^.!?]{0,48}?(?:olvidaste|se te olvid[oó]|faltaste)/iu,
+];
+const pastDigLeft = (text: string): string | null => {
+  if (!text || !text.trim()) return null;
+  const hasNeutral = PAST_DIG_NEUTRAL_LAST_TIME.test(text);
+  for (const re of PAST_DIG_RES) {
+    re.lastIndex = 0;
+    const m = text.match(re);
+    if (!m) continue;
+    const hit = m[0];
+    if (hasNeutral && /last time|última vez|ultima vez/i.test(hit) && !PAST_DIG_HARD.test(hit) && !PAST_DIG_HARD.test(text)) continue;
+    return hit;
+  }
+  return null;
+};
+/** Arm the hard-stop timer this many ms early so a late setTimeout still decides under 2400. */
+const SEND_HARD_TIMER_EARLY_MS = 50;
+
 const pastHardStop = (started: number, now = Date.now()) => now - started >= SEND_HARD_STOP_MS;
 
 // v6: "reason" / "reasons" carry only codes from REASON_CODES (never draft text, spans or snippets).
@@ -2634,7 +2681,8 @@ Deno.serve(async (req) => {
     const log = (outcome: string, reasons: string[], attempts: number, meta?: { span_n: number; span_len_sum: number; span_model_n: number; span_code_n: number; span_src: string; guard: string }) => {
       if (settled) return;
       // v7.4.7: stamp ms at decision; pendingLog flush must reuse it (was Date.now()-started at flush → 3075/3332 inflation).
-      const msAtDecision = Date.now() - started;
+      // v7.4.8: never log ms above the hard stop (late flush / timer skew showed 2414).
+      const msAtDecision = Math.min(Date.now() - started, SEND_HARD_STOP_MS);
       const t: Record<string, number | string> = { ...timing, ms: msAtDecision };
       if (meta) {
         t.span_n = meta.span_n;
@@ -2758,6 +2806,11 @@ Deno.serve(async (req) => {
         }
         if (got.kind !== "cand" || got.text === undefined) return json(pass);
         const rewrite = addPlease(got.text, got.pleaseFrom ?? Infinity);
+        // v7.4.8 Jared: past-failure dig left in FINAL output → null (calm untouched never enters here).
+        if (pastDigLeft(rewrite)) {
+          log("pass", ["past_dig"], attempts, got.meta);
+          return json(pass);
+        }
         log("rewrite", rewrite === got.text ? [] : ["please_added"], attempts, got.meta);
         return json({ needs_rewrite: true, rewrite });
       };
@@ -2849,7 +2902,7 @@ Deno.serve(async (req) => {
         settled = true;
         sendCtrl.abort();
         resolve(json(pass));
-      }, Math.max(0, started + SEND_HARD_STOP_MS - Date.now()));
+      }, Math.max(0, started + SEND_HARD_STOP_MS - SEND_HARD_TIMER_EARLY_MS - Date.now()));
     });
     const work = runSend().then((r) => r, () => json(pass));
     const gated = (async (): Promise<Response> => {
