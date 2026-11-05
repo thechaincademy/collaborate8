@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.1; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.2; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1537,6 +1537,8 @@ const VERB_WORDS = new Set([
   "compro", "llevaré", "recogeré", "pagaré",
   // v7: reply verbs as imperatives ("E responde." / "Y contesta.")
   "responde", "respondes", "contesta", "contestas", "avisa", "avisas", "confirma", "confirmas", "reply", "answer", "confirm",
+  // v7.1: asking/telling verbs that open a run-on ("Te pregunté el martes...", "Pedi-te na terça...")
+  "asked", "pregunté", "preguntaste", "perguntei", "perguntaste", "pedí", "pedi", "pediste", "dije", "avisé", "avisei", "disse", "mandé", "mandei",
 ]);
 const hasFiniteVerb = (s: string) => {
   const toks = s.toLowerCase().replace(/[’]/g, "'").split(/[^\p{L}']+/u).filter(Boolean);
@@ -1790,6 +1792,18 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
       if ([...origSegs].some((o) => o !== c && o.endsWith(" " + c) && hasFiniteVerb(o.slice(0, o.length - c.length))))
         out.push(`dangling: "${c.split(/\s+/).slice(0, 3).join(" ")}" is a comma clause left without its verb`);
     }
+  }
+  // v7.1 (1e): a cut that opens a sentence and takes its verb ("[Te pregunté] el martes ... si puedes") must leave a
+  // clause with its own verb; "El martes y otra vez el jueves si puedes recogerla" has lost what it hung from.
+  for (const [a, b] of ranges) {
+    const cut = draft.slice(a, b), before = draft.slice(0, a), after = draft.slice(b);
+    if (!(before.trim() === "" || /[.!?…]["')\]]*\s*$/u.test(before))) continue;
+    if (/[,;:.!?…]["')\]]*\s*$/u.test(cut) || !/^\s*[\p{L}\p{N}£€$]/u.test(after)) continue;
+    if (!hasFiniteVerb(cut)) continue;
+    const nextSeg = after.trim().split(/[,;:.!?…]/u)[0].trim();
+    if (!nextSeg || JOIN_NEXT.test(nextSeg)) continue;
+    const head = nextSeg.split(new RegExp("\\s+(?=(?:and|so|but|or|because|e|ou|mas|porque|por isso|y|pero|así que|por eso|if|se|si|whether|when|quando|cuando)(?![\\p{L}]))", "iu"))[0];
+    if (!hasFiniteVerb(head)) out.push(`dangling: the cut leaves "${head.split(/\s+/).slice(0, 3).join(" ")}" with its verb struck`);
   }
   // v7.1 (1c): a relative clause is struck whole or not at all; cutting only its opener (", which by the way") leaves
   // its verb ("still smells") glued to the clause before it.
