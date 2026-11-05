@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.1; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1520,6 +1520,21 @@ const shoutForm = (w: string, draft: string, inRun = false): string | null => {
   return low;
 };
 const hasShout = (draft: string) => shoutLeft(draft, draft).length > 0;
+// v7.4.1 (Jared): shouting is rough for the gate — 3+ consecutive all-caps words, or most of the
+// message in caps, excluding acronyms and names. A single emphasised word ("IMPORTANT") is not shouting.
+const isShoutingRough = (draft: string): boolean => {
+  const ws = [...draft.matchAll(CAPS_WORD_RE)];
+  if (!ws.length) return false;
+  const loud = ws.map((m) => isShout(m[0]) && shoutForm(m[0], draft) !== null);
+  let run = 0;
+  for (const L of loud) {
+    if (L) { run++; if (run >= 3) return true; }
+    else run = 0;
+  }
+  const total = ws.filter((m) => (m[0].match(/\p{L}/gu) ?? []).length >= 2).length;
+  const nLoud = loud.filter(Boolean).length;
+  return total > 0 && nLoud * 2 >= total; // most (≥ half) of the message's letter-words are shouted
+};
 // A short all-caps word next to another shouted word (of 5+ letters or a common word) is part of a shouted phrase
 // ("TODOS LOS DÍAS", "SO HARD"), not an acronym.
 const shoutRuns = (text: string, draft: string) => {
@@ -1612,7 +1627,7 @@ const hasFiniteVerb = (s: string) => {
     VERB_WORDS.has(t) || FX_KEY.some(([, re]) => re.test(t)) || /^(?:esque[çc]|olvid|atras|retras|falt|falh|lleg|cheg|lembr|acord|recuerd)\p{L}*$/u.test(t) || PLEASE_EN_VERBS.has(t) || PLEASE_PTES_VERBS.has(t) || /(?:n't|'ll|'re|'ve|'m|'d)$/.test(t) ||
     /^i'm$|^it's$|^that's$|^there's$|^he's$|^she's$/.test(t) ||
     (t.length >= 5 && /ed$/.test(t)) ||
-    (t.length >= 4 && /(?:aste|este|iste|ou|eu|iu|ámos|aram|eram|iram|ava|avas|aba|abas|ió|aron|ieron|aremos|eremos|iremos|arás|erás|irás|ará|erá|irá)$/.test(t))
+    (t.length >= 4 && /(?:aste|este|iste|ou|eu|iu|ámos|aram|eram|iram|ava|avas|aba|abas|ió|ó|yó|aron|ieron|aremos|eremos|iremos|arás|erás|irás|ará|erá|irá)$/.test(t))
   );
 };
 const NOT_ME_OR_YOU = /(?<![\p{L}])(?:(?:wasn't|was not|isn't|it's not|not) me|it was you|you did|was you|não fui eu|nao fui eu|foste tu|foi você|tu é que|no fui yo|no he sido yo|fuiste tú|fuiste tu|has sido tú|tú eres (?:el|la) que)(?![\p{L}])/iu;
@@ -1633,7 +1648,8 @@ const STRIKE_BLAME_LEFT = wordRe(
   // v7: "which you'd know if you ever read the emails" and a snide "by the way" aside in a relative clause
   "which you'd know|which you would know|you'd know if|you would know if|if you ever read|if you ever checked|if you ever looked|" +
   "if you ever listened|if you ever opened|if you ever paid attention|saberias se|saberías si|se lesses os|se lesses as|si leyeras|si leyeses|" +
-  "which by the way|which btw|que por cierto|que por sinal|que já agora|que a propósito|que por lo visto",
+  "which by the way|which btw|que por cierto|que por sinal|que já agora|que a propósito|que por lo visto|" +
+  "encima|además|ademas|para colmo|além disso|alem disso|on top of (?:that|it)|what's more|whats more",
 );
 // v6: sarcasm left in a struck result (anywhere) or a sarcastic opener left at a sentence start.
 const SARC_LEFT = wordRe(
@@ -1812,7 +1828,7 @@ const FACT_FRAME = wordRe(
   "i'm sick of|i am sick of|i'm tired of|i am tired of|i'm fed up|i am fed up|sick and tired|estou farta|estou farto|estou cansada|estou cansado|" +
   "ando farta|ando farto|estoy harta|estoy harto|estoy cansada|estoy cansado|me tienes harta|me tienes harto|glad you|glad to see you|nice that you|" +
   "good to see you|good to know you|fico contente|fico feliz|ainda bem que|me alegra que|me alegro de que|qué bien que|i bet|bet you|aposto que|" +
-  "apuesto a que|seguro que|tenho a certeza que|of course|claro que|obviamente|obviously|naturally|naturalmente|por supuesto|desastre|disaster|" +
+  "apuesto a que|seguro que|tenho a certeza que|of course|claro que|obviamente|obviously|naturally|naturalmente|por supuesto|encima|además|ademas|para colmo|além disso|on top of that|what's more|desastre|disaster|" +
   "vergonha|vergüenza|how many times|quantas vezes|cuántas veces|cuantas veces|how hard|so hard|tão difícil|tan difícil|assim tão|is it that hard|" +
   "graças à tua|gracias a tu|thanks to your|como nunca|as you never|since you never",
 );
@@ -2101,6 +2117,36 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
     if (fin(leftSeg) && (hasFiniteVerb(rightSeg) || RUN_VERB1.test(rightSeg.trim())))
       out.push(`dangling: the cut takes the joiner and runs "${leftSeg.trim().split(/\s+/).slice(-2).join(" ")}" into "${rightSeg.trim().split(/\s+/).slice(0, 2).join(" ")}"`);
   }
+  // v7.4.1: adverb/adjective jammed against a finite verb whose subject or object was struck between them
+  // ("…oliendo fatal [porque nadie la] lavó" → "…fatal lavó"; EN/PT/ES).
+  const ADJ_ADV_END = /(?:ly|mente)$/iu;
+  const ADJ_ADV_WORD = new Set(["fatal", "awful", "terrible", "horrible", "bad", "badly", "late", "early", "alone", "solo", "só", "so", "dirty", "filthy", "wrong", "right", "hard", "easy", "clear", "claro", "mal", "bien", "bem", "já", "ya", "ainda", "todavia", "todavía", "still", "already", "never", "sempre", "siempre", "nunca", "well", "just", "only", "apenas", "sólo", "muy", "muito", "tan", "tão", "quite", "rather"]);
+  const SUBORD_IN_CUT = /(?<![\p{L}])(?:because|since|as|that|which|who|when|while|porque|pois|que|quando|cuando|mientras|enquanto|embora|aunque)(?![\p{L}])/iu;
+  const SUBJOBJ_IN_CUT = /(?<![\p{L}])(?:nadie|ninguém|ninguem|nobody|somebody|someone|alguém|alguien|everyone|everybody|he|she|they|we|i|you|él|ella|eles|elas|ele|ela|yo|eu|tú|tu|usted|nós|ellos|ellas|me|te|lo|la|le|nos|os|les|him|her|them|us)(?![\p{L}])/iu;
+  for (const [a, b] of ranges) {
+    const before = draft.slice(0, a), after = draft.slice(b), cut = draft.slice(a, b);
+    if (/[.!?…]\s*$/u.test(before) || before.trim() === "") continue;
+    if (!/[\p{L}\p{N}'’)\]]\s*$/u.test(before) || !/^\s*[\p{L}]/u.test(after)) continue;
+    const prev = lastTok(before.replace(/[\s,;:–-]+$/u, ""));
+    const next = (after.trim().match(/^[\p{L}'’]+/u)?.[0] ?? "");
+    if (!prev || !next || hasFiniteVerb(prev) || !hasFiniteVerb(next)) continue;
+    const prevIsAdj = ADJ_ADV_END.test(prev) || ADJ_ADV_WORD.has(prev.toLowerCase()) || STATE_WORDS.test(prev);
+    if (!prevIsAdj) continue;
+    if (!(SUBORD_IN_CUT.test(cut) || SUBJOBJ_IN_CUT.test(cut))) continue;
+    out.push(`dangling: "${prev} ${next}" jams an adverb/adjective against a verb whose subject or object was struck`);
+  }
+  // v7.4.1: a sentence left ending on a bare finite verb after its subject was struck ("[Nadie] lavó." → "Lavó.").
+  for (const [s, e] of sentRanges(draft)) {
+    const local = ranges.filter(([a, b]) => a < e && b > s);
+    if (!local.length) continue;
+    const r = strikeSpans(draft.slice(s, e), [], local.map(([a, b]) => [Math.max(a, s) - s, Math.min(b, e) - s] as [number, number]));
+    if (!r.ok) continue;
+    const rem = r.text.replace(/[.!?…¿¡"')\]]+$/u, "").trim();
+    const toks = rem.toLowerCase().match(/[\p{L}'’]+/gu) ?? [];
+    if (toks.length === 1 && hasFiniteVerb(toks[0]) && local.some(([a, b]) => SUBJOBJ_IN_CUT.test(draft.slice(a, b))))
+      out.push(`no_subject: the strike leaves a bare verb "${toks[0]}" with its subject struck`);
+  }
+  
   const EMPTY_ITEM = /(?:\(\s*(?:\d{1,2}|[a-z])\s*\)|(?<![\p{L}\p{N}])\d{1,2}\))\s*(?=[.,;:!?…]|$)/gu;
   if ((text.match(EMPTY_ITEM) ?? []).length > (draft.match(EMPTY_ITEM) ?? []).length) out.push(`dangling: the cut leaves an empty list item`);
   // v7.3 (c): a rule sentence keeps who the rule is about. When every subject before the rule words ("The kids", "Isla",
@@ -2110,6 +2156,43 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
   // outside every blame / reproach / sarcasm / dig / ignore / code-struck phrase, and not said elsewhere in the result
   // ("which by the way still smells") -> null.
   for (const w of factWordsDropped(draft, ranges, text)) out.push(`missing_fact: the strike drops "${w}"`);
+  // v7.4.1 (Dinesh): a non-payment fact stays word for word. Never rephrase ("hasn't paid" → "didn't pay").
+  // A later repeat that is only a jab may be struck; the first statement stays. Ambiguous → null.
+  {
+    const PAY_FACT_RE = /(?<![\p{L}])(?:(?:you|he|she|they|tu|tú|él|ele|ela|usted)\s+)?(?:(?:still|aún|aun|ainda|ya|já)\s+)?(?:(?:haven['’]?t|hasn['’]?t|have not|has not|didn['’]?t|did not|never)\s+(?:(?:even|still)\s+)?(?:pay|paid)|(?:no|não|nao)\s+(?:(?:me|te|le|lo|la)\s+)?pag(?:a|as|ou|aste|ó|ado|aron)?|(?:y|e)\s+no\s+pagaste|(?:y|e)\s+no\s+pagó|(?:e)\s+não\s+pagaste)(?![\p{L}])/giu;
+    const norms = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, " ").trim();
+    const draftFacts = [...draft.matchAll(PAY_FACT_RE)].map((m) => ({ raw: m[0], at: m.index ?? 0, n: norms(m[0]) }));
+    if (draftFacts.length) {
+      const textFacts = [...text.matchAll(PAY_FACT_RE)].map((m) => ({ raw: m[0], n: norms(m[0]) }));
+      const first = draftFacts[0];
+      const covers = (f: { at: number; raw: string }) => ranges.some(([a, b]) => a <= f.at && b >= f.at + f.raw.length);
+      const isJabFact = (f: { raw: string }) => {
+        // Narrow: wrappers / reproach / blame / sarcasm only — not FACT_YOU (every "you haven't paid" would look like a jab).
+        const sent = (sentRanges(draft).map(([s, e]) => draft.slice(s, e)).find((s) => s.includes(f.raw)) ?? f.raw);
+        return FX_REPROACH.test(sent) || STRIKE_BLAME_LEFT.test(sent) || SARC_LEFT.test(sent) ||
+          /as always|como siempre|como siempre|otra vez|outra vez|\bagain\b|de novo|de nuevo/iu.test(sent);
+      };
+      // A different surface form of non-payment that the draft never used → rephrase.
+      for (const t of textFacts) {
+        if (!draftFacts.some((d) => d.n === t.n)) {
+          out.push(`tense_changed: non-payment fact rephrased as "${t.raw}"`);
+          break;
+        }
+      }
+      // The first statement stays word for word — never struck, never rewritten away.
+      if (covers(first))
+        out.push(`missing_fact: the first non-payment fact "${first.raw.trim()}" must stay word for word`);
+      else if (!textFacts.some((t) => t.n === first.n) && !text.includes(first.raw))
+        out.push(`tense_changed: non-payment fact "${first.raw.trim()}" must stay word for word`);
+      // Later repeats may be struck only when clearly a jab; otherwise ambiguous → null.
+      for (const f of draftFacts.slice(1)) {
+        if (!covers(f)) continue;
+        if (!isJabFact(f))
+          out.push(`missing_fact: ambiguous which non-payment statement is the fact; leave the first word for word`);
+      }
+    }
+  }
+
   // v7.3 (b): a whole sentence struck right before a kept sentence that points back at it ("[Did you even read the letter
   // from school?] It says the trip is on Wednesday") takes what "It" refers to.
   {
@@ -2297,7 +2380,20 @@ Deno.serve(async (req) => {
       const judge = (raw: string, strikes: string[]): Got => {
         const spans = strikes.filter((s) => typeof s === "string" && s.trim());
         // v7.4 (Jared): hard rough-gate. Empty model strikes => pass; never caps/martyr/brush-off/fixed/Please alone.
-        if (!spans.length) return { kind: "none" };
+        // v7.4.1: shouting (3+ consecutive all-caps words, or most of the message in caps) counts as rough —
+        // caps normalisation still runs (subject to every other guard). A single emphasised word does not.
+        if (!spans.length) {
+          if (!isShoutingRough(draft) || !hasShout(draft)) return { kind: "none" };
+          const text = deShout(draft, draft);
+          if (text === draft) return { kind: "none" };
+          const shape = strikeShape(draft, [], text);
+          const loud = shoutLeft(text, draft);
+          if (loud.length) shape.push(`shout_left: ${loud.join(", ")}`);
+          if (shape.length) return { kind: "cand", raw, text, problems: shape };
+          const c = strikeCheck(draft, text, [], []);
+          if (c.codes.length) return { kind: "cand", raw, text, problems: c.codes.length && c.notes.length ? [...c.codes, ...c.notes] : c.codes };
+          return { kind: "cand", raw, text, problems: [], codeOnly: false, pleaseFrom: undefined };
+        }
         // v7: grudging tails ("if you can fit it in") are struck only with another strike.
         const fw = fixedWith(fixed, spans);
         const st = strikeSpans(draft, spans, fw.ranges);
