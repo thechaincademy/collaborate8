@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.2; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.3; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1235,6 +1235,55 @@ const DIG_RE = new RegExp(
 );
 // Left in a result: the same dig with anything after it ("I'm not your taxi so ...") is still blame.
 const DIG_LEFT_RE = new RegExp(DIG_RE.source.slice(0, DIG_RE.source.lastIndexOf("(?=")) + "(?![\\p{L}])", "iu");
+// v7.3 (Jared): "you just ignored it", "tu simplesmente ignoraste", "lo ignoraste", "didn't even reply", "nem respondeste",
+// "ni contestaste" are blame. Left in a result they are blame_left (null); a clause that is only this is struck by code.
+const IGNORE_BODY =
+  "ignored|ignores|ignoring|you ignore|ignore me|ignore us|ignore everything|left me on read|blanked me|ghosted me|" +
+  "didn't even (?:reply|answer|respond|text back|get back|call back|read)|did not even (?:reply|answer|respond|read)|" +
+  "never even (?:replied|answered|responded|read)|can't even (?:reply|answer|respond)|couldn't even (?:reply|answer|respond|be bothered)|" +
+  "ignoraste|ignoras|ignora-me|ignoras-me|ignorou|ignorou-me|ignoram|me ignoras|me ignoraste|" +
+  "nem (?:sequer )?(?:me )?(?:respondeste|respondes|respondeu|disseste nada|atendeste|atendes|leste|ligaste)|deixaste-me a falar sozinh[ao]|" +
+  "ignoró|lo ignoraste|la ignoraste|me ignoraste|pasaste de mí|pasas de mí|pasaste del tema|" +
+  "ni (?:siquiera )?(?:me )?(?:contestaste|contestas|respondiste|respondes|dijiste nada|cogiste el teléfono|leíste)|me dejaste en visto";
+const IGNORE_LEFT_RE = wordRe(IGNORE_BODY);
+const IGNORE_G = new RegExp(`(?<![\\p{L}\\p{N}])(?:${IGNORE_BODY})(?![\\p{L}\\p{N}])`, "giu");
+// Words that may share a clause with the ignore phrase when the clause goes whole ("and you just ignored it like you
+// ignore everything"). Anything else in the clause (a day, a name, "my three messages") means the cut is not clean.
+const IGNORE_CLAUSE_OK = new Set([
+  "you", "tu", "tú", "just", "simply", "completely", "totally", "simplesmente", "simplemente", "completamente", "totalmente", "again", "then",
+  "it", "me", "us", "them", "him", "her", "everything", "tudo", "todo", "like", "como", "always", "sempre", "siempre", "do", "does", "did",
+  "fazes", "haces", "lo", "la", "o", "a", "mí", "mim", "my", "minhas", "mis", "mensagens", "mensajes", "messages", "texts", "message", "text",
+  "even", "sequer", "siquiera", "outra", "otra", "vez", "de", "novo", "nuevo", "as", "usual", "else", "also", "também", "también", "y", "e", "and",
+]);
+const ignoreClauses = (draft: string): [number, number][] => {
+  const out: [number, number][] = [];
+  const words = (s: string) => s.toLowerCase().replace(/[’]/g, "'").split(/[^\p{L}'-]+/u).filter(Boolean);
+  for (const m of draft.matchAll(IGNORE_G)) {
+    const at = m.index ?? 0, end = at + m[0].length;
+    const sentStart = Math.max(draft.slice(0, at).search(/[^.!?\n]*$/u), 0);
+    const pre = draft.slice(sentStart, at);
+    // The clause opens at the last joiner or comma before the phrase, or at the sentence start.
+    const j = [...pre.matchAll(/(?:,|\s(?:and|but|e|mas|y|pero))\s/giu)].pop();
+    const a = j ? sentStart + (j.index ?? 0) : sentStart;
+    const lead = draft.slice(j ? a + j[0].length : a, at);
+    if (!words(lead).every((w) => IGNORE_CLAUSE_OK.has(w))) continue;
+    // ... and runs to the next joiner, comma or sentence end.
+    const rest = draft.slice(end);
+    const stop = rest.search(/\s*(?:[,;:.!?…]|$)|\s+(?=(?:so|and|but|because|então|entao|por isso|portanto|porque|e|mas|así que|asi que|entonces|por eso|porque|y|pero)(?![\p{L}]))/iu);
+    const tail = rest.slice(0, Math.max(stop, 0));
+    const tailOk = words(tail.replace(IGNORE_G, " ")).every((w) => IGNORE_CLAUSE_OK.has(w));
+    if (!tailOk) continue;
+    let b = end + tail.length;
+    const whole = !j && (sentStart === 0 || /[.!?]\s*$/.test(draft.slice(0, sentStart)));
+    if (whole) {
+      // A sentence that is only the ignore line goes with its full stop; one that runs on keeps its next clause.
+      const p = draft.slice(b).match(/^\s*[.!?…]+\s*/u);
+      if (p) b += p[0].length; else { const c = draft.slice(b).match(/^\s*,\s*/); if (c) b += c[0].length; else continue; }
+    }
+    if (!out.some(([x, y]) => a < y && b > x)) out.push([a, b]);
+  }
+  return out;
+};
 // The clause around a dig, if it is only the dig: at most 3 words before it in its clause and 2 after.
 const digClauses = (draft: string): [number, number][] => {
   const out: [number, number][] = [];
@@ -1312,6 +1361,8 @@ const strikeFixed = (draft: string) => {
   for (const r of strikeMartyr(draft)) { ranges.push(r); jab.push(r); }
   // v7: "isn't a babysitting service" digs (their "not" is not a fact the result must keep).
   for (const r of digClauses(draft)) { ranges.push(r); jab.push(r); }
+  // v7.3: "and you just ignored it (like you ignore everything)" clauses.
+  for (const r of ignoreClauses(draft)) { ranges.push(r); jab.push(r); }
   // v7: grudging tails go only alongside another strike (the caller adds them; a calm draft keeps its "if you've got time").
   const tail = digTails(draft);
   return { ranges, jab, tail };
@@ -1676,6 +1727,160 @@ const actorDeeds = (text: string, names: Set<string>) => {
   }
   return out;
 };
+// ---- v7.3: fact guard for struck ranges ----
+const FACT_STOP = new Set(["alguna", "alguno", "algún", "alguma", "algum", "ever", "anything", "everything", 
+  ...FX_STOP, "not", "no", "não", "nao", "nem", "ni", "nor", "never", "always", "ever", "even", "again", "once", "too", "really", "actually",
+  "all", "any", "some", "every", "each", "both", "much", "many", "more", "most", "less", "other", "another", "such", "own", "same", "single",
+  "one", "ones", "thing", "things", "something", "anything", "everything", "nothing", "someone", "anyone", "everyone", "nobody", "somebody",
+  "way", "bit", "lot", "lots", "kind", "sort", "time", "times", "now", "today", "yet", "already", "soon", "later", "back", "out", "off", "over",
+  "into", "onto", "about", "after", "before", "because", "while", "since", "until", "though", "although", "unless", "whether", "why", "whose",
+  "whom", "yourself", "myself", "himself", "herself", "themselves", "ourselves", "yes", "okay", "ok", "well", "oh", "like", "via", "per",
+  "i'm", "you're", "it's", "that's", "there's", "he's", "she's", "they're", "we're", "i've", "you've", "i'll", "you'll", "i'd", "you'd",
+  "don't", "didn't", "doesn't", "can't", "won't", "isn't", "wasn't", "aren't", "weren't", "haven't", "hasn't", "wouldn't", "couldn't",
+  "shouldn't", "let's", "here's", "what's", "who's", "got", "get", "gets", "getting", "going", "gonna", "want", "need", "know", "think", "mean",
+  "say", "said", "tell", "told", "ask", "asked", "make", "made", "take", "took", "give", "gave", "come", "came", "goes", "went", "keep", "kept",
+  "let", "put", "see", "seen", "look", "seems", "guess", "suppose", "try", "tried", "manage", "managed", "bother", "bothered", "deal", "handle",
+  "nada", "nadie", "ninguém", "ninguem", "algo", "alguém", "alguien", "tudo", "todo", "toda", "todos", "todas", "cada", "outro", "outra",
+  "otro", "otra", "mesmo", "mesma", "mismo", "misma", "vez", "vezes", "veces", "coisa", "coisas", "cosa", "cosas", "forma", "jeito", "manera",
+  "agora", "ahora", "hoje", "hoy", "ainda", "todavía", "aún", "aun", "sempre", "siempre", "nunca", "jamais", "jamás", "muito", "muita",
+  "muitos", "muitas", "mucho", "mucha", "muchos", "muchas", "pouco", "poco", "mais", "más", "menos", "tão", "tan", "tanto", "tanta",
+  "porque", "pois", "quando", "cuando", "onde", "donde", "como", "assim", "así", "então", "entonces", "aqui", "aquí", "ali", "allí", "lá",
+  "também", "también", "só", "solo", "sólo", "apenas", "bem", "bien", "mal", "sim", "sí", "pá", "tipo", "fazer", "hacer", "dizer", "decir",
+  "disse", "dije", "dijo", "fez", "hizo", "vai", "va", "vou", "voy", "estou", "estoy", "estás", "estás", "tens", "tienes", "sou", "soy",
+  "és", "eres", "nos", "nosso", "nossa", "nuestro", "nuestra", "vosotros", "ti", "mim", "contigo", "comigo", "conmigo", "si", "sem", "sin",
+  "sobre", "entre", "até", "hasta", "desde", "depois", "después", "antes", "durante", "contra", "seja", "sea", "pelo", "pela", "pelos", "pelas",
+  "num", "numa", "dum", "duma", "ao", "aos", "una", "uno", "unos",
+]);
+// Words that are themselves the reproach / blame frame (never a fact the reply must keep).
+const FACT_REPROACH = new Set([
+  "emails", "email", "messages", "message", "texts", "text", "calls", "call", "phone", "whatsapp", "mensagens", "mensagem", "mensajes", "mensaje",
+  "chamadas", "llamadas", "correos", "correo", "attention", "effort", "trouble", "favour", "favor", "joke", "piada", "chiste", "excuse",
+  "excuses", "desculpa", "desculpas", "excusa", "excusas", "fault", "culpa", "problem", "problema", "drama", "nonsense", "rubbish", "tonterías",
+  "parvoíces", "disparates", "care", "bothered", "bother", "deal", "lie", "lies", "mentira", "mentiras", "promise", "promises", "promessa",
+  "promesa", "word", "palavra", "palabra", "point", "surprise", "surprised", "shock", "shocked", "fine", "great", "lovely", "brilliant",
+  "perfect", "wonderful", "fantastic", "amazing", "typical", "conveniently", "convenient", "forgetful", "honest", "honestly", "serious",
+  "seriously", "sorry", "thanks", "thank", "obrigado", "obrigada", "gracias", "worries", "worry", "matter", "importa", "importância",
+  "deal", "life", "vida", "god", "deus", "dios", "hell", "earth", "planet", "world", "mundo", "parent", "parents", "father", "mother",
+  "dad", "mum", "pai", "mãe", "padre", "madre", "parenting", "adult", "adulto", "adulta", "grown", "child", "childish", "infantil",
+  // "which you'd know if you ever read ..." conditionals
+  "know", "knew", "known", "sabrías", "saberías", "saberias", "saberia", "sabría", "read", "leyeras", "leyeses", "lesses", "lerias", "leerías",
+  "listened", "listen", "checked", "opened", "looked", "paid", "ouvisses", "escucharas", "algo",
+]);
+const STATE_WORDS = /^(?:smell|smells|smelled|smelling|smelly|stink|stinks|stinking|stank|hurt|hurts|hurting|ache|aches|aching|itch|itches|itchy|cheira|cheirava|cheirar|fede|fedia|dói|doía|doem|huele|olía|oliendo|apesta|apestaba|duele|dolía|wet|soaked|soaking|damp|dirty|filthy|muddy|ripped|torn|broken|ruined|stained|cold|hot|hungry|tired|exhausted|upset|sad|scared|crying|sick|ill|poorly|feverish|molhad[oa]s?|encharcad[oa]s?|suj[oa]s?|rot[oa]s?|rasgad[oa]s?|partid[oa]s?|estragad[oa]s?|manchad[oa]s?|mojad[oa]s?|empapad[oa]s?|suci[oa]s?|cansad[oa]s?|trist[e]s?|doente|enferm[oa]|assustad[oa]|asustad[oa]|chorar|llorando|chorando)$/u;
+// Verb-like tokens that are not facts by themselves (deeds are guarded elsewhere): a token the verb test accepts is not a
+// content word unless it is a state word.
+const isContentWord = (w: string) => {
+  if (STATE_WORDS.test(w)) return true;
+  if (w.length < 3 || /\d/.test(w) || FACT_STOP.has(w) || FACT_REPROACH.has(w)) return false;
+  if (/(?:ly|mente)$/.test(w) && w.length > 5) return false;
+  if (/^(?:ing|ed)$/.test(w) || /(?:ing)$/.test(w)) return false;
+  if (hasFiniteVerb(w)) return false;
+  if (VERB_WORDS.has(w) || PLEASE_EN_VERBS.has(w) || PLEASE_PTES_VERBS.has(w) || COMMIT_EN.has(w) || COMMIT_PTES.has(w)) return false;
+  // Infinitives and bare verbs in PT/ES ("lavar", "recoger") are actions, not facts.
+  if (/(?:ar|er|ir)$/.test(w) && !INF_NOT.test(w)) return false;
+  return true;
+};
+const FACT_LEX: RegExp[] = [
+  new RegExp(STRIKE_BLAME_LEFT.source, "giu"), new RegExp(SARC_LEFT.source, "giu"), new RegExp(FX_REPROACH.source, "giu"),
+  new RegExp(DIG_RE.source, "giu"), IGNORE_G, DIG_TAIL_RE, STRIKE_FIXED_RE, STRIKE_SIGH_RE, STRIKE_NOREPLY_RE,
+  new RegExp(STRIKE_JAB.source, "giu"), new RegExp(STRIKE_FED_UP.source, "giu"), new RegExp(FX_THREAT.source, "giu"),
+];
+// A clause that speaks to the other parent ("your 'relaxed' attitude", "eres un desastre total", "Como nunca olhas ...") or
+// voices the sender's own grievance ("Estou farta de ...", "Me alegra que tengas tiempo ...") is the reproach itself; its
+// words are not facts. An aside marker ("by the way", "por cierto") does not make a clause reproach: "which by the way still
+// smells because nobody washed it" is a fact about the bag.
+const FACT_YOU = wordRe(
+  "you|your|yours|you're|you've|you'll|you'd|yourself|tu|tú|teu|tua|teus|tuas|ti|contigo|tuyo|tuya|tuyos|tuyas|eres|és|vocês|você|" +
+  "usted|vos|te importa|te da igual|estás|tienes|tens|sabes|andas|fazes|haces|olhas|miras|lês|lees|ligas|llamas|apareces|apareças|tengas|tenhas",
+);
+const FACT_FRAME = wordRe(
+  "i'm sick of|i am sick of|i'm tired of|i am tired of|i'm fed up|i am fed up|sick and tired|estou farta|estou farto|estou cansada|estou cansado|" +
+  "ando farta|ando farto|estoy harta|estoy harto|estoy cansada|estoy cansado|me tienes harta|me tienes harto|glad you|glad to see you|nice that you|" +
+  "good to see you|good to know you|fico contente|fico feliz|ainda bem que|me alegra que|me alegro de que|qué bien que|i bet|bet you|aposto que|" +
+  "apuesto a que|seguro que|tenho a certeza que|of course|claro que|obviamente|obviously|naturally|naturalmente|por supuesto|desastre|disaster|" +
+  "vergonha|vergüenza|how many times|quantas vezes|cuántas veces|cuantas veces|how hard|so hard|tão difícil|tan difícil|assim tão|is it that hard|" +
+  "graças à tua|gracias a tu|thanks to your|como nunca|as you never|since you never",
+);
+const FACT_ASIDE = /(?<![\p{L}])(?:which by the way|by the way|btw|que por cierto|por cierto|que por sinal|por sinal|que já agora|já agora|que a propósito|a propósito|que por lo visto|por lo visto)(?![\p{L}])/giu;
+const factClauseIsReproach = (clause: string) => {
+  const c = normText(clause).replace(FACT_ASIDE, " ");
+  return FACT_YOU.test(c) || FACT_FRAME.test(c) || STRIKE_BLAME_LEFT.test(c) || FX_REPROACH.test(c) || SARC_LEFT.test(c) ||
+    IGNORE_LEFT_RE.test(c) || DIG_LEFT_RE.test(c) || fxIsThreat(c);
+};
+const factWordsDropped = (draft: string, ranges: [number, number][], text: string): string[] => {
+  if (!ranges.length) return [];
+  const lowerDraft = draft.replace(/[’]/g, "'");
+  const exempt: [number, number][] = [];
+  const fx = strikeFixed(draft);
+  exempt.push(...fx.ranges, ...fx.tail);
+  for (const re of FACT_LEX) for (const m of lowerDraft.matchAll(re)) exempt.push([m.index ?? 0, (m.index ?? 0) + m[0].length]);
+  for (const [s, e] of sentRanges(draft)) {
+    const sent = draft.slice(s, e);
+    const lead = sent.match(/^\s*/)?.[0].length ?? 0;
+    const trail = sent.match(/\s*$/)?.[0].length ?? 0;
+    const whole = ranges.some(([a, b]) => a <= s + lead && b >= e - trail);
+    // A threat sentence goes whole; its words are never facts.
+    if (fxIsThreat(sent)) exempt.push([s, e]);
+    // A sarcastic opener ("Wow.", "Claro que") is the frame, not a fact.
+    const op = sent.slice(lead).match(SARC_OPENER);
+    if (op) exempt.push([s + lead, s + lead + op[0].length]);
+    // A one- to three-word exclamation struck whole ("Increíble.", "Inacreditável.", "Typical.") and a rhetorical question
+    // struck whole ("¿Tan difícil es contestar un mensaje?", "Why is that SO HARD to remember?") are reproach.
+    const nw = sent.trim().split(/\s+/).length;
+    if (whole && (nw <= 3 || /\?\s*$/.test(sent))) exempt.push([s, e]);
+    // Clauses (split at , ; : and sentence ends) that speak to the other parent or voice the grievance.
+    let at = s;
+    for (const piece of sent.split(/(?<=[,;:–])/u)) {
+      if (factClauseIsReproach(piece)) exempt.push([at, at + piece.length]);
+      at += piece.length;
+    }
+  }
+  const stem = (w: string) => stripAccents(w).slice(0, Math.max(4, Math.min(5, w.length - 1)));
+  const kept = new Set(fxToks(text).map(stem));
+  const out: string[] = [];
+  for (const [a, b] of ranges) {
+    for (const m of draft.slice(a, b).matchAll(/[\p{L}][\p{L}'’-]*/gu)) {
+      const at = a + (m.index ?? 0), end = at + m[0].length;
+      if (exempt.some(([x, y]) => at >= x && end <= y)) continue;
+      const w = m[0].toLowerCase().replace(/[’]/g, "'").replace(/^'+|'+$/g, "");
+      if (!isContentWord(w)) continue;
+      if (kept.has(stem(w))) continue;
+      out.push(m[0].replace(/^['’]+|['’]+$/g, ""));
+    }
+  }
+  return [...new Set(out)];
+};
+// v7.3 (c) helpers: who a rule sentence is about.
+const RULE_HEAD_RE = /(?<![\p{L}])(?:(?:has|have|need|needs|got) to|must(?:n't)?|(?:is|are|isn't|aren't|is not|are not) (?:not )?(?:allowed|permitted|meant|supposed)|can't|cannot|can not|shouldn't|should|(?:tem|têm|tens|teem) (?:de|que)|precisa(?:m|s)? de|(?:não|nao) (?:pode|podem|podes|deve|devem)|deve(?:m|s)?|(?:tiene|tienen|tienes) que|debe(?:n|s)?|no (?:puede|pueden|puedes|debe|deben)|necesita(?:n|s)?|no (?:se le|se les) permite|no (?:está|están) permitid[oa]s?|(?:não|nao) (?:é|são|está|estão) permitid[oa]s?)(?![\p{L}])/iu;
+const RULE_FRAME_RE = /(?<![\p{L}])(?:the rule is(?: that)?|our rule is(?: that)?|we agreed(?: that)?|the doctor said(?: that)?|a regra é(?: que)?|combinámos(?: que)?|combinamos(?: que)?|acordámos(?: que)?|o médico disse(?: que)?|a médica disse(?: que)?|la regla es(?: que)?|quedamos en(?: que)?|acordamos(?: que)?|el médico dijo(?: que)?|la médica dijo(?: que)?)(?![\p{L}])/giu;
+const RULE_WHO = new Set(["kids", "children", "child", "boys", "girls", "son", "daughter", "baby", "twins", "miúdos", "miudos", "crianças", "criancas", "meninos", "meninas", "filhos", "filho", "filha", "filhas", "niños", "ninos", "niñas", "hijos", "hijo", "hija", "hijas", "chicos", "chicas", "peques", "nenes", "both"]);
+const RULE_SUBJ = new Set(["i", "you", "he", "she", "they", "we", "it", "eu", "tu", "tú", "ele", "ela", "eles", "elas", "nós", "você", "vocês", "yo", "él", "ella", "ellos", "ellas", "nosotros", "nosotras", "usted", "ustedes"]);
+const ruleSubjectLost = (draft: string, ranges: [number, number][], names: Set<string>): string[] => {
+  const out: string[] = [];
+  const isWho = (w: string) => RULE_SUBJ.has(w) || RULE_WHO.has(w) || names.has(w);
+  for (const [s, e] of sentRanges(draft)) {
+    const local = ranges.filter(([a, b]) => a < e && b > s).map(([a, b]) => [Math.max(a, s), Math.min(b, e)] as [number, number]);
+    if (!local.length) continue;
+    const sent = draft.slice(s, e);
+    const struck = (i: number) => local.some(([a, b]) => i >= a && i < b);
+    // the first rule words that stay
+    let head = -1, headTxt = "";
+    for (const m of sent.matchAll(new RegExp(RULE_HEAD_RE.source, "giu"))) { if (!struck(s + (m.index ?? 0))) { head = s + (m.index ?? 0); headTxt = m[0]; break; } }
+    if (head < 0) continue;
+    // the subject region: after the last rule frame ("we agreed", "o médico disse que") before the rule words
+    let from = s;
+    for (const m of sent.slice(0, head - s).matchAll(RULE_FRAME_RE)) from = s + (m.index ?? 0) + m[0].length;
+    const words = [...draft.slice(from, head).matchAll(/[\p{L}][\p{L}'’]*/gu)].map((m) => ({ w: m[0].toLowerCase().replace(/[’]/g, "'").replace(/'(?:d|s|re|ve|ll|m)$/, ""), at: from + (m.index ?? 0) }));
+    const who = words.filter((x) => isWho(x.w));
+    if (!who.length) continue;
+    const keptWho = who.filter((x) => !struck(x.at));
+    if (keptWho.length) continue;
+    // PT/ES: a struck "tu / tú" before a second-person verb ("tienes que", "tens de", "debes") is still said by the verb.
+    if (who.every((x) => /^(?:tu|tú)$/.test(x.w)) && /^(?:tienes|tens|debes|deves|precisas|necesitas|no puedes|não podes)/iu.test(headTxt)) continue;
+    out.push(`${headTxt}`);
+  }
+  return out;
+};
 // Returns problem notes; empty = the shape is fine.
 const strikeShape = (draft: string, ranges: [number, number][], text: string): string[] => {
   const out: string[] = [];
@@ -1843,13 +2048,38 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
     const f = fragStart(sent);
     if (f && !FRAG_JOIN.has(f)) out.push(`no_subject: a sentence opens on "${f}" with no subject`);
   }
+  // v7.3 (c): a rule sentence keeps who the rule is about. When every subject before the rule words ("The kids", "Isla",
+  // "You", "A Isla", "Los niños") is struck and none is left before them, the rule has no subject -> null.
+  for (const p of ruleSubjectLost(draft, ranges, names)) out.push(`no_subject: the strike takes who the rule "${p}" is about`);
+  // v7.3 (b): a strike must not drop a fact word. A content word (noun, adjective, state verb) inside a struck range,
+  // outside every blame / reproach / sarcasm / dig / ignore / code-struck phrase, and not said elsewhere in the result
+  // ("which by the way still smells") -> null.
+  for (const w of factWordsDropped(draft, ranges, text)) out.push(`missing_fact: the strike drops "${w}"`);
+  // v7.3 (b): a whole sentence struck right before a kept sentence that points back at it ("[Did you even read the letter
+  // from school?] It says the trip is on Wednesday") takes what "It" refers to.
+  {
+    const sr = sentRanges(draft);
+    const kept = new Set(fxToks(text).map((w) => stripAccents(w).slice(0, 5)));
+    for (let i = 0; i + 1 < sr.length; i++) {
+      const [s, e] = sr[i], sent = draft.slice(s, e).trim();
+      const lead = draft.slice(s, e).match(/^\s*/)?.[0].length ?? 0;
+      if (!ranges.some(([a, b]) => a <= s + lead && b >= s + lead + sent.length)) continue;
+      const next = draft.slice(sr[i + 1][0], sr[i + 1][1]).trim();
+      if (ranges.some(([a, b]) => a <= sr[i + 1][0] && b >= sr[i + 1][1])) continue;
+      if (!/^(?:it|this|that|these|those|they|isto|isso|esto|eso|ello)(?![\p{L}])/iu.test(next)) continue;
+      const lost = (sent.match(/[\p{L}][\p{L}'’-]*/gu) ?? []).map((w) => w.toLowerCase()).filter((w) => isContentWord(w) && !kept.has(stripAccents(w).slice(0, 5)));
+      if (lost.length) out.push(`missing_fact: the strike takes what "${next.split(/\s+/)[0]}" refers to`);
+    }
+  }
   // (3) Blame words left in the result.
   for (const sent of fxSentences(text)) {
     const m = normText(sent).match(STRIKE_BLAME_LEFT);
     const sarc = normText(sent).match(SARC_LEFT);
     const sigh = new RegExp(`^(?:${SIGH_WORDS})\\b[^.!?]{0,80}?${SIGH_MARTYR}`, "iu").test(sent.trim());
     const dig = sent.match(DIG_LEFT_RE);
+    const ign = normText(sent).match(IGNORE_LEFT_RE);
     if (m) out.push(`blame_left: "${sent}" still has "${m[0].trim()}"`);
+    else if (ign) out.push(`blame_left: "${sent}" still has "${ign[0].trim()}"`);
     else if (dig) out.push(`blame_left: "${sent}" still has the dig "${dig[0].trim()}"`);
     else if (sarc) out.push(`sarcasm_left: "${sent}" still has "${sarc[0].trim()}"`);
     else if (SARC_OPENER.test(sent.trim()) && !/^(?:sure|claro|boa|ótimo|perfect|perfecto|perfeito|great|genial|lovely|cool|nice)[,.!]?\s+(?:thanks|thank you|obrigad[oa]|gracias|see you|até|hasta|that works|works for me|combinado|de acuerdo)/iu.test(sent.trim())) out.push(`sarcasm_left: "${sent}" opens on a sarcastic word`);
