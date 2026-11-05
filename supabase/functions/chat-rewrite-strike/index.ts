@@ -1,5 +1,5 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.3; the live chat-rewrite is untouched)
-// v7.4.3: subject-lost post-check; myself-who; lone caps jab stays (deShout); v7.4.2 budget.
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.4; the live chat-rewrite is untouched)
+// v7.4.4: calm lock + soft-code second-signal; finalBroken every path; budget 2400/2300/1000; span meta logging (no text).
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -81,16 +81,18 @@ const STRIKE_SCHEMA = {
   },
 };
 
-// v7.4.2: client app budget is 3200ms. Observed client-RTT on the hard set is ~0.5–0.9s
-// once the server answers, so a 2400ms server hard stop can still surface as 3.28s e2e
-// (mix-pten1#2 on b04edc7). Cap the server earlier and refuse a late retry.
-const SEND_HARD_STOP_MS = 2000;
-const SEND_DEADLINE_MS = 1900;
+// v7.4.4: client app budget is 3200ms. Jared: hard 2400 / deadline 2300 / retry ≥1000ms.
+// Slack 800 keeps hard+slack ≤3200. Live reruns must stay ≤3.2s or revert hard to 2000.
+// v7.4.4 (Jared): hard stop 2400, deadline 2300, retry only if ≥1000ms left.
+// Network slack 800 so hard+slack fits the app's 3.2s ceiling. Keep 2400 only if live
+// reruns stay ≤3.2s e2e; otherwise revert hard stop to 2000.
+const SEND_HARD_STOP_MS = 2400;
+const SEND_DEADLINE_MS = 2300;
 const SEND_RETRY_MIN_LEFT_MS = 1000;
 /** App-facing ceiling the send path must respect once network slack is reserved. */
 const SEND_CLIENT_BUDGET_MS = 3200;
-/** Reserved for auth/egress/RTT after the server returns (observed hard-set slack). */
-const SEND_NETWORK_SLACK_MS = 1000;
+/** Reserved for auth/egress/RTT after the server returns (fit 2400+800=3200). */
+const SEND_NETWORK_SLACK_MS = 800;
 // Static guard: hard stop + reserved network slack must fit the app's 3.2s ceiling.
 if (SEND_HARD_STOP_MS + SEND_NETWORK_SLACK_MS > SEND_CLIENT_BUDGET_MS) {
   throw new Error("send budget misconfigured: hard stop + network slack exceeds client budget");
@@ -1407,7 +1409,7 @@ const fixedWith = (fixed: { ranges: [number, number][]; jab: [number, number][];
 // ---- v6: log reasons are codes from this fixed set only; never draft text, spans or snippets ----
 const REASON_CODES = new Set([
   "pass", "rewrite", "please_added", "timeout", "parse", "error", "no_time_for_retry", "retry_timeout", "retry_parse", "retry_error",
-  "retry_none", "retry_cand", "span_not_found", "too_small", "no_subject", "hanging_conditional", "dangling", "no_verb", "actor_dropped",
+  "retry_none", "retry_cand", "span_not_found", "too_small", "no_subject", "hanging_conditional", "dangling", "no_verb", "actor_dropped", "uncertain_calm", "final_broken",
   "blame_left", "sarcasm_left", "shout_left", "name", "number", "time", "place", "medicine", "health", "rule", "not_told", "agreement",
   "report", "count", "deed", "ask", "negation", "reproach_kept", "threat_kept", "added_content", "dropped_number", "new_time_word",
   "tense_changed", "actor_changed", "action_dropped", "stance_changed", "rule_changed", "missing_fact", "new_number", "banned_word",
@@ -1944,6 +1946,119 @@ const looksImperative = (sent: string): boolean => {
   }
   return false;
 };
+
+// v7.4.4: soft code-list phrases the model often returns as its only "strike" on a calm draft.
+// Matching one of these alone is NOT enough to rewrite — need a real model span or unambiguous reproach.
+const SOFT_CODE_PHRASE_RE = /^(?:[,:;–—\-]\s*)?(?:as usual|as always|like always|same as always|same as usual|same as ever|again|yet again|once again|just|honestly|seriously|obviously|clearly|by the way|btw|of course|como sempre|como siempre|como de costume|como de costumbre|outra vez|otra vez|de novo|de nuevo|mais uma vez|una vez más|por cierto|por sinal|já agora|a propósito|a sério|de verdad|en serio)(?:\s*[,:;–—\-])?$/iu;
+const softCodeSpan = (span: string): boolean => SOFT_CODE_PHRASE_RE.test(span.trim());
+const spanIsCodeList = (span: string, draft: string, fixed: { ranges: [number, number][]; jab: [number, number][] }): boolean => {
+  // Only soft/ambiguous phrases count as "code-list only". Strong fixed reproach
+  // ("Typical of you.", brush-off, dig) is a real signal, not soft.
+  if (softCodeSpan(span)) return true;
+  const n = span.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!n) return true;
+  for (const [a, b] of [...fixed.ranges, ...fixed.jab]) {
+    const raw = draft.slice(a, b).trim();
+    if (!raw) continue;
+    if (!(softCodeSpan(raw) || softCodeSpan(raw.replace(/^,\s*/, "")))) continue;
+    const t = raw.toLowerCase().replace(/\s+/g, " ");
+    if (n === t || (n.length >= 3 && (t.includes(n) || n.includes(t)))) return true;
+  }
+  return false;
+};
+/** Brush-off, sigh+martyr, noreply, standalone Again?!, dig, ignore, or a non-soft fixed reproach.
+ * Soft "as usual"/"just"/"honestly" and martyr-only "myself"/"just" are NOT a second signal. */
+const MARTYR_SOFTISH_RE = /^(?:[,:\s]*)(?:myself|just|eu\s+mesm[oa]|yo\s+mism[oa])(?:[,.\s]*)$/iu;
+const unambiguousCodeReproach = (draft: string, fixed: { ranges: [number, number][]; jab: [number, number][] }): boolean => {
+  for (const [a, b] of [...fixed.ranges, ...fixed.jab]) {
+    const t = draft.slice(a, b).trim();
+    if (!t) continue;
+    if (softCodeSpan(t) || softCodeSpan(t.replace(/^,\s*/, ""))) continue;
+    if (MARTYR_SOFTISH_RE.test(t)) continue;
+    // Non-soft code hit (typical of you, don't bother, dig, ignore, …)
+    return true;
+  }
+  for (const [a, b] of fixed.jab) {
+    const t = draft.slice(a, b);
+    if (STRIKE_BRUSH_RE.test(t)) return true;
+    if (STRIKE_SIGH_RE.test(t) || STRIKE_SIGH_REPEAT_RE.test(t) || STRIKE_NOREPLY_RE.test(t)) return true;
+    if (STRIKE_AGAIN_ALONE_RE.test(t)) return true;
+    if (t.length >= 18 && (DIG_LEFT_RE.test(t) || IGNORE_LEFT_RE.test(t))) return true;
+  }
+  for (const s of fxSentences(draft)) {
+    const t = s.trim();
+    if (STRIKE_BRUSH_RE.test(t)) return true;
+  }
+  return false;
+};
+const classifySpans = (spans: string[], draft: string, fixed: { ranges: [number, number][]; jab: [number, number][] }) => {
+  let model_n = 0, code_n = 0, len_sum = 0;
+  const tags: string[] = [];
+  for (const s of spans) {
+    len_sum += s.length;
+    if (spanIsCodeList(s, draft, fixed)) { code_n++; tags.push("code_soft"); }
+    else { model_n++; tags.push("model"); }
+  }
+  if (unambiguousCodeReproach(draft, fixed)) tags.push("code_reproach");
+  return { span_n: spans.length, span_len_sum: len_sum, span_model_n: model_n, span_code_n: code_n, span_src: tags.join("|") || "none" };
+};
+
+// v7.4.4: final-output broken-sentence/fragment check — runs on every accepted rewrite path (symmetric with subjectLostAfterStrike).
+const EDGE_DANGLE = new Set([
+  ...SHAPE_DANGLE,
+  "and", "or", "but", "so", "then", "y", "e", "mas", "pero", "então", "entonces", "así", "asi",
+  "with", "without", "to", "for", "of", "at", "in", "on", "by", "from", "about",
+  "com", "con", "de", "para", "pra", "por", "sem", "sin", "a", "an", "the",
+  "o", "os", "as", "el", "la", "los", "las", "um", "uma", "un", "una",
+]);
+const finalBrokenAfterStrike = (draft: string, text: string): string[] => {
+  const out: string[] = [];
+  if (text === draft) return out;
+  // Lone comma before a full stop / at a sentence edge.
+  if (/,\s*[.!?…]/.test(text) || /(?:^|[.!?…]\s*),/.test(text))
+    out.push(`final_broken: lone comma before a full stop`);
+  // Unbalanced clause markers.
+  const bal = (open: string, close: string) => {
+    let n = 0;
+    for (const ch of text) {
+      if (ch === open) n++;
+      else if (ch === close) { n--; if (n < 0) return false; }
+    }
+    return n === 0;
+  };
+  if (!bal("(", ")") || !bal("[", "]") || !bal("{", "}"))
+    out.push(`final_broken: unbalanced clause`);
+  if (((text.match(/"/g) || []).length % 2) !== 0)
+    out.push(`final_broken: unbalanced quote`);
+  const lastTok = (s: string) => (s.toLowerCase().replace(/[’]/g, "'").match(/[\p{L}\p{N}'-]+(?=[^\p{L}\p{N}]*$)/u)?.[0] ?? "");
+  const draftSents = fxSentences(draft);
+  for (const rem of fxSentences(text)) {
+    const open = rem.replace(/^[¿¡"'(\[\s]+/u, "").trim();
+    if (!open) continue;
+    const body = open.replace(/[.!?…]+["')\]]*$/u, "").trim();
+    if (!body) continue;
+    const lt = lastTok(body);
+    if (lt && (EDGE_DANGLE.has(lt) || CONNECTOR_ONLY.test(lt)))
+      out.push(`dangling: "${lt}" at a sentence edge`);
+    // Sentence opens on a dangling connective (not an imperative).
+    if (!looksImperative(open) && CONNECTOR_ONLY.test((body.match(/^[\p{L}'']+/u)?.[0] ?? "")))
+      out.push(`dangling: sentence opens on a connective`);
+    // No finite verb left, but a draft sentence that shared content had one.
+    if (!hasFiniteVerb(body) && body.split(/\s+/).length >= 2) {
+      const remWords = new Set((body.toLowerCase().match(/[\p{L}]{3,}/gu) ?? []));
+      for (const o of draftSents) {
+        const ow = o.toLowerCase().match(/[\p{L}]{3,}/gu) ?? [];
+        const share = ow.filter((w) => remWords.has(w)).length;
+        if (share >= 2 && hasFiniteVerb(o)) {
+          out.push(`no_verb: sentence left with no finite verb`);
+          break;
+        }
+      }
+    }
+  }
+  return out;
+};
+
 const subjectLostAfterStrike = (draft: string, text: string): string[] => {
   const out: string[] = [];
   const origSents = fxSentences(draft);
@@ -2244,6 +2359,8 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
   for (const p of subjectLostAfterStrike(draft, text)) out.push(p);
   // v7.4.3 (Jared): "myself" may drop only when the sentence still names who acts.
   for (const p of myselfWhoLost(draft, ranges, text)) out.push(p);
+  // v7.4.4: final-output fragment check on every path (symmetric with subjectLostAfterStrike).
+  for (const p of finalBrokenAfterStrike(draft, text)) out.push(p);
   // v7.3 (b): a strike must not drop a fact word. A content word (noun, adjective, state verb) inside a struck range,
   // outside every blame / reproach / sarcasm / dig / ignore / code-struck phrase, and not said elsewhere in the result
   // ("which by the way still smells") -> null.
@@ -2354,7 +2471,7 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
 };
 
 // v6: "reason" / "reasons" carry only codes from REASON_CODES (never draft text, spans or snippets).
-const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) => {
+const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number | string> = {}) => {
   const codes = reasonCodes(reasons);
   console.log(JSON.stringify({ fn: "chat-rewrite-strike", event: "calm_check", outcome, reason: codes[0] ?? outcome, reasons: codes, attempts, ms: Date.now() - started, ...timing }));
 };
@@ -2403,7 +2520,7 @@ Deno.serve(async (req) => {
     // send: signed-in check first (no model call before the user is confirmed), then the Premium check runs
     // alongside the model calls; its answer is awaited before any response, so the 402 gate still comes first.
     // Any other mode: Premium first, then 400 (this prototype only serves status and send).
-    const timing: Record<string, number> = {};
+    const timing: Record<string, number | string> = {};
     let premiumCheck: Promise<Response | null> = Promise.resolve(null);
     if (mode === "send") {
       if ((body as { _timeout?: boolean })._timeout) { logSend("fallback", ["timeout"], 0, started); return json({ needs_rewrite: false, rewrite: null }); }
@@ -2447,9 +2564,18 @@ Deno.serve(async (req) => {
     // Nothing from a send is logged until Premium is confirmed; on a denial the model reply is thrown away unlogged.
     let premiumOk = false;
     let pendingLog: (() => void) | null = null;
-    const log = (outcome: string, reasons: string[], attempts: number) => {
+    const log = (outcome: string, reasons: string[], attempts: number, meta?: { span_n: number; span_len_sum: number; span_model_n: number; span_code_n: number; span_src: string; guard: string }) => {
       if (settled) return;
-      const write = () => logSend(outcome, reasons, attempts, started, timing);
+      const t: Record<string, number | string> = { ...timing };
+      if (meta) {
+        t.span_n = meta.span_n;
+        t.span_len_sum = meta.span_len_sum;
+        t.span_model_n = meta.span_model_n;
+        t.span_code_n = meta.span_code_n;
+        t.span_src = meta.span_src;
+        t.guard = meta.guard;
+      }
+      const write = () => logSend(outcome, reasons, attempts, started, t);
       if (premiumOk) write(); else pendingLog = write;
     };
     const runSend = async (): Promise<Response> => {
@@ -2457,11 +2583,12 @@ Deno.serve(async (req) => {
         { role: "system", content: STRIKE_SYSTEM },
         { role: "user", content: draft },
       ];
+      type SpanMeta = { span_n: number; span_len_sum: number; span_model_n: number; span_code_n: number; span_src: string; guard: string };
       type Got =
         | { kind: "timeout" | "parse" }
         | { kind: "error"; resp: Response }
-        | { kind: "none" }
-        | { kind: "cand"; raw: string; text: string; problems: string[]; codeOnly?: boolean; pleaseFrom?: number };
+        | { kind: "none"; meta?: SpanMeta }
+        | { kind: "cand"; raw: string; text: string; problems: string[]; codeOnly?: boolean; pleaseFrom?: number; meta?: SpanMeta };
       // Code strikes: fixed reproach phrases and the jab "again", whatever the model returns.
       const fixed = strikeFixed(draft);
       // v4: shouted words are lower-cased by code (acronyms, names and brands kept).
@@ -2469,41 +2596,47 @@ Deno.serve(async (req) => {
       // Apply the strikes and run every guard. Any problem rejects the whole candidate; it is never partly applied.
       // The model's spans are guarded one by one; the fixed code strikes are not (they are whole reproach phrases),
       // but the whole result still goes through every check.
+      const spanMeta = (spans: string[], guard: string): SpanMeta => {
+        const c = classifySpans(spans, draft, fixed);
+        return { ...c, guard };
+      };
       const judge = (raw: string, strikes: string[]): Got => {
         const spans = strikes.filter((s) => typeof s === "string" && s.trim());
-        // v7.4 (Jared): hard rough-gate. Empty model strikes => pass; never caps/martyr/brush-off/fixed/Please alone.
-        // v7.4.1: shouting (3+ consecutive all-caps words, or most of the message in caps) counts as rough —
-        // caps normalisation still runs (subject to every other guard). A single emphasised word does not.
+        // v7.4.4: model's own flag says calm (empty strikes) → untouched. No code path around it
+        // (caps/martyr/brush-off/fixed alone never win). Shouting-rough still allows caps normalisation only.
         if (!spans.length) {
-          if (!isShoutingRough(draft) || !hasShout(draft)) return { kind: "none" };
+          if (!isShoutingRough(draft) || !hasShout(draft)) return { kind: "none", meta: spanMeta([], "calm") };
           const text = deShout(draft, draft);
-          if (text === draft) return { kind: "none" };
+          if (text === draft) return { kind: "none", meta: spanMeta([], "calm") };
           const shape = strikeShape(draft, [], text);
           const loud = shoutLeft(text, draft);
           if (loud.length) shape.push(`shout_left: ${loud.join(", ")}`);
-          if (shape.length) return { kind: "cand", raw, text, problems: shape };
+          if (shape.length) return { kind: "cand", raw, text, problems: shape, meta: spanMeta([], reasonCode(shape[0])) };
           const c = strikeCheck(draft, text, [], []);
-          if (c.codes.length) return { kind: "cand", raw, text, problems: c.codes.length && c.notes.length ? [...c.codes, ...c.notes] : c.codes };
-          return { kind: "cand", raw, text, problems: [], codeOnly: false, pleaseFrom: undefined };
+          if (c.codes.length) return { kind: "cand", raw, text, problems: c.codes.length && c.notes.length ? [...c.codes, ...c.notes] : c.codes, meta: spanMeta([], c.codes[0]) };
+          return { kind: "cand", raw, text, problems: [], codeOnly: false, pleaseFrom: undefined, meta: spanMeta([], "ok-shout") };
         }
-        // v7: grudging tails ("if you can fit it in") are struck only with another strike.
+        // v7.4.4: model flagged rough but every span is a soft code-list phrase and there is no
+        // unambiguous code reproach → prefer null (uncertain). A real model span OR an unambiguous
+        // reproach (brush / sigh+martyr / dig / ignore / Again?!) is the second signal.
+        const classified = classifySpans(spans, draft, fixed);
+        if (classified.span_model_n === 0 && !unambiguousCodeReproach(draft, fixed)) {
+          return { kind: "none", meta: { ...classified, guard: "uncertain_calm" } };
+        }
         const fw = fixedWith(fixed, spans);
         const st = strikeSpans(draft, spans, fw.ranges);
-        if (!st.ok) return { kind: "cand", raw, text: "", problems: [st.reason ?? "span_not_found"] };
+        if (!st.ok) return { kind: "cand", raw, text: "", problems: [st.reason ?? "span_not_found"], meta: { ...classified, guard: st.reason ?? "span_not_found" } };
         const g = strikeGuard(draft, spans);
-        if (g.length) return { kind: "cand", raw, text: st.text, problems: g };
-        // Nothing (or almost nothing) left: the draft is all blame, so there is nothing to send in its place.
-        if (st.ranges.length && strikeTooSmall(draft, st.text)) return { kind: "none" };
+        if (g.length) return { kind: "cand", raw, text: st.text, problems: g, meta: { ...classified, guard: reasonCode(g[0]) } };
+        if (st.ranges.length && strikeTooSmall(draft, st.text)) return { kind: "none", meta: { ...classified, guard: "too_small" } };
         const text = shout ? deShout(st.text, draft) : st.text;
-        // v4 shape guards: no fragment, no lost doer, no blame left, no shouting left. Any hit rejects the candidate.
         const shape = strikeShape(draft, st.ranges, text);
         const loud = shoutLeft(text, draft);
         if (loud.length) shape.push(`shout_left: ${loud.join(", ")}`);
-        if (shape.length) return { kind: "cand", raw, text, problems: shape };
+        if (shape.length) return { kind: "cand", raw, text, problems: shape, meta: { ...classified, guard: reasonCode(shape[0]) } };
         const c = strikeCheck(draft, text, spans, fw.jab);
-        // codeOnly: the model struck nothing and only the fixed phrases / capitals changed; such a result never wins at once.
-        // v6: the model gets the notes on a retry; the log gets only the codes (see logSend).
-        return { kind: "cand", raw, text, problems: c.codes.length ? c.notes.length ? [...c.codes, ...c.notes] : c.codes : [], codeOnly: !spans.length, pleaseFrom: pleaseFrom(draft, st.ranges) };
+        const problems = c.codes.length ? (c.notes.length ? [...c.codes, ...c.notes] : c.codes) : [];
+        return { kind: "cand", raw, text, problems, codeOnly: !spans.length, pleaseFrom: pleaseFrom(draft, st.ranges), meta: { ...classified, guard: problems.length ? reasonCode(problems[0]) : "ok" } };
       };
       const ask = async (msgs: unknown[], maxTokens: number, signal: AbortSignal): Promise<Got> => {
         if (signal.aborted) return { kind: "timeout" };
@@ -2558,7 +2691,7 @@ Deno.serve(async (req) => {
       }
       if (first.kind === "error") return first.resp;
       if (first.kind === "none") {
-        log("pass", [], 1);
+        log("pass", first.meta?.guard === "uncertain_calm" ? ["uncertain_calm"] : [], 1, first.meta);
         return json(pass);
       }
       let got: Got = first;
@@ -2572,7 +2705,7 @@ Deno.serve(async (req) => {
         const leftDeadline = deadline - now;
         timing.retry_left_ms = Math.min(leftHard, leftDeadline);
         if (timing.retry_left_ms < SEND_RETRY_MIN_LEFT_MS || leftHard < SEND_RETRY_MIN_LEFT_MS) {
-          log("fallback", ["no_time_for_retry"], attempts);
+          log("fallback", ["no_time_for_retry"], attempts, first.kind === "cand" ? first.meta : undefined);
           return json(pass);
         }
         attempts = 2;
@@ -2585,7 +2718,7 @@ Deno.serve(async (req) => {
           },
         ], 300, sendCtrl.signal);
         if (got.kind !== "cand" || got.problems.length) {
-          log("fallback", ["retry_" + got.kind, ...first.problems, ...(got.kind === "cand" ? got.problems : [])], attempts);
+          log("fallback", ["retry_" + got.kind, ...first.problems, ...(got.kind === "cand" ? got.problems : [])], attempts, got.kind === "cand" ? got.meta : (first.kind === "cand" ? first.meta : undefined));
           return json(pass);
         }
       }
@@ -2593,7 +2726,7 @@ Deno.serve(async (req) => {
       // The one word code may add: "Please" / "Por favor" before an ask the parent already wrote, if none is there.
       // v6: "Please" only for an ask in or after the first struck span; nothing struck (capitals only) -> never.
       const rewrite = addPlease(got.text, got.pleaseFrom ?? Infinity);
-      log("rewrite", rewrite === got.text ? [] : ["please_added"], attempts);
+      log("rewrite", rewrite === got.text ? [] : ["please_added"], attempts, got.meta);
       return json({ needs_rewrite: true, rewrite });
     };
     // Hard stop: whatever happens, answer by the deadline so the app never waits past its own limit.
