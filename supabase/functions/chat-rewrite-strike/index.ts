@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v6; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -40,6 +40,8 @@ Strike only:
 - brush-offs and martyr lines ("Don't bother.", "Não te incomodes.", "No te molestes.", "Fine, I'll just do it myself"): strike the brush-off; "I'll do it" / "ya lo hago yo" stays.
 - mild blame counts too: a sigh or dig ("No worries, I'll sort it like always", "Não faz mal, eu trato disso", "No pasa nada, ya me encargo yo"), "just a gentle reminder", "per my last message", a sarcastic thanks or opener ("Oh great,", "Wow,", "Well done.", "Parabéns,", "Qué sorpresa,"), "even" / "sequer" / "siquiera" used as a jab.
 - sarcasm: strike the sarcastic words; if what is left of that sentence would have no subject ("Great job forgetting her bag."), strike the whole sentence.
+- digs about what they or a place are not ("the school isn't a babysitting service", "I'm not a taxi", "não sou tua empregada", "no soy tu chófer"): strike that whole clause with its comma.
+- in a long run-on sentence, strike a whole clause with its joining word ("and I can't keep doing this every single weekend"); never leave a word group such as "every single weekend" or a subject such as "e tu" / "and you" / "y tú" cut off from its verb.
 - around a fact that something was not told, only the blame wrapper ("Típico que", "de nada", "claro que", "of course", "as usual"); the not-told fact itself stays.
 
 Never strike: names, dates, days, times, numbers, amounts of money, counts and repetition words (again, second time, outra vez, de novo, otra vez, de nuevo, still, ainda, todavía), places, what happened and who did it (forgot, missed, was late, didn't pay, left), medicine, doses, health and symptoms, rules ("no screens after 8pm", "bedtime is 7:30"), agreements ("we agreed"), what someone said, a fact that something was not told, and real requests or questions ("please bring", "can you", "let me know", "tens de", "tienes que").
@@ -1211,6 +1213,63 @@ const STRIKE_JAB_AGAIN_RE = new RegExp(
   "(\\s+(?:again|once again|otra vez|outra vez|de novo|de nuevo|novamente|nuevamente))(?=\\s*(?:[.!?,;:]|$))",
   "giu",
 );
+// v7: "what I am not / what it is not" digs ("the school isn't a babysitting service", "I'm not a taxi", "não sou tua
+// empregada", "no soy tu chófer"). Struck by code as a whole short clause; left in a result they are blame (null).
+const DIG_NOUNS =
+  "babysitting service|babysitting|babysitter|childminder|childcare service|taxi service|taxi|cab|chauffeur|driver|maid|cleaner|servant|slave|" +
+  "skivvy|secretary|pa|personal assistant|bank|cash machine|cashpoint|atm|nanny|hotel|creche|crèche|daycare|nursery|butler|mum|mother|" +
+  "empregada|empregada doméstica|criada|motorista|taxista|táxi|secretária|ama|banco|multibanco|infantário|creche|atl|escrava|escravo|mãe|" +
+  "chófer|chofer|chacha|asistenta|niñera|canguro|cajero|cajero automático|guardería|madre|esclava|esclavo|secretaria";
+const DIG_RE = new RegExp(
+  "(?<![\\p{L}])(?:(?:(?:i['’]m|i am|we['’]re|we are)\\s+not|(?:this|that|it|here|(?:the|my|our)\\s+[\\p{L}-]+)\\s*(?:isn['’]t|is not|['’]s not|ain['’]t)|(?<=(?:^|[,;:.!?]\\s*))not)\\s+(?:a|an|your|some)|" +
+  "(?:(?:não|nao)\\s+(?:sou|somos)|(?:isto|isso|aqui|(?:a|o)\\s+(?:escola|casa|colégio|minha casa|nossa casa|creche|atl))\\s+(?:não|nao)\\s+(?:é|e))\\s+(?:(?:o\\s+)?teu|(?:a\\s+)?tua|nenhum|nenhuma|um|uma)|" +
+  "(?:no\\s+(?:soy|somos)|(?:esto|eso|aquí|aqui|(?:el|la)\\s+(?:colegio|escuela|casa|guardería))\\s+no\\s+es)\\s+(?:tu|ningún|ninguna|un|una))" +
+  "\\s+(?:(?:free|personal|private|24-hour|grátis|gratuito|gratuita|gratis|privado|privada|particular|pessoal|personal)\\s+)?" +
+  `(?:${DIG_NOUNS})(?:\\s+(?:service|serviço|servicio|de táxis|de taxis|grátis|gratis))?` +
+  "(?=\\s*(?:[,;:.!?…)]|$)|\\s+(?:for you|here|mate|you know|para ti|aqui|aquí|sabes)(?![\\p{L}]))",
+  "giu",
+);
+// Left in a result: the same dig with anything after it ("I'm not your taxi so ...") is still blame.
+const DIG_LEFT_RE = new RegExp(DIG_RE.source.slice(0, DIG_RE.source.lastIndexOf("(?=")) + "(?![\\p{L}])", "iu");
+// The clause around a dig, if it is only the dig: at most 3 words before it in its clause and 2 after.
+const digClauses = (draft: string): [number, number][] => {
+  const out: [number, number][] = [];
+  for (const m of draft.matchAll(DIG_RE)) {
+    const at = m.index ?? 0, end = at + m[0].length;
+    const head = draft.slice(0, at);
+    const cs = Math.max(head.search(/[^,;:.!?\n]*$/u), 0);
+    const tailM = draft.slice(end).match(/^[^,;:.!?\n]*/u)?.[0] ?? "";
+    const pre = draft.slice(cs, at).trim(), post = tailM.trim();
+    if (pre.split(/\s+/).filter(Boolean).length > 3 || post.split(/\s+/).filter(Boolean).length > 2) continue;
+    let a = cs, b = end + tailM.length;
+    const before = draft.slice(0, a);
+    if (/,\s*$/.test(before)) a = before.replace(/,\s*$/, "").length; // ", the school isn't a babysitting service"
+    else if (/^\s*[.!?]/.test(draft.slice(b))) b += (draft.slice(b).match(/^\s*[.!?]+\s*/)?.[0].length ?? 0); // whole sentence
+    else if (/^\s*,\s*/.test(draft.slice(b))) b += (draft.slice(b).match(/^\s*,\s*/)?.[0].length ?? 0); // opening clause
+    out.push([a, b]);
+  }
+  return out;
+};
+// v7: a grudging tail on a statement ("It's at 2pm next Friday if you can fit it in."). Struck only when something
+// else in the draft is struck too (see strikeFixed().tail), and never on an ask ("Can you take her, if you've got time?").
+const DIG_TAIL_RE = /,?\s+(?:if you can (?:fit (?:it|us|him|her|them|that) in|be bothered|spare the time|make (?:the )?time)|if you(?:['’]ve| have) (?:got )?(?:the )?time|if it['’]s not too much (?:trouble|to ask)|if your (?:busy )?schedule allows|se tiveres tempo|se conseguires arranjar tempo|se te der jeito|se não for pedir muito|se não for muito incómodo|si te viene bien|si tienes tiempo|si encuentras (?:un )?hueco|si no es mucho pedir|si te da la vida)(?=\s*(?:[.!…]|$))/giu;
+const isAskSentence = (s: string) => {
+  const b = s.trim().replace(/^[¿¡"'(]+/, "");
+  const first = (b.match(/^[\p{L}'’-]+/u)?.[0] ?? "").toLowerCase().replace("’", "'");
+  return /\?\s*$/.test(s) || PLEASE_EN_REQ.test(b) || PLEASE_PTES_REQ.test(b) || HAS_PLEASE.test(b) || PLEASE_EN_VERBS.has(first) || PLEASE_PTES_VERBS.has(first) || PLEASE_PTES_LEAD.test(b);
+};
+const digTails = (draft: string): [number, number][] => {
+  const out: [number, number][] = [];
+  for (const m of draft.matchAll(DIG_TAIL_RE)) {
+    const at = m.index ?? 0;
+    const head = draft.slice(0, at);
+    const sent = head.slice(Math.max(head.search(/[^.!?\n]*$/u), 0)) + m[0];
+    // "if it's not too much to ask" / "si no es mucho pedir" / "if you can be bothered" are sarcasm on an ask too.
+    if (!/too much|be bothered|pedir muito|mucho pedir|muito incómodo/iu.test(m[0]) && isAskSentence(sent.replace(/^\s*(?:and|so|e|y|mas|pero)\s+/iu, ""))) continue;
+    out.push([at, at + m[0].length]);
+  }
+  return out;
+};
 const strikeFixed = (draft: string) => {
   const ranges: [number, number][] = [];
   const jab: [number, number][] = [];
@@ -1247,8 +1306,18 @@ const strikeFixed = (draft: string) => {
   }
   // v4: martyr "just" / trailing "as usual" after "I'll do it myself" style clauses.
   for (const r of strikeMartyr(draft)) { ranges.push(r); jab.push(r); }
-  return { ranges, jab };
+  // v7: "isn't a babysitting service" digs (their "not" is not a fact the result must keep).
+  for (const r of digClauses(draft)) { ranges.push(r); jab.push(r); }
+  // v7: grudging tails go only alongside another strike (the caller adds them; a calm draft keeps its "if you've got time").
+  const tail = digTails(draft);
+  return { ranges, jab, tail };
 };
+
+// v7: the code strikes for one candidate: grudging tails join only when the model or the fixed list strikes something else.
+const fixedWith = (fixed: { ranges: [number, number][]; jab: [number, number][]; tail: [number, number][] }, spans: string[]) =>
+  fixed.tail.length && (fixed.ranges.length || spans.some((s) => typeof s === "string" && s.trim()))
+    ? { ranges: [...fixed.ranges, ...fixed.tail], jab: [...fixed.jab, ...fixed.tail] }
+    : { ranges: fixed.ranges, jab: fixed.jab };
 
 // ---- v6: log reasons are codes from this fixed set only; never draft text, spans or snippets ----
 const REASON_CODES = new Set([
@@ -1462,6 +1531,8 @@ const VERB_WORDS = new Set([
   // first person "I'll do it" forms (pt / es)
   "faço", "farei", "trato", "busco", "apanho", "compro", "resolvo", "organizo", "sou", "hago", "haré", "recojo", "arreglo", "encargo", "soy",
   "compro", "llevaré", "recogeré", "pagaré",
+  // v7: reply verbs as imperatives ("E responde." / "Y contesta.")
+  "responde", "respondes", "contesta", "contestas", "avisa", "avisas", "confirma", "confirmas", "reply", "answer", "confirm",
 ]);
 const hasFiniteVerb = (s: string) => {
   const toks = s.toLowerCase().replace(/[’]/g, "'").split(/[^\p{L}']+/u).filter(Boolean);
@@ -1486,7 +1557,11 @@ const STRIKE_BLAME_LEFT = wordRe(
   // v5: "nobody bothered to" style blame verbs and brush-offs (never left in; the strike is rejected -> null)
   "bothered to|bother to|bothering to|bothered telling|bothered letting|bothered checking|could be bothered|can't be bothered|" +
   "don't bother|do not bother|deu ao trabalho|deste ao trabalho|dês ao trabalho|dignou|dignaste|não te incomodes|" +
-  "se molestó|te molestaste|te molestes|se dignó|te dignaste|tomó la molestia|tomaste la molestia",
+  "se molestó|te molestaste|te molestes|se dignó|te dignaste|tomó la molestia|tomaste la molestia|" +
+  // v7: "which you'd know if you ever read the emails" and a snide "by the way" aside in a relative clause
+  "which you'd know|which you would know|you'd know if|you would know if|if you ever read|if you ever checked|if you ever looked|" +
+  "if you ever listened|if you ever opened|if you ever paid attention|saberias se|saberías si|se lesses os|se lesses as|si leyeras|si leyeses|" +
+  "which by the way|which btw|que por cierto|que por sinal|que já agora|que a propósito|que por lo visto",
 );
 // v6: sarcasm left in a struck result (anywhere) or a sarcastic opener left at a sentence start.
 const SARC_LEFT = wordRe(
@@ -1679,6 +1754,58 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
     if (SUBJ_PRON.has(prev) && /^(?:not|to|the|a|an|não|no|a|o|el|la)$/.test(next) && !/^(?:not|to)$/.test(lastTok(cut)))
       out.push(`no_verb: the cut leaves "${prev} ${next}" with no verb`);
   }
+  // v7 (1): a cut inside a sentence must leave a complete clause. The words right after a cut that took a verb clause
+  // must start a new clause (a joiner, punctuation or a verb); a tail such as "every single weekend" left hanging off
+  // the clause before it is refused. And no comma clause may be left without a verb unless the draft had it as written.
+  const JOIN_NEXT = /^(?:and|so|but|or|because|then|cause|e|ou|mas|porque|pois|então|entao|por isso|portanto|y|o|pero|así que|asi que|entonces|por eso|porque|que|which|who|when|while|until|before|after|if|unless|antes|depois|quando|cuando|hasta|até|se|si|please|por favor|can|could|will|would|podes|puedes)(?![\p{L}])/iu;
+  for (const [a, b] of ranges) {
+    const cut = draft.slice(a, b);
+    const before = draft.slice(0, a), after = draft.slice(b);
+    if (/[.!?…]\s*$/.test(before) || before.trim() === "" || !/^\s*[\p{L}\p{N}£€$]/u.test(after)) continue;
+    if (/[.!?…]["')\]]*\s*$/u.test(cut)) continue;
+    if (!hasFiniteVerb(cut)) continue;
+    const nextSeg = after.trim().split(/[,;:.!?…]/u)[0].trim();
+    if (!nextSeg || JOIN_NEXT.test(nextSeg)) continue;
+    const segToJoin = nextSeg.split(new RegExp("\\s+(?=(?:and|so|but|or|because|e|ou|mas|porque|por isso|y|pero|así que|por eso)(?![\\p{L}]))", "iu"))[0];
+    if (!hasFiniteVerb(segToJoin)) out.push(`dangling: the cut leaves "${segToJoin.split(/\s+/).slice(0, 3).join(" ")}" cut off from its verb`);
+  }
+  for (const [s, e] of sentRanges(draft)) {
+    const local = ranges.filter(([a, b]) => a < e && b > s).map(([a, b]) => [Math.max(a, s) - s, Math.min(b, e) - s] as [number, number]);
+    if (!local.length) continue;
+    const orig = draft.slice(s, e);
+    const r = strikeSpans(orig, [], local);
+    const rem = r.ok ? r.text.trim() : "";
+    if (!rem) continue;
+    const seg = (t: string) => t.replace(/[.!?…]+["')\]]*$/u, "").split(/\s*[,;:–]\s*/).map((c) => normText(c).replace(/^[¿¡"'(]+/, "")).filter(Boolean);
+    const origSegs = new Set(seg(orig));
+    for (const c of seg(rem)) {
+      if (origSegs.has(c) || hasFiniteVerb(c) || c.split(/\s+/).length < 2) continue;
+      // A new verbless comma clause made by the cut: "..., every single weekend," / "..., and his."
+      // the tail of a clause the draft had, whose verb was in the struck head: "[and I can't keep doing this] every single weekend,"
+      if (/^(?:and|e|y|or|ou|o)\s/.test(c)) continue;
+      if ([...origSegs].some((o) => o !== c && o.endsWith(" " + c) && hasFiniteVerb(o.slice(0, o.length - c.length))))
+        out.push(`dangling: "${c.split(/\s+/).slice(0, 3).join(" ")}" is a comma clause left without its verb`);
+    }
+  }
+  // v7 (2): a subject pronoun ("e tu", "and you", "y tú") left with no verb before the next clause.
+  const SUBJ_ANY = new Set([...SUBJ_PRON, "eu", "yo", "nós", "nosotros", "vocês", "ustedes", "você", "usted", "elas", "ellas", "they"]);
+  for (const [a, b] of ranges) {
+    const before = draft.slice(0, a), after = draft.slice(b);
+    if (/[.!?…]\s*$/.test(before) || before.trim() === "") continue;
+    const prevM = before.replace(/\s+$/u, "").match(/(?:^|[^\p{L}'’])([\p{L}'’]+)$/u);
+    const prev = (prevM?.[1] ?? "").toLowerCase();
+    if (!SUBJ_ANY.has(prev) || /,\s*$/.test(before)) continue;
+    // Only a pronoun that opens its clause ("..., e tu [cut]"); "ya lo hago yo [cut]" already has its verb.
+    const clauseHead = before.replace(/\s+$/u, "").slice(0, -prev.length).split(/[,;:.!?…]/u).pop() ?? "";
+    const afterJoin = clauseHead.split(/(?<![\p{L}])(?:and|so|but|or|because|e|ou|mas|porque|y|pero|que|that)(?![\p{L}])/iu).pop() ?? "";
+    if (hasFiniteVerb(afterJoin) || /(?<![\p{L}])(?:fui|foste|foi|fomos|foram|fuiste|fue|fuimos|fueron|sou|és|soy|eres|somos|estás|estoy|estou)\s*$/iu.test(afterJoin)) continue;
+    // "Did you [even] check" / "you [just] forgot": the verb is still right after the cut.
+    const nextWords = after.trim().split(/[,;:.!?…]/u)[0].trim();
+    const firstNext = (nextWords.match(/^[\p{L}'’]+/u)?.[0] ?? "").toLowerCase();
+    if (nextWords && !JOIN_NEXT.test(nextWords) && hasFiniteVerb(firstNext)) continue;
+    if (nextWords && !JOIN_NEXT.test(nextWords) && !hasFiniteVerb(draft.slice(a, b))) continue;
+    out.push(`no_verb: the cut leaves the subject "${prev}" with no verb`);
+  }
   // (1f) v6: any sentence of a struck result that opens on a subject-less verb ("Forgot the bag again.", "Leaving her
   // coat at yours, again.") is a fragment; the sarcasm it hung from is gone, so the result is refused.
   for (const sent of fxSentences(text)) {
@@ -1690,7 +1817,9 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
     const m = normText(sent).match(STRIKE_BLAME_LEFT);
     const sarc = normText(sent).match(SARC_LEFT);
     const sigh = new RegExp(`^(?:${SIGH_WORDS})\\b[^.!?]{0,80}?${SIGH_MARTYR}`, "iu").test(sent.trim());
+    const dig = sent.match(DIG_LEFT_RE);
     if (m) out.push(`blame_left: "${sent}" still has "${m[0].trim()}"`);
+    else if (dig) out.push(`blame_left: "${sent}" still has the dig "${dig[0].trim()}"`);
     else if (sarc) out.push(`sarcasm_left: "${sent}" still has "${sarc[0].trim()}"`);
     else if (SARC_OPENER.test(sent.trim()) && !/^(?:sure|claro|boa|ótimo|perfect|perfecto|perfeito|great|genial|lovely|cool|nice)[,.!]?\s+(?:thanks|thank you|obrigad[oa]|gracias|see you|até|hasta|that works|works for me|combinado|de acuerdo)/iu.test(sent.trim())) out.push(`sarcasm_left: "${sent}" opens on a sarcastic word`);
     else if (sigh) out.push(`blame_left: "${sent}" is a sigh before a martyr line`);
@@ -1818,7 +1947,9 @@ Deno.serve(async (req) => {
       const judge = (raw: string, strikes: string[]): Got => {
         const spans = strikes.filter((s) => typeof s === "string" && s.trim());
         if (!spans.length && !fixed.ranges.length && !shout) return { kind: "none" };
-        const st = strikeSpans(draft, spans, fixed.ranges);
+        // v7: grudging tails ("if you can fit it in") are struck only with another strike.
+        const fw = fixedWith(fixed, spans);
+        const st = strikeSpans(draft, spans, fw.ranges);
         if (!st.ok) return { kind: "cand", raw, text: "", problems: [st.reason ?? "span_not_found"] };
         const g = strikeGuard(draft, spans);
         if (g.length) return { kind: "cand", raw, text: st.text, problems: g };
@@ -1830,7 +1961,7 @@ Deno.serve(async (req) => {
         const loud = shoutLeft(text, draft);
         if (loud.length) shape.push(`shout_left: ${loud.join(", ")}`);
         if (shape.length) return { kind: "cand", raw, text, problems: shape };
-        const c = strikeCheck(draft, text, spans, fixed.jab);
+        const c = strikeCheck(draft, text, spans, fw.jab);
         // codeOnly: the model struck nothing and only the fixed phrases / capitals changed; such a result never wins at once.
         // v6: the model gets the notes on a retry; the log gets only the codes (see logSend).
         return { kind: "cand", raw, text, problems: c.codes.length ? c.notes.length ? [...c.codes, ...c.notes] : c.codes : [], codeOnly: !spans.length, pleaseFrom: pleaseFrom(draft, st.ranges) };
