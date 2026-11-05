@@ -1,4 +1,5 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.1; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.3; the live chat-rewrite is untouched)
+// v7.4.3: subject-lost post-check; myself-who; lone caps jab stays (deShout); v7.4.2 budget.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -80,9 +81,20 @@ const STRIKE_SCHEMA = {
   },
 };
 
-const SEND_HARD_STOP_MS = 2400;
-const SEND_DEADLINE_MS = 2300;
-const SEND_RETRY_MIN_LEFT_MS = 700;
+// v7.4.2: client app budget is 3200ms. Observed client-RTT on the hard set is ~0.5–0.9s
+// once the server answers, so a 2400ms server hard stop can still surface as 3.28s e2e
+// (mix-pten1#2 on b04edc7). Cap the server earlier and refuse a late retry.
+const SEND_HARD_STOP_MS = 2000;
+const SEND_DEADLINE_MS = 1900;
+const SEND_RETRY_MIN_LEFT_MS = 1000;
+/** App-facing ceiling the send path must respect once network slack is reserved. */
+const SEND_CLIENT_BUDGET_MS = 3200;
+/** Reserved for auth/egress/RTT after the server returns (observed hard-set slack). */
+const SEND_NETWORK_SLACK_MS = 1000;
+// Static guard: hard stop + reserved network slack must fit the app's 3.2s ceiling.
+if (SEND_HARD_STOP_MS + SEND_NETWORK_SLACK_MS > SEND_CLIENT_BUDGET_MS) {
+  throw new Error("send budget misconfigured: hard stop + network slack exceeds client budget");
+}
 const SEND_MODEL = "openai/gpt-5.6-luna";
 // OpenAI models take max_completion_tokens; reasoning off keeps the call fast.
 const sendModel = (maxTokens: number) => ({ model: SEND_MODEL, max_completion_tokens: maxTokens, reasoning_effort: "none" });
@@ -1368,7 +1380,10 @@ const strikeFixed = (draft: string) => {
   }
   for (const m of draft.matchAll(STRIKE_JAB_AGAIN_RE)) {
     const end = (m.index ?? 0) + m[0].length;
-    const r: [number, number] = [end - m[1].length, end];
+    const g = m[1];
+    // v7.4.3 (Jared): a lone caps jab word (AGAIN) stays; deShout lower-cases it. Acronyms/names keep their caps via shoutForm.
+    if (/\p{Lu}/u.test(g) && !/\p{Ll}/u.test(g)) continue;
+    const r: [number, number] = [end - g.length, end];
     ranges.push(r);
     jab.push(r);
   }
@@ -1904,6 +1919,79 @@ const ruleSubjectLost = (draft: string, ranges: [number, number][], names: Set<s
   }
   return out;
 };
+// v7.4.3 (Jared): after ALL strikes, a remaining sentence that needs a subject must still have one.
+// Needs a subject: opens on aux/modal/negation/finite-verb (EN/PT/ES), or is a finite clause with no leading subject.
+// Imperatives that were already imperative in the original are excluded.
+const OPEN_AUX = /^(?:¿|¡)?(?:(?:is|are|was|were|isn't|aren't|wasn't|weren't|ain't|am|has|have|had|hasn't|haven't|hadn't|does|did|doesn't|didn't|can|can't|cannot|could|couldn't|will|won't|would|wouldn't|shall|should|shouldn't|must|mustn't|may|might|ought|needs?)(?:\s+not)?|(?:is|are|was|were|isn't|aren't)\s+not\s+to|isn't\s+to|aren't\s+to|(?:não|nao|no|nunca)\s+(?:(?:se\s+)?(?:pode|podem|podes|debe|deben|debes|pued[ea]n?|está|estão|estan|es|é|são|sao|son|tem|têm|tiene|tienen|hay|há|va|vai|vão|van))|(?:é|está|estão|são|sao|tem|têm|pode|podem|deve|devem|es|está|están|son|tiene|tienen|puede|pueden|debe|deben|hay|há|va|vai|vão|van))(?![\p{L}])/iu;
+const AFTER_AUX_HAS_SUBJ = /^(?:¿|¡)?(?:is|are|was|were|isn't|aren't|wasn't|weren't|am|has|have|had|hasn't|haven't|hadn't|does|did|doesn't|didn't|don't|do|can|can't|cannot|could|couldn't|will|won't|would|wouldn't|shall|should|shouldn't|must|mustn't|may|might|ought|needs?|é|está|estão|são|tem|têm|pode|podem|deve|devem|es|está|están|son|tiene|tienen|puede|pueden|debe|deben)\s+(?:not\s+)?(?:you|he|she|they|we|i|eu|tu|tú|yo|ele|ela|él|ella|você|voce|vocês|usted|ustedes|nós|nos|nosotros|nosotras|it)\b/iu;
+const NEG_IMP = /^(?:¿|¡)?(?:don['’]?t|do\s+not|não|nao|no)(?=\s+\p{L})/iu;
+const CONJ_IMP = /^(?:¿|¡)?(?:and|so|then|but|or|y|e|entonces|então|entao|así que|asi que|por isso|por eso)\s+/iu;
+const looksImperative = (sent: string): boolean => {
+  const t = sent.replace(/^[¿¡"'(\s]+/u, "").trim();
+  if (!t) return false;
+  if (NEG_IMP.test(t)) return true;
+  if (/^(?:please|por\s+favor)\b/iu.test(t)) return true;
+  if (CONJ_IMP.test(t)) {
+    const rest = t.replace(CONJ_IMP, "");
+    return looksImperative(rest) || /^(?:contesta|responde|reply|answer|call|text|send|tell|ask|pick|get|bring|take|come|go|wait|stop|start|check|pack|drop|pay|sign|fill|remember|forget|need|vai|vou|leva|traz|mete|pon|trae|llama|recoge|deja|haz|dá|da|confirma|confirm)\b/iu.test(rest);
+  }
+  // "Need you to …" / "Preciso que …" requests keep their asker as subject of the speech act.
+  if (/^(?:need|preciso|necesito)\b/iu.test(t)) return true;
+  const w = (t.match(/^[\p{L}'’]+/u)?.[0] ?? "").toLowerCase();
+  if (!w || AFTER_AUX_HAS_SUBJ.test(t) || OPEN_AUX.test(t)) return false;
+  if (/^[A-ZÁÉÍÓÚÀÃÕÂÊÔÜÑ]/.test(t.replace(/^[¿¡"'(\s]+/u, "")) && !/^(?:The|A|An|My|Your|His|Her|Their|Our|This|That|These|Those|If|When|While|Because|After|Before|Once|O|A|Os|As|El|La|Los|Las|Um|Uma|Un|Una|Eu|Tu|Yo|Él|Ella|Ele|Ela|Nós|Vos|You|He|She|They|We|It|His|Her)\b/u.test(t)) {
+    if (/^(?:pick|get|bring|take|call|text|send|tell|ask|put|leave|keep|make|let|give|stop|start|come|go|wait|check|pack|drop|collect|book|pay|sign|fill|remember|forget|need|vai|vou|leva|traz|mete|põe|pon|trae|llame|llama|recoge|deja|haz|dá|da|contesta|responde|confirma)\b/iu.test(w)) return true;
+  }
+  return false;
+};
+const subjectLostAfterStrike = (draft: string, text: string): string[] => {
+  const out: string[] = [];
+  const origSents = fxSentences(draft);
+  for (const rem of fxSentences(text)) {
+    const open = rem.replace(/^[¿¡"'(\s]+/u, "").trim();
+    if (!open) continue;
+    // Imperatives (incl. Don't / Y contesta / Need you to) are not subject-loss.
+    if (looksImperative(open)) continue;
+    // Aux/modal/neg opening that still has its subject ("Can you wash…") is fine.
+    if (AFTER_AUX_HAS_SUBJ.test(open)) continue;
+    const needs = OPEN_AUX.test(open) || !!fragStart(open);
+    if (!needs) continue;
+    // If the parent already wrote this subject-less / imperative line, allow.
+    if (origSents.some((o) => o.replace(/^[¿¡"'(\s]+/u, "").trim().toLowerCase() === open.toLowerCase())) continue;
+    if (origSents.some((o) => looksImperative(o.replace(/^[¿¡"'(\s]+/u, "").trim()) && o.replace(/^[¿¡"'(\s]+/u, "").trim().toLowerCase().endsWith(open.toLowerCase()))) continue;
+    const head = open.split(/\s+/).slice(0, 4).join(" ");
+    out.push(`no_subject: "${head}" has no subject after the strike`);
+  }
+  return out;
+};
+
+const MYSELF_WORD = /(?<![\p{L}])(?:myself|ourselves|yourself|eu\s+mesm[oa]|nós\s+mesm[oa]s|yo\s+mism[oa]|nosotros\s+mism[oa]s|me\s+mesm[oa]|a\s+mí\s+mism[oa])(?![\p{L}])/giu;
+const WHO_ACTS = /(?<![\p{L}])(?:I(?:['’]ll|['’]m|['’]d| will| am| have| had)?|we(?:['’]ll|['’]re| will| are)?|eu|nós|nos|yo|nosotros|nosotras)(?![\p{L}])/iu;
+const myselfWhoLost = (draft: string, ranges: [number, number][], text: string): string[] => {
+  const out: string[] = [];
+  for (const [s, e] of sentRanges(draft)) {
+    const sent = draft.slice(s, e);
+    const hits = [...sent.matchAll(MYSELF_WORD)];
+    if (!hits.length) continue;
+    const local = ranges.filter(([a, b]) => a < e && b > s);
+    for (const m of hits) {
+      const at = s + (m.index ?? 0);
+      const end = at + m[0].length;
+      const struck = local.some(([a, b]) => a < end && b > at);
+      const stillInText = new RegExp(m[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(text);
+      if (!struck && stillInText) continue;
+      // myself gone from this sentence's remnant — who must still be named.
+      const rem = (() => {
+        const r = strikeSpans(sent, [], local.map(([a, b]) => [Math.max(a, s) - s, Math.min(b, e) - s] as [number, number]));
+        return r.ok ? r.text : text;
+      })();
+      if (WHO_ACTS.test(rem) || WHO_ACTS.test(text)) continue;
+      out.push(`actor_dropped: "myself" was the only marker of who acted; keep it or name who`);
+    }
+  }
+  return out;
+};
+
 // Returns problem notes; empty = the shape is fine.
 // v7.3.3 helpers (Jared's limits).
 const RQ_FRAME = /(?<![\p{L}])(?:(?:so|that|too|this|how|really) (?:hard|difficult)(?: is it| was it| is that| was that)?|would it kill you|too much to ask|(?:tão|tao|muito) difícil(?: é| foi| era)?|custa(?: assim| lá)? tanto|é (?:pedir muito|muito pedir)|(?:tan|muy) difícil(?: es| era| resulta)?|(?:tanto|mucho)(?: te)? cuesta|es (?:mucho pedir|pedir mucho))(?![\p{L}])/iu;
@@ -2152,6 +2240,10 @@ const strikeShape = (draft: string, ranges: [number, number][], text: string): s
   // v7.3 (c): a rule sentence keeps who the rule is about. When every subject before the rule words ("The kids", "Isla",
   // "You", "A Isla", "Los niños") is struck and none is left before them, the rule has no subject -> null.
   for (const p of ruleSubjectLost(draft, ranges, names)) out.push(`no_subject: the strike takes who the rule "${p}" is about`);
+  // v7.4.3 (Jared): final post-check — any remaining sentence that needs a subject and lost it → null.
+  for (const p of subjectLostAfterStrike(draft, text)) out.push(p);
+  // v7.4.3 (Jared): "myself" may drop only when the sentence still names who acts.
+  for (const p of myselfWhoLost(draft, ranges, text)) out.push(p);
   // v7.3 (b): a strike must not drop a fact word. A content word (noun, adjective, state verb) inside a struck range,
   // outside every blame / reproach / sarcasm / dig / ignore / code-struck phrase, and not said elsewhere in the result
   // ("which by the way still smells") -> null.
@@ -2472,9 +2564,14 @@ Deno.serve(async (req) => {
       let got: Got = first;
       let attempts = 1;
       if (first.problems.length) {
-        // v7.3.2: log how much time the retry would have (the 700 ms floor is unchanged).
-        timing.retry_left_ms = deadline - Date.now();
-        if (timing.retry_left_ms < SEND_RETRY_MIN_LEFT_MS) {
+        // v7.4.2: overall deadline check before the retry — use the hard stop (not only the
+        // model-abort deadline), so a retry cannot push the server reply into the network
+        // slack the client needs to stay under SEND_CLIENT_BUDGET_MS.
+        const now = Date.now();
+        const leftHard = started + SEND_HARD_STOP_MS - now;
+        const leftDeadline = deadline - now;
+        timing.retry_left_ms = Math.min(leftHard, leftDeadline);
+        if (timing.retry_left_ms < SEND_RETRY_MIN_LEFT_MS || leftHard < SEND_RETRY_MIN_LEFT_MS) {
           log("fallback", ["no_time_for_retry"], attempts);
           return json(pass);
         }
