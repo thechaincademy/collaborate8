@@ -1,4 +1,4 @@
-// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v5; the live chat-rewrite is untouched)
+// Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v5.1; the live chat-rewrite is untouched)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
@@ -1419,7 +1419,9 @@ const STRIKE_BLAME_LEFT = wordRe(
 // Who did what, for guard 2: each deed verb (FX_KEY) with its doer, found before it (skipping auxiliaries, "who/que/quien"
 // pointing back to the doer), from a PT/ES person ending, or from "it was you / foste tu / fuiste tú" in the same sentence.
 // Deeds inside an "If/Se/Si" clause or a threat are hypothetical and skipped.
-const ACTOR_SKIP = new Set([...FX_SUBJ_SKIP, "who", "that", "que", "quien", "quem", "the", "one", "el", "la", "o", "a", "were", "was", "is", "are", "really", "actually", "completely", "it"]);
+const ACTOR_SKIP = new Set([...FX_SUBJ_SKIP, "who", "that", "que", "quien", "quem", "the", "one", "el", "la", "o", "a", "were", "was", "is", "are", "really", "actually", "completely", "it",
+  // v5: "you've been late" / "he had forgotten": the auxiliary sits between the doer and the deed.
+  "been", "be", "being", "have", "has", "had", "always", "often", "ever"]);
 const ACTOR_ROLE: Record<string, string> = {
   you: "other", "você": "other", voce: "other", tu: "other", "tú": "other", usted: "other", ti: "other",
   i: "self", me: "self", eu: "self", yo: "self", mim: "self", "mí": "self",
