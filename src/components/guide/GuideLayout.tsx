@@ -21,7 +21,8 @@ const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <nav className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-background px-8 backdrop-blur-[14px]">
+      <nav aria-label="Main" className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-background px-8 backdrop-blur-[14px]">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:ring-2 focus:ring-primary-ink">Skip to main content</a>
         <Link to="/" className="text-xl font-semibold tracking-tight text-[#1E6B5E]" style={{ fontFamily: "'Georgia', serif" }}>
           Collabor8
         </Link>
@@ -58,7 +59,9 @@ const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
         </nav>
       )}
 
-      {children}
+      <main id="main" tabIndex={-1} className="focus:outline-none">
+        {children}
+      </main>
 
       <section className="bg-primary px-8 py-[4.5rem] text-center text-foreground">
         <h2 className="mx-auto mb-4 text-[clamp(1.8rem,4vw,2.8rem)] font-light leading-tight tracking-tight" style={{ fontFamily: "'Georgia', serif" }}>

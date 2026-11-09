@@ -221,12 +221,12 @@ const SignUp = () => {
       <div className="flex flex-col gap-4">
         <div className="relative">
           <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="text" placeholder="First name" aria-label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+          <Input type="text" placeholder="First name" aria-label="First name" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)}
             className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
         </div>
         <div className="relative">
           <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="text" placeholder="Last name" aria-label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)}
+          <Input type="text" placeholder="Last name" aria-label="Last name" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)}
             className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
         </div>
       </div>
@@ -251,6 +251,9 @@ const SignUp = () => {
             type="email"
             placeholder="Enter your email"
             aria-label="Email address"
+            autoComplete="email"
+            aria-invalid={!!(showFormatError || emailError)}
+            aria-describedby={showFormatError || emailError ? "signup-email-error" : undefined}
             value={email}
             onChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
             className={`h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${
@@ -259,7 +262,7 @@ const SignUp = () => {
           />
         </div>
         {(showFormatError || emailError) && (
-          <p className="mt-2 text-sm text-destructive">
+          <p id="signup-email-error" role="alert" className="mt-2 text-sm text-destructive">
             {emailError ?? "Please enter a valid email address."}
           </p>
         )}
@@ -291,12 +294,14 @@ const SignUp = () => {
             placeholder="Enter your password"
             aria-label="Password"
             autoComplete="new-password"
+            aria-invalid={!!password && !isPasswordValid}
+            aria-describedby="signup-password-rules"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={`h-14 rounded-2xl border-2 bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${password && !isPasswordValid ? "border-destructive" : "border-border"}`}
           />
         </div>
-        <div className="mt-4 flex flex-col gap-2">
+        <div id="signup-password-rules" className="mt-4 flex flex-col gap-2">
           <Rule ok={pwc.length} label="At least 8 characters" />
           <Rule ok={pwc.mixed} label="Upper and lowercase letters" />
           <Rule ok={pwc.number} label="At least one number" />
@@ -319,11 +324,11 @@ const SignUp = () => {
       </p>
       <div className="relative">
         <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-        <Input type="email" placeholder="Co-parent's email (optional)" aria-label="Co-parent's email address" value={coparentEmail} onChange={(e) => setCoparentEmail(e.target.value)}
+        <Input type="email" placeholder="Co-parent's email (optional)" aria-label="Co-parent's email address" aria-invalid={coparentEmail.length > 0 && !isCoparentValid} aria-describedby={coparentEmail.length > 0 && !isCoparentValid ? "signup-coparent-error" : undefined} value={coparentEmail} onChange={(e) => setCoparentEmail(e.target.value)}
           className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay" />
       </div>
       {coparentEmail.length > 0 && !isCoparentValid && (
-        <p className="mt-2 text-sm text-destructive">Please enter a valid email address.</p>
+        <p id="signup-coparent-error" role="alert" className="mt-2 text-sm text-destructive">Please enter a valid email address.</p>
       )}
       <div className="flex-1" />
       <div className="pb-8 pt-6">

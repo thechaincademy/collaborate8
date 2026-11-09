@@ -71,8 +71,8 @@ const NewEnvelope = () => {
       <div className="flex min-h-screen flex-col bg-background">
         <div className="px-6 pt-12">
           <div className="mb-8 flex items-center justify-between">
-            <button onClick={() => setStep("name")}>
-              <ArrowLeft className="h-6 w-6 text-foreground" />
+            <button aria-label="Go back" onClick={() => setStep("name")}>
+              <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
             </button>
             <button onClick={handleDone} className="text-foreground">
               Skip
@@ -200,8 +200,8 @@ const NewEnvelope = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="px-6 pt-12">
-        <button onClick={() => navigate(-1)} className="mb-8">
-          <ArrowLeft className="h-6 w-6 text-foreground" />
+        <button aria-label="Go back" onClick={() => navigate(-1)} className="mb-8">
+          <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
         </button>
 
         {/* Style Carousel */}
@@ -241,6 +241,7 @@ const NewEnvelope = () => {
         </div>
 
         <Input
+          aria-label="Envelope name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Envelope name"

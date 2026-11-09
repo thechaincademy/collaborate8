@@ -17,7 +17,7 @@ const FooterResources = ({ onDark = false }: { onDark?: boolean }) => (
     <ul className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 md:grid-cols-4">
       {links.map((l) => (
         <li key={l.to}>
-          <Link to={l.to} className={`no-underline ${onDark ? "text-background/70 hover:text-background" : "text-muted-foreground hover:text-foreground"}`}>
+          <Link to={l.to} className={`inline-flex min-h-6 items-center no-underline ${onDark ? "text-background/70 hover:text-background" : "text-muted-foreground hover:text-foreground"}`}>
             {l.label}
           </Link>
         </li>

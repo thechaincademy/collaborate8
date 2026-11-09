@@ -256,6 +256,7 @@ export const ConversationCostsStep = ({
                         min="0"
                         step="0.01"
                         placeholder="0.00"
+                        aria-label="Amount in pounds"
                         className="pl-7"
                         value={entry.amount}
                         onChange={(e) => update(c.id, { amount: e.target.value })}

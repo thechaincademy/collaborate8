@@ -60,7 +60,7 @@ const DeleteAccount = () => {
       </Helmet>
       <TopBanner />
 
-      <main className="mx-auto max-w-md px-6 py-12 md:max-w-2xl md:py-16">
+      <main id="main" tabIndex={-1} className="focus:outline-none mx-auto max-w-md px-6 py-12 md:max-w-2xl md:py-16">
         <h1 className="text-3xl font-bold text-foreground md:text-4xl">Delete your Collabor8 account</h1>
         <p className="mt-3 text-muted-foreground">
           This page explains how to delete your account in Collabor8 (app ID com.collaborate8.app) and what happens to your data.

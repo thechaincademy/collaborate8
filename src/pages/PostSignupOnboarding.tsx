@@ -171,7 +171,7 @@ const PostSignupOnboarding = () => {
         <>
           <div className="relative mb-4">
             <PoundSterling className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input type="number" placeholder="Enter amount" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)}
+            <Input type="number" aria-label="Monthly amount in pounds" placeholder="Enter amount" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)}
               className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground" />
           </div>
           <button onClick={() => setUseCalculator(true)} className="mb-6 flex items-center gap-2 rounded-2xl bg-card p-4 text-left">

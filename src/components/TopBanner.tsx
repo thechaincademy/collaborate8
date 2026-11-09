@@ -12,8 +12,9 @@ const TopBanner = () => {
 
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+    <nav aria-label="Main" className="sticky top-0 z-50 w-full border-b border-border/40 bg-background pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       <div className="mx-auto flex max-w-5xl flex-nowrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:ring-2 focus:ring-primary-ink">Skip to main content</a>
         <Link to="/" className="flex shrink-0 items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground">
             <span className="text-sm font-bold text-background">C8</span>

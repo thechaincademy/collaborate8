@@ -53,7 +53,7 @@ const NeedsResponse = ({ userId }: { userId?: string }) => {
           <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Upcoming exchanges</p>
           {upcoming.map((t) => (
             <button key={t.id} onClick={() => open(t.id)} className="flex w-full items-center gap-2 rounded-xl p-2 text-left text-sm hover:bg-muted">
-              <CalendarClock className="h-4 w-4 text-primary" />
+              <CalendarClock className="h-4 w-4 text-primary-ink" />
               <span className="flex-1 truncate text-foreground">{t.title}</span>
               <span className="text-xs text-muted-foreground">{format(new Date(t.deadline!), "EEE d MMM")}</span>
             </button>

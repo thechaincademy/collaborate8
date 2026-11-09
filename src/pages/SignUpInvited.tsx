@@ -197,9 +197,13 @@ const SignUpInvited = () => {
         Your co-parent should have shared a 6-character code with you.
       </p>
 
+      <label htmlFor="invite-code" className="mb-2 block text-sm font-medium text-foreground">
+        Invite code
+      </label>
       <div className="relative">
-        <KeyRound className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+        <KeyRound className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
         <Input
+          id="invite-code"
           type="text"
           placeholder="Enter invite code"
           value={inviteCode}
@@ -230,15 +234,25 @@ const SignUpInvited = () => {
       <p className="mb-8 text-muted-foreground">Enter your full name as it appears on official documents.</p>
 
       <div className="flex flex-col gap-4">
-        <div className="relative">
-          <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="text" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+        <div>
+          <label htmlFor="invited-first-name" className="mb-2 block text-sm font-medium text-foreground">
+            First name
+          </label>
+          <div className="relative">
+            <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input id="invited-first-name" type="text" autoComplete="given-name" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+              className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+          </div>
         </div>
-        <div className="relative">
-          <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input type="text" placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)}
-            className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+        <div>
+          <label htmlFor="invited-last-name" className="mb-2 block text-sm font-medium text-foreground">
+            Last name
+          </label>
+          <div className="relative">
+            <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input id="invited-last-name" type="text" autoComplete="family-name" placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)}
+              className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-foreground" />
+          </div>
         </div>
       </div>
 
@@ -380,8 +394,8 @@ const SignUpInvited = () => {
         <div className="px-6 pt-4">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             {step !== "verify" && (
-              <button onClick={handleBack} className="mb-4 flex h-10 w-10 items-center justify-center">
-                <ArrowLeft className="h-5 w-5 text-foreground" />
+              <button aria-label="Go back" onClick={handleBack} className="mb-4 flex h-10 w-10 items-center justify-center">
+                <ArrowLeft className="h-5 w-5 text-foreground" aria-hidden="true" />
               </button>
             )}
             {renderProgressBar()}

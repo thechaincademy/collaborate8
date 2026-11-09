@@ -485,6 +485,7 @@ const ConversationQuestionnaire = ({
                         min="0"
                         step="0.01"
                         placeholder="0.00"
+                        aria-label="Amount in pounds"
                         className="pl-7"
                         value={entry.amount}
                         onChange={(e) => updateCost(c.id, { amount: e.target.value })}
@@ -555,6 +556,7 @@ const ConversationQuestionnaire = ({
               financial conversation?
             </p>
             <Textarea
+              aria-label="Add a note"
               value={note}
               maxLength={NOTE_MAX}
               onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX))}

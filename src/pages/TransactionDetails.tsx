@@ -10,8 +10,8 @@ const TransactionDetails = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="px-6 pt-12">
-        <button onClick={() => navigate(-1)} className="mb-12">
-          <ArrowLeft className="h-6 w-6 text-foreground" />
+        <button aria-label="Go back" onClick={() => navigate(-1)} className="mb-12">
+          <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
         </button>
 
         <div className="mb-8 flex items-start justify-between">

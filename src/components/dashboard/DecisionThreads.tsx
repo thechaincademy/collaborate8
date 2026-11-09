@@ -182,44 +182,44 @@ const NewThreadSheet = ({ open, onOpenChange, userId, coparentId, onCreated }: {
         </SheetHeader>
         <div className="mt-4 space-y-3">
           <div>
-            <label className="text-xs text-muted-foreground">Topic</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Saturday pickup" maxLength={80} />
+            <label htmlFor="decision-topic" className="text-xs text-muted-foreground">Topic</label>
+            <Input id="decision-topic" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Saturday pickup" maxLength={80} />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-muted-foreground">Category</label>
+              <label id="decision-category-label" className="text-xs text-muted-foreground">Category</label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="decision-category" aria-labelledby="decision-category-label"><SelectValue /></SelectTrigger>
                 <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{categoryLabel(c)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">Priority</label>
+              <label id="decision-priority-label" className="text-xs text-muted-foreground">Priority</label>
               <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="decision-priority" aria-labelledby="decision-priority-label"><SelectValue /></SelectTrigger>
                 <SelectContent>{PRIORITIES.map((p) => <SelectItem key={p} value={p}>{priorityLabel(p)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-muted-foreground">Reply by (optional)</label>
-              <Input type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+              <label htmlFor="decision-reply-by" className="text-xs text-muted-foreground">Reply by (optional)</label>
+              <Input id="decision-reply-by" type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">Child or children</label>
-              <Input value={children} onChange={(e) => setChildren(e.target.value)} placeholder="e.g. Mia, Leo" />
+              <label htmlFor="decision-children" className="text-xs text-muted-foreground">Child or children</label>
+              <Input id="decision-children" value={children} onChange={(e) => setChildren(e.target.value)} placeholder="e.g. Mia, Leo" />
             </div>
           </div>
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">What are you asking for?</label>
+              <label htmlFor="decision-request" className="text-xs text-muted-foreground">What are you asking for?</label>
               <Button variant="ghost" size="sm" disabled={!request.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }}
                 className="h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40">
-                <Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly
+                <Wand2 className="h-3.5 w-3.5 text-primary-ink" /> Rewrite calmly
               </Button>
             </div>
-            <Textarea value={request} onChange={(e) => setRequest(e.target.value)} rows={3}
+            <Textarea id="decision-request" value={request} onChange={(e) => setRequest(e.target.value)} rows={3}
               placeholder="e.g. Could we move Saturday pickup to 11am at the school gate?" />
           </div>
           <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
@@ -432,12 +432,12 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
             <Button variant="ghost" size="sm" onClick={async () => { if (await premium.requireAccess()) fileRef.current?.click(); }} className="h-auto gap-1 px-0 text-xs text-muted-foreground"><Paperclip className="h-3.5 w-3.5" /> Document</Button>
             <Button variant="ghost" size="sm" onClick={async () => { if (await premium.requireAccess()) photoRef.current?.click(); }} className="h-auto gap-1 px-0 text-xs text-muted-foreground"><Camera className="h-3.5 w-3.5" /> Photo</Button>
             <button onClick={() => setLinkOpen(true)} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><Receipt className="h-3.5 w-3.5" /> Expense</button>
-            <Button variant="ghost" size="sm" disabled={!draft.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }} className="ml-auto h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40"><Wand2 className="h-3.5 w-3.5 text-primary" /> Rewrite calmly</Button>
+            <Button variant="ghost" size="sm" disabled={!draft.trim()} onClick={async () => { if (await premium.requireAccess()) setRewriteOpen(true); }} className="ml-auto h-auto gap-1 px-0 text-xs font-medium text-foreground disabled:opacity-40"><Wand2 className="h-3.5 w-3.5 text-primary-ink" /> Rewrite calmly</Button>
           </div>
           <input ref={fileRef} type="file" accept="application/pdf,image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
           <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
           <div className="flex items-end gap-2">
-            <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={2} placeholder="Add a message to this decision…" className="min-h-[48px] flex-1 resize-none rounded-2xl bg-card" />
+            <Textarea aria-label="Message to this decision" value={draft} onChange={(e) => setDraft(e.target.value)} rows={2} placeholder="Add a message to this decision…" className="min-h-[48px] flex-1 resize-none rounded-2xl bg-card" />
             <Button size="icon" className="h-12 w-12 shrink-0" onClick={sendMessage} disabled={!draft.trim() || busy} aria-label="Send">
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
@@ -455,7 +455,7 @@ const ThreadDetail = ({ thread: t, events, userId, coparentName, onBack, reload 
             <SheetTitle>Propose a change</SheetTitle>
             <SheetDescription>Suggest a new time, date, amount or plan. Keep it to the practical details.</SheetDescription>
           </SheetHeader>
-          <Textarea className="mt-3" rows={3} value={proposal} onChange={(e) => setProposal(e.target.value)} />
+          <Textarea aria-label="Your proposal" className="mt-3" rows={3} value={proposal} onChange={(e) => setProposal(e.target.value)} />
           <Button className="mt-3 w-full" disabled={!proposal.trim() || busy}
             onClick={async () => { if (await act("propose", proposal.trim())) setProposeOpen(false); }}>
             Send proposal

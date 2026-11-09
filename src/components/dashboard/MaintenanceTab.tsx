@@ -357,7 +357,7 @@ const MaintenanceTab = () => {
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Recent Payments</h3>
           {paymentHistory.length > 3 && (
-            <Button variant="link" className="text-sm text-primary p-0 h-auto" onClick={() => navigate("/payment-history")}>
+            <Button variant="link" className="text-sm text-primary-ink p-0 h-auto" onClick={() => navigate("/payment-history")}>
               See all
             </Button>
           )}
@@ -436,7 +436,7 @@ const MaintenanceTab = () => {
             Are you the receiving parent instead?{" "}
             <button
               onClick={handleGoBack}
-              className="font-medium text-primary underline-offset-2 hover:underline"
+              className="font-medium text-primary-ink underline-offset-2 hover:underline"
             >
               Click here to go back
             </button>

@@ -126,7 +126,7 @@ const TermsOfService = () => {
         {/* Sidebar */}
         <aside className="md:sticky md:top-[90px] md:self-start">
           <div className="mb-4 border-b border-[#E4E2DA] pb-3 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#6B6B64]">Contents</div>
-          <nav className="flex flex-wrap gap-1 md:flex-col md:gap-0">
+          <nav aria-label="Policy contents" className="flex flex-wrap gap-1 md:flex-col md:gap-0">
             {sections.map((s) => (
               <a
                 key={s.id}
@@ -150,7 +150,7 @@ const TermsOfService = () => {
           </div>
         </aside>
 
-        <main className="min-w-0">
+        <main id="main" tabIndex={-1} className="focus:outline-none min-w-0">
           <div className="mb-8 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-secondary p-4">
             <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">About these terms</div>
             <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">

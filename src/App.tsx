@@ -11,6 +11,7 @@ import CookieConsent from "@/components/CookieConsent";
 import { sendGa4PageView } from "@/lib/ga4";
 import { isAdminPath, optOutLoadedTrackers } from "@/lib/internalTraffic";
 import { useEffect } from "react";
+import { MotionConfig } from "framer-motion";
 
 /** Sends one GA4 page_view per route change (deduped inside sendGa4PageView). */
 const Ga4PageTracker = () => {
@@ -85,6 +86,7 @@ const DashboardTabRedirect = () => {
 const queryClient = new QueryClient();
 
 const App = () => (
+  <MotionConfig reducedMotion="user">
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -167,6 +169,7 @@ const App = () => (
       </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
+  </MotionConfig>
 );
 
 export default App;

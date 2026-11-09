@@ -47,7 +47,7 @@ const ForgotPassword = () => {
         <meta name="description" content="Reset your Collabor8 password. Enter your email to receive a secure password reset link." />
         <link rel="canonical" href="https://collaborate8.com/forgot-password" />
       </Helmet>
-      <div className="mx-auto min-h-screen max-w-md md:max-w-xl bg-background">
+      <main id="main" tabIndex={-1} className="mx-auto min-h-screen max-w-md md:max-w-xl bg-background focus:outline-none">
       <AnimatePresence mode="wait">
         {!isSubmitted ? (
           <motion.div
@@ -59,10 +59,11 @@ const ForgotPassword = () => {
           >
             <div className="pt-12">
               <button
+                aria-label="Go back"
                 onClick={() => navigate(-1)}
                 className="mb-8 flex h-10 w-10 items-center justify-center"
               >
-                <ArrowLeft className="h-6 w-6 text-foreground" />
+                <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
               </button>
 
               <h1 className="mb-2 text-3xl font-bold text-foreground">Reset your password</h1>
@@ -72,10 +73,15 @@ const ForgotPassword = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+              <label htmlFor="forgot-email" className="mb-2 block text-sm font-medium text-foreground">
+                Email address
+              </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                 <Input
+                  id="forgot-email"
                   type="email"
+                  autoComplete="email"
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -106,10 +112,11 @@ const ForgotPassword = () => {
           >
             <div className="pt-12">
               <button
+                aria-label="Go back"
                 onClick={() => navigate("/login")}
                 className="mb-8 flex h-10 w-10 items-center justify-center"
               >
-                <ArrowLeft className="h-6 w-6 text-foreground" />
+                <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
               </button>
             </div>
 
@@ -144,7 +151,7 @@ const ForgotPassword = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </main>
     </>
   );
 };

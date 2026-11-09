@@ -49,6 +49,7 @@ const IsMyChildMaintenanceFair = () => (
     <H3>Step 3: the rate</H3>
     <P>One of five rates applies, based on the paying parent's gross weekly income:</P>
     <Table
+      label="Child maintenance rates table"
       head={["Paying parent's gross weekly income", "Rate", "Weekly amount"]}
       rows={[
         ["Unknown or not provided", "Default", "£38 for 1 child, £51 for 2 children, £64 for 3 or more"],
@@ -66,6 +67,7 @@ const IsMyChildMaintenanceFair = () => (
     <H3>Step 6: shared care</H3>
     <P>If you agree that your child stays overnight with the paying parent for at least 52 nights a year, the amount for each child can go down (on the reduced and basic rates):</P>
     <Table
+      label="Shared care reductions table"
       head={["Agreed overnight stays each year", "Reduction for each child"]}
       rows={[
         ["52 to 103 nights", "14.29%"],

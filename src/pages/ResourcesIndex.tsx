@@ -48,7 +48,7 @@ const ResourcesIndex = () => {
         <meta name="twitter:description" content={DESC} />
         <script type="application/ld+json">{JSON.stringify(crumbLd)}</script>
       </Helmet>
-      <main className="mx-auto max-w-[740px] px-5 pb-16 pt-8 sm:px-8 sm:pt-10">
+      <div className="mx-auto max-w-[740px] px-5 pb-16 pt-8 sm:px-8 sm:pt-10">
         <h1 className="mb-4 text-[clamp(2rem,6vw,3.2rem)] font-light leading-[1.15] tracking-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
           Resources for separated parents
         </h1>
@@ -68,7 +68,7 @@ const ResourcesIndex = () => {
             </li>
           ))}
         </ul>
-      </main>
+      </div>
     </GuideLayout>
   );
 };

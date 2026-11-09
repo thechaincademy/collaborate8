@@ -86,7 +86,7 @@ const BenefitsTab = () => {
         className="mt-8 rounded-2xl border border-primary/40 bg-primary/10 p-5"
       >
         <div className="mb-3 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/20 text-primary">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/20 text-primary-ink">
             <Plane className="h-5 w-5" />
           </div>
           <div>

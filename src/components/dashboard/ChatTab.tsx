@@ -721,6 +721,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
                 {!savedCoparentEmail && (
                   <input
                     type="email"
+                    aria-label="Co-parent's email address"
                     value={pendingEmail}
                     onChange={(e) => setPendingEmail(e.target.value)}
                     placeholder="Your co-parent's email address"
@@ -911,7 +912,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
             onClick={() => setAiInfoOpen((o) => !o)}
             className="flex w-full items-center gap-1.5 rounded-md py-1 text-left text-xs text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary-ink" />
             <span className="flex-1">About AI prompts and the calm check</span>
             <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", aiInfoOpen && "rotate-180")} />
           </button>
@@ -923,7 +924,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         </div>
       ) : (
         <div className="mb-3 flex shrink-0 items-start gap-2 rounded-2xl border border-primary/30 bg-primary/10 p-3">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary-ink" />
           <p className="text-xs text-foreground/80">
             AI prompts and the calm check on Send are optional, private writing aids - not legal advice.
           </p>
@@ -1071,7 +1072,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       <div className="-mt-2 mb-2 flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={async () => { if (!(await premium.requireAccess())) return; if (!startersOpen) void track("chatbot_opened", { surface: "prompts" }); setStartersOpen((o) => !o); }}
           className="h-auto min-h-6 gap-1 px-1 py-1 text-xs font-medium text-foreground">
-          <MessageCircle className="h-3.5 w-3.5 text-primary" /> {startersOpen ? "Hide AI prompts" : "AI prompts"}
+          <MessageCircle className="h-3.5 w-3.5 text-primary-ink" /> {startersOpen ? "Hide AI prompts" : "AI prompts"}
         </Button>
       </div>
       {startersOpen && (

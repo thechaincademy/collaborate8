@@ -61,7 +61,7 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse, surface = "chat" }:
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wand2 className="h-4 w-4 text-primary" /> Rewrite calmly
+            <Wand2 className="h-4 w-4 text-primary-ink" /> Rewrite calmly
           </DialogTitle>
           <DialogDescription>
             Private to you. Nothing is sent until you choose to send it.
@@ -83,7 +83,7 @@ const RewriteComposer = ({ open, draft, onOpenChange, onUse, surface = "chat" }:
         <div className="space-y-2">
           {options.map((o) => (
             <div key={o.tone} className="rounded-xl border border-border bg-card p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">{o.tone}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary-ink">{o.tone}</p>
               <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{o.text}</p>
               <Button size="sm" variant="outline" className="mt-2" onClick={() => { void track("chatbot_message_sent", { surface: "rewrite", source: surface, action: "used_version" }); onUse(o.text); onOpenChange(false); }}>
                 Use this version

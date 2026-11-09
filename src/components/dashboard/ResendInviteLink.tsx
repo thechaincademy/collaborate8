@@ -67,7 +67,7 @@ const ResendInviteLink = ({ email, onResent, className = "" }: Props) => {
           setValue(email);
           setOpen(true);
         }}
-        className={`text-xs font-medium text-primary underline-offset-4 hover:underline ${className}`}
+        className={`text-xs font-medium text-primary-ink underline-offset-4 hover:underline ${className}`}
       >
         Wrong email address? Resend invitation
       </button>
@@ -76,7 +76,7 @@ const ResendInviteLink = ({ email, onResent, className = "" }: Props) => {
           <DialogHeader>
             <DialogTitle>Resend invitation</DialogTitle>
           </DialogHeader>
-          <Input type="email" value={value} onChange={(e) => setValue(e.target.value)} />
+          <Input type="email" aria-label="Co-parent's email address" value={value} onChange={(e) => setValue(e.target.value)} />
           <Button onClick={submit} disabled={busy} className="w-full">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resend invitation"}
           </Button>

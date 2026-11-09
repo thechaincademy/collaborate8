@@ -197,6 +197,9 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
     provider: { "@type": "Organization", name: "Collabor8", url: "https://collaborate8.com" },
   };
 
+  // Embedded in the app shell, which already renders the page's <main>.
+  const MainTag = embedded ? "div" : "main";
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background bg-background" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       {!embedded && <TopBanner />}
@@ -215,7 +218,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
-      <div className="mx-auto max-w-[640px]">
+      <MainTag {...(embedded ? {} : { id: "main", tabIndex: -1 })} className="mx-auto max-w-[640px] focus:outline-none">
         {/* Header */}
         <div className="mb-6 overflow-hidden rounded-2xl bg-teal p-6 text-teal-foreground shadow-elevated">
           <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-full bg-gold text-gold-foreground">
@@ -263,14 +266,14 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
           )}
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#3D3D38]">{incomeLabels[incomePeriod].label}</label>
-              <p className="mb-1.5 text-xs leading-snug text-[#6B6B64]">Before tax and National Insurance, after pension contributions</p>
-              <input type="number" placeholder={incomeLabels[incomePeriod].placeholder} value={income} onChange={(e) => setIncome(e.target.value)} className={inputClass} min="0" />
+              <label htmlFor="calc-income" className="mb-1 block text-sm font-medium text-[#3D3D38]">{incomeLabels[incomePeriod].label}</label>
+              <p id="calc-income-hint" className="mb-1.5 text-xs leading-snug text-[#6B6B64]">Before tax and National Insurance, after pension contributions</p>
+              <input id="calc-income" aria-describedby="calc-income-hint" type="number" placeholder={incomeLabels[incomePeriod].placeholder} value={income} onChange={(e) => setIncome(e.target.value)} className={inputClass} min="0" />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#3D3D38]">Income period</label>
-              <p className="mb-1.5 text-xs leading-snug text-[#6B6B64]">How your income figure is expressed</p>
-              <select value={incomePeriod} onChange={(e) => setIncomePeriod(e.target.value)} className={selectClass}>
+              <label htmlFor="calc-income-period" className="mb-1 block text-sm font-medium text-[#3D3D38]">Income period</label>
+              <p id="calc-income-period-hint" className="mb-1.5 text-xs leading-snug text-[#6B6B64]">How your income figure is expressed</p>
+              <select id="calc-income-period" aria-describedby="calc-income-period-hint" value={incomePeriod} onChange={(e) => setIncomePeriod(e.target.value)} className={selectClass}>
                 <option value="annual">Annual</option>
                 <option value="monthly">Monthly</option>
                 <option value="weekly">Weekly</option>
@@ -278,17 +281,17 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
             </div>
           </div>
           <div className="mt-3.5">
-            <label className="mb-1 block text-sm font-medium text-[#3D3D38]">Income type</label>
-            <select value={benefits} onChange={(e) => setBenefits(e.target.value)} className={selectClass}>
+            <label htmlFor="calc-income-type" className="mb-1 block text-sm font-medium text-[#3D3D38]">Income type</label>
+            <select id="calc-income-type" value={benefits} onChange={(e) => setBenefits(e.target.value)} className={selectClass}>
               <option value="no">Employment / self-employment</option>
               <option value="yes">Receiving qualifying benefits</option>
             </select>
           </div>
           <div className="mt-3.5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#3D3D38]">Other children in household</label>
-              <p className="mb-1.5 text-xs leading-snug text-[#6B6B64]">Children supported in your household</p>
-              <select value={otherKids} onChange={(e) => setOtherKids(e.target.value)} className={selectClass}>
+              <label htmlFor="calc-other-children" className="mb-1 block text-sm font-medium text-[#3D3D38]">Other children in household</label>
+              <p id="calc-other-children-hint" className="mb-1.5 text-xs leading-snug text-[#6B6B64]">Children supported in your household</p>
+              <select id="calc-other-children" aria-describedby="calc-other-children-hint" value={otherKids} onChange={(e) => setOtherKids(e.target.value)} className={selectClass}>
                 <option value="0">None</option>
                 <option value="1">1 child</option>
                 <option value="2">2 children</option>
@@ -298,9 +301,9 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#3D3D38]">Qualifying children</label>
-              <p className="mb-1.5 text-xs leading-snug text-[#6B6B64]">Children this arrangement covers</p>
-              <select value={kids} onChange={(e) => handleKidsChange(e.target.value)} className={selectClass}>
+              <label htmlFor="calc-qualifying-children" className="mb-1 block text-sm font-medium text-[#3D3D38]">Qualifying children</label>
+              <p id="calc-qualifying-children-hint" className="mb-1.5 text-xs leading-snug text-[#6B6B64]">Children this arrangement covers</p>
+              <select id="calc-qualifying-children" aria-describedby="calc-qualifying-children-hint" value={kids} onChange={(e) => handleKidsChange(e.target.value)} className={selectClass}>
                 <option value="1">1 child</option>
                 <option value="2">2 children</option>
                 <option value="3">3 children</option>
@@ -319,12 +322,12 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
             </div>
             <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-[#3D3D38]">Shared care - overnight stays</span>
           </div>
-          <p className="mb-3 text-xs leading-snug text-[#6B6B64]">Enter the number of nights per year each child spends with the parent making payments. The CMS adjusts the amount for each child individually based on this.</p>
+          <p id="calc-nights-hint" className="mb-3 text-xs leading-snug text-[#6B6B64]">Enter the number of nights per year each child spends with the parent making payments. The CMS adjusts the amount for each child individually based on this.</p>
           <div className="flex flex-col gap-2.5">
             {Array.from({ length: kidsNum }).map((_, i) => (
               <div key={i} className="grid grid-cols-[100px_1fr] items-center gap-3 max-[480px]:grid-cols-[80px_1fr]">
-                <span className="text-[13px] font-medium text-[#3D3D38]">{ordinal(i + 1)} child</span>
-                <select value={childNights[i] || 0} onChange={(e) => setNightsForChild(i, parseInt(e.target.value))} className={selectClass}>
+                <label htmlFor={`calc-nights-${i}`} className="text-[13px] font-medium text-[#3D3D38]">{ordinal(i + 1)} child</label>
+                <select id={`calc-nights-${i}`} aria-label={`Nights per week with child ${i + 1}`} aria-describedby="calc-nights-hint" value={childNights[i] || 0} onChange={(e) => setNightsForChild(i, parseInt(e.target.value))} className={selectClass}>
                   {nightOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
@@ -457,7 +460,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
             </ul>
           </section>
         </div>
-      </div>
+      </MainTag>
       </div>
     </div>
   );

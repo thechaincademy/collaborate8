@@ -30,7 +30,7 @@ const CoparentStatus = ({ isLinked, hasInvite, inviteEmail }: Props) => {
     }
     if (hasInvite) {
       return (
-        <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
+        <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-primary-ink">
           <Clock className="h-3.5 w-3.5" /> Invitation not yet accepted
         </span>
       );
@@ -54,7 +54,7 @@ const CoparentStatus = ({ isLinked, hasInvite, inviteEmail }: Props) => {
   const days = differenceInCalendarDays(new Date(), lastActive);
   if (days <= 0) {
     return (
-      <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
+      <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-primary-ink">
         <span className="h-2 w-2 rounded-full bg-emerald-500" /> Connected and active
       </span>
     );

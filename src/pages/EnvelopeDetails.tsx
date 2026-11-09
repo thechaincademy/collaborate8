@@ -80,8 +80,8 @@ const EnvelopeDetails = () => {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <div className="px-6 pt-12">
-          <button onClick={() => setView("settings")} className="mb-8">
-            <ArrowLeft className="h-6 w-6 text-foreground" />
+          <button aria-label="Go back" onClick={() => setView("settings")} className="mb-8">
+            <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
           </button>
 
           <p className="text-sm text-muted-foreground">{envelopeName}</p>
@@ -172,8 +172,8 @@ const EnvelopeDetails = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="px-6 pt-12">
-        <button onClick={() => navigate("/dashboard")} className="mb-8">
-          <ArrowLeft className="h-6 w-6 text-foreground" />
+        <button aria-label="Go back" onClick={() => navigate("/dashboard")} className="mb-8">
+          <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
         </button>
 
         <p className="text-sm text-muted-foreground">{envelopeName}</p>

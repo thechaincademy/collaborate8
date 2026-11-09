@@ -168,6 +168,7 @@ const LetsChatTool = () => {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parent A</p>
                 <p className="mb-3 text-foreground">{selected.prompts[step].parentA}</p>
                 <Textarea
+                  aria-label="Parent A's answer"
                   value={currentAnswer.a}
                   onChange={(e) => updateAnswer("a", e.target.value)}
                   placeholder="Parent A's answer..."
@@ -179,6 +180,7 @@ const LetsChatTool = () => {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parent B</p>
                 <p className="mb-3 text-foreground">{selected.prompts[step].parentB}</p>
                 <Textarea
+                  aria-label="Parent B's answer"
                   value={currentAnswer.b}
                   onChange={(e) => updateAnswer("b", e.target.value)}
                   placeholder="Parent B's answer..."

@@ -77,7 +77,7 @@ const Landing = () => {
 
   return (
     <RedirectIfSignedIn>
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Helmet>
         <title>Collabor8 - Child Maintenance App for UK Parents</title>
         <meta name="description" content="Collabor8 helps separated parents manage child maintenance payments, track expenses, and earn rewards. Free CMS calculator based on the official UK formula." />
@@ -99,6 +99,7 @@ const Landing = () => {
       {/* Nav */}
       <TopBanner />
 
+      <main id="main" tabIndex={-1} className="focus:outline-none">
       {/* Hero */}
       <div>
         <section className="relative w-full overflow-hidden bg-primary">
@@ -306,6 +307,7 @@ const Landing = () => {
 
       {/* Trusted by */}
       <TrustedBy />
+      </main>
 
 
 
@@ -343,7 +345,7 @@ const Landing = () => {
           </a>
         </div>
       </footer>
-    </main>
+    </div>
     </RedirectIfSignedIn>
   );
 };

@@ -265,7 +265,7 @@ const FAQ = () => {
         </motion.div>
       </section>
 
-      <main className="mx-auto max-w-5xl px-6 py-16 md:px-8 md:py-20">
+      <main id="main" tabIndex={-1} className="focus:outline-none mx-auto max-w-5xl px-6 py-16 md:px-8 md:py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

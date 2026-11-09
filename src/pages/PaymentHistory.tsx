@@ -28,8 +28,8 @@ const PaymentHistory = () => {
     <MobileLayout>
       <div className="px-6 pt-12 pb-24">
         <div className="mb-6 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
+          <Button aria-label="Go back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </Button>
           <h1 className="text-2xl font-bold text-foreground">Payment History</h1>
         </div>

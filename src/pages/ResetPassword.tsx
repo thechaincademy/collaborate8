@@ -131,6 +131,8 @@ const ResetPassword = () => {
                 placeholder="New password"
                 aria-label="New password"
                 autoComplete="new-password"
+                aria-invalid={password.length > 0 && !allRulesPass}
+                aria-describedby="reset-password-rules"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
@@ -144,13 +146,15 @@ const ResetPassword = () => {
                 placeholder="Confirm new password"
                 aria-label="Confirm new password"
                 autoComplete="new-password"
+                aria-invalid={confirm.length > 0 && !matches}
+                aria-describedby="reset-password-rules"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 className="h-14 rounded-2xl border-border bg-card pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
               />
             </div>
 
-            <ul className="space-y-2">
+            <ul id="reset-password-rules" className="space-y-2">
               {rules.map((rule) => {
                 const ok = rule.test(password);
                 return (

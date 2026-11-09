@@ -227,7 +227,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           className="rounded-2xl border border-primary/40 bg-primary/10 p-4 text-left transition-colors hover:bg-primary/15"
         >
           <div className="mb-2 flex items-center justify-between">
-            <PoundSterling className="h-5 w-5 text-primary" />
+            <PoundSterling className="h-5 w-5 text-primary-ink" />
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="text-xs font-medium text-foreground/70">Monthly payments</p>
@@ -242,7 +242,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           className="rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
         >
           <div className="mb-2 flex items-center justify-between">
-            <Receipt className="h-5 w-5 text-primary" />
+            <Receipt className="h-5 w-5 text-primary-ink" />
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="text-xs font-medium text-foreground/70">Expenses</p>
@@ -262,7 +262,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         className="mb-6 rounded-2xl border border-primary/40 bg-primary/10 p-5"
       >
         <div className="flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-ink">
             <MessageCircle className="h-5 w-5" />
           </div>
           <div className="flex-1">
@@ -335,7 +335,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
               transition={{ delay: 0.2 + i * 0.04 }}
               className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-ink">
                 <link.icon className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">

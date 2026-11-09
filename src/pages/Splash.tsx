@@ -146,7 +146,7 @@ const Splash = () => {
         <meta name="description" content="Create your account or log in to Collabor8. The app helping co-parents manage child maintenance payments with ease." />
         <link rel="canonical" href="https://collaborate8.com/splash" />
       </Helmet>
-      <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-4xl lg:max-w-5xl flex-col bg-background pl-[calc(1.5rem+env(safe-area-inset-left))] pr-[calc(1.5rem+env(safe-area-inset-right))] pb-[env(safe-area-inset-bottom)] md:pl-[calc(2.5rem+env(safe-area-inset-left))] md:pr-[calc(2.5rem+env(safe-area-inset-right))]">
+      <main id="main" tabIndex={-1} className="mx-auto flex min-h-screen w-full max-w-md md:max-w-4xl lg:max-w-5xl flex-col bg-background pl-[calc(1.5rem+env(safe-area-inset-left))] pr-[calc(1.5rem+env(safe-area-inset-right))] pb-[env(safe-area-inset-bottom)] md:pl-[calc(2.5rem+env(safe-area-inset-left))] md:pr-[calc(2.5rem+env(safe-area-inset-right))]">
         <div className="flex flex-1 flex-col items-center justify-center pt-10 md:grid md:grid-cols-2 md:items-center md:gap-12 md:pt-0">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -201,7 +201,7 @@ const Splash = () => {
         >
           {renderAccountActions()}
         </motion.div>
-      </div>
+      </main>
     </RedirectIfSignedIn>
   );
 };

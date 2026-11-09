@@ -75,7 +75,7 @@ const CoparentLinkSettings = () => {
               <ResendInviteLink email={inviteEmail} onResent={setInviteEmail} />
             ) : (
               <div className="flex gap-2">
-                <Input type="email" inputMode="email" placeholder="co-parent@email.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
+                <Input type="email" inputMode="email" aria-label="Co-parent's email address" placeholder="co-parent@email.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
                 <Button onClick={send} disabled={sending || !emailInput.trim()} className="gap-2">
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Send
                 </Button>
@@ -104,7 +104,7 @@ const CoparentLinkSettings = () => {
       {emailRowOpen && (
         <div className="border-b border-border bg-muted/30 p-4">
           <div className="flex gap-2">
-            <Input type="email" inputMode="email" placeholder="co-parent@email.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
+            <Input type="email" inputMode="email" aria-label="Co-parent's email address" placeholder="co-parent@email.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
             <Button onClick={send} disabled={sending || !emailInput.trim()} className="gap-2">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />} Update
             </Button>

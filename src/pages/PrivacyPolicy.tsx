@@ -86,7 +86,7 @@ const PrivacyPolicy = () => {
         {/* Sidebar */}
         <aside className="md:sticky md:top-[90px] md:self-start">
           <div className="mb-4 border-b border-[#E4E2DA] pb-3 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#6B6B64]">Contents</div>
-          <nav className="flex flex-wrap gap-1 md:flex-col md:gap-0">
+          <nav aria-label="Policy contents" className="flex flex-wrap gap-1 md:flex-col md:gap-0">
             {sections.map((s) => (
               <a
                 key={s.id}
@@ -111,7 +111,7 @@ const PrivacyPolicy = () => {
         </aside>
 
         {/* Content */}
-        <main className="min-w-0">
+        <main id="main" tabIndex={-1} className="focus:outline-none min-w-0">
           {/* About box */}
           <div className="mb-8 rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-secondary p-4">
             <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">About this policy</div>
@@ -210,7 +210,7 @@ const PrivacyPolicy = () => {
             <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#1A1A18]">03</div>
             <h2 className="mb-5 border-b border-[#E4E2DA] pb-3 text-[1.65rem] font-normal leading-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', serif" }}>How and why we use your data</h2>
             <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">The table below sets out every purpose for which we process personal data and the lawful basis under UK GDPR Article 6 that we rely on.</p>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-ink" tabIndex={0} role="region" aria-label="How we use your data table">
               <table className="w-full border-collapse text-[0.86rem]">
                 <thead>
                   <tr className="bg-foreground">
@@ -329,7 +329,7 @@ const PrivacyPolicy = () => {
           <section ref={setRef("s6")} id="s6" className="mb-14 scroll-mt-[90px]">
             <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#1A1A18]">06</div>
             <h2 className="mb-5 border-b border-[#E4E2DA] pb-3 text-[1.65rem] font-normal leading-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', serif" }}>How long we keep your data</h2>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-ink" tabIndex={0} role="region" aria-label="Data retention table">
               <table className="w-full border-collapse text-[0.86rem]">
                 <thead>
                   <tr className="bg-foreground">
@@ -425,7 +425,7 @@ const PrivacyPolicy = () => {
             <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#1A1A18]">09</div>
             <h2 className="mb-5 border-b border-[#E4E2DA] pb-3 text-[1.65rem] font-normal leading-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', serif" }}>Cookies & tracking technologies</h2>
             <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">We use cookies and similar technologies on collaborate8.com, including our web pages when they open inside the Collabor8 app. You choose which ones we use in the cookie banner on your first visit. To change your choice later, clear collaborate8.com's cookies and site data in your browser settings and the banner will appear again.</p>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-ink" tabIndex={0} role="region" aria-label="Cookies table">
               <table className="w-full border-collapse text-[0.86rem]">
                 <thead>
                   <tr className="bg-foreground">

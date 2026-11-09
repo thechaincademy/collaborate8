@@ -142,8 +142,8 @@ const EditRecurringPayment = () => {
   if (!profileLoading && isViewing) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-lg flex-col bg-card px-6 pt-12">
-        <button onClick={() => navigate(-1)} className="mb-8">
-          <ArrowLeft className="h-6 w-6 text-foreground" />
+        <button aria-label="Go back" onClick={() => navigate(-1)} className="mb-8">
+          <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
         </button>
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <ShieldAlert className="mb-6 h-12 w-12 text-muted-foreground" />
@@ -160,8 +160,8 @@ const EditRecurringPayment = () => {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-lg flex-col bg-card">
       <div className="px-6 pt-12 pb-24">
-        <button onClick={() => navigate(-1)} className="mb-6">
-          <ArrowLeft className="h-6 w-6 text-foreground" />
+        <button aria-label="Go back" onClick={() => navigate(-1)} className="mb-6">
+          <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
         </button>
 
         <h1 className="mb-2 text-2xl font-bold text-foreground">Set up your arrangement</h1>
@@ -184,6 +184,7 @@ const EditRecurringPayment = () => {
               <Input
                 type="number"
                 inputMode="decimal"
+                aria-label="Amount in pounds"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="h-14 text-2xl"

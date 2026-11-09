@@ -30,7 +30,7 @@ const FinancialCoparentingTips = () => {
           "mainEntityOfPage": "https://collaborate8.com/resources/financial-coparenting-tips"
         })}</script>
       </Helmet>
-      <div className="mx-auto max-w-3xl px-6 py-12">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-6 py-12 focus:outline-none">
         <button
           onClick={() => navigate(-1)}
           className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
@@ -110,7 +110,7 @@ const FinancialCoparentingTips = () => {
             </div>
           </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

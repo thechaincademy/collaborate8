@@ -108,7 +108,7 @@ const EpisodeCard = ({ ep }: { ep: Episode }) => (
     <div className="p-6">
       <div className="flex items-center gap-3">
         <span className="text-2xl font-extrabold leading-none text-primary-ink">{ep.number}</span>
-        <span className="rounded-full border border-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+        <span className="rounded-full border border-primary px-2.5 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-ink">
           {ep.duration}
         </span>
       </div>
@@ -166,7 +166,7 @@ const Podcast = () => {
     </section>
 
     {/* Episodes */}
-    <main className="bg-background">
+    <main id="main" tabIndex={-1} className="focus:outline-none bg-background">
       <section className="px-6 pb-16 md:px-8 md:pb-24">
         <motion.div {...fade} className="mx-auto max-w-5xl">
           <div className="mb-8 flex items-center gap-4">

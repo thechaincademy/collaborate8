@@ -40,7 +40,7 @@ const statusLabel = (e: ExpenseRequest) => {
 const statusClass = (status: ExpenseRequest["status"]) => {
   switch (status) {
     case "approved":
-      return "text-primary";
+      return "text-primary-ink";
     case "paid":
     case "agreed":
       return "text-emerald-600";
@@ -124,7 +124,7 @@ const ExpensesTab = () => {
         <Button
           variant="link"
           onClick={() => { if (e.receipt_url) void openReceipt(e.receipt_url); }}
-          className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline"
+          className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary-ink underline"
         >
           <FileText className="h-3.5 w-3.5" />
           View receipt
@@ -235,10 +235,11 @@ const ExpensesTab = () => {
         ) : (
           <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              <label htmlFor="expense-description" className="mb-1 block text-xs font-medium text-muted-foreground">
                 What was it for?
               </label>
               <Textarea
+                id="expense-description"
                 value={description}
                 onChange={(ev) => setDescription(ev.target.value)}
                 placeholder="School trip, winter coat, dentist..."
@@ -247,8 +248,9 @@ const ExpensesTab = () => {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Amount (£)</label>
+              <label htmlFor="expense-amount" className="mb-1 block text-xs font-medium text-muted-foreground">Amount (£)</label>
               <Input
+                id="expense-amount"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -269,7 +271,7 @@ const ExpensesTab = () => {
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary-ink"
               >
                 <Paperclip className="h-4 w-4" />
                 {receipt ? receipt.name : "Attach a receipt (optional)"}

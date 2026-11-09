@@ -20,7 +20,7 @@ const Contact = () => (
     </Helmet>
     <TopBanner />
 
-    <main className="bg-background px-6 py-16 md:px-8 md:py-20">
+    <main id="main" tabIndex={-1} className="focus:outline-none bg-background px-6 py-16 md:px-8 md:py-20">
       <div className="mx-auto max-w-5xl">
         <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary-ink">
           Get in touch

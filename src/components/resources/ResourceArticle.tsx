@@ -50,8 +50,13 @@ export const Callout = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-export const Table = ({ head, rows }: { head: React.ReactNode[]; rows: React.ReactNode[][] }) => (
-  <div className="my-6 overflow-x-auto rounded-xl border border-[#E4E2DA]">
+export const Table = ({ head, rows, label }: { head: React.ReactNode[]; rows: React.ReactNode[][]; label?: string }) => (
+  <div
+    className="my-6 overflow-x-auto rounded-xl border border-[#E4E2DA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-ink"
+    tabIndex={0}
+    role="region"
+    aria-label={label ?? (typeof head[0] === "string" ? `${head[0]} table` : "Data table")}
+  >
     <table className="w-full min-w-[480px] border-collapse text-left text-[0.95rem] text-[#3D3D38]">
       <thead className="bg-secondary text-[#1A1A18]">
         <tr>{head.map((h, i) => <th key={i} className="px-4 py-3 font-semibold">{h}</th>)}</tr>

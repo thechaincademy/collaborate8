@@ -184,15 +184,17 @@ const ChildMaintenanceGuide = () => {
       <TopBanner />
 
       {/* SIDE DOTS */}
-      <div className="fixed right-6 top-1/2 z-40 hidden -translate-y-1/2 flex-col gap-[10px] md:flex" aria-hidden="true">
+      <div className="fixed right-6 top-1/2 z-40 hidden -translate-y-1/2 flex-col md:flex">
         {articles.map((a, i) => (
           <button
             key={i}
             onClick={() => scrollTo(i)}
             aria-label={`Go to article ${i + 1}: ${a.title}`}
-            className={`h-2 w-2 rounded-full border-0 p-0 transition-all ${active === i ? "scale-[1.4] bg-foreground" : "bg-[#E4E2DA]"}`}
+            className="flex min-h-6 min-w-6 items-center justify-center rounded-full border-0 p-0"
             title={`Article ${i + 1}`}
-          />
+          >
+            <span aria-hidden="true" className={`block h-2 w-2 rounded-full transition-all ${active === i ? "scale-[1.4] bg-foreground" : "bg-[#E4E2DA]"}`} />
+          </button>
         ))}
       </div>
 
@@ -247,7 +249,7 @@ const ChildMaintenanceGuide = () => {
       </section>
 
       {/* ARTICLES */}
-      <main className="mx-auto max-w-[740px] px-8 bg-background">
+      <main id="main" tabIndex={-1} className="focus:outline-none mx-auto max-w-[740px] px-8 bg-background">
         {/* Article 1 */}
         <article ref={(el) => (refs.current[0] = el)} id="article-1" className="border-b border-[#E4E2DA] py-20 bg-inherit">
           <header className="mb-10">

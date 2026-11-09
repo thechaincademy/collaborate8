@@ -139,6 +139,7 @@ const Login = () => {
                   type="email"
                   placeholder="Email"
                   aria-label="Email for new confirmation link"
+                  autoComplete="email"
                   value={resendEmail}
                   onChange={(e) => setResendEmail(e.target.value)}
                   className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
@@ -166,6 +167,7 @@ const Login = () => {
                   type="email"
                   placeholder="Email"
                   aria-label="Email address"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"

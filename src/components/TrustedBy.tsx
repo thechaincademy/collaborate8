@@ -34,7 +34,7 @@ const TrustedBy = () => {
               className={`${logoClass} mix-blend-multiply`}
               loading="lazy"
             />
-            <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
+            <span className="mt-1 text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
               Council
             </span>
           </div>

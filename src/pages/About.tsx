@@ -117,7 +117,7 @@ const About = () => (
     </section>
 
     {/* Story */}
-    <main className="bg-background">
+    <main id="main" tabIndex={-1} className="focus:outline-none bg-background">
       <Block b={blocks[0]} />
       <Rule />
       <Block b={blocks[1]} />
