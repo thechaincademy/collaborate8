@@ -4,7 +4,8 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
 import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare";
 import { SOLANA_RPC_URL } from "@/config/solana";
-import "@solana/wallet-adapter-react-ui/styles.css";
+// Local copy without the Google Fonts @import (fonts are self-hosted).
+import "./wallet-adapter.css";
 
 /**
  * Wallet context for Solana / USDC payments.

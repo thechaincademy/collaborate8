@@ -190,10 +190,11 @@ const ChildMaintenanceGuide = () => {
             key={i}
             onClick={() => scrollTo(i)}
             aria-label={`Go to article ${i + 1}: ${a.title}`}
+            aria-current={active === i ? "true" : undefined}
             className="flex min-h-6 min-w-6 items-center justify-center rounded-full border-0 p-0"
             title={`Article ${i + 1}`}
           >
-            <span aria-hidden="true" className={`block h-2 w-2 rounded-full transition-all ${active === i ? "scale-[1.4] bg-foreground" : "bg-[#E4E2DA]"}`} />
+            <span aria-hidden="true" className={`block h-2 w-2 rounded-full transition-all ${active === i ? "scale-[1.4] bg-foreground" : "bg-[#878278]"}`} />
           </button>
         ))}
       </div>

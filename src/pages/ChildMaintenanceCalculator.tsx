@@ -327,7 +327,7 @@ ${d.otherKidsNum > 0 ? `<tr><td>Adjusted weekly income</td><td style="text-align
             {Array.from({ length: kidsNum }).map((_, i) => (
               <div key={i} className="grid grid-cols-[100px_1fr] items-center gap-3 max-[480px]:grid-cols-[80px_1fr]">
                 <label htmlFor={`calc-nights-${i}`} className="text-[13px] font-medium text-[#3D3D38]">{ordinal(i + 1)} child</label>
-                <select id={`calc-nights-${i}`} aria-label={`Nights per week with child ${i + 1}`} aria-describedby="calc-nights-hint" value={childNights[i] || 0} onChange={(e) => setNightsForChild(i, parseInt(e.target.value))} className={selectClass}>
+                <select id={`calc-nights-${i}`} aria-label={`Nights per year with child ${i + 1}`} aria-describedby="calc-nights-hint" value={childNights[i] || 0} onChange={(e) => setNightsForChild(i, parseInt(e.target.value))} className={selectClass}>
                   {nightOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
