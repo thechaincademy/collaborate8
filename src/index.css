@@ -33,14 +33,14 @@
 
     --destructive: 0 70% 45%;
     --status-awaiting: 214 70% 48%;
-    --status-soon: 36 92% 45%;
-    --status-ok: 145 55% 34%;
+    --status-soon: 36 92% 30%;
+    --status-ok: 145 55% 30%;
     --status-overdue: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 40 20% 88%;
-    --input: 40 20% 88%;
-    --ring: 45 80% 46%;
+    --input: 40 6% 50%;
+    --ring: 42 85% 28%;
 
     --radius: 1rem;
 
@@ -157,12 +157,12 @@
   }
   .app-ui input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
   .app-ui textarea, .app-ui select {
-    border-radius: 0.5rem; border-color: #D1D5DB; font-size: 1rem;
+    border-radius: 0.5rem; border-color: #878278; font-size: 1rem;
     transition: border-color 150ms, box-shadow 150ms;
   }
   .app-ui input:focus-visible, .app-ui textarea:focus-visible, .app-ui select:focus-visible {
-    border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2); outline: none;
+    border-color: hsl(var(--primary-ink));
+    box-shadow: 0 0 0 3px hsl(var(--primary-ink) / 0.35); outline: none;
     --tw-ring-shadow: 0 0 #0000; --tw-ring-offset-shadow: 0 0 #0000;
   }
   .app-ui label { font-size: max(0.875rem, 1em); }
@@ -171,4 +171,5 @@
     background-size: 200% 100%; animation: skeleton-shimmer 1.4s ease-in-out infinite;
   }
   @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .skeleton-shimmer { animation: none; } }
 }

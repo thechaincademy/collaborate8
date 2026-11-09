@@ -107,7 +107,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
 
       {!profileLoading && !coparentId ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <FolderOpen className="mb-3 h-8 w-8 text-muted-foreground/50" />
+          <FolderOpen className="mb-3 h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             Link with your co-parent first to share documents. You can do this from Settings.
           </p>
@@ -151,7 +151,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
               </div>
             ) : documents.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <FolderOpen className="mb-3 h-8 w-8 text-muted-foreground/50" />
+                <FolderOpen className="mb-3 h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   No documents yet. Upload your first one above.
                 </p>

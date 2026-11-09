@@ -107,7 +107,7 @@ const EpisodeCard = ({ ep }: { ep: Episode }) => (
 
     <div className="p-6">
       <div className="flex items-center gap-3">
-        <span className="text-2xl font-extrabold leading-none text-primary">{ep.number}</span>
+        <span className="text-2xl font-extrabold leading-none text-primary-ink">{ep.number}</span>
         <span className="rounded-full border border-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
           {ep.duration}
         </span>
@@ -147,13 +147,13 @@ const Podcast = () => {
         transition={{ duration: 0.6 }}
         className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-start px-6 pb-16 pt-8 md:px-8 md:py-24"
       >
-        <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
+        <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary-ink">
           The Collabor8 Blog
         </div>
         <h1 className="text-6xl font-extrabold italic leading-[0.9] tracking-tighter text-foreground md:text-7xl">
           The
           <br />
-          <span className="not-italic text-primary">Blog.</span>
+          <span className="not-italic text-primary-ink">Blog.</span>
         </h1>
         <div className="mt-6 flex items-center gap-4">
           <div className="h-px w-8 shrink-0 bg-primary" />
@@ -200,7 +200,7 @@ const Podcast = () => {
                 key={n}
                 className="relative flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-card"
               >
-                <span className="absolute right-4 top-4 rounded-full border border-gold px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-gold">
+                <span className="absolute right-4 top-4 rounded-full border border-primary-ink px-2.5 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-ink">
                   Coming Soon
                 </span>
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal/10">

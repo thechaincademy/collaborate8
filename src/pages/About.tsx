@@ -48,7 +48,7 @@ const Block = ({ b }: { b: (typeof blocks)[number] }) => (
   <section className="px-6 py-16 md:px-8 md:py-20">
     <motion.div {...fade} className="mx-auto flex max-w-5xl flex-col gap-6 md:flex-row md:gap-12">
       <div className="shrink-0 md:w-32">
-        <span className="block text-5xl font-extrabold leading-none text-primary md:text-6xl">{b.n}</span>
+        <span className="block text-5xl font-extrabold leading-none text-primary-ink md:text-6xl">{b.n}</span>
         <span className="mt-2 block text-xs font-bold uppercase tracking-widest text-foreground/70">{b.label}</span>
       </div>
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground md:text-base">

@@ -312,9 +312,9 @@ const TermsOfService = () => {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="text-[1.1rem] text-white/70" style={{ fontFamily: "'Fraunces', serif" }}>Collabor8</span>
-            <p className="mt-1 text-[0.8rem] text-white/35">&copy; {new Date().getFullYear()} Collaborate Technologies Ltd. All rights reserved.</p>
+            <p className="mt-1 text-[0.8rem] text-white/60">&copy; {new Date().getFullYear()} Collaborate Technologies Ltd. All rights reserved.</p>
           </div>
-          <div className="text-right text-[0.8rem] text-white/35">
+          <div className="text-right text-[0.8rem] text-white/60">
             <Link to="/terms" className="text-white/50 hover:text-white/80">Terms of Service</Link>
             {" · "}
             <Link to="/privacy" className="text-white/50 hover:text-white/80">Privacy Policy</Link>

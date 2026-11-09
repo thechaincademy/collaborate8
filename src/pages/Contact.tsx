@@ -22,13 +22,13 @@ const Contact = () => (
 
     <main className="bg-background px-6 py-16 md:px-8 md:py-20">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
+        <div className="mb-5 inline-block rounded-full border border-primary px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary-ink">
           Get in touch
         </div>
         <h1 className="text-5xl font-extrabold italic leading-[0.9] tracking-tighter text-foreground md:text-6xl">
           Contact
           <br />
-          <span className="not-italic text-primary">Collabor8.</span>
+          <span className="not-italic text-primary-ink">Collabor8.</span>
         </h1>
         <div className="mt-6 flex items-center gap-4">
           <div className="h-px w-8 shrink-0 bg-primary" />

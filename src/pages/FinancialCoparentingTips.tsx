@@ -105,8 +105,8 @@ const FinancialCoparentingTips = () => {
             <h2 className="mb-3 text-lg font-semibold text-foreground">Why Collabor8?</h2>
             <p>Collabor8 keeps payments, shared expenses, and reminders all in one place, so you can spend less time stressing and more time supporting your child.</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link to="/child-maintenance-calculator" className="text-sm font-medium text-primary hover:underline">Try the calculator</Link>
-              <Link to="/resources/child-maintenance-guide" className="text-sm font-medium text-primary hover:underline">Read the full guide</Link>
+              <Link to="/child-maintenance-calculator" className="text-sm font-medium text-primary-ink hover:underline">Try the calculator</Link>
+              <Link to="/resources/child-maintenance-guide" className="text-sm font-medium text-primary-ink hover:underline">Read the full guide</Link>
             </div>
           </section>
         </div>

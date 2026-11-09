@@ -42,7 +42,7 @@ const CheckEmail = () => {
     <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center bg-background px-6 text-center">
       <Helmet><title>Check your email - Collabor8</title><meta name="robots" content="noindex" /></Helmet>
       <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/15">
-        <Mail className="h-8 w-8 text-primary" />
+        <Mail className="h-8 w-8 text-primary-ink" />
       </div>
       <h1 className="mb-3 text-3xl font-bold text-foreground">Check your email</h1>
       <p className="mb-3 text-foreground/90">

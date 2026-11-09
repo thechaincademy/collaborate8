@@ -197,16 +197,16 @@ const ChildMaintenanceGuide = () => {
       </div>
 
       {/* HERO */}
-      <header className="relative overflow-hidden px-8 pb-0 pt-20 text-center text-white bg-yellow-500">
+      <header className="relative overflow-hidden px-8 pb-0 pt-20 text-center text-foreground bg-yellow-500">
         <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 60% 0%, rgba(255,255,255,0.08) 0%, transparent 70%)" }} />
         <div className="relative z-10 mx-auto max-w-[720px]">
-          <span className="mb-6 inline-block rounded-full border border-white/20 bg-background/[0.12] px-[0.9rem] py-[0.35rem] text-xs font-medium uppercase tracking-[0.1em] text-white/85">
+          <span className="mb-6 inline-block rounded-full border border-foreground/20 bg-background/[0.12] px-[0.9rem] py-[0.35rem] text-xs font-medium uppercase tracking-[0.1em] text-foreground">
             Complete guide &middot; UK parents
           </span>
           <h1 className="mb-5 text-[clamp(2.4rem,6vw,4rem)] font-light leading-[1.15] tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-            Child maintenance <em className="italic text-[#D9D9D5]">made simple</em>
+            Child maintenance <em className="italic text-foreground/80">made simple</em>
           </h1>
-          <p className="mx-auto mb-10 max-w-[520px] text-[1.1rem] font-light text-white/70">
+          <p className="mx-auto mb-10 max-w-[520px] text-[1.1rem] font-light text-foreground/85">
             Everything you need to know about your responsibilities, your options, and how to manage it all without the stress.
           </p>
         </div>
@@ -422,7 +422,7 @@ const ChildMaintenanceGuide = () => {
             </div>
           ))}
 
-          <p className="border-t border-[#E4E2DA] pt-6 text-[0.83rem] italic leading-[1.65] text-[#AEADA5]">
+          <p className="border-t border-[#E4E2DA] pt-6 text-[0.83rem] italic leading-[1.65] text-[#6B6B64]">
             This section is for signposting purposes only. Collabor8 is not a financial adviser or legal service. The organisations listed above are independent and not affiliated with Collabor8. Always seek advice directly from qualified professionals for your specific situation.
           </p>
         </div>

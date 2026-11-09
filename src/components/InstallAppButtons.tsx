@@ -67,7 +67,7 @@ const InstallAppButtons = ({ variant = "default" }: { variant?: "default" | "sub
   return (
     <>
       {variant === "subtle" ? (
-        <Button variant="link" onClick={openHomeScreenGuide} className="h-auto px-1 py-2 text-xs font-normal text-foreground/70">
+        <Button variant="link" onClick={openHomeScreenGuide} className="h-auto px-1 py-2 text-xs font-normal text-foreground/85">
           Add to home screen
         </Button>
       ) : (
