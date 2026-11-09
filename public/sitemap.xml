@@ -67,6 +67,12 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://collaborate8.com/accessibility</loc>
+    <lastmod>2026-11-09</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://collaborate8.com/resources</loc>
     <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>

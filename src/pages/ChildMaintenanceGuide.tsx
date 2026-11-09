@@ -460,6 +460,8 @@ const ChildMaintenanceGuide = () => {
           <a href="#money-help" className="text-white/60 no-underline hover:text-white">Money Help</a>
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/60 no-underline hover:text-white">Privacy</Link>
+          {" \u00B7 "}
+          <Link to="/accessibility" className="inline-flex min-h-6 items-center text-white/60 no-underline hover:text-white">Accessibility</Link>
         </p>
         <p className="mt-2 text-xs">&copy; {new Date().getFullYear()} Collabor8. This guide is for informational purposes only and does not constitute legal advice.</p>
         <FooterResources onDark />

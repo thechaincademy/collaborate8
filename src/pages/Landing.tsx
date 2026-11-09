@@ -328,6 +328,7 @@ const Landing = () => {
               <Link to="/resources/child-maintenance-guide#money-help" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">Money Help</Link>
               <Link to="/faq" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">FAQ</Link>
               <Link to="/privacy" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">Privacy Policy</Link>
+              <Link to="/accessibility" className="inline-flex min-h-6 items-center py-1 hover:text-foreground">Accessibility</Link>
               <span>© {new Date().getFullYear()} Collabor8</span>
             </div>
           </div>

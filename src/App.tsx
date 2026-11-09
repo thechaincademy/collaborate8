@@ -42,6 +42,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Premium from "./pages/Premium";
 import CookiePolicy from "./pages/CookiePolicy";
+import Accessibility from "./pages/Accessibility";
 import FAQ from "./pages/FAQ";
 import CommunicationGuide from "./pages/CommunicationGuide";
 import CostOfConflict from "./pages/CostOfConflict";
@@ -130,6 +131,7 @@ const App = () => (
           <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
           <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
           <Route path="/cookies" element={<CookiePolicy />} />
+          <Route path="/accessibility" element={<Accessibility />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

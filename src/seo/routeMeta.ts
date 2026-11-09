@@ -187,6 +187,19 @@ const routeMeta = [
     "twitterDescription": "Learn how Collabor8 uses cookies to improve your experience. Manage your preferences for essential and analytics cookies."
   },
   {
+    "route": "/accessibility",
+    "title": "Accessibility statement | Collabor8",
+    "description": "How accessible the Collabor8 website is, known issues, and how to contact us.",
+    "canonical": "https://collaborate8.com/accessibility",
+    "ogTitle": "Accessibility statement | Collabor8",
+    "ogDescription": "How accessible the Collabor8 website is, known issues, and how to contact us.",
+    "ogUrl": "https://collaborate8.com/accessibility",
+    "ogType": "website",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Accessibility statement | Collabor8",
+    "twitterDescription": "How accessible the Collabor8 website is, known issues, and how to contact us."
+  },
+  {
     "route": "/about",
     "title": "About Us | Collabor8",
     "description": "Collabor8 was built from personal experience by co-founders Jade and Rafa to help separated parents talk about money.",

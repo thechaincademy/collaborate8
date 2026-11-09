@@ -318,6 +318,8 @@ const TermsOfService = () => {
             <Link to="/terms" className="text-white/50 hover:text-white/80">Terms of Service</Link>
             {" · "}
             <Link to="/privacy" className="text-white/50 hover:text-white/80">Privacy Policy</Link>
+            {" · "}
+            <Link to="/accessibility" className="inline-flex min-h-6 items-center text-white/50 hover:text-white/80">Accessibility</Link>
           </div>
         </div>
         <FooterContact onDark />

@@ -269,6 +269,9 @@ const Podcast = () => {
             <Link to="/privacy" className="hover:text-foreground">
               Privacy Policy
             </Link>
+            <Link to="/accessibility" className="inline-flex min-h-6 items-center hover:text-foreground">
+              Accessibility
+            </Link>
             <span>© {new Date().getFullYear()} Collabor8</span>
           </div>
         </div>

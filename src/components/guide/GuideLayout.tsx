@@ -88,6 +88,8 @@ const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
           <Link to="/" className="text-white/60 no-underline hover:text-white">Collabor8</Link>
           {" \u00B7 "}
           <Link to="/privacy" className="text-white/60 no-underline hover:text-white">Privacy</Link>
+          {" \u00B7 "}
+          <Link to="/accessibility" className="inline-flex min-h-6 items-center text-white/60 no-underline hover:text-white">Accessibility</Link>
         </p>
         <p className="mt-1 text-xs">This guide is for informational purposes only and does not constitute legal advice. &copy; {new Date().getFullYear()} Collabor8.</p>
         <FooterResources onDark />

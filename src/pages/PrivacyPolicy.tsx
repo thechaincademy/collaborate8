@@ -227,7 +227,7 @@ const PrivacyPolicy = () => {
                 <tbody>
                   {[
                     ["Create and manage your account", "Name, email, password hash", "Contract (Art. 6(1)(b))"],
-                    ["Provide maintenance calculations", "Income, custody arrangement, number of dependants", "Contract (Art. 6(1)(b))"],
+                    ["Provide maintenance calculations", "Income, how nights are shared, number of children", "Contract (Art. 6(1)(b))"],
                     ["Track and split shared expenses", "Expense records, payment history", "Contract (Art. 6(1)(b))"],
                     ["Keep a record of payments to a co-parent who is not on Collabor8", "Account holder name, sort code and account number you add", "Legitimate interests (Art. 6(1)(f))"],
                     ["Check the tone of a message and suggest calmer wording (Rewrite calmly)", "The message draft, and a tone score we keep with your original draft", "Contract (Art. 6(1)(b))"],
@@ -539,6 +539,8 @@ const PrivacyPolicy = () => {
           <a href="/terms" className="text-white/50 hover:text-white/80">Terms of Service</a>
           {" · "}
           <a href="/privacy" className="text-white/50 hover:text-white/80">Privacy Policy</a>
+          {" · "}
+          <a href="/accessibility" className="inline-flex min-h-6 items-center text-white/50 hover:text-white/80">Accessibility</a>
           <span className="mt-1 block">Collaborate Technologies Ltd, 86-90 Paul Street, London EC2A 4NE</span>
           <a href="mailto:privacy@collaborate8.com" className="mt-1 block break-all text-background/70 hover:underline">privacy@collaborate8.com</a>
         </div>

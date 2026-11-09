@@ -20,6 +20,10 @@ const FooterContact = ({ onDark = false }: { onDark?: boolean }) => (
         Privacy Policy
       </Link>
       {" | "}
+      <Link to="/accessibility" className="inline-flex min-h-6 items-center py-1 hover:underline">
+        Accessibility
+      </Link>
+      {" | "}
       <Link to="/contact" className="inline-flex min-h-6 items-center py-1 hover:underline">
         Contact
       </Link>
