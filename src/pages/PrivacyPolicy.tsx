@@ -70,9 +70,9 @@ const PrivacyPolicy = () => {
             Your privacy,<br /><em className="italic text-primary">taken seriously.</em>
           </h1>
           <div className="flex flex-wrap items-center gap-6 text-[0.85rem] text-white/50">
-            <span>Last updated: 26 October 2026</span>
+            <span>Last updated: 9 November 2026</span>
             <span className="h-1 w-1 rounded-full bg-background/20" />
-            <span>Version 1.2</span>
+            <span>Version 1.3</span>
             <span className="h-1 w-1 rounded-full bg-background/20" />
             <span>UK GDPR compliant</span>
             <span className="h-1 w-1 rounded-full bg-background/20" />
@@ -159,8 +159,12 @@ const PrivacyPolicy = () => {
                 "Password - stored as a one-way bcrypt hash, never in plain text",
                 "Financial information you enter (income figures, expense amounts, payment records)",
                 "Bank details you add for a co-parent who is not on Collabor8 (account holder name, sort code and account number), so you can keep a record of the payments you send them",
-                "Number of dependants and custody arrangement - used solely for maintenance calculations. No names, dates of birth, or any other personal details relating to dependants are collected or stored.",
-                "Communications you send us via email or in-app support",
+                "Messages, photos and documents you send your co-parent in Collabor8, and the decisions you create together",
+                "Receipts and descriptions for shared expenses",
+                "Your answers to the Conversation tool questions, which can include your approximate income",
+                "The email address of a co-parent you invite, and any first message you write to them before they join",
+                "Number of children and how nights are shared, used for maintenance calculations. If you choose to, you can add your children's first names to a decision, and you may mention them in messages, expenses or documents. Please only share what you need to.",
+                "Messages you send us by email or in-app support",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
                   <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
@@ -190,7 +194,8 @@ const PrivacyPolicy = () => {
             <ul className="mb-4 flex flex-col gap-2">
               {[
                 "Payment status from Stripe - we do not store full card numbers, which are handled by Stripe as a PCI-DSS Level 1 provider",
-                "Sign-in tokens if you use Google or Apple Sign-In",
+                "Purchase and renewal details from Apple or Google if you subscribe to Premium in the app",
+                "If you receive payments through Collabor8, Stripe collects identity and bank details from you directly to verify you, under its own privacy notice",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
                   <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
@@ -201,7 +206,7 @@ const PrivacyPolicy = () => {
 
             <div className="rounded-xl border border-[#E4D8C6] border-l-[3px] border-l-[#1A1A18] bg-secondary p-4">
               <div className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1A1A18]">What we do not collect</div>
-              <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">We do not collect personal data about dependants. Collabor8 is a tool for adults only. All data we hold relates solely to the adults who register and use the Service.</p>
+              <p className="text-[0.88rem] leading-relaxed text-[#3D3D38]">Collabor8 is for adults only. We do not create accounts for children or collect their contact details. Information about children is held only when a parent adds it, for example a first name in a decision or a note in a message.</p>
             </div>
           </section>
 
@@ -225,7 +230,7 @@ const PrivacyPolicy = () => {
                     ["Provide maintenance calculations", "Income, custody arrangement, number of dependants", "Contract (Art. 6(1)(b))"],
                     ["Track and split shared expenses", "Expense records, payment history", "Contract (Art. 6(1)(b))"],
                     ["Keep a record of payments to a co-parent who is not on Collabor8", "Account holder name, sort code and account number you add", "Legitimate interests (Art. 6(1)(f))"],
-                    ["Suggest calmer wording for a message (Rewrite calmly, Premium)", "The message draft you choose to submit", "Contract (Art. 6(1)(b))"],
+                    ["Check the tone of a message and suggest calmer wording (Rewrite calmly)", "The message draft, and a tone score we keep with your original draft", "Contract (Art. 6(1)(b))"],
                     ["Process subscription payments", "Email, billing name (Stripe handles card data)", "Contract (Art. 6(1)(b))"],
                     ["Send transactional notifications", "Email address, push notification token, notification preferences", "Contract (Art. 6(1)(b))"],
                     ["Improve and debug the Service", "Usage analytics (anonymised where possible)", "Legitimate interests (Art. 6(1)(f))"],
@@ -255,7 +260,7 @@ const PrivacyPolicy = () => {
             <h3 className="mb-2.5 mt-6 text-[0.95rem] font-semibold text-[#1A1A18]">Service providers (processors)</h3>
             <ul className="mb-4 flex flex-col gap-2">
               {[
-                { bold: "Supabase", rest: " - our database, sign-in and file storage (hosted in Switzerland)" },
+                { bold: "Supabase, through Lovable Cloud", rest: " - our database, sign-in and file storage, hosted on Amazon Web Services in Zurich, Switzerland. Some server functions run on Supabase's network in the location nearest to you" },
                 { bold: "Stripe", rest: " - card payments, payments between co-parents and Premium subscriptions (US/EU, SCCs in place)" },
                 { bold: "Lovable", rest: " - hosts our website and backend functions, sends our emails, and connects Rewrite calmly to its AI model" },
                 { bold: "OpenAI", rest: " - the AI model behind Rewrite calmly, reached through Lovable's AI gateway. It receives only the message draft you submit" },
@@ -263,6 +268,10 @@ const PrivacyPolicy = () => {
                 { bold: "Google Analytics and the Google tag", rest: " - website analytics and ad measurement. Cookies are only set if you accept them" },
                 { bold: "Microsoft Clarity", rest: " - website usage analytics. Only loads if you accept analytics cookies" },
                 { bold: "Hotjar", rest: " - website usage analytics. Only loads if you accept analytics cookies" },
+                { bold: "Apple and Google", rest: " - in-app subscriptions and app store notifications" },
+                { bold: "Resend", rest: " - sends some payment reminder emails, through Lovable" },
+                { bold: "Cloudflare", rest: " - delivers our website and protects it from attacks" },
+                { bold: "Web push services run by your browser maker (Google, Mozilla or Apple)", rest: " - deliver browser notifications if you turn them on" },
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
                   <span className="absolute left-0 top-[0.6em] h-[5px] w-[5px] rounded-full bg-foreground" />
@@ -272,7 +281,7 @@ const PrivacyPolicy = () => {
             </ul>
 
             <h3 className="mb-2.5 mt-6 text-[0.95rem] font-semibold text-[#1A1A18]">Rewrite calmly (AI writing tool)</h3>
-            <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">If you use Rewrite calmly, a Premium feature, the message draft you submit is sent to an AI provider to suggest calmer wording. We send it through Lovable's AI gateway to a model provided by OpenAI. Nothing is sent to your co-parent unless you choose to send it. Suggestions can be wrong, and you decide what you send.</p>
+            <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">If you use Rewrite calmly, a Premium feature, the message draft you submit is sent to an AI provider to suggest calmer wording. We send it through Lovable's AI gateway to a model provided by OpenAI. Nothing is sent to your co-parent unless you choose to send it. Suggestions can be wrong, and you decide what you send. We keep your original draft and its tone score privately in your account so you can see your history. Your co-parent cannot see them.</p>
 
             <h3 className="mb-2.5 mt-6 text-[0.95rem] font-semibold text-[#1A1A18]">Co-parent sharing - what is and is not shared</h3>
             <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">Collabor8 allows two parents to work within a shared workspace. It is important to understand exactly what each party can and cannot see:</p>
@@ -280,7 +289,7 @@ const PrivacyPolicy = () => {
               {[
                 { bold: "Each parent has their own independent account", rest: ", protected by their own login credentials. Neither parent can access, view or modify the other's account settings, profile or personal details." },
                 { bold: "Your card details are never visible to a co-parent.", rest: " Card payments are processed by Stripe, and we never see or store your full card number. Your co-parent has no access to your billing details." },
-                { bold: "Bank details you add for a co-parent are stored by Collabor8.", rest: " If your co-parent is not on Collabor8, you can save their account holder name, sort code and account number so you can record the payments you send them. We store these details in our database, linked to your account. Only you can see them, and they are deleted if you delete your account." },
+                { bold: "Bank details you add for a co-parent are stored by Collabor8.", rest: " If your co-parent is not on Collabor8, you can save their account holder name, sort code and account number so you can record the payments you send them. We store these details in our database, linked to your account. Only you can see them, and they are deleted if you delete your account. We do not use these details for anything else and do not contact your co-parent's bank." },
                 { bold: "Income figures stay private.", rest: " They are used only to generate a calculation result. The underlying figures you entered are not displayed to your co-parent - only the resulting output is shared." },
                 { bold: "Only explicitly shared content is visible to both parties", rest: " - expense records, payment notes, and calculation results that have been submitted to the shared workspace." },
                 { bold: "You are always in control of your own account.", rest: " You may leave a shared workspace, request deletion of your account, or withdraw access at any time without affecting the other parent's account." },
@@ -296,6 +305,9 @@ const PrivacyPolicy = () => {
               <p className="text-[0.9rem] leading-[1.7] text-white/85">
                 <strong className="text-white">Your financial data is yours alone.</strong> We will never expose your payment details, card information, subscription status or personal income figures to another user - including your co-parent. These are held in strict confidence between you and Collaborate Technologies Ltd.
               </p>
+              <p className="mt-3 text-[0.9rem] leading-[1.7] text-white/85">
+                Your Conversation tool answers, including any income figure, are only emailed to you, never to your co-parent.
+              </p>
             </div>
 
             <h3 className="mb-2.5 mt-6 text-[0.95rem] font-semibold text-[#1A1A18]">Legal and regulatory disclosure</h3>
@@ -309,7 +321,7 @@ const PrivacyPolicy = () => {
           <section ref={setRef("s5")} id="s5" className="mb-14 scroll-mt-[90px]">
             <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#1A1A18]">05</div>
             <h2 className="mb-5 border-b border-[#E4E2DA] pb-3 text-[1.65rem] font-normal leading-tight text-[#1A1A18]" style={{ fontFamily: "'Fraunces', serif" }}>International data transfers</h2>
-            <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">Our database is hosted by Supabase in Switzerland, which the UK recognises as giving adequate protection to personal data. Some of our other processors are based in, or may process data in, the United States. Where we transfer data outside the UK, we ensure appropriate safeguards are in place, including:</p>
+            <p className="mb-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">Our database is hosted by Supabase on Amazon Web Services in Zurich, Switzerland, which the UK recognises as giving adequate protection to personal data. Some of our other processors are based in, or may process data in, the United States, including OpenAI, Stripe, Google, Apple, Microsoft, Resend and Cloudflare. Where a US company is certified under the UK Extension to the EU-US Data Privacy Framework, we rely on that. Otherwise we use the safeguards below. Where we transfer data outside the UK, we ensure appropriate safeguards are in place, including:</p>
             <ul className="mb-4 flex flex-col gap-2">
               {[
                 "UK International Data Transfer Agreements (IDTAs), or",
@@ -344,7 +356,11 @@ const PrivacyPolicy = () => {
                     ["Payments shared with your co-parent", "Kept in your co-parent's payment history, shown as from \"Deleted user\", while their account exists"],
                     ["Messages your co-parent received from you", "Kept in your co-parent's account, shown as from \"Deleted user\", while their account exists"],
                     ["Support communications", "3 years from last interaction"],
-                    ["Analytics data", "13 months (rolling), then aggregated / anonymised"],
+                    ["Analytics data", "Google Analytics: up to 14 months; Microsoft Clarity: 13 months; Hotjar: up to 12 months. Our own usage events linked to your account are deleted when you delete your account. Events recorded before you sign up are not yet deleted automatically; we are introducing a 13-month limit."],
+                    ["Email delivery records (who we emailed, when and which email)", "Kept while your account is open. We are introducing a 12-month limit"],
+                    ["Unsubscribe and suppression list", "Kept so we never email you again after you opt out"],
+                    ["Invitations you sent", "Until accepted or cancelled, or until you delete your account"],
+                    ["Account deletion requests made on the web", "7 days after the request expires"],
                   ].map((row, i) => (
                     <tr key={i} className={`${i % 2 === 0 ? "bg-background" : "bg-secondary"} hover:bg-secondary`}>
                       <td className="border-b border-[#E4E2DA] px-4 py-3 font-medium text-[#1A1A18]">{row[0]}</td>
@@ -357,9 +373,10 @@ const PrivacyPolicy = () => {
             <p className="mt-3 text-[0.95rem] leading-[1.75] text-[#3D3D38]">After applicable retention periods, data is securely deleted or anonymised so it can no longer be linked to you.</p>
             <h3 id="deleting-your-account" className="mb-2 mt-8 text-[1.15rem] font-semibold text-[#1A1A18]">Deleting your account and data retention</h3>
             <p className="text-[0.95rem] leading-[1.75] text-[#3D3D38]">
-              You can delete your account at any time in the app (Settings, Delete my account), on the web, or by emailing rafa@collaborate8.com. Please download your data first if you want a copy.
+              You can delete your account at any time in the app (Settings, Delete my account), on the web, or by emailing privacy@collaborate8.com. Please download your data first if you want a copy.
               When you confirm the deletion, your account is deleted straight away. Your personal details, settings, the expenses you added, your receipts, documents and chat attachments, the co-parent bank details you saved, and records only you were part of are deleted. Payments you shared with your co-parent stay in their payment history, and messages and decisions they received from you stay in their account, all shown as from "Deleted user". Your Stripe subscriptions are cancelled automatically, so you will not be charged again.
               {" "}<a href="/delete-account" className="underline">See how to delete your account</a>.
+              {" "}We keep a record that we emailed you (address, date and which email), and we keep your address on our unsubscribe list if you opted out, so we never email you again.
             </p>
           </section>
 
@@ -373,8 +390,8 @@ const PrivacyPolicy = () => {
                 "AES-256 encryption at rest; TLS 1.2+ in transit",
                 "Passwords stored using bcrypt with a per-user salt",
                 "Role-based access controls - staff see only the minimum data needed",
-                "Regular penetration testing and vulnerability assessments",
-                "SOC 2-aligned processes for our cloud infrastructure",
+                "Automated security checks on our database and code",
+                "Our main infrastructure providers, Supabase and Amazon Web Services, hold independent SOC 2 Type II reports",
                 "Data breach response procedure - we will notify the ICO within 72 hours and affected users without undue delay where required",
               ].map((t, i) => (
                 <li key={i} className="relative pl-5 text-[0.92rem] leading-relaxed text-[#3D3D38]">
