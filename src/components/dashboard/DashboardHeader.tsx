@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 import { categoryMeta } from "@/lib/notificationTypes";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useIsInApp } from "@/hooks/useIsInApp";
 import { formatDistanceToNow } from "date-fns";
 
 interface DashboardHeaderProps {
@@ -29,6 +30,7 @@ interface DashboardHeaderProps {
 const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const inApp = useIsInApp();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const { items, unreadCount, markAllRead, markRead } = useNotifications();
   const notifications = items.map((n) => ({
@@ -60,8 +62,8 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="mb-10 flex items-center justify-between"
     >
-      {/* Avatar Dropdown */}
-      <DropdownMenu>
+      {/* Avatar Dropdown. The mobile app has its own bar, so this menu is website-only. */}
+      {!inApp && <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button aria-label="Open user menu" className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent">
             <User className="h-5 w-5 text-foreground" />
@@ -91,12 +93,12 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             Logout
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu>}
 
       <h1 className="text-lg font-semibold text-foreground">{title}</h1>
 
-      {/* Notifications Popover */}
-      <Popover open={notificationOpen} onOpenChange={setNotificationOpen} modal>
+      {/* Notifications. The mobile app has its own bar, so the bell is website-only. */}
+      {!inApp && <Popover open={notificationOpen} onOpenChange={setNotificationOpen} modal>
         <PopoverTrigger asChild>
           <button aria-label="Open notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-accent">
             <Bell className="h-5 w-5 text-foreground" />
@@ -164,7 +166,7 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
             </div>
           )}
         </PopoverContent>
-      </Popover>
+      </Popover>}
     </motion.div>
   );
 };

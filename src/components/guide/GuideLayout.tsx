@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { useAppCtaHref } from "@/hooks/useAppCta";
+import { useIsInApp } from "@/hooks/useIsInApp";
 
 export interface Crumb {
   label: string;
@@ -18,10 +19,11 @@ interface GuideLayoutProps {
 const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
   const navigate = useNavigate();
   const ctaHref = useAppCtaHref("/signup");
+  const inApp = useIsInApp();
 
   return (
     <div className="min-h-screen bg-background text-[#1A1A18]" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <nav aria-label="Main" className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-background px-8 backdrop-blur-[14px]">
+      {!inApp && <nav aria-label="Main" className="sticky top-0 z-50 flex h-[62px] items-center justify-between border-b border-[#E4E2DA] bg-background px-8 backdrop-blur-[14px]">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:ring-2 focus:ring-primary-ink">Skip to main content</a>
         <Link to="/" className="text-xl font-semibold tracking-tight text-[#1E6B5E]" style={{ fontFamily: "'Georgia', serif" }}>
           Collabor8
@@ -29,7 +31,7 @@ const GuideLayout = ({ children, breadcrumb, crumbs }: GuideLayoutProps) => {
         <Link to={ctaHref} className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/90">
           Get started free
         </Link>
-      </nav>
+      </nav>}
 
       {breadcrumb && (
         <div className="mx-auto max-w-[800px] px-8 pt-5 text-sm text-[#6B6B64]">
