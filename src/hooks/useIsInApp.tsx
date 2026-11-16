@@ -1,8 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { isInApp } from "@/lib/inApp";
 
-/** Reads in-app state synchronously on first render, then watches for the class being added later. */
+/** Reads in-app state synchronously on first render, then watches for the class or `?app=1`. */
 export const useIsInApp = () => {
+  const location = useLocation();
   const [inApp, setInApp] = useState(isInApp);
   useEffect(() => {
     const update = () => setInApp(isInApp());
@@ -11,7 +13,7 @@ export const useIsInApp = () => {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     if (document.body) observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     return () => observer.disconnect();
-  }, []);
+  }, [location.pathname, location.search]);
   return inApp;
 };
 

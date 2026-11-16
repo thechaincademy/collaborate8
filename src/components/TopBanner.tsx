@@ -1,10 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsInApp } from "@/hooks/useIsInApp";
 
 const TopBanner = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const inApp = useIsInApp();
+  if (inApp) return null;
 
   const handleWaitlistClick = () => {
     navigate("/signup");
