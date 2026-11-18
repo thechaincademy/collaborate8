@@ -215,16 +215,14 @@ Deno.serve(async (req) => {
     const realIds = new Set(users.map((u) => u.id));
     const realCount = users.length;
     const pct = (n: number) => Math.round((n / Math.max(1, realCount)) * 1000) / 10;
-    const [{ data: ca }, { data: rp }, { data: cba }] = await Promise.all([
+    const [{ data: ca }, { data: rp }] = await Promise.all([
       admin.from("connected_accounts").select("user_id, charges_enabled, onboarding_status"),
       admin.from("recurring_payments").select("user_id, is_active, updated_at"),
-      admin.from("coparent_bank_accounts").select("user_id"),
     ]);
-    const connectSet = new Set<string>(), recurSet = new Set<string>(), bankSet = new Set<string>();
+    const connectSet = new Set<string>(), recurSet = new Set<string>();
     for (const r of ca ?? []) if (realIds.has(r.user_id) && (r.charges_enabled === true || r.onboarding_status === "complete")) connectSet.add(r.user_id);
     for (const r of rp ?? []) if (realIds.has(r.user_id)) recurSet.add(r.user_id);
-    for (const r of cba ?? []) if (realIds.has(r.user_id)) bankSet.add(r.user_id);
-    const setupSet = new Set<string>([...connectSet, ...recurSet, ...bankSet]);
+    const setupSet = new Set<string>([...connectSet, ...recurSet]);
 
     const { data: ctaFull } = await admin.from("conversation_tool_access")
       .select("user_id, subscription_status, cancel_at_period_end, current_period_end, created_at");
@@ -306,7 +304,7 @@ Deno.serve(async (req) => {
         pct_of_real_users: pct(setupSet.size),
         stripe_connect_onboarded: connectSet.size,
         recurring_payment_users: recurSet.size,
-        bank_details_users: bankSet.size,
+        bank_details_users: 0,
       },
       upgrades: { premium_active: premActive.size, all_time: premAll.size, pct_of_real_users: pct(premAll.size) },
       churn: {

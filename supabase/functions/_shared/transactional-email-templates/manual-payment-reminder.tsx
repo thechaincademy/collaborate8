@@ -18,52 +18,34 @@ interface ManualPaymentReminderProps {
   firstName?: string
   amountLabel?: string
   holderName?: string
-  sortCode?: string
-  accountNumber?: string
-  paymentReference?: string
 }
 
 export const ManualPaymentReminder = ({
   firstName = 'there',
   amountLabel = '',
-  holderName = 'Your co-parent',
-  sortCode = '00-00-00',
-  accountNumber = '00000000',
-  paymentReference = '',
+  holderName = 'your co-parent',
 }: ManualPaymentReminderProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your child maintenance payment is due today</Preview>
+    <Preview>Pay through Stripe in the Collabor8 app</Preview>
     <Body style={{ margin: 0, backgroundColor: '#ffffff', fontFamily: 'Arial, Helvetica, sans-serif', color: '#111111', padding: '24px' }}>
       <Container style={{ maxWidth: '480px', margin: '0 auto', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
         <Heading style={{ margin: '0 0 12px', fontSize: '22px', color: '#111111' }}>
           Your payment is due today
         </Heading>
         <Text style={{ margin: '0 0 16px', color: '#444444', lineHeight: 1.6 }}>
-          Hi {firstName}, this is a reminder to send {amountLabel ? `${amountLabel} ` : 'your '}
-          child maintenance payment from your own bank today.
+          Hi {firstName}, pay {holderName}{amountLabel ? ` ${amountLabel}` : ''} today through Stripe in the Collabor8 app.
         </Text>
-        <Section style={{ margin: '0 0 20px', padding: '16px', borderRadius: '12px', backgroundColor: '#FAF8F3' }}>
-          <Text style={{ margin: '0 0 6px', color: '#111111', fontSize: '14px' }}>
-            Payout details are collected by Stripe. Collabor8 does not store a sort code or account number.
-          </Text>
-          {paymentReference ? (
-            <Text style={{ margin: 0, color: '#111111', fontSize: '14px' }}>
-              <strong>Reference:</strong> {paymentReference}
-            </Text>
-          ) : null}
-        </Section>
         <Section style={{ textAlign: 'center', margin: '0 0 24px' }}>
           <Link
-            href={`${APP_URL}/profile`}
+            href={`${APP_URL}/dashboard?tab=maintenance`}
             style={{ display: 'inline-block', backgroundColor: '#D4A017', color: '#111111', textDecoration: 'none', padding: '14px 28px', borderRadius: '999px', fontWeight: 600 }}
           >
-            Record this payment
+            Pay in the app
           </Link>
         </Section>
         <Text style={{ margin: 0, color: '#777777', fontSize: '13px', lineHeight: 1.5 }}>
-          Collabor8 does not move this money for you. Once you have sent it, record it in the app so
-          it appears in your statements.
+          Collabor8 takes this payment through Stripe. Do not send it from your own bank using stored account details.
         </Text>
       </Container>
     </Body>
@@ -72,14 +54,11 @@ export const ManualPaymentReminder = ({
 
 export const template = {
   component: ManualPaymentReminder,
-  subject: 'Your child maintenance payment is due today',
-  displayName: 'Manual payment reminder',
+  subject: 'Pay through Stripe in the Collabor8 app',
+  displayName: 'Payment due reminder',
   previewData: {
     firstName: 'Alex',
     amountLabel: '£250.00',
-    holderName: 'J Smith',
-    sortCode: '20-00-00',
-    accountNumber: '12345678',
-    paymentReference: 'MAINTENANCE',
+    holderName: 'Jordan',
   },
 } satisfies TemplateEntry
