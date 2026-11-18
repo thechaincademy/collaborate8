@@ -155,7 +155,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     const { data, error } = await supabase
       .from("messages")
       .insert({ sender_id: user.id, recipient_id: coparentId, body, attachment_path: path, attachment_name: file.name })
-      .select()
+      .select("id, sender_id, recipient_id, body, created_at, attachment_path, attachment_name, pending_first_message_id")
       .single();
     setAttaching(false);
     if (error) {
@@ -323,7 +323,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     (async () => {
       const { data, error } = await supabase.from("messages")
         .insert(pendingMessageDelivery(user.id, coparentId, pendingMessage))
-        .select().single();
+        .select("id, sender_id, recipient_id, body, created_at, attachment_path, attachment_name, pending_first_message_id").single();
       if (error) { deliveryInFlight.current = null; return; }
       if (data) setMessages(prev => mergeChatMessages(prev, [data as Message]));
       const { error: completionError } = await supabase
