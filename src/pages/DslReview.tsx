@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { DslDashboard } from "@/components/safeguarding/DslDashboard";
-import { fetchDslQueue, type DslConcern, type DslFlag } from "@/lib/safeguarding/api";
+import { fetchDslQueue, isSafeguardingLead, type DslConcern, type DslFlag } from "@/lib/safeguarding/api";
 
 const DslReview = () => {
   const [allowed, setAllowed] = useState(false);
@@ -10,6 +10,14 @@ const DslReview = () => {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    // Route guard: only the safeguarding lead (dsl role) loads anything. Admins are refused here too.
+    if (!(await isSafeguardingLead())) {
+      setAllowed(false);
+      setFlags([]);
+      setConcerns([]);
+      setLoading(false);
+      return;
+    }
     const queue = await fetchDslQueue();
     setAllowed(queue.allowed);
     setFlags(queue.flags);

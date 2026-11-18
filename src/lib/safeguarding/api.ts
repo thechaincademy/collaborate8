@@ -117,6 +117,13 @@ export interface DslConcern {
   linkedPaymentId: string | null;
 }
 
+export async function isSafeguardingLead(): Promise<boolean> {
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  if (!userId) return false;
+  const { data, error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>)("sg_is_dsl", { _user_id: userId });
+  return !error && data === true;
+}
+
 export async function fetchDslQueue(): Promise<{ allowed: boolean; flags: DslFlag[]; concerns: DslConcern[] }> {
   const { data, error } = await supabase.rpc("sg_dsl_overview");
   if (error) return { allowed: false, flags: [], concerns: [] };
