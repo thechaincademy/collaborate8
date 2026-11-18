@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Navigate } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AnalyticsConnections from "@/components/admin/AnalyticsConnections";
 
 const ALLOWED = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 
@@ -316,32 +317,6 @@ const AdminAnalytics = () => {
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"week" | "day">("week");
   const [range, setRange] = useState<"last_7d" | "last_30d">("last_7d");
-  const [banner, setBanner] = useState<{ ok: boolean; text: string } | null>(null);
-  const [connecting, setConnecting] = useState(false);
-
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    const g = p.get("google");
-    if (!g) return;
-    if (g === "connected") setBanner({ ok: true, text: "Google connected." });
-    else setBanner({ ok: false, text: `Google connection failed (${p.get("reason") ?? "unknown"}).` });
-    p.delete("google"); p.delete("reason");
-    const qs = p.toString();
-    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
-  }, []);
-
-  const connectGoogle = async () => {
-    setConnecting(true);
-    const { data, error } = await supabase.functions.invoke("google-oauth-start");
-    if (error || !data?.url) {
-      let msg = "Could not start Google connection.";
-      try { const b = await (error as { context?: Response })?.context?.json(); if (b?.error) msg = b.error; } catch { /* keep default */ }
-      setBanner({ ok: false, text: msg });
-      setConnecting(false);
-      return;
-    }
-    window.location.href = data.url;
-  };
 
   const emailOk = ALLOWED.includes((user?.email ?? "").toLowerCase());
 
@@ -351,13 +326,17 @@ const AdminAnalytics = () => {
     supabase.rpc("is_admin", { _user_id: user.id }).then(({ data }) => setIsAdmin(Boolean(data)));
   }, [user, emailOk]);
 
-  useEffect(() => {
-    if (!isAdmin) return;
+  const loadAnalytics = useCallback(() => {
     supabase.functions.invoke("admin-analytics").then(({ data, error }) => {
       if (error) setError("Could not load analytics.");
-      else setData(data as Analytics);
+      else { setError(null); setData(data as Analytics); }
     });
-  }, [isAdmin]);
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    loadAnalytics();
+  }, [isAdmin, loadAnalytics]);
 
   if (authLoading || (user && isAdmin === null)) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
@@ -380,13 +359,6 @@ const AdminAnalytics = () => {
       <div className="mx-auto max-w-md px-4 py-8 md:max-w-3xl">
         <h1 className="text-2xl font-semibold">Analytics</h1>
         <p className="text-sm text-muted-foreground">Collabor8 counts only. Read-only.</p>
-        {banner && <p className={`mt-4 rounded-md border p-3 text-sm ${banner.ok ? "" : "text-destructive"}`}>{banner.text}</p>}
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          {data?.google?.connected && <p className="break-all text-sm text-muted-foreground">Connected as {data.google.account_email ?? "unknown account"}</p>}
-          <Button size="sm" variant="outline" onClick={connectGoogle} disabled={connecting}>
-            {connecting ? "Opening Google..." : data?.google?.connected ? "Reconnect Google" : "Connect Google"}
-          </Button>
-        </div>
 
         {error && <p className="mt-6 text-sm text-destructive">{error}</p>}
         {!data && !error && (
@@ -610,6 +582,7 @@ const AdminAnalytics = () => {
         </Section>
 
         <Section title="Website and social">
+          <AnalyticsConnections compact onChanged={loadAnalytics} />
           <div className="mb-3 grid gap-3 md:grid-cols-2">
             {[["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["tiktok", "TikTok"]].map(([key, label]) => (
               <SocialCard key={key} title={label} channel={data?.social?.channels[key]} error={!data?.social?.channels[key]?.connected ? data?.social?.error : undefined} />

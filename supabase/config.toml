@@ -87,3 +87,7 @@ verify_jwt = false
 [functions.admin-system-health]
 # Admin JWT or the pg_cron monitor key is checked inside the function.
 verify_jwt = false
+
+[functions.admin-connections]
+# Admin JWT is checked inside the function.
+verify_jwt = false

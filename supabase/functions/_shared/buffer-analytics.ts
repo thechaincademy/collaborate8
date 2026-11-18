@@ -11,7 +11,7 @@ const DAY = 86400000;
 const emptyMetrics = (): Metrics => ({ posts: null, reach: null, impressions: null, reactions: null, comments: null, shares: null, engagement_rate: null });
 const emptyChannel = (): SocialChannel => ({ connected: false, disconnected: false, name: null, last7: emptyMetrics(), last30: emptyMetrics(), daily: [], top_posts: [], followers: null, followers_available: false });
 const emptySocial = (): Social => ({ buffer_ok: false, organization_name: null, fetched_at: new Date().toISOString(), channels: { instagram: emptyChannel(), linkedin: emptyChannel(), tiktok: emptyChannel() } });
-let cache: { at: number; result: Result } | null = null;
+let cache: { at: number; key: string; result: Result } | null = null;
 // API errors may echo request credentials. Always redact them before returning a message.
 export function safeSourceError(value: unknown, credentials: string[] = []): string {
   let text = typeof value === "string" ? value : "Source request failed";
@@ -41,9 +41,9 @@ export function aggregateMetrics(groups: Metric[][]): Metrics {
   const rate = !measurable ? null : reportedRate ?? (impressions !== null && impressions > 0 && engaged !== null ? engaged / impressions * 100 : null);
   return { posts, reach, impressions, reactions: v("reactions"), comments: v("comments"), shares: v("shares"), engagement_rate: rate };
 }
-export async function getBufferAnalytics(): Promise<Result> {
-  if (cache && Date.now() - cache.at < 15 * 60 * 1000) return cache.result;
-  const key = Deno.env.get("BUFFER_API_KEY");
+export async function getBufferAnalytics(token?: string | null): Promise<Result> {
+  const key = token || Deno.env.get("BUFFER_API_KEY");
+  if (cache && cache.key === (key ?? "") && Date.now() - cache.at < 15 * 60 * 1000) return cache.result;
   const social = emptySocial();
   if (!key) return { social: { ...social, error: "Buffer not connected" }, services: [], http_status: null };
   const controller = new AbortController();
@@ -120,10 +120,10 @@ export async function getBufferAnalytics(): Promise<Result> {
     social.buffer_ok = !payload.errors?.length;
     social.fetched_at = new Date().toISOString();
     const result = { social, services, http_status: 200 };
-    cache = { at: Date.now(), result };
+    cache = { at: Date.now(), key, result };
     return result;
   } catch (e) {
-    if (e instanceof BufferError && e.status === 429 && cache) return cache.result;
+    if (e instanceof BufferError && e.status === 429 && cache && cache.key === key) return cache.result;
     social.error = controller.signal.aborted ? "Buffer request timed out after 10 seconds" : safeSourceError(e instanceof Error ? e.message : "Buffer request failed", [key]);
     for (const channel of Object.values(social.channels)) channel.error = social.error;
     return { social, services, http_status: e instanceof BufferError ? e.status : null };

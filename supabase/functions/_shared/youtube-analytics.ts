@@ -1,4 +1,5 @@
-// Server-only YouTube channel stats. The API key never leaves this module.
+// Server-only YouTube channel stats. Uses the admin's Google sign-in (youtube.readonly) when
+// available, otherwise the YOUTUBE_API_KEY secret. Neither ever leaves the server.
 import { safeSourceError } from "./buffer-analytics.ts";
 
 const HANDLE = "@collabor8official";
@@ -9,19 +10,22 @@ export type YouTube = {
   recent_videos: { title: string; published_at: string; url: string; views: number | null; likes: number | null; comments: number | null }[];
   fetched_at: string;
 };
-let cache: { at: number; value: YouTube } | null = null;
+let cache: { at: number; mode: string; value: YouTube } | null = null;
 const num = (v: unknown) => (v === undefined || v === null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
 
-export async function getYouTubeAnalytics(): Promise<YouTube> {
-  if (cache && Date.now() - cache.at < TTL) return cache.value;
+export async function getYouTubeAnalytics(opts: { accessToken?: string } = {}): Promise<YouTube> {
+  const accessToken = opts.accessToken;
+  const mode = accessToken ? "oauth" : "key";
+  if (cache && cache.mode === mode && Date.now() - cache.at < TTL) return cache.value;
   const base: YouTube = { ok: false, channel_id: null, title: null, handle: HANDLE, subscribers: null, total_views: null, video_count: null, recent_videos: [], fetched_at: new Date().toISOString() };
-  const key = Deno.env.get("YOUTUBE_API_KEY");
-  if (!key) return { ...base, error: "YouTube not configured" };
+  const key = accessToken ? "" : (Deno.env.get("YOUTUBE_API_KEY") ?? "");
+  if (!accessToken && !key) return { ...base, error: "YouTube not connected. Connect Google on the Setup page." };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   const get = async (path: string, params: Record<string, string>) => {
-    const qs = new URLSearchParams({ ...params, key });
-    const r = await fetch(`https://www.googleapis.com/youtube/v3/${path}?${qs}`, { signal: controller.signal });
+    const qs = new URLSearchParams(accessToken ? params : { ...params, key });
+    const headers: Record<string, string> = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+    const r = await fetch(`https://www.googleapis.com/youtube/v3/${path}?${qs}`, { signal: controller.signal, headers });
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body?.error?.message ?? `YouTube HTTP ${r.status}`);
     return body;
@@ -55,10 +59,10 @@ export async function getYouTubeAnalytics(): Promise<YouTube> {
         return { title: i.snippet?.title ?? "", published_at: i.contentDetails?.videoPublishedAt ?? i.snippet?.publishedAt ?? "", url: `https://www.youtube.com/watch?v=${id}`, views: num(st.viewCount), likes: num(st.likeCount), comments: num(st.commentCount) };
       });
     }
-    cache = { at: Date.now(), value };
+    cache = { at: Date.now(), mode, value };
     return value;
   } catch (e) {
-    const msg = controller.signal.aborted ? "YouTube request timed out after 10 seconds" : safeSourceError(e instanceof Error ? e.message : "YouTube request failed", [key]);
+    const msg = controller.signal.aborted ? "YouTube request timed out after 10 seconds" : safeSourceError(e instanceof Error ? e.message : "YouTube request failed", [key, accessToken ?? ""].filter(Boolean));
     return { ...base, error: msg };
   } finally {
     clearTimeout(timer);

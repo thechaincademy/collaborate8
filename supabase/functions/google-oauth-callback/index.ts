@@ -2,16 +2,17 @@
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
 import { ALLOWED_ADMIN_EMAILS, DASHBOARD_URL, googleClient, redirectUri, verifyState } from "../_shared/google-oauth.ts";
 
-const go = (qs: string) => new Response(null, { status: 302, headers: { Location: `${DASHBOARD_URL}?${qs}` } });
-const fail = (reason: string) => go(`google=error&reason=${encodeURIComponent(reason)}`);
+const go = (qs: string, to: string = DASHBOARD_URL) => new Response(null, { status: 302, headers: { Location: `${to}?${qs}` } });
 
 Deno.serve(async (req) => {
+  let back = DASHBOARD_URL;
+  const fail = (reason: string) => go(`google=error&reason=${encodeURIComponent(reason)}`, back);
   try {
     const url = new URL(req.url);
+    const state = await verifyState(url.searchParams.get("state"));
+    if (state.ok) back = state.returnTo;
     const gErr = url.searchParams.get("error");
     if (gErr) return fail(gErr.replace(/[^a-z_]/gi, "").slice(0, 40) || "google_error");
-
-    const state = await verifyState(url.searchParams.get("state"));
     if (!state.ok) return fail("reason" in state ? state.reason : "bad_state");
 
     const code = url.searchParams.get("code");
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
 
     // admin-analytics keys its 15-minute Google cache on this row's updated_at,
     // so the new connection clears the cached results automatically.
-    return go("google=connected");
+    return go("google=connected", back);
   } catch {
     return fail("unexpected");
   }

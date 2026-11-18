@@ -8,7 +8,7 @@ export type Clarity = {
   dead_click_pct: number | null; rage_click_pct: number | null; quickback_pct: number | null;
   excessive_scroll_pct: number | null; top_pages: { url: string; sessions: number }[];
 };
-let cache: { at: number; value: Clarity } | null = null;
+let cache: { at: number; key: string; value: Clarity } | null = null;
 const num = (v: unknown) => (v === undefined || v === null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
 
 export function parseClarity(body: unknown): Omit<Clarity, "ok" | "days" | "fetched_at"> {
@@ -28,12 +28,12 @@ export function parseClarity(body: unknown): Omit<Clarity, "ok" | "days" | "fetc
   };
 }
 
-export async function getClarityAnalytics(): Promise<Clarity> {
-  if (cache && Date.now() - cache.at < TTL) return cache.value;
+export async function getClarityAnalytics(override?: string | null): Promise<Clarity> {
+  const token = override || Deno.env.get("CLARITY_API_TOKEN");
+  if (cache && cache.key === (token ?? "") && Date.now() - cache.at < TTL) return cache.value;
   const empty: Clarity = { ok: false, days: 3, fetched_at: new Date().toISOString(), sessions: null, pages_per_session: null, scroll_depth_pct: null, dead_click_pct: null, rage_click_pct: null, quickback_pct: null, excessive_scroll_pct: null, top_pages: [] };
-  const token = Deno.env.get("CLARITY_API_TOKEN");
   if (!token) return { ...empty, error: "Clarity not configured" };
-  const fallback = (error: string) => cache ? { ...cache.value, stale: true, error } : { ...empty, error };
+  const fallback = (error: string) => cache && cache.key === token ? { ...cache.value, stale: true, error } : { ...empty, error };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
@@ -42,7 +42,7 @@ export async function getClarityAnalytics(): Promise<Clarity> {
     const body = await r.json().catch(() => null);
     if (!r.ok) return fallback(safeSourceError(`Clarity HTTP ${r.status}`, [token]));
     const value: Clarity = { ...empty, ok: true, ...parseClarity(body) };
-    cache = { at: Date.now(), value };
+    cache = { at: Date.now(), key: token, value };
     return value;
   } catch (e) {
     return fallback(controller.signal.aborted ? "Clarity request timed out after 10 seconds" : safeSourceError(e instanceof Error ? e.message : "Clarity request failed", [token]));

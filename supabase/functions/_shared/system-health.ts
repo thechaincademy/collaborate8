@@ -147,10 +147,10 @@ export async function runServiceChecks(): Promise<ServiceCheck[]> {
 
 /** Which integration secrets are set. Names and true/false only. */
 export const SETUP_SECRETS: { group: string; names: string[] }[] = [
-  { group: "Instagram, LinkedIn and TikTok (Buffer)", names: ["BUFFER_API_KEY"] },
-  { group: "YouTube", names: ["YOUTUBE_API_KEY"] },
-  { group: "Microsoft Clarity", names: ["CLARITY_API_TOKEN"] },
-  { group: "GA4, Search Console and Business Profile (Google)", names: ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET"] },
+  { group: "Buffer fallback secret (optional, use Connect above)", names: ["BUFFER_API_KEY"] },
+  { group: "YouTube fallback key (optional, Connect Google covers YouTube)", names: ["YOUTUBE_API_KEY"] },
+  { group: "Clarity fallback secret (optional, use Connect above)", names: ["CLARITY_API_TOKEN"] },
+  { group: "Google login client (needed for Connect Google)", names: ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET"] },
   { group: "Stripe", names: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET_PLATFORM", "STRIPE_WEBHOOK_SECRET"] },
   { group: "Email (Resend, EU)", names: ["RESEND_API_KEY", "EMAIL_FROM"] },
   { group: "Alert recipients", names: ["DSL_ALERT_EMAIL", "QA_ALERT_EMAIL"] },

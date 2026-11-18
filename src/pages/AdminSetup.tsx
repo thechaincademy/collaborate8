@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useSystemHealth } from "@/components/admin/useSystemHealth";
+import AnalyticsConnections from "@/components/admin/AnalyticsConnections";
 
 // Plain-English steps for each integration. Values are never shown, only whether each name is set.
 const STEPS: Record<string, string> = {
-  "Instagram, LinkedIn and TikTok (Buffer)": "In Buffer, open Settings, then API (or the developer page), and create an access token for the Collabor8 organisation. Save it in Supabase as BUFFER_API_KEY.",
-  YouTube: "In Google Cloud (project collaborate8-c9e7f), turn on the YouTube Data API v3, then go to APIs and services, Credentials, Create credentials, API key. Limit it to the YouTube Data API. Save it as YOUTUBE_API_KEY. The channel (@collabor8official) is already set in the code.",
-  "Microsoft Clarity": "In Clarity, open the Collabor8 project (yszafltuee), then Settings, Data Export, Generate new API token. Save it as CLARITY_API_TOKEN.",
-  "GA4, Search Console and Business Profile (Google)": "In Google Cloud, APIs and services, Credentials, create an OAuth client ID (Web application). Add this authorised redirect URI: https://byrwtxdalhsmvktuzoya.supabase.co/functions/v1/google-oauth-callback. Save the client ID and secret as GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET, then press Connect Google on the Analytics page once.",
+  "Google login client (needed for Connect Google)": "One-off platform setup. In Google Cloud, APIs and services, Credentials, create an OAuth client ID (Web application) with this authorised redirect URI: https://byrwtxdalhsmvktuzoya.supabase.co/functions/v1/google-oauth-callback. Turn on the Google Analytics Data, Search Console, Business Profile and YouTube Data APIs. Once the client ID and secret are saved on the server, press Connect Google above.",
+  "Buffer fallback secret (optional, use Connect above)": "Not needed if Buffer is connected above. A token connected above is used first.",
+  "YouTube fallback key (optional, Connect Google covers YouTube)": "Not needed once Google is connected with YouTube access.",
+  "Clarity fallback secret (optional, use Connect above)": "Not needed if Clarity is connected above. A token connected above is used first.",
   Stripe: "In Stripe, Developers, API keys: copy the secret key into STRIPE_SECRET_KEY. Then Developers, Webhooks: add an endpoint for https://byrwtxdalhsmvktuzoya.supabase.co/functions/v1/stripe-webhooks and copy its signing secret into STRIPE_WEBHOOK_SECRET_PLATFORM (and STRIPE_WEBHOOK_SECRET for connected accounts).",
   "Email (Resend, EU)": "The sending domain notify.collaborate8.com is in Resend's EU (Ireland) region. It starts working once its DNS records are added and verified.",
   "Alert recipients": "Optional. DSL_ALERT_EMAIL lists who gets live alerts. Test alerts only go to the QA inbox.",
@@ -46,13 +47,12 @@ const AdminSetup = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h1 className="text-2xl font-semibold">Setup</h1>
-            <p className="text-sm text-muted-foreground">Which keys are set on the server. Values are never shown here. Keys are added in Supabase under Edge Functions, Secrets.</p>
+            <p className="text-sm text-muted-foreground">Connect analytics services, and see which server keys are set. Values are never shown here.</p>
           </div>
           <Button variant="outline" onClick={() => void load()} disabled={loading}>Refresh</Button>
         </div>
-        {data?.database?.google_connected !== undefined && (
-          <p className="text-sm">Google account link: {data.database.google_connected ? "a saved link exists. If Google still shows not connected after the keys are added, press Connect Google on the Analytics page again." : "not connected yet."}</p>
-        )}
+        <AnalyticsConnections />
+        <h2 className="pt-2 text-base font-semibold">Server keys</h2>
         {(data?.setup ?? []).map((g) => {
           const allSet = g.secrets.every((s) => s.set);
           return (

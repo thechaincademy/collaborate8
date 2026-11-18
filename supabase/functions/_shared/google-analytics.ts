@@ -1,6 +1,7 @@
 // Google (GA4, Search Console, Business Profile) aggregates for admin-analytics.
 // Never returns or logs tokens.
-import { googleClient } from "./google-oauth.ts";
+import { googleClient, YOUTUBE_SCOPE } from "./google-oauth.ts";
+import { getYouTubeAnalytics } from "./youtube-analytics.ts";
 
 const GA4_PROPERTY = "560493842";
 const SC_SITE = "sc-domain%3Acollaborate8.com";
@@ -167,7 +168,7 @@ export async function getGoogleAnalytics(admin: any) {
 
   const base = { connected: true, account_email: row.account_email, scopes: row.scopes };
   const client = googleClient();
-  if (!client) return { ...base, error: "Google OAuth client not configured", ga4: null, search_console: null, business_profile: null };
+  if (!client) return { ...base, error: "Google login client not set up yet", ga4: null, search_console: null, business_profile: null };
 
   let token: string;
   try {
@@ -187,8 +188,13 @@ export async function getGoogleAnalytics(admin: any) {
     return { ...base, error: `Token refresh failed: ${(e as Error).message}`, ga4: null, search_console: null, business_profile: null };
   }
 
-  const [g, sc, bp] = await Promise.all([safe(() => ga4(token)), safe(() => searchConsole(token)), safe(() => businessProfile(token))]);
-  const value = { ...base, ga4: g, search_console: sc, business_profile: bp };
+  // YouTube comes from the same Google sign-in when the youtube.readonly scope was granted.
+  const hasYouTube = String(row.scopes ?? "").split(/\s+/).includes(YOUTUBE_SCOPE);
+  const [g, sc, bp, yt] = await Promise.all([
+    safe(() => ga4(token)), safe(() => searchConsole(token)), safe(() => businessProfile(token)),
+    hasYouTube ? getYouTubeAnalytics({ accessToken: token }) : Promise.resolve(null),
+  ]);
+  const value = { ...base, youtube_scope: hasYouTube, ga4: g, search_console: sc, business_profile: bp, youtube: yt };
   cache = { at: Date.now(), key, value };
   return value;
 }
