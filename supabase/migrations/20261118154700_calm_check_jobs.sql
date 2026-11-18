@@ -50,8 +50,8 @@ CREATE POLICY calm_check_jobs_select_own
 
 -- Writes stay with the edge function using the service role. Parents only read their own row.
 
-REVOKE ALL ON public.calm_check_jobs FROM anon;
-GRANT SELECT ON public.calm_check_jobs TO authenticated;
+REVOKE ALL ON TABLE public.calm_check_jobs FROM anon, authenticated;
+GRANT SELECT ON TABLE public.calm_check_jobs TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.calm_check_jobs_cleanup()
 RETURNS void
