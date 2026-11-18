@@ -974,9 +974,27 @@ const logSend = (outcome: string, reasons: string[], attempts: number, started: 
 
 // Vertex AI London (europe-west2). The model is VERTEX_MODEL (default gemini-3.5-flash);
 // the request and response keep the chat-completions shape used below.
-const callGateway = (_apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) => {
+// Vertex gemini-3.5-flash runs on Google's shared capacity, which answers 429 at busy moments.
+// Retry a 429 quickly (150-300ms jitter, at most 2 retries), only while the time budget allows another call.
+const RETRY_429_MAX = 2;
+const RETRY_MIN_CALL_MS = 900; // a retry needs at least this much time left after the wait
+const abortableSleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, reject) => {
+  if (signal?.aborted) return reject(new Error("aborted"));
+  const t = setTimeout(() => { signal?.removeEventListener("abort", onAbort); resolve(); }, ms);
+  const onAbort = () => { clearTimeout(t); reject(new Error("aborted")); };
+  signal?.addEventListener("abort", onAbort, { once: true });
+});
+const callGateway = async (_apiKey: string, body: Record<string, unknown>, signal?: AbortSignal, deadline?: number) => {
   const { model: _model, ...rest } = body;
-  return callVertex(rest, signal);
+  let resp = await callVertex(rest, signal);
+  for (let i = 0; i < RETRY_429_MAX && resp.status === 429; i++) {
+    const wait = 150 + Math.floor(Math.random() * 151);
+    if (deadline !== undefined && deadline - Date.now() < wait + RETRY_MIN_CALL_MS) break;
+    try { await resp.body?.cancel(); } catch { /* ignore */ }
+    await abortableSleep(wait, signal);
+    resp = await callVertex(rest, signal);
+  }
+  return resp;
 };
 
 const gatewayError = (resp: Response) => {
@@ -1052,7 +1070,7 @@ Deno.serve(async (req) => {
       const runSend = async (): Promise<Response> => {
         const timed = async (payload: Record<string, unknown>, signal: AbortSignal = sendCtrl.signal) => {
           if (signal.aborted) throw new Error("timeout");
-          return await callGateway(apiKey, payload, signal);
+          return await callGateway(apiKey, payload, signal, deadline);
         };
         const firstMessages = [
           { role: "system", content: SEND_SYSTEM },
