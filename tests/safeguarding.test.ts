@@ -151,6 +151,7 @@ describe("database contract", () => {
     expect(policies[0].includes("FOR SELECT")).toBe(true);
     expect(/FOR\s+(INSERT|ALL)/i.test(policies[0])).toBe(false);
     expect(sql.includes("realtime.messages has an INSERT policy; clients must not send broadcasts")).toBe(true);
+    expect(sql.includes("GRANT SELECT ON realtime.messages TO authenticated")).toBe(true);
 
     const supabaseDir = fileURLToPath(new URL("../supabase", import.meta.url));
     for (const file of listSql(supabaseDir)) {
@@ -159,6 +160,15 @@ describe("database contract", () => {
         expect(/FOR\s+(INSERT|ALL)/i.test(policy)).toBe(false);
       }
     }
+  });
+
+  it("blocks message deletes while paused and still allows a read_at-only update", () => {
+    const fn = sql.split("FUNCTION public.sg_refuse_paused_message()")[1]?.split("DROP TRIGGER IF EXISTS sg_a_pause_messages")[0] ?? "";
+    expect(fn.includes("IF TG_OP = 'DELETE' THEN RETURN OLD; END IF")).toBe(true);
+    expect(fn.includes("NOT public.sg_tools_paused(auth.uid())")).toBe(true);
+    expect(fn.includes("IF TG_OP = 'UPDATE' AND (to_jsonb(NEW) - 'read_at') IS NOT DISTINCT FROM (to_jsonb(OLD) - 'read_at')")).toBe(true);
+    expect(fn.includes("RAISE EXCEPTION 'sg_paused'")).toBe(true);
+    expect(sql.includes("CREATE TRIGGER sg_a_pause_messages BEFORE INSERT OR UPDATE OR DELETE ON public.messages")).toBe(true);
   });
 });
 

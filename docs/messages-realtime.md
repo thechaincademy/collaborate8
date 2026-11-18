@@ -68,8 +68,14 @@ channel.on("broadcast", { event: "message" }, (payload) => {
 await channel.subscribe();
 ```
 
+`authenticated` is granted `SELECT` on `realtime.messages` in the same migration block that creates the policy, so a private subscribe does not depend on a default table grant.
+
 Postgres allows the select on `realtime.messages` only when `extension = 'broadcast'` and `realtime.topic()` equals the caller's current family topic.
 
 That topic is `public.sg_caller_family_topic()`. The function is `STABLE`, `SECURITY DEFINER`, and `SET search_path = public`. `EXECUTE` is granted to `authenticated` only (revoked from `PUBLIC`, `anon`, and `service_role`). It reads `auth.uid()` and `public.get_coparent_id(auth.uid())`, lowercases both ids, sorts them, and returns `sg-family:{low}:{high}`. If there is no co-parent, both sides are the caller's own id. The client does not supply the pair. A topic for a former co-parent does not match.
 
 There is no `INSERT` policy on `realtime.messages`. An authenticated client cannot send a broadcast. The migration raises if an `INSERT` or `ALL` policy is present on that table. Messages are published only by `sg_broadcast_message`, which calls `realtime.send` as a security definer trigger.
+
+## Website
+
+The website chat calls `sg_caller_family_topic` before it subscribes. When that function and `messages_caller` exist, it reads `messages_caller` and subscribes to `sg-family:{low}:{high}` with `private: true`. It calls `supabase.realtime.setAuth` with the access token before subscribe, and again on `TOKEN_REFRESHED`. When the function or the view is not in the database yet, chat keeps selecting `messages` and listening to `postgres_changes` on that table, so the site still works before the migration. The topic string does not change.

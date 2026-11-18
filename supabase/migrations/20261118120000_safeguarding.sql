@@ -714,7 +714,9 @@ BEGIN
 END;
 $$;
 
--- Messages: block new sends and body edits while paused. The receiver may still set read_at.
+-- Messages: block new sends, body edits, and deletes while paused.
+-- A read_at-only update stays allowed. Unflagged families and a global flag off are a no-op.
+-- Service role (auth.uid() is null), including account deletion, is not blocked.
 CREATE OR REPLACE FUNCTION public.sg_refuse_paused_message()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -723,20 +725,18 @@ SET search_path = public
 AS $$
 BEGIN
   IF auth.uid() IS NULL OR NOT public.sg_tools_paused(auth.uid()) THEN
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
     RETURN NEW;
   END IF;
-  IF TG_OP = 'INSERT' THEN
-    RAISE EXCEPTION 'sg_paused';
+  IF TG_OP = 'UPDATE' AND (to_jsonb(NEW) - 'read_at') IS NOT DISTINCT FROM (to_jsonb(OLD) - 'read_at') THEN
+    RETURN NEW;
   END IF;
-  IF (to_jsonb(NEW) - 'read_at') IS DISTINCT FROM (to_jsonb(OLD) - 'read_at') THEN
-    RAISE EXCEPTION 'sg_paused';
-  END IF;
-  RETURN NEW;
+  RAISE EXCEPTION 'sg_paused';
 END;
 $$;
 
 DROP TRIGGER IF EXISTS sg_a_pause_messages ON public.messages;
-CREATE TRIGGER sg_a_pause_messages BEFORE INSERT OR UPDATE ON public.messages
+CREATE TRIGGER sg_a_pause_messages BEFORE INSERT OR UPDATE OR DELETE ON public.messages
   FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_message();
 DROP TRIGGER IF EXISTS sg_a_pause_expenses ON public.expense_requests;
 CREATE TRIGGER sg_a_pause_expenses BEFORE INSERT OR UPDATE OR DELETE ON public.expense_requests
@@ -914,6 +914,7 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'realtime') THEN
     EXECUTE 'ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'GRANT SELECT ON realtime.messages TO authenticated';
     EXECUTE 'DROP POLICY IF EXISTS "sg family message broadcast" ON realtime.messages';
     -- SELECT only. There is no INSERT policy, so an authenticated client cannot send a broadcast.
     -- realtime.send runs as the security definer trigger owner and is not a client insert.

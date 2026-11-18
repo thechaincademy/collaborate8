@@ -28,6 +28,7 @@ import ConversationQuestionnaire from "./ConversationQuestionnaire";
 import DocumentsTab from "./DocumentsTab";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 import { mergeChatMessages, pendingMessageDelivery } from "@/lib/chatMessages";
+import { applyFamilyBroadcast, familyMessageTopic, isMissingMessageFeed, type FamilyBroadcast } from "@/lib/familyMessageChannel";
 import { hideSenderReadAt } from "@/lib/safeguarding/logic";
 import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
 import { notifyIfPaused } from "@/lib/safeguarding/pausedError";
@@ -396,32 +397,54 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     }
     let active = true;
     const pairKey = `${user.id}:${coparentId}`;
+    const me = user.id;
+    const other = coparentId;
     let resubscribing = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let authSub: { unsubscribe: () => void } | null = null;
+    let poll: ReturnType<typeof setInterval> | null = null;
+    const pairFilter =
+      `and(sender_id.eq.${me},recipient_id.eq.${other}),and(sender_id.eq.${other},recipient_id.eq.${me})`;
+    const inPair = (sender: string, recipient: string) =>
+      (sender === me && recipient === other) || (sender === other && recipient === me);
 
     let fetchVersion = 0;
+    let readLegacy = false;
     const fetchMessages = async () => {
       const version = ++fetchVersion;
-      const { data, error } = await supabase
-        .from("messages_caller" as "messages")
-        .select("*")
-        .or(
-          `and(sender_id.eq.${user.id},recipient_id.eq.${coparentId}),and(sender_id.eq.${coparentId},recipient_id.eq.${user.id})`,
-        )
-        .order("created_at", { ascending: true })
-        .limit(200);
+      const readTable = async (table: "messages" | "messages_caller") =>
+        supabase.from(table as "messages").select("*").or(pairFilter).order("created_at", { ascending: true }).limit(200);
+      let result = await readTable(readLegacy ? "messages" : "messages_caller");
+      if (!readLegacy && isMissingMessageFeed(result.error)) {
+        readLegacy = true;
+        result = await readTable("messages");
+      }
+      const { data, error } = result;
       if (active && version === fetchVersion) {
         if (error) {
           // Keep any rows already shown; only an empty list shows the retry line.
           setLoadState((prev) => (prev === "ok" && loadedPairRef.current === pairKey ? prev : "error"));
         } else {
           loadedPairRef.current = pairKey;
-          setMessages(prev => mergeChatMessages(prev, ((data ?? []) as Message[]).map((row) => hideSenderReadAt(row, user.id))));
+          setMessages(prev => mergeChatMessages(prev, ((data ?? []) as Message[]).map((row) => hideSenderReadAt(row, me))));
           setLoadState("ok");
         }
         setLoading(false);
       }
     };
     fetchMessagesRef.current = () => { if (active) { setLoading(true); void fetchMessages(); } };
+    const refreshMessages = () => { if (active) void fetchMessages(); };
+    const onVisible = () => { if (document.visibilityState === "visible") refreshMessages(); };
+    const onStatus = (status: string) => {
+      if (!active || resubscribing) return;
+      if (status === "SUBSCRIBED") void fetchMessages();
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        resubscribing = true;
+        void fetchMessages();
+        setTimeout(() => { if (active) setChannelGen((g) => g + 1); }, 2000);
+      }
+    };
+
     // Only reset the list when the account or co-parent actually changes,
     // not on token refreshes or channel resubscribes.
     if (loadedPairRef.current !== pairKey) {
@@ -430,56 +453,64 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       setLoadState("loading");
       setLoading(true);
     }
-    void fetchMessages();
 
-    const channel = supabase
-      .channel(`messages:${user.id}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
-        (payload) => {
-          const m = payload.new as Message;
-          if (
-            (m.sender_id === user.id && m.recipient_id === coparentId) ||
-            (m.sender_id === coparentId && m.recipient_id === user.id)
-          ) {
-            if (active) setMessages(prev => mergeChatMessages(prev, [hideSenderReadAt(m, user.id)]));
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "messages" },
-        (payload) => {
-          const m = payload.new as Message;
-          if (active) setMessages((prev) => prev.map((p) => (p.id === m.id && p.sender_id !== user.id ? { ...p, read_at: m.read_at } : p)));
-        },
-      )
-      .subscribe(status => {
-        // Close the gap between the initial query and a ready subscription.
-        if (!active || resubscribing) return;
-        if (status === "SUBSCRIBED") void fetchMessages();
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-          // Refetch now, then rebuild the subscription.
-          resubscribing = true;
-          void fetchMessages();
-          setTimeout(() => { if (active) setChannelGen((g) => g + 1); }, 2000);
-        }
-      });
-    const refreshMessages = () => { if (active) void fetchMessages(); };
-    const onVisible = () => { if (document.visibilityState === "visible") refreshMessages(); };
+    const start = async () => {
+      const probe = await supabase.rpc("sg_caller_family_topic" as never);
+      if (!active) return;
+      const probeError = (probe as { error: { code?: string; message?: string } | null }).error;
+      readLegacy = isMissingMessageFeed(probeError);
+      void fetchMessages();
+
+      if (readLegacy) {
+        channel = supabase
+          .channel(`messages:${me}:${Math.random().toString(36).slice(2)}`)
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+            const m = payload.new as Message;
+            if (inPair(m.sender_id, m.recipient_id) && active) {
+              setMessages(prev => mergeChatMessages(prev, [hideSenderReadAt(m, me)]));
+            }
+          })
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
+            const m = payload.new as Message;
+            if (active) setMessages((prev) => prev.map((p) => (p.id === m.id && p.sender_id !== me ? { ...p, read_at: m.read_at } : p)));
+          })
+          .subscribe(onStatus);
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!active) return;
+      const token = sessionData.session?.access_token;
+      if (token) await supabase.realtime.setAuth(token);
+      authSub = supabase.auth.onAuthStateChange((event, session) => {
+        const next = session?.access_token;
+        if (!next || !active) return;
+        if (event === "TOKEN_REFRESHED" || event === "SIGNED_IN") void supabase.realtime.setAuth(next);
+      }).data.subscription;
+      channel = supabase
+        .channel(familyMessageTopic(me, other), { config: { private: true } })
+        .on("broadcast", { event: "message" }, (message) => {
+          const row = (message.payload ?? {}) as FamilyBroadcast;
+          if (!row.sender_id || !row.recipient_id || !inPair(row.sender_id, row.recipient_id) || !active) return;
+          setMessages((prev) => applyFamilyBroadcast(prev, row, me));
+        })
+        .subscribe(onStatus);
+    };
+    void start();
+
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", refreshMessages);
     window.addEventListener("c8-profile-refresh", refreshMessages);
-    const poll = setInterval(refreshMessages, 10000);
+    poll = setInterval(refreshMessages, 10000);
 
     return () => {
       active = false;
-      clearInterval(poll);
+      if (poll) clearInterval(poll);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", refreshMessages);
       window.removeEventListener("c8-profile-refresh", refreshMessages);
-      supabase.removeChannel(channel);
+      authSub?.unsubscribe();
+      if (channel) supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, coparentId, channelGen]);
