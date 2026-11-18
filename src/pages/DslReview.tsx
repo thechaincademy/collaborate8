@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { DslDashboard } from "@/components/safeguarding/DslDashboard";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { fetchDslQueue, isSafeguardingLead, type DslConcern, type DslFlag } from "@/lib/safeguarding/api";
 
 const DslReview = () => {
@@ -31,13 +32,19 @@ const DslReview = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
+      <AdminLayout>
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </AdminLayout>
     );
   }
 
-  return <DslDashboard allowed={allowed} flags={flags} concerns={concerns} onChange={() => void load()} />;
+  return (
+    <AdminLayout>
+      <DslDashboard allowed={allowed} flags={flags} concerns={concerns} onChange={() => void load()} />
+    </AdminLayout>
+  );
 };
 
 export default DslReview;
