@@ -5,58 +5,25 @@
 
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
-DO $$
-BEGIN
-  CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-  WHEN OTHERS THEN
-    BEGIN
-      CREATE EXTENSION IF NOT EXISTS pgcrypto;
-    EXCEPTION WHEN OTHERS THEN
-      RAISE NOTICE 'pgcrypto unavailable';
-    END;
-END $$;
+-- Global kill switch. Every safeguarding gate is this flag AND the per-account or family flag.
+INSERT INTO public.app_settings (key, value)
+VALUES ('safeguarding_enabled', 'false')
+ON CONFLICT (key) DO NOTHING;
 
-CREATE SCHEMA IF NOT EXISTS private;
-REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated;
-
-CREATE TABLE IF NOT EXISTS private.bank_field_keys (
-  id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  key bytea NOT NULL
-);
-INSERT INTO private.bank_field_keys (id, key)
-VALUES (1, extensions.gen_random_bytes(32))
-ON CONFLICT (id) DO NOTHING;
-REVOKE ALL ON TABLE private.bank_field_keys FROM PUBLIC, anon, authenticated;
-
-CREATE OR REPLACE FUNCTION private.encrypt_bank_text(plain text)
-RETURNS bytea
+CREATE OR REPLACE FUNCTION public.sg_global_enabled()
+RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = private, extensions, public
+SET search_path = public
 AS $$
-  SELECT CASE
-    WHEN plain IS NULL OR plain = '' THEN NULL
-    ELSE pgp_sym_encrypt(plain, encode((SELECT key FROM private.bank_field_keys WHERE id = 1), 'hex'))
-  END;
+  SELECT EXISTS (
+    SELECT 1 FROM public.app_settings
+    WHERE key = 'safeguarding_enabled' AND value = 'true'
+  );
 $$;
-
-CREATE OR REPLACE FUNCTION private.decrypt_bank_text(cipher bytea)
-RETURNS text
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = private, extensions, public
-AS $$
-  SELECT CASE
-    WHEN cipher IS NULL THEN NULL
-    ELSE pgp_sym_decrypt(cipher, encode((SELECT key FROM private.bank_field_keys WHERE id = 1), 'hex'))
-  END;
-$$;
-REVOKE ALL ON FUNCTION private.encrypt_bank_text(text) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION private.decrypt_bank_text(bytea) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sg_global_enabled() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.sg_global_enabled() TO service_role;
 
 DO $$
 BEGIN
@@ -201,11 +168,11 @@ CREATE TABLE IF NOT EXISTS public.safeguarding_suitability (
   q4 text NOT NULL,
   q5 text NOT NULL,
   updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT safeguarding_suitability_q1 CHECK (q1 IN ('yes', 'no', 'unsure')),
-  CONSTRAINT safeguarding_suitability_q2 CHECK (q2 IN ('yes', 'no', 'prefer_not')),
-  CONSTRAINT safeguarding_suitability_q3 CHECK (q3 IN ('yes', 'no', 'unsure')),
-  CONSTRAINT safeguarding_suitability_q4 CHECK (q4 IN ('yes', 'no', 'unsure')),
-  CONSTRAINT safeguarding_suitability_q5 CHECK (q5 IN ('yes', 'no', 'prefer_not'))
+  CONSTRAINT safeguarding_suitability_q1 CHECK (q1 IN ('yes', 'no', 'unsure', 'prefer_not')),
+  CONSTRAINT safeguarding_suitability_q2 CHECK (q2 IN ('yes', 'no', 'unsure', 'prefer_not')),
+  CONSTRAINT safeguarding_suitability_q3 CHECK (q3 IN ('yes', 'no', 'unsure', 'prefer_not')),
+  CONSTRAINT safeguarding_suitability_q4 CHECK (q4 IN ('yes', 'no', 'unsure', 'prefer_not')),
+  CONSTRAINT safeguarding_suitability_q5 CHECK (q5 IN ('yes', 'no', 'unsure', 'prefer_not'))
 );
 GRANT INSERT, UPDATE ON public.safeguarding_suitability TO authenticated;
 GRANT ALL ON public.safeguarding_suitability TO service_role;
@@ -216,6 +183,7 @@ CREATE POLICY "Users write own suitability" ON public.safeguarding_suitability
   FOR INSERT TO authenticated
   WITH CHECK (
     user_id = auth.uid()
+    AND public.sg_global_enabled()
     AND EXISTS (
       SELECT 1 FROM public.safeguarding_accounts a
       WHERE a.user_id = auth.uid() AND a.safeguarding_enabled
@@ -360,6 +328,7 @@ AS $$
     FROM public.family_safeguarding f
     JOIN public.sg_pair(_user) p ON f.parent_low = p.parent_low AND f.parent_high = p.parent_high
     WHERE f.paused_at IS NOT NULL
+      AND public.sg_global_enabled()
       AND public.sg_family_active(_user)
   );
 $$;
@@ -486,7 +455,7 @@ BEGIN
       'safeguarding_enabled', false
     );
   END IF;
-  enabled := public.sg_user_enabled(uid);
+  enabled := public.sg_global_enabled() AND public.sg_user_enabled(uid);
   paused := public.sg_tools_paused(uid);
   due := enabled AND NOT EXISTS (
     SELECT 1 FROM public.safeguarding_suitability WHERE user_id = uid
@@ -517,14 +486,14 @@ DECLARE
   q4 text := p_answers->>'q4';
   q5 text := p_answers->>'q5';
 BEGIN
-  IF uid IS NULL OR NOT public.sg_user_enabled(uid) THEN
+  IF uid IS NULL OR NOT public.sg_global_enabled() OR NOT public.sg_user_enabled(uid) THEN
     RAISE EXCEPTION 'safeguarding_disabled';
   END IF;
-  IF q1 NOT IN ('yes', 'no', 'unsure')
-     OR q2 NOT IN ('yes', 'no', 'prefer_not')
-     OR q3 NOT IN ('yes', 'no', 'unsure')
-     OR q4 NOT IN ('yes', 'no', 'unsure')
-     OR q5 NOT IN ('yes', 'no', 'prefer_not') THEN
+  IF q1 NOT IN ('yes', 'no', 'unsure', 'prefer_not')
+     OR q2 NOT IN ('yes', 'no', 'unsure', 'prefer_not')
+     OR q3 NOT IN ('yes', 'no', 'unsure', 'prefer_not')
+     OR q4 NOT IN ('yes', 'no', 'unsure', 'prefer_not')
+     OR q5 NOT IN ('yes', 'no', 'unsure', 'prefer_not') THEN
     RAISE EXCEPTION 'invalid_answers';
   END IF;
   INSERT INTO public.safeguarding_suitability (user_id, q1, q2, q3, q4, q5)
@@ -549,7 +518,7 @@ DECLARE
   note text;
   created timestamptz := now();
 BEGIN
-  IF uid IS NULL OR NOT public.sg_user_enabled(uid) THEN
+  IF uid IS NULL OR NOT public.sg_global_enabled() OR NOT public.sg_user_enabled(uid) THEN
     RAISE EXCEPTION 'safeguarding_disabled';
   END IF;
   IF p_kind NOT IN ('message', 'payment', 'expense', 'general') THEN
@@ -583,7 +552,8 @@ BEGIN
       NULL;
     END;
   END LOOP;
-  PERFORM public.sg_pause_family(pair.parent_low, pair.parent_high, true);
+  -- A report alerts the DSL. It does not pause the family. The DSL decides.
+  PERFORM public.dispatch_safeguarding_alert(pair.parent_low, pair.parent_high, 'concern');
   PERFORM public.safeguarding_audit('concern', 'concern', NULL, jsonb_build_object('kind', p_kind, 'reference', ref));
   RETURN jsonb_build_object('reference', ref, 'received_at', created);
 END;
@@ -599,7 +569,7 @@ DECLARE
   uid uuid := auth.uid();
   on_flag boolean := COALESCE(p_on, false);
 BEGIN
-  IF uid IS NULL OR NOT public.sg_user_enabled(uid) THEN
+  IF uid IS NULL OR NOT public.sg_global_enabled() OR NOT public.sg_user_enabled(uid) THEN
     RETURN jsonb_build_object('quiet_mode', false);
   END IF;
   INSERT INTO public.quiet_mode (user_id, enabled)
@@ -698,11 +668,11 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.sg_user_enabled(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.sg_family_active(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.sg_pair(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.sg_tools_paused(uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.sg_reference() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.sg_user_enabled(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sg_family_active(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sg_pair(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sg_tools_paused(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sg_reference() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.sg_family_status() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.sg_submit_suitability(jsonb) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.sg_report_concern(text, uuid, text) FROM PUBLIC, anon;
@@ -711,9 +681,11 @@ REVOKE ALL ON FUNCTION public.sg_dsl_overview() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.sg_dsl_set_pause(uuid, uuid, boolean) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.sg_admin_set_account(uuid, boolean, boolean) FROM PUBLIC, anon;
 
-GRANT EXECUTE ON FUNCTION public.sg_user_enabled(uuid) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.sg_family_active(uuid) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.sg_tools_paused(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.sg_user_enabled(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.sg_family_active(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.sg_pair(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.sg_tools_paused(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.sg_reference() TO service_role;
 GRANT EXECUTE ON FUNCTION public.sg_family_status() TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.sg_submit_suitability(jsonb) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.sg_report_concern(text, uuid, text) TO authenticated, service_role;
@@ -722,10 +694,11 @@ GRANT EXECUTE ON FUNCTION public.sg_dsl_overview() TO authenticated, service_rol
 GRANT EXECUTE ON FUNCTION public.sg_dsl_set_pause(uuid, uuid, boolean) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.sg_admin_set_account(uuid, boolean, boolean) TO authenticated, service_role;
 
--- Pause writes only for a family that has the per-account switch on.
+-- SECURITY DEFINER so these triggers can call internal helpers that authenticated cannot execute.
 CREATE OR REPLACE FUNCTION public.sg_refuse_paused_write()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
@@ -733,7 +706,7 @@ BEGIN
     IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
     RETURN NEW;
   END IF;
-  IF public.sg_family_active(auth.uid()) AND public.sg_tools_paused(auth.uid()) THEN
+  IF public.sg_tools_paused(auth.uid()) THEN
     RAISE EXCEPTION 'sg_paused';
   END IF;
   IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
@@ -741,33 +714,73 @@ BEGIN
 END;
 $$;
 
+-- Messages: block new sends and body edits while paused. The receiver may still set read_at.
+CREATE OR REPLACE FUNCTION public.sg_refuse_paused_message()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.sg_tools_paused(auth.uid()) THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'INSERT' THEN
+    RAISE EXCEPTION 'sg_paused';
+  END IF;
+  IF (to_jsonb(NEW) - 'read_at') IS DISTINCT FROM (to_jsonb(OLD) - 'read_at') THEN
+    RAISE EXCEPTION 'sg_paused';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
 DROP TRIGGER IF EXISTS sg_a_pause_messages ON public.messages;
 CREATE TRIGGER sg_a_pause_messages BEFORE INSERT OR UPDATE ON public.messages
-  FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
+  FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_message();
 DROP TRIGGER IF EXISTS sg_a_pause_expenses ON public.expense_requests;
-CREATE TRIGGER sg_a_pause_expenses BEFORE INSERT OR UPDATE ON public.expense_requests
+CREATE TRIGGER sg_a_pause_expenses BEFORE INSERT OR UPDATE OR DELETE ON public.expense_requests
   FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
 DROP TRIGGER IF EXISTS sg_a_pause_payments ON public.payments;
-CREATE TRIGGER sg_a_pause_payments BEFORE INSERT OR UPDATE ON public.payments
+CREATE TRIGGER sg_a_pause_payments BEFORE INSERT OR UPDATE OR DELETE ON public.payments
   FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
 DROP TRIGGER IF EXISTS sg_a_pause_recurring ON public.recurring_payments;
-CREATE TRIGGER sg_a_pause_recurring BEFORE INSERT OR UPDATE ON public.recurring_payments
+CREATE TRIGGER sg_a_pause_recurring BEFORE INSERT OR UPDATE OR DELETE ON public.recurring_payments
   FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
 DROP TRIGGER IF EXISTS sg_a_pause_decisions ON public.decision_threads;
-CREATE TRIGGER sg_a_pause_decisions BEFORE INSERT OR UPDATE ON public.decision_threads
+CREATE TRIGGER sg_a_pause_decisions BEFORE INSERT OR UPDATE OR DELETE ON public.decision_threads
   FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
 DROP TRIGGER IF EXISTS sg_a_pause_thread_events ON public.thread_events;
-CREATE TRIGGER sg_a_pause_thread_events BEFORE INSERT OR UPDATE ON public.thread_events
+CREATE TRIGGER sg_a_pause_thread_events BEFORE INSERT OR UPDATE OR DELETE ON public.thread_events
+  FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
+-- Calendar dates live on decision threads. These tables are the other shared money writes.
+DROP TRIGGER IF EXISTS sg_a_pause_manual_payments ON public.manual_payments;
+CREATE TRIGGER sg_a_pause_manual_payments BEFORE INSERT OR UPDATE OR DELETE ON public.manual_payments
+  FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
+DROP TRIGGER IF EXISTS sg_a_pause_payment_records ON public.payment_records;
+CREATE TRIGGER sg_a_pause_payment_records BEFORE INSERT OR UPDATE OR DELETE ON public.payment_records
+  FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
+DROP TRIGGER IF EXISTS sg_a_pause_pending_messages ON public.pending_first_messages;
+CREATE TRIGGER sg_a_pause_pending_messages BEFORE INSERT OR UPDATE OR DELETE ON public.pending_first_messages
   FOR EACH ROW EXECUTE FUNCTION public.sg_refuse_paused_write();
 
--- Message lock is safe for every account: the app only lets the receiver set read_at, and nobody deletes messages.
+-- Message lock applies only when the global flag and this family's account flag are on.
+-- The receiver may set read_at once. A later write keeps the original timestamp.
 -- Account deletion runs as service role (auth.uid() is null) and can still remove rows.
 CREATE OR REPLACE FUNCTION public.sg_lock_message()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  actor uuid;
 BEGIN
+  actor := CASE WHEN TG_OP = 'DELETE' THEN OLD.sender_id ELSE COALESCE(NEW.sender_id, OLD.sender_id) END;
+  IF NOT (public.sg_global_enabled() AND public.sg_family_active(actor)) THEN
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+  END IF;
   IF TG_OP = 'DELETE' THEN
     IF auth.uid() IS NULL THEN RETURN OLD; END IF;
     RAISE EXCEPTION 'messages cannot be deleted';
@@ -780,8 +793,8 @@ BEGIN
     IF (to_jsonb(NEW) - 'read_at') IS DISTINCT FROM (to_jsonb(OLD) - 'read_at') THEN
       RAISE EXCEPTION 'messages cannot be changed';
     END IF;
-    IF NEW.read_at IS DISTINCT FROM OLD.read_at AND (OLD.read_at IS NOT NULL OR NEW.read_at IS NULL) THEN
-      RAISE EXCEPTION 'read_at can only be set once';
+    IF OLD.read_at IS NOT NULL THEN
+      NEW.read_at := OLD.read_at;
     END IF;
   END IF;
   RETURN NEW;
@@ -794,8 +807,10 @@ CREATE TRIGGER sg_lock_message
 
 ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS pending_first_message_id uuid;
 
+-- Definer view so a later column revoke still lets this view null private fields.
+-- auth.uid() is the session user. The WHERE clause keeps it to the caller's own messages.
 CREATE OR REPLACE VIEW public.messages_caller
-WITH (security_invoker = true) AS
+WITH (security_invoker = false) AS
 SELECT
   m.id,
   m.sender_id,
@@ -809,8 +824,92 @@ SELECT
   CASE WHEN m.sender_id = auth.uid() THEN m.original_body ELSE NULL END AS original_body,
   CASE WHEN m.sender_id = auth.uid() THEN m.tone_score ELSE NULL END AS tone_score,
   CASE WHEN m.recipient_id = auth.uid() THEN m.read_at ELSE NULL END AS read_at
-FROM public.messages m;
+FROM public.messages m
+WHERE m.sender_id = auth.uid() OR m.recipient_id = auth.uid();
 GRANT SELECT ON public.messages_caller TO authenticated, service_role;
+
+-- Sanitized broadcast. The table stays on supabase_realtime until the later cutover migration.
+CREATE OR REPLACE FUNCTION public.sg_broadcast_message()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  low uuid;
+  high uuid;
+  topic text;
+  row_id uuid;
+  sender uuid;
+  recipient uuid;
+BEGIN
+  row_id := COALESCE(NEW.id, OLD.id);
+  sender := COALESCE(NEW.sender_id, OLD.sender_id);
+  recipient := COALESCE(NEW.recipient_id, OLD.recipient_id);
+  IF sender IS NULL OR recipient IS NULL THEN
+    RETURN NULL;
+  END IF;
+  IF sender <= recipient THEN
+    low := sender;
+    high := recipient;
+  ELSE
+    low := recipient;
+    high := sender;
+  END IF;
+  topic := 'sg-family:' || low::text || ':' || high::text;
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'realtime' AND p.proname = 'send'
+  ) THEN
+    PERFORM realtime.send(
+      jsonb_build_object(
+        'id', row_id,
+        'sender_id', sender,
+        'recipient_id', recipient,
+        'body', NEW.body,
+        'created_at', NEW.created_at,
+        'attachment_path', NEW.attachment_path,
+        'attachment_name', NEW.attachment_name,
+        'used_suggestion', NEW.used_suggestion,
+        'pending_first_message_id', NEW.pending_first_message_id,
+        'op', TG_OP
+      ),
+      'message',
+      topic,
+      true
+    );
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS sg_broadcast_message ON public.messages;
+CREATE TRIGGER sg_broadcast_message
+  AFTER INSERT OR UPDATE ON public.messages
+  FOR EACH ROW EXECUTE FUNCTION public.sg_broadcast_message();
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'realtime') THEN
+    EXECUTE 'ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "sg family message broadcast" ON realtime.messages';
+    EXECUTE $policy$
+      CREATE POLICY "sg family message broadcast"
+      ON realtime.messages
+      FOR SELECT
+      TO authenticated
+      USING (
+        realtime.messages.extension = 'broadcast'
+        AND split_part(realtime.topic(), ':', 1) = 'sg-family'
+        AND auth.uid()::text IN (
+          split_part(realtime.topic(), ':', 2),
+          split_part(realtime.topic(), ':', 3)
+        )
+      )
+    $policy$;
+  END IF;
+END $$;
 
 CREATE OR REPLACE FUNCTION public.create_notification(_user uuid, _type text, _title text, _message text, _link text, _dedupe text DEFAULT NULL)
 RETURNS void
@@ -820,7 +919,7 @@ SET search_path = public
 AS $$
 BEGIN
   IF _user IS NULL THEN RETURN; END IF;
-  IF public.sg_user_enabled(_user) AND EXISTS (
+  IF public.sg_global_enabled() AND public.sg_user_enabled(_user) AND EXISTS (
     SELECT 1 FROM public.quiet_mode q WHERE q.user_id = _user AND q.enabled
   ) THEN
     RETURN;
@@ -831,51 +930,47 @@ BEGIN
 END;
 $$;
 
+-- Collabor8 does not write new bank account numbers or sort codes.
+-- Existing rows stay until supabase/manual/NEEDS_RAFA_APPROVAL_remove_stored_bank_details.sql.
 DROP POLICY IF EXISTS "Co-parent can view bank connections" ON public.bank_connections;
 DROP POLICY IF EXISTS "Co-parent can view bank connections when safeguarding is off" ON public.bank_connections;
 CREATE POLICY "Co-parent can view bank connections when safeguarding is off"
 ON public.bank_connections FOR SELECT TO authenticated
 USING (
   user_id = public.get_coparent_id(auth.uid())
-  AND NOT public.sg_family_active(auth.uid())
+  AND NOT (
+    public.sg_global_enabled()
+    AND (
+      EXISTS (SELECT 1 FROM public.safeguarding_accounts a WHERE a.user_id = auth.uid() AND a.safeguarding_enabled)
+      OR EXISTS (SELECT 1 FROM public.safeguarding_accounts a WHERE a.user_id = public.get_coparent_id(auth.uid()) AND a.safeguarding_enabled)
+    )
+  )
 );
 
-ALTER TABLE public.coparent_bank_accounts
-  ADD COLUMN IF NOT EXISTS sort_code_enc bytea,
-  ADD COLUMN IF NOT EXISTS account_number_enc bytea;
-ALTER TABLE public.bank_connections
-  ADD COLUMN IF NOT EXISTS sort_code_enc bytea;
+GRANT EXECUTE ON FUNCTION public.sg_global_enabled() TO authenticated, service_role;
 
-COMMENT ON COLUMN public.coparent_bank_accounts.account_number_enc IS
-  'pgp_sym_encrypt copy. Plaintext stays so the published owner screens and payment reminders keep working.';
-
-CREATE OR REPLACE FUNCTION public.encrypt_bank_fields()
-RETURNS trigger
+CREATE OR REPLACE FUNCTION public.sg_claim_monitor_alert()
+RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, private, extensions
+SET search_path = public
 AS $$
+DECLARE
+  claimed integer;
 BEGIN
-  IF TG_TABLE_NAME = 'coparent_bank_accounts' THEN
-    NEW.sort_code_enc := private.encrypt_bank_text(NEW.sort_code);
-    NEW.account_number_enc := private.encrypt_bank_text(NEW.account_number);
-  ELSIF TG_TABLE_NAME = 'bank_connections' THEN
-    NEW.sort_code_enc := private.encrypt_bank_text(NEW.sort_code);
-  END IF;
-  RETURN NEW;
+  INSERT INTO public.safeguarding_monitor_state (id, last_alert_at)
+  VALUES (1, NULL)
+  ON CONFLICT (id) DO NOTHING;
+  UPDATE public.safeguarding_monitor_state
+  SET last_alert_at = now()
+  WHERE id = 1
+    AND (last_alert_at IS NULL OR last_alert_at < now() - interval '6 hours');
+  GET DIAGNOSTICS claimed = ROW_COUNT;
+  RETURN claimed > 0;
 END;
 $$;
-DROP TRIGGER IF EXISTS coparent_bank_accounts_encrypt ON public.coparent_bank_accounts;
-CREATE TRIGGER coparent_bank_accounts_encrypt
-  BEFORE INSERT OR UPDATE ON public.coparent_bank_accounts
-  FOR EACH ROW EXECUTE FUNCTION public.encrypt_bank_fields();
-DROP TRIGGER IF EXISTS bank_connections_encrypt ON public.bank_connections;
-CREATE TRIGGER bank_connections_encrypt
-  BEFORE INSERT OR UPDATE ON public.bank_connections
-  FOR EACH ROW EXECUTE FUNCTION public.encrypt_bank_fields();
-
-UPDATE public.coparent_bank_accounts SET sort_code = sort_code WHERE sort_code_enc IS NULL;
-UPDATE public.bank_connections SET sort_code = sort_code WHERE sort_code IS NOT NULL AND sort_code_enc IS NULL;
+REVOKE ALL ON FUNCTION public.sg_claim_monitor_alert() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.sg_claim_monitor_alert() TO service_role;
 
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('safeguarding-records', 'safeguarding-records', false)

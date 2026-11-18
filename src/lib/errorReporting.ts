@@ -23,10 +23,10 @@ export function initErrorReporting() {
     replaysOnErrorSampleRate: sentryReplayOnErrorSampleRate,
     integrations: (defaults) => defaults.filter((integration) => integration.name !== "Replay"),
     beforeSend(event) {
-      return scrubSentryEvent(event as SentryEventLike) as typeof event;
+      return scrubSentryEvent(event as unknown as SentryEventLike) as unknown as typeof event;
     },
     beforeBreadcrumb(breadcrumb) {
-      return scrubSentryBreadcrumb(breadcrumb as SentryBreadcrumbLike) as typeof breadcrumb;
+      return scrubSentryBreadcrumb(breadcrumb as unknown as SentryBreadcrumbLike) as unknown as typeof breadcrumb;
     },
   });
 }

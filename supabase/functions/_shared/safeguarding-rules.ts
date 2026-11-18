@@ -10,7 +10,7 @@ export const SAFETY_ALERT_TEXT =
 export const MONITORING_ALERT_TEXT =
   "Collabor8: a monitoring alert needs review. Please check your email or the console.";
 
-export type AlertKind = "safety_flag" | "monitoring";
+export type AlertKind = "safety_flag" | "concern" | "monitoring";
 
 export function splitList(value: string | undefined | null): string[] {
   return (value ?? "")

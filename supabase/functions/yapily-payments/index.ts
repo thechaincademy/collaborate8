@@ -128,7 +128,7 @@ serve(async (req) => {
         reference: "Collabor8 Payment",
         payeeName: "Collabor8 Payee",
         payeeAccountNumber: payeeConnection?.account_id || "",
-        payeeSortCode: payeeConnection?.sort_code || "",
+        payeeSortCode: "",
         payerInstitutionId: "",
       });
 

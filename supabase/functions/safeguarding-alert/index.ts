@@ -1,8 +1,10 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
-import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import { notifySafeguarding } from "../_shared/safeguarding-notify.ts";
+import type { AlertKind } from "../_shared/safeguarding-rules.ts";
 
 const UUID = /^[0-9a-f-]{36}$/i;
+const KINDS = new Set(["safety_flag", "concern", "monitoring"]);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -14,30 +16,29 @@ Deno.serve(async (req) => {
   if (!service || auth !== `Bearer ${service}`) return json({ error: "Unauthorized" }, 401);
 
   try {
-    const { flag_id } = await req.json().catch(() => ({}));
-    if (typeof flag_id !== "string" || !UUID.test(flag_id)) return json({ error: "Invalid id" }, 400);
-
-    const to = Deno.env.get("DSL_ALERT_EMAIL");
-    if (!to) {
-      console.warn("[safeguarding-alert] DSL_ALERT_EMAIL is not set");
-      return json({ sent: false, reason: "missing_recipient" });
-    }
+    const body = await req.json().catch(() => ({}));
+    const kind = body.kind as string;
+    const parentLow = body.parent_low as string | undefined;
+    const parentHigh = body.parent_high as string | undefined;
+    if (!KINDS.has(kind)) return json({ error: "Invalid kind" }, 400);
+    if (kind !== "monitoring" && (!parentLow || !UUID.test(parentLow))) return json({ error: "Invalid pair" }, 400);
 
     const supabase = createSupabaseAdmin();
-    const { data: flag } = await supabase
-      .from("safety_flags")
-      .select("id, source, status, created_at")
-      .eq("id", flag_id)
-      .maybeSingle();
-    if (!flag) return json({ sent: false, reason: "not_found" });
+    let testAccount = false;
+    if (parentLow) {
+      const ids = [parentLow, parentHigh].filter((id): id is string => !!id && UUID.test(id));
+      const { data } = await supabase.from("profiles").select("is_test_account").in("id", ids);
+      testAccount = (data ?? []).some((row) => row.is_test_account === true);
+    }
 
-    const result = await sendTemplateEmail("safeguarding_dsl_alert", to, {
-      templateData: { dashboardUrl: "https://collaborate8.com/dsl" },
-      idempotencyKey: `safeguarding-flag-${flag.id}`,
+    const result = await notifySafeguarding({
+      kind: kind as AlertKind,
+      testAccount,
+      idempotencyKey: `sg-${kind}-${parentLow ?? "monitor"}-${parentHigh ?? "monitor"}`,
     });
-    return json({ sent: result.sent });
-  } catch (e) {
-    console.error("[safeguarding-alert]", (e as Error).message);
+    return json({ ok: true, email: result.email.sent, sms: result.sms.decision });
+  } catch {
+    console.error("[safeguarding-alert] failed");
     return json({ error: "Failed" }, 500);
   }
 });

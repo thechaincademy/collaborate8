@@ -19,6 +19,8 @@ import {
 export interface NotifyInput {
   kind: AlertKind;
   testAccount: boolean;
+  /** Stable per family and kind. Do not include the hour. */
+  idempotencyKey: string;
   now?: Date;
 }
 
@@ -61,7 +63,7 @@ async function sendEmailChannel(input: NotifyInput): Promise<{ sent: number; dro
     try {
       const result = await sendTemplateEmail("safeguarding_dsl_alert", to, {
         templateData: { test: input.testAccount, kind: input.kind, subject, text },
-        idempotencyKey: `sg-${input.kind}-${input.testAccount ? "test" : "live"}-${to}-${new Date().toISOString().slice(0, 13)}`,
+        idempotencyKey: `${input.idempotencyKey}:${to}`,
       });
       if (result.sent) sent += 1;
     } catch (error) {

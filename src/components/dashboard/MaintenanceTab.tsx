@@ -17,6 +17,8 @@ import DeletedUserLabel from "@/components/DeletedUserLabel";
 import { isDeletedProfile } from "@/lib/profileDisplay";
 import { useSafeguarding } from "@/hooks/useSafeguarding";
 import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
+import { CmsGuidance } from "@/components/safeguarding/CmsGuidance";
+import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
 
 const MaintenanceTab = () => {
   const navigate = useNavigate();
@@ -329,24 +331,22 @@ const MaintenanceTab = () => {
           )}
 
           {/* Arrangement actions for managing parent (payer) */}
-          {isManaging && cards.length > 0 && (
-            <>
-              {displayArrangement && (
-                <div className="grid grid-cols-2 gap-3">
-                  <Button className="h-auto flex-col gap-2 py-4" variant="outline" onClick={() => navigate("/payment-history")}>
-                    <span className="font-medium">Payment History</span>
-                  </Button>
-                  <Button
-                    className="h-auto flex-col gap-2 py-4"
-                    variant="outline"
-                    onClick={() => navigate("/edit-payment")}
-                  >
-                    <span className="font-medium">Manage Arrangement</span>
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
+          {safety.paused ? (
+            <CmsGuidance onDownload={() => void downloadRecord()} />
+          ) : isManaging && cards.length > 0 && displayArrangement ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Button className="h-auto min-h-11 flex-col gap-2 py-4" variant="outline" onClick={() => navigate("/payment-history")}>
+                <span className="font-medium">Payment History</span>
+              </Button>
+              <Button
+                className="h-auto min-h-11 flex-col gap-2 py-4"
+                variant="outline"
+                onClick={() => navigate("/edit-payment")}
+              >
+                <span className="font-medium">Manage Arrangement</span>
+              </Button>
+            </div>
+          ) : null}
 
         </motion.div>
       )}

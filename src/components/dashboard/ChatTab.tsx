@@ -30,6 +30,7 @@ import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 import { mergeChatMessages, pendingMessageDelivery } from "@/lib/chatMessages";
 import { hideSenderReadAt } from "@/lib/safeguarding/logic";
 import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
+import { notifyIfPaused } from "@/lib/safeguarding/pausedError";
 import { useSafeguarding } from "@/hooks/useSafeguarding";
 import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 
@@ -157,7 +158,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       .single();
     setAttaching(false);
     if (error) {
-      toast.error("Could not send that attachment");
+      if (!notifyIfPaused(error)) toast.error("Could not send that attachment");
       return;
     }
     if (draft.trim()) setDraft("");
@@ -565,7 +566,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     });
     setSending(false);
     if (error) {
-      toast.error("Could not send message");
+      if (!notifyIfPaused(error)) toast.error("Could not send message");
       return;
     }
     void track("chat_message_sent", { used_suggestion: opts?.usedSuggestion ?? false, rewritten: !!opts?.original });

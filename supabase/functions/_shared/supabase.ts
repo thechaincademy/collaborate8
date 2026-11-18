@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { initEdgeSentry } from "./sentry.ts";
 
-initEdgeSentry();
+void initEdgeSentry();
 
 export function createSupabaseClient(authHeader?: string) {
   const url = Deno.env.get("SUPABASE_URL")!;

@@ -88,6 +88,12 @@ describe("Sentry scrubber", () => {
     expect(sentryReplayOnErrorSampleRate).toBe(0);
     const web = readFileSync(new URL("../src/lib/errorReporting.ts", import.meta.url), "utf8");
     const edge = readFileSync(new URL("../supabase/functions/_shared/sentry.ts", import.meta.url), "utf8");
+    const webScrub = readFileSync(new URL("../src/lib/sentryScrub.ts", import.meta.url), "utf8");
+    const edgeScrub = readFileSync(new URL("../supabase/functions/_shared/sentry-scrub.ts", import.meta.url), "utf8");
+    expect(webScrub).toBe(edgeScrub);
+    expect(edge.includes("../../../src")).toBe(false);
+    expect(edge.includes("SENTRY_DSN")).toBe(true);
+    expect(edge.includes("await import(\"npm:@sentry/deno@8.47.0\")")).toBe(true);
     expect(web.includes("sendDefaultPii: sentrySendDefaultPii")).toBe(true);
     expect(web.includes("beforeSend")).toBe(true);
     expect(web.includes("beforeBreadcrumb")).toBe(true);

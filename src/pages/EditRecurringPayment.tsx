@@ -15,6 +15,8 @@ import { useStripePayments } from "@/hooks/useStripe";
 import { toast } from "sonner";
 import { useSafeguarding } from "@/hooks/useSafeguarding";
 import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
+import { CmsGuidance } from "@/components/safeguarding/CmsGuidance";
+import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
 
 type Frequency = "Weekly" | "Monthly";
 
@@ -160,6 +162,20 @@ const EditRecurringPayment = () => {
   const amountNum = parseFloat(amount || "0");
   const step4Ready = completed[1] && completed[2] && completed[3];
 
+  if (safety.paused) {
+    return (
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card md:max-w-lg">
+        <div className="px-6 pb-24 pt-12">
+          <button aria-label="Go back" onClick={() => navigate(-1)} className="mb-6 min-h-11">
+            <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
+          </button>
+          <SafetyToolsBanner safety={safety} />
+          <CmsGuidance onDownload={() => void downloadRecord()} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-lg flex-col bg-card">
       <div className="px-6 pt-12 pb-24">
@@ -167,7 +183,6 @@ const EditRecurringPayment = () => {
           <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
         </button>
 
-        <SafetyToolsBanner safety={safety} />
         <h1 className="mb-2 text-2xl font-bold text-foreground">Set up your arrangement</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Complete each step to schedule your child maintenance payment.

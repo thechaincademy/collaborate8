@@ -196,7 +196,7 @@ export class StripePayoutProvider implements PayoutProvider {
       };
     }
 
-    const account = await tryStripe("STRIPE-ADAPTER", "accounts.create", () =>
+    const account = await tryStripe<Stripe.Account>("STRIPE-ADAPTER", "accounts.create", () =>
       stripe.accounts.create(accountParams),
     );
     return account.id;
@@ -204,7 +204,7 @@ export class StripePayoutProvider implements PayoutProvider {
 
   async createOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string): Promise<string> {
     const stripe = getStripe();
-    const link = await tryStripe("STRIPE-ADAPTER", "accountLinks.create", () =>
+    const link = await tryStripe<Stripe.AccountLink>("STRIPE-ADAPTER", "accountLinks.create", () =>
       stripe.accountLinks.create({
         account: accountId,
         refresh_url: refreshUrl,

@@ -25,8 +25,9 @@ function unmaskDocument() {
   root.classList.remove("hj-suppress");
 }
 
-/** Pause session recording while a safeguarding surface is open. */
+/** Pause session recording while a safeguarding surface is open. Runs before paint. */
 export function useSafeguardingRecording() {
+  if (typeof document !== "undefined") maskDocument();
   useEffect(() => {
     depth += 1;
     maskDocument();

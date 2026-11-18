@@ -12,9 +12,10 @@ async function findUserId(admin: ReturnType<typeof createSupabaseAdmin>, email: 
   for (let page = 1; page <= 50; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw error;
-    const hit = data.users.find((u) => u.email?.toLowerCase() === email);
+    const users = (data.users ?? []) as Array<{ id: string; email?: string | null }>;
+    const hit = users.find((u) => u.email?.toLowerCase() === email);
     if (hit) return hit.id;
-    if (data.users.length < 200) return null;
+    if (users.length < 200) return null;
   }
   return null;
 }

@@ -28,7 +28,8 @@ export function useSafeguarding(): SafeguardingState {
     fetchFamilyStatus()
       .then((status) => {
         if (cancelled) return;
-        const enabled = status.safeguardingEnabled;
+        const envOn = import.meta.env.VITE_SAFEGUARDING_ENABLED === "true";
+        const enabled = envOn && status.safeguardingEnabled;
         const paused = enabled && status.sharedToolsPaused;
         setState({
           ...status,
