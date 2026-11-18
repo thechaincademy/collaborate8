@@ -913,7 +913,10 @@ GRANT EXECUTE ON FUNCTION public.sg_caller_family_topic() TO authenticated;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'realtime') THEN
-    EXECUTE 'ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY';
+    -- On standard Supabase projects realtime.messages is owned by supabase_realtime_admin and RLS is already on.
+    IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = 'realtime.messages'::regclass) THEN
+      EXECUTE 'ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY';
+    END IF;
     EXECUTE 'GRANT SELECT ON realtime.messages TO authenticated';
     EXECUTE 'DROP POLICY IF EXISTS "sg family message broadcast" ON realtime.messages';
     -- SELECT only. There is no INSERT policy, so an authenticated client cannot send a broadcast.

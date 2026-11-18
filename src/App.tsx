@@ -76,6 +76,7 @@ import SolanaProvider from "@/components/solana/SolanaProvider";
 import SolanaPaymentAudit from "./pages/SolanaPaymentAudit";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminMonitoring from "./pages/AdminMonitoring";
 import OAuthConsent from "./pages/OAuthConsent";
 import ResetPassword from "./pages/ResetPassword";
 import InAppShell from "@/components/layout/InAppShell";
@@ -184,6 +185,7 @@ const App = () => (
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="/admin/monitoring" element={<AdminMonitoring />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <SafeguardingRecording />
