@@ -1,6 +1,6 @@
 -- Collabor8 admin analytics connections (Buffer and Clarity tokens pasted on /admin/setup).
--- NOT APPLIED. Needs Rafa's own yes before it runs on any project.
--- Rollback: NEEDS_RAFA_APPROVAL_analytics_connections_ROLLBACK.sql
+-- Applied to London (byrwtxdalhsmvktuzoya) on 18 November 2026 with Rafa's yes.
+-- Rollback: applied_analytics_connections_ROLLBACK.sql
 --
 -- The token itself is kept encrypted in Supabase Vault. This table only holds which
 -- providers are connected, a short account label, when and by whom. Only the server

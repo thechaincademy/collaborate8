@@ -1,7 +1,7 @@
 // Server-only store for analytics tokens pasted by an admin (Buffer, Clarity).
 // Tokens live encrypted in Supabase Vault behind service-role-only functions
-// (supabase/manual/NEEDS_RAFA_APPROVAL_analytics_connections.sql). Until that
-// migration is applied every helper here returns "not ready" and callers fall
+// (supabase/manual/applied_analytics_connections.sql, applied to London). If the
+// store is ever missing, every helper here returns "not ready" and callers fall
 // back to the env secrets. Never logs or returns token values.
 
 export type PastedProvider = "buffer" | "clarity";
