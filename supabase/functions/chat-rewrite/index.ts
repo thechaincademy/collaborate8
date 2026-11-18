@@ -3,6 +3,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
+import { callVertex, vertexConfigured } from "../_shared/vertex.ts";
 
 const CALM_CHECK_REQUIRES_PREMIUM = (Deno.env.get("CALM_CHECK_REQUIRES_PREMIUM") ?? "true").trim().toLowerCase() !== "false";
 
@@ -120,10 +121,13 @@ const RETRY_SCHEMA = {
 const SEND_HARD_STOP_MS = 2400;
 const SEND_DEADLINE_MS = 2300;
 const SEND_RETRY_MIN_LEFT_MS = 700;
-const SEND_MODEL = "openai/gpt-5.6-luna";
-// OpenAI models take max_completion_tokens; reasoning off keeps the first call near flash-lite latency.
+const SEND_MODEL = "vertex";
+// max_completion_tokens maps to maxOutputTokens; reasoning "none" maps to the minimal thinking level.
 const sendModel = (maxTokens: number) => ({ model: SEND_MODEL, max_completion_tokens: maxTokens, reasoning_effort: "none" });
-const SEND_FIRST_CALLS = 2; // parallel first calls; the first that passes the checks wins, the rest are aborted.
+// Parallel first calls; the first that passes the checks wins, the rest are aborted.
+// Default 1 on Vertex: a new project's Gemini quota refuses concurrent calls with 429, so 2 doubled the failures.
+// Set CHAT_REWRITE_SEND_PARALLEL=2 once the Vertex quota is raised.
+const SEND_FIRST_CALLS = Math.min(3, Math.max(1, Number(Deno.env.get("CHAT_REWRITE_SEND_PARALLEL") ?? "1") || 1));
 
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
@@ -968,17 +972,16 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
 const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) =>
   console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome, reasons, attempts, ms: Date.now() - started, ...timing }));
 
-const callGateway = (apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) =>
-  fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(body),
-    signal,
-  });
+// Vertex AI London (europe-west2). The model is VERTEX_MODEL (default gemini-3.5-flash);
+// the request and response keep the chat-completions shape used below.
+const callGateway = (_apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) => {
+  const { model: _model, ...rest } = body;
+  return callVertex(rest, signal);
+};
 
 const gatewayError = (resp: Response) => {
   if (resp.status === 429) return json({ error: "Too many requests - please try again in a moment." }, 429);
-  if (resp.status === 402) return json({ error: "AI credits have run out." }, 402);
+  if (resp.status === 402 || resp.status === 403) return json({ error: "The writing aid is unavailable right now." }, 503);
   if (!resp.ok) return json({ error: "The writing aid is unavailable right now." }, resp.status >= 500 ? 502 : resp.status);
   return null;
 };
@@ -1023,8 +1026,8 @@ Deno.serve(async (req) => {
       if (denied) return denied;
       return json({ error: "Missing draft" }, 400);
     }
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
+    const apiKey = "vertex";
+    if (!vertexConfigured()) {
       const denied = await premiumCheck;
       if (denied) return denied;
       return json({ error: "AI not configured" }, 500);
@@ -1209,7 +1212,6 @@ Deno.serve(async (req) => {
     }
 
     const resp = await callGateway(apiKey, {
-      model: "openai/gpt-6-astra",
       reasoning_effort: "low",
       response_format: { type: "json_object" },
       messages: [

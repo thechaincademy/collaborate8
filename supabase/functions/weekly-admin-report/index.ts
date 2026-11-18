@@ -20,8 +20,24 @@ async function readSubjectPrefix(req: Request): Promise<string> {
   return typeof raw === "string" ? raw.trim().slice(0, 40).trim() : "";
 }
 
+// Called only by pg_cron with the project's service key. Deployed with verify_jwt = false because
+// new projects use non-JWT secret keys, so the bearer is checked here instead (constant time).
+function isServiceCaller(req: Request): boolean {
+  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const got = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!expected || got.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
+  return diff === 0;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!isServiceCaller(req)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const supabase = createSupabaseAdmin();

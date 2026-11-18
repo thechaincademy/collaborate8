@@ -25,8 +25,6 @@ interface MonitoringSummary {
   alert_deliveries_7d: { sent_test: number; sent_real: number; failed_test: number; failed_real: number; skipped: number };
   recent_deliveries: Delivery[];
   alerts_not_dispatched_7d: number;
-  concerns: { total: number; last_7d: number };
-  paused_families: number;
   safeguarding_global_on: boolean;
   scheduled_jobs_24h: { runs: number; failed: number };
   edge_calls_from_db_6h: { total: number; errors: number };
@@ -152,10 +150,8 @@ const AdminMonitoring = () => {
           <CardHeader className="p-4 pb-2"><CardTitle className="text-base">Safeguarding</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-2 gap-3 p-4 pt-0 sm:grid-cols-4">
             <Stat label="Feature switch" value={data?.safeguarding_global_on ? "On" : "Off"} />
-            <Stat label="Concerns (7 days)" value={data?.concerns.last_7d ?? 0} />
-            <Stat label="Concerns (all)" value={data?.concerns.total ?? 0} />
-            <Stat label="Paused families" value={data?.paused_families ?? 0} />
           </CardContent>
+          <p className="px-4 pb-4 text-xs text-muted-foreground">Flags, concerns and answers are only shown to the safeguarding lead.</p>
         </Card>
 
         <Card>

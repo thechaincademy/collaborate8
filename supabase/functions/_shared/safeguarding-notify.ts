@@ -82,6 +82,15 @@ interface DeliveryRow {
 }
 
 /** Records delivery metadata only. No message text, no full address, no phone number. */
+// Provider errors can echo the recipient address or a phone number. Keep only a
+// short, identity-free reason in the delivery log and console.
+export function safeReason(message: string | null | undefined): string {
+  return String(message ?? "error")
+    .replace(/[^\s@]+@[^\s@]+/g, "[email]")
+    .replace(/\+?\d[\d\s()-]{6,}\d/g, "[number]")
+    .slice(0, 120);
+}
+
 async function recordDelivery(row: DeliveryRow) {
   try {
     await createSupabaseAdmin().from("sg_alert_deliveries").insert(row);
@@ -124,7 +133,7 @@ async function sendEmailChannel(input: NotifyInput, cfg: RuntimeConfig): Promise
         reason = "recipient_suppressed";
       }
     } catch (error) {
-      reason = (error as Error).message.slice(0, 120);
+      reason = safeReason((error as Error).message);
       console.warn("[safeguarding-notify] email failed", reason);
     }
     await recordDelivery({

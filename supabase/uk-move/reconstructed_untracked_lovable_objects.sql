@@ -1,3 +1,5 @@
+-- SUPERSEDED 18 Nov 2026: replaced by supabase/migrations/20261118110000_baseline_missing_live_objects.sql
+-- (exact live DDL read from the catalog). Kept for history only. Do not apply.
 -- UK adaptation: objects present on the live project (per src/integrations/supabase/types.ts)
 -- but never committed as migrations by Lovable. Reconstructed from the generated types.
 -- Column types/nullability follow types.ts; defaults, indexes and RLS policies are best guesses.
