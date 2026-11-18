@@ -17,13 +17,7 @@ const mightHaveStoredSession = () => {
     // Storage can be unavailable in private browsing or embedded contexts.
   }
 
-  // Embedded Lovable previews can restore a session from the editor broker,
-  // even when this origin has no local copy yet.
-  const previewZones = ["lovableproject.com", "lovableproject-dev.com", "lovable.app", "gpt-eng.com", "gptengineer.run"];
-  const isPreview = previewZones.some((zone) =>
-    window.location.hostname === zone || window.location.hostname.endsWith(`.${zone}`),
-  );
-  return isPreview && window.parent !== window;
+  return false;
 };
 
 const RedirectIfSignedIn = ({ children }: { children: ReactNode }) => {

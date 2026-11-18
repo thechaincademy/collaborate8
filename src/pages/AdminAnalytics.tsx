@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 const ALLOWED = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 
@@ -371,7 +372,7 @@ const AdminAnalytics = () => {
     : [];
 
   return (
-    <>
+    <AdminLayout>
       <Helmet>
         <title>Analytics - Collabor8</title>
         <meta name="robots" content="noindex, nofollow" />
@@ -621,7 +622,7 @@ const AdminAnalytics = () => {
           </div>
         </Section>
       </div>
-    </>
+    </AdminLayout>
   );
 };
 

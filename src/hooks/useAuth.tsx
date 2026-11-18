@@ -2,6 +2,7 @@ import { getAttribution } from "@/lib/attribution";
 import { useState, useEffect, createContext, useContext } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { clearProfileCache } from "@/hooks/useProfile";
+import { confirmRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
@@ -55,7 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
       options: {
-        emailRedirectTo: "https://collaborate8.com/dashboard",
+        emailRedirectTo: confirmRedirect(),
         data: { ...getAttribution(), ...metadata },
       },
     });

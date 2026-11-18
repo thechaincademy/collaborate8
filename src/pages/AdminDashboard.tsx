@@ -15,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 interface TabRow {
   name: string;
@@ -120,7 +121,7 @@ const AdminDashboard = () => {
   const maxClicks = Math.max(1, ...(summary?.tabs ?? []).map((t) => t.clicks));
 
   return (
-    <>
+    <AdminLayout>
       <Helmet>
         <title>Founder dashboard - Collabor8</title>
         <meta name="robots" content="noindex" />
@@ -296,7 +297,7 @@ const AdminDashboard = () => {
           </>
         )}
       </div>
-    </>
+    </AdminLayout>
   );
 };
 

@@ -77,7 +77,7 @@ import SolanaPaymentAudit from "./pages/SolanaPaymentAudit";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminMonitoring from "./pages/AdminMonitoring";
-import OAuthConsent from "./pages/OAuthConsent";
+import AdminSetup from "./pages/AdminSetup";
 import ResetPassword from "./pages/ResetPassword";
 import InAppShell from "@/components/layout/InAppShell";
 import NotFound from "./pages/NotFound";
@@ -182,10 +182,10 @@ const App = () => (
               <Route path="/dsl" element={<ProtectedRoute><DslReview /></ProtectedRoute>} />
               {import.meta.env.DEV ? <Route path="/internal/safeguarding-preview" element={<SafeguardingPreview />} /> : null}
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/monitoring" element={<AdminMonitoring />} />
+              <Route path="/admin/setup" element={<AdminSetup />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <SafeguardingRecording />

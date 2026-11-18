@@ -370,7 +370,7 @@ var send_chat_message_default = defineTool9({
 });
 
 // src/lib/mcp/index.ts
-var projectRef = "eycpkzbjylzzynkfggis";
+var projectRef = "byrwtxdalhsmvktuzoya";
 var mcp_default = defineMcp({
   name: "medi8-your-connection-hub",
   title: "Collabor8: Your Connection Hub",

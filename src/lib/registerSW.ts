@@ -1,16 +1,11 @@
 // Registers the app service worker (generated at /sw.js by vite-plugin-pwa).
-// Never registers in dev, inside iframes, or on Lovable preview hosts.
+// Never registers in dev or inside iframes.
 // Supports ?sw=off as a kill switch to unregister.
-
-const REFUSED_HOSTS = ["lovableproject.com", "lovableproject-dev.com", "beta.lovable.dev"];
 
 const isRefused = () => {
   if (!import.meta.env.PROD) return true;
   if (typeof window === "undefined") return true;
   if (window.self !== window.top) return true;
-  const host = window.location.hostname;
-  if (host.startsWith("id-preview--") || host.startsWith("preview--")) return true;
-  if (REFUSED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) return true;
   return false;
 };
 

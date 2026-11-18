@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { resetRedirect } from "@/lib/authRedirect";
 import { isEmailRateLimit, EMAIL_RATE_LIMIT_MESSAGE } from "@/lib/authErrors";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,7 +25,7 @@ const ForgotPassword = () => {
   const sendReset = async () => {
     setIsLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: resetRedirect(),
     });
     setIsLoading(false);
     if (error) {

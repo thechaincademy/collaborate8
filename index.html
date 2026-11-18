@@ -87,7 +87,13 @@
           ad_user_data: state, ad_personalization: state
         });
       };
+      // Google Analytics and Ads tags only load on the live site, so test sites never mix into live data.
+      window.c8IsLiveHost = function () {
+        var h = window.location.hostname;
+        return h === 'collaborate8.com' || h === 'www.collaborate8.com';
+      };
       window.c8LoadGtag = function () {
+        if (!window.c8IsLiveHost()) return;
         if (window.c8GtagLoaded || (window.c8IsInternal && window.c8IsInternal())) return;
         window.c8GtagLoaded = true;
         var s = document.createElement('script');

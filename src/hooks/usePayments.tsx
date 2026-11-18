@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { toast } from "sonner";
 import type { DisplayProfile } from "@/lib/profileDisplay";
 
 export interface Payment {
@@ -39,86 +38,9 @@ export const usePayments = () => {
     setLoading(false);
   };
 
-  const initiatePayment = async (params: {
-    institutionId: string;
-    amount: number;
-    payeeName: string;
-    payeeAccountNumber: string;
-    payeeSortCode: string;
-    payeeId: string;
-    type?: string;
-    reference?: string;
-    relatedExpenseId?: string;
-    relatedArrangementId?: string;
-  }) => {
-    if (!user) {
-      toast.error("Please log in first");
-      return null;
-    }
-
-    setLoading(true);
-    const idempotencyKey = crypto.randomUUID();
-    const callbackUrl = `${window.location.origin}/dashboard?payment-callback=true`;
-
-    try {
-      const { data, error } = await supabase.functions.invoke("yapily-payments", {
-        body: {
-          action: "create-payment-auth",
-          idempotencyKey,
-          callbackUrl,
-          ...params,
-        },
-      });
-      if (error) throw error;
-      return { ...data, idempotencyKey };
-    } catch (e: any) {
-      toast.error("Failed to initiate payment");
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const executePayment = async (consentToken: string, idempotencyKey: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("yapily-payments", {
-        body: {
-          action: "execute-payment",
-          consentToken,
-          idempotencyKey,
-        },
-      });
-      if (error) throw error;
-      toast.success("Payment submitted!");
-      await fetchPayments();
-      return data;
-    } catch (e: any) {
-      toast.error("Payment failed");
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkPaymentStatus = async (paymentId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke("yapily-payments", {
-        body: { action: "get-status", paymentId },
-      });
-      if (error) throw error;
-      return data;
-    } catch {
-      return null;
-    }
-  };
-
   return {
     payments,
     loading,
     fetchPayments,
-    initiatePayment,
-    executePayment,
-    checkPaymentStatus,
   };
 };

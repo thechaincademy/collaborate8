@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { consumeConfirmLinkError } from "@/lib/confirmLinkError";
 import { readLastSignupEmail } from "@/lib/lastSignupEmail";
-import { CONFIRM_REDIRECT } from "@/pages/CheckEmail";
+import { confirmRedirect } from "@/lib/authRedirect";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
 import appScreenshot3 from "@/assets/app-screenshot-3-hd.png";
@@ -43,7 +43,7 @@ const Login = () => {
     if (!target) return toast.error("Please enter your email address.");
     setResendSending(true);
     setResendMsg("");
-    const { error } = await supabase.auth.resend({ type: "signup", email: target, options: { emailRedirectTo: CONFIRM_REDIRECT } });
+    const { error } = await supabase.auth.resend({ type: "signup", email: target, options: { emailRedirectTo: confirmRedirect() } });
     setResendSending(false);
     if (error) {
       const isRate = isEmailRateLimit(error);

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberLastSignupEmail } from "@/lib/lastSignupEmail";
 
-export const CONFIRM_REDIRECT = "https://collaborate8.com/dashboard";
+import { confirmRedirect } from "@/lib/authRedirect";
 
 const CheckEmail = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const CheckEmail = () => {
   const resend = async () => {
     if (!email) return toast.error("Please sign up again with your email address.");
     setSending(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: CONFIRM_REDIRECT } });
+    const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: confirmRedirect() } });
     setSending(false);
     if (error) return toast.error(isEmailRateLimit(error) ? EMAIL_RATE_LIMIT_MESSAGE : "We couldn't resend the email. Please try again in a minute.");
     toast.success("Confirmation email sent");

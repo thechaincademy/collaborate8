@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import AdminLayout from "@/components/admin/AdminLayout";
+import SystemHealthSection from "@/components/admin/SystemHealthSection";
 
 interface Delivery {
   created_at: string;
@@ -91,7 +93,7 @@ const AdminMonitoring = () => {
   const deliveries = data?.alert_deliveries_7d;
 
   return (
-    <>
+    <AdminLayout>
       <Helmet>
         <title>Monitoring - Collabor8</title>
         <meta name="robots" content="noindex" />
@@ -106,8 +108,7 @@ const AdminMonitoring = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => void load()} disabled={loading}>Refresh</Button>
-            <Button asChild variant="outline"><Link to="/admin">Dashboard</Link></Button>
-          </div>
+                      </div>
         </div>
 
         <Card>
@@ -170,8 +171,10 @@ const AdminMonitoring = () => {
             {data?.last_backup ? `Last backup ${ukTime(data.last_backup.backup_at)} (${data.last_backup.source})` : "Not set up yet. Daily backups come with the Supabase Pro plan."}
           </CardContent>
         </Card>
+
+        {data && <SystemHealthSection />}
       </div>
-    </>
+    </AdminLayout>
   );
 };
 

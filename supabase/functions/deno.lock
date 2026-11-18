@@ -10,6 +10,7 @@
     "npm:@supabase/supabase-js@^2.91.0": "2.119.0",
     "npm:@types/react@18.3.1": "18.3.1",
     "npm:jose@5.9.6": "5.9.6",
+    "npm:postgres@3.4.5": "3.4.5",
     "npm:react@18.3.1": "18.3.1",
     "npm:web-push@3.6.7": "3.6.7",
     "npm:zod@3.23.8": "3.23.8",
@@ -1517,6 +1518,9 @@
         "picocolors",
         "source-map-js"
       ]
+    },
+    "postgres@3.4.5": {
+      "integrity": "sha512-cDWgoah1Gez9rN3H4165peY9qfpEo+SA61oQv65O3cRUE1pOEoJWwddwcqKE8XZYjbblOJlYDlLV4h67HrEVDg=="
     },
     "prismjs@1.29.0": {
       "integrity": "sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q=="
