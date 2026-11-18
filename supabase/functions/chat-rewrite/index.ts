@@ -2,7 +2,8 @@
 // @ts-nocheck
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
-import { getUserFromRequest } from "../_shared/supabase.ts";
+import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts";
+import { callVertex, vertexConfigured } from "../_shared/vertex.ts";
 
 const CALM_CHECK_REQUIRES_PREMIUM = (Deno.env.get("CALM_CHECK_REQUIRES_PREMIUM") ?? "true").trim().toLowerCase() !== "false";
 
@@ -16,12 +17,214 @@ const unauthorized = () =>
 
 // Signed-in only (no Premium gate): same 401 body as requirePremium.
 const requireSignedIn = async (req: Request): Promise<Response | null> => {
-  try {
-    await getUserFromRequest(req);
-    return null;
-  } catch {
-    return unauthorized();
+  const gate = await signedInGate(req);
+  return gate.denied;
+};
+
+type AuthGate = { userId: string | null; denied: Response | null };
+type CachedGate = { userId: string | null; kind: "ok" | "unauth" | "premium_required" | "unavailable"; exp: number };
+const gateCache = new Map<string, CachedGate>();
+
+const headerKey = async (req: Request): Promise<string> => {
+  const raw = req.headers.get("Authorization") ?? "";
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+};
+
+const pruneMaps = () => {
+  const now = Date.now();
+  for (const [k, v] of gateCache) if (v.exp <= now) gateCache.delete(k);
+  for (const [k, v] of jobs) if (v.expires <= now) jobs.delete(k);
+};
+
+const signedInGate = async (req: Request): Promise<AuthGate> => {
+  pruneMaps();
+  const key = "auth:" + await headerKey(req);
+  const hit = gateCache.get(key);
+  if (hit && hit.exp > Date.now()) {
+    if (hit.kind === "unauth" || !hit.userId) return { userId: null, denied: unauthorized() };
+    return { userId: hit.userId, denied: null };
   }
+  try {
+    const user = await getUserFromRequest(req);
+    gateCache.set(key, { userId: user.id, kind: "ok", exp: Date.now() + GATE_CACHE_MS });
+    return { userId: user.id, denied: null };
+  } catch {
+    gateCache.set(key, { userId: null, kind: "unauth", exp: Date.now() + GATE_CACHE_MS });
+    return { userId: null, denied: unauthorized() };
+  }
+};
+
+const premiumGate = async (req: Request): Promise<Response | null> => {
+  if (!CALM_CHECK_REQUIRES_PREMIUM) return null;
+  const key = "prem:" + await headerKey(req);
+  const hit = gateCache.get(key);
+  if (hit && hit.exp > Date.now()) {
+    if (hit.kind === "ok") return null;
+    if (hit.kind === "unauth") return unauthorized();
+    if (hit.kind === "premium_required") return json({ error: "premium_required", feature: "rewrite" }, 402);
+    return json({ error: "entitlement_unavailable" }, 503);
+  }
+  const denied = await requirePremium(req, "rewrite");
+  let kind: CachedGate["kind"] = "unavailable";
+  if (!denied) kind = "ok";
+  else if (denied.status === 401) kind = "unauth";
+  else if (denied.status === 402) kind = "premium_required";
+  else if (denied.status === 503) kind = "unavailable";
+  gateCache.set(key, { userId: null, kind, exp: Date.now() + GATE_CACHE_MS });
+  return denied;
+};
+
+type JobRecord = {
+  id: string;
+  userId: string;
+  status: "pending" | "done" | "failed";
+  needs_rewrite?: boolean;
+  rewrite?: string | null;
+  created: number;
+  etaAt: number;
+  expires: number;
+};
+const jobs = new Map<string, JobRecord>();
+
+const remainingEta = (job: JobRecord): number => {
+  if (Date.now() > job.etaAt) job.etaAt = Date.now() + PENDING_ETA_EXTEND_SECONDS * 1000;
+  return Math.max(1, Math.ceil((job.etaAt - Date.now()) / 1000));
+};
+
+const logStoreError = (outcome: string, code?: string) =>
+  console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome, code: code ?? null }));
+
+const purgeExpiredJobs = async () => {
+  const { error } = await createSupabaseAdmin().from("calm_check_jobs").delete().lte("expires_at", new Date().toISOString());
+  if (error) logStoreError("job_cleanup_error", error.code);
+};
+
+const persistJob = async (job: JobRecord, insert: boolean) => {
+  jobs.set(job.id, job);
+  const row = {
+    id: job.id,
+    user_id: job.userId,
+    status: job.status,
+    needs_rewrite: job.needs_rewrite ?? null,
+    rewrite: job.rewrite ?? null,
+    eta_seconds: Math.max(1, Math.ceil((job.etaAt - Date.now()) / 1000)),
+    created_at: new Date(job.created).toISOString(),
+    expires_at: new Date(job.expires).toISOString(),
+  };
+  const admin = createSupabaseAdmin();
+  const { error } = insert
+    ? await admin.from("calm_check_jobs").insert(row)
+    : await admin.from("calm_check_jobs").update({
+      status: row.status,
+      needs_rewrite: row.needs_rewrite,
+      rewrite: row.rewrite,
+      eta_seconds: row.eta_seconds,
+    }).eq("id", job.id).eq("user_id", job.userId);
+  if (error) logStoreError(insert ? "job_insert_error" : "job_update_error", error.code);
+};
+
+const jobFromRow = (data: { id: string; user_id: string; status: string; needs_rewrite?: boolean | null; rewrite?: string | null; eta_seconds?: number | null; created_at: string; expires_at: string }): JobRecord => {
+  const created = new Date(data.created_at).getTime();
+  const expires = new Date(data.expires_at).getTime();
+  const etaAt = data.status === "pending"
+    ? Date.now() + Math.max(1, Number(data.eta_seconds ?? PENDING_ETA_SECONDS)) * 1000
+    : created;
+  return {
+    id: data.id,
+    userId: data.user_id,
+    status: data.status as JobRecord["status"],
+    needs_rewrite: data.needs_rewrite === true,
+    rewrite: typeof data.rewrite === "string" ? data.rewrite : null,
+    created,
+    etaAt,
+    expires,
+  };
+};
+
+const loadJob = async (jobId: string, userId: string): Promise<JobRecord | null> => {
+  const { data, error } = await createSupabaseAdmin()
+    .from("calm_check_jobs")
+    .select("id, user_id, status, needs_rewrite, rewrite, eta_seconds, created_at, expires_at")
+    .eq("id", jobId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) {
+    logStoreError("job_read_error", error.code);
+  } else if (data && new Date(data.expires_at).getTime() > Date.now()) {
+    const job = jobFromRow(data);
+    jobs.set(job.id, job);
+    return job;
+  }
+  const mem = jobs.get(jobId);
+  if (mem && mem.userId === userId && mem.expires > Date.now()) return mem;
+  return null;
+};
+
+const createJob = async (userId: string): Promise<JobRecord> => {
+  void purgeExpiredJobs();
+  const now = Date.now();
+  const job: JobRecord = {
+    id: crypto.randomUUID(),
+    userId,
+    status: "pending",
+    created: now,
+    etaAt: now + PENDING_ETA_SECONDS * 1000,
+    expires: now + JOB_TTL_MS,
+  };
+  await persistJob(job, true);
+  return job;
+};
+
+const discardJob = async (job: JobRecord) => {
+  jobs.delete(job.id);
+  const { error } = await createSupabaseAdmin()
+    .from("calm_check_jobs")
+    .delete()
+    .eq("id", job.id)
+    .eq("user_id", job.userId)
+    .eq("status", "pending");
+  if (error) logStoreError("job_discard_error", error.code);
+};
+
+const failStaleJob = async (job: JobRecord): Promise<boolean> => {
+  if (job.status !== "pending") return false;
+  if (Date.now() - job.created < STALE_PENDING_MS) return false;
+  job.status = "failed";
+  await persistJob(job, false);
+  console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome: "pending_stale_failed", ms: Date.now() - job.created }));
+  return true;
+};
+
+const settleJobFromResponse = async (job: JobRecord, resp: Response) => {
+  if (job.status !== "pending") return;
+  try {
+    if (resp.status !== 200) {
+      job.status = "failed";
+    } else {
+      const body = await resp.clone().json().catch(() => ({}));
+      if (body && body.status === "failed") {
+        job.status = "failed";
+      } else {
+        job.status = "done";
+        job.needs_rewrite = body?.needs_rewrite === true;
+        job.rewrite = typeof body?.rewrite === "string" ? body.rewrite : null;
+      }
+    }
+  } catch {
+    job.status = "failed";
+  }
+  await persistJob(job, false);
+};
+
+const waitUntil = (p: Promise<unknown>) => {
+  try {
+    const ev = (globalThis as { EdgeRuntime?: { waitUntil?: (x: Promise<unknown>) => void } }).EdgeRuntime;
+    ev?.waitUntil?.(p);
+  } catch {
+    // Isolate keeps running the promise anyway while it is still alive.
+  }
+  void p.catch(() => {});
 };
 
 const SYSTEM = `You are a private writing aid for separated co-parents. Rewrite the user's draft message to their co-parent.
@@ -115,15 +318,24 @@ const RETRY_SCHEMA = {
   },
 };
 
-// mode:send time budget. The app gives up at about 4s; network and cold start add up to ~1.3s on the client,
-// so the server answers by 2.4s at the latest. Model calls are aborted at 2.3s; a retry starts only with 700ms left.
-const SEND_HARD_STOP_MS = 2400;
-const SEND_DEADLINE_MS = 2300;
+// mode:send time budget. The app waits about 4s for a first answer, so the server
+// replies by about 3.3s with either a rewrite or a pending job. Vertex work then
+// continues in the background for up to about 30s from the start of the request.
+const SEND_HARD_STOP_MS = 3300;
+const SEND_BACKGROUND_MS = 30000;
 const SEND_RETRY_MIN_LEFT_MS = 700;
-const SEND_MODEL = "openai/gpt-5.6-luna";
-// OpenAI models take max_completion_tokens; reasoning off keeps the first call near flash-lite latency.
+const PENDING_ETA_SECONDS = 12;
+const PENDING_ETA_EXTEND_SECONDS = 8;
+const JOB_TTL_MS = 600000;
+const STALE_PENDING_MS = 35000;
+const GATE_CACHE_MS = 30000;
+const SEND_MODEL = "vertex";
+// max_completion_tokens maps to maxOutputTokens; reasoning "none" maps to the minimal thinking level.
 const sendModel = (maxTokens: number) => ({ model: SEND_MODEL, max_completion_tokens: maxTokens, reasoning_effort: "none" });
-const SEND_FIRST_CALLS = 2; // parallel first calls; the first that passes the checks wins, the rest are aborted.
+// Parallel first calls; the first that passes the checks wins, the rest are aborted.
+// Default 1 on Vertex: a new project's Gemini quota refuses concurrent calls with 429, so 2 doubled the failures.
+// Set CHAT_REWRITE_SEND_PARALLEL=2 once the Vertex quota is raised.
+const SEND_FIRST_CALLS = Math.min(3, Math.max(1, Number(Deno.env.get("CHAT_REWRITE_SEND_PARALLEL") ?? "1") || 1));
 
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
@@ -968,17 +1180,39 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
 const logSend = (outcome: string, reasons: string[], attempts: number, started: number, timing: Record<string, number> = {}) =>
   console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome, reasons, attempts, ms: Date.now() - started, ...timing }));
 
-const callGateway = (apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) =>
-  fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(body),
-    signal,
-  });
+// Vertex AI London (europe-west2). The model is VERTEX_MODEL (default gemini-3.5-flash);
+// the request and response keep the chat-completions shape used below.
+// Vertex gemini-3.5-flash runs on Google's shared capacity, which answers 429 at busy moments.
+// Retry a 429 quickly (150-300ms jitter) inside the 3.3s first-answer window, then with
+// exponential backoff, only while the remaining time budget allows another call.
+const RETRY_429_MAX = 12;
+const RETRY_MIN_CALL_MS = 900; // a retry needs at least this much time left after the wait
+const abortableSleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, reject) => {
+  if (signal?.aborted) return reject(new Error("aborted"));
+  const t = setTimeout(() => { signal?.removeEventListener("abort", onAbort); resolve(); }, ms);
+  const onAbort = () => { clearTimeout(t); reject(new Error("aborted")); };
+  signal?.addEventListener("abort", onAbort, { once: true });
+});
+const retryWaitMs = (i: number, startedAt: number) => {
+  if (Date.now() - startedAt < SEND_HARD_STOP_MS) return 150 + Math.floor(Math.random() * 151);
+  return Math.min(8000, 400 * Math.pow(2, Math.max(0, i - 2))) + Math.floor(Math.random() * 250);
+};
+const callGateway = async (_apiKey: string, body: Record<string, unknown>, signal?: AbortSignal, deadline?: number, startedAt: number = Date.now()) => {
+  const { model: _model, ...rest } = body;
+  let resp = await callVertex(rest, signal);
+  for (let i = 0; i < RETRY_429_MAX && resp.status === 429; i++) {
+    const wait = retryWaitMs(i, startedAt);
+    if (deadline !== undefined && deadline - Date.now() < wait + RETRY_MIN_CALL_MS) break;
+    try { await resp.body?.cancel(); } catch { /* ignore */ }
+    await abortableSleep(wait, signal);
+    resp = await callVertex(rest, signal);
+  }
+  return resp;
+};
 
 const gatewayError = (resp: Response) => {
   if (resp.status === 429) return json({ error: "Too many requests - please try again in a moment." }, 429);
-  if (resp.status === 402) return json({ error: "AI credits have run out." }, 402);
+  if (resp.status === 402 || resp.status === 403) return json({ error: "The writing aid is unavailable right now." }, 503);
   if (!resp.ok) return json({ error: "The writing aid is unavailable right now." }, resp.status >= 500 ? 502 : resp.status);
   return null;
 };
@@ -988,7 +1222,7 @@ Deno.serve(async (req) => {
   const started = Date.now();
   try {
     const body = await req.json().catch(() => ({}));
-    const { draft, mode } = body ?? {};
+    const { draft, mode, action, job_id } = body ?? {};
 
     // Status mode: no draft, no AI call, no logging, no DB writes. Auth is always checked.
     if (mode === "status") {
@@ -1000,18 +1234,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    // send: signed-in check first (no model call before the user is confirmed), then the Premium check runs
-    // alongside the model calls; its answer is awaited before any response, so the 402 gate still comes first.
-    // Any other mode: always Premium, before anything else.
+    // Poll a pending calm check. Auth is required; the job must belong to this user.
+    // Nothing here logs or stores the original draft.
+    if (mode === "result" || action === "result") {
+      const gate = await signedInGate(req);
+      if (gate.denied) return gate.denied;
+      if (typeof job_id !== "string" || !job_id) return json({ error: "Missing job_id" }, 400);
+      if (!gate.userId) return unauthorized();
+      pruneMaps();
+      const job = await loadJob(job_id, gate.userId);
+      if (!job) return json({ status: "unknown", error: "not_found" }, 404);
+      if (await failStaleJob(job)) return json({ status: "failed", job_id: job.id });
+      if (job.status === "pending") {
+        const eta = remainingEta(job);
+        await persistJob(job, false);
+        return json({ status: "pending", job_id: job.id, eta_seconds: eta });
+      }
+      if (job.status === "failed") return json({ status: "failed", job_id: job.id });
+      return json({ status: "done", job_id: job.id, needs_rewrite: job.needs_rewrite === true, rewrite: job.rewrite ?? null });
+    }
+
+    // send: signed-in and Premium checks run in parallel with the Vertex call. Their
+    // answers are awaited before any response, so a 401/402/503 still comes first and
+    // the model reply is discarded. Other modes: always Premium, before anything else.
     const timing: Record<string, number> = {};
+    let authP: Promise<AuthGate> | null = null;
     let premiumCheck: Promise<Response | null> = Promise.resolve(null);
     if (mode === "send") {
-      const signedOut = await requireSignedIn(req);
-      timing.auth_ms = Date.now() - started;
-      if (signedOut) return signedOut;
+      const a0 = Date.now();
+      authP = signedInGate(req).then((g) => { timing.auth_ms = Date.now() - a0; return g; });
       if (CALM_CHECK_REQUIRES_PREMIUM) {
         const p0 = Date.now();
-        premiumCheck = requirePremium(req, "rewrite").then((d) => { timing.premium_ms = Date.now() - p0; return d; });
+        premiumCheck = premiumGate(req).then((d) => { timing.premium_ms = Date.now() - p0; return d; });
       }
     } else {
       const denied = await requirePremium(req, "rewrite");
@@ -1019,20 +1273,28 @@ Deno.serve(async (req) => {
     }
 
     if (!draft || typeof draft !== "string" || draft.length > 4000) {
+      if (authP) {
+        const gate = await authP;
+        if (gate.denied) return gate.denied;
+      }
       const denied = await premiumCheck;
       if (denied) return denied;
       return json({ error: "Missing draft" }, 400);
     }
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
+    const apiKey = "vertex";
+    if (!vertexConfigured()) {
+      if (authP) {
+        const gate = await authP;
+        if (gate.denied) return gate.denied;
+      }
       const denied = await premiumCheck;
       if (denied) return denied;
       return json({ error: "AI not configured" }, 500);
     }
 
     if (mode === "send") {
-      const pass = { needs_rewrite: false, rewrite: null };
-      const deadline = started + SEND_DEADLINE_MS;
+      const pass = { status: "done", needs_rewrite: false, rewrite: null };
+      const deadline = started + SEND_BACKGROUND_MS;
       // One controller for every model call in this request. It is aborted at the deadline, at the hard stop
       // and when the response is sent, so no fetch or body read outlives the cap.
       const sendCtrl = new AbortController();
@@ -1049,7 +1311,7 @@ Deno.serve(async (req) => {
       const runSend = async (): Promise<Response> => {
         const timed = async (payload: Record<string, unknown>, signal: AbortSignal = sendCtrl.signal) => {
           if (signal.aborted) throw new Error("timeout");
-          return await callGateway(apiKey, payload, signal);
+          return await callGateway(apiKey, payload, signal, deadline, started);
         };
         const firstMessages = [
           { role: "system", content: SEND_SYSTEM },
@@ -1118,9 +1380,12 @@ Deno.serve(async (req) => {
         sendCtrl.signal.removeEventListener("abort", onAbort);
         if (first.kind === "timeout") {
           log("fallback", ["timeout"], 1);
-          return json(pass);
+          return json({ status: "failed" });
         }
-        if (first.kind === "error") return first.resp;
+        if (first.kind === "error") {
+          log("fallback", ["busy"], 1);
+          return json({ status: "failed" });
+        }
         if (first.kind === "parse") {
           log("fallback", ["parse"], 1);
           return json(pass);
@@ -1162,6 +1427,7 @@ Deno.serve(async (req) => {
           } catch (e) {
             const reason = e instanceof Error && e.message.startsWith("retry_") ? e.message : "retry_timeout";
             log("fallback", [reason, ...result.codes], attempts);
+            if (reason === "retry_timeout" || reason === "retry_http") return json({ status: "failed" });
             return json(pass);
           }
           if (result.codes.length) {
@@ -1174,42 +1440,94 @@ Deno.serve(async (req) => {
           return json(pass);
         }
         log("rewrite", [], attempts);
-        return json({ needs_rewrite: true, rewrite });
+        return json({ status: "done", needs_rewrite: true, rewrite });
       };
-      // Hard stop: whatever happens, answer by the deadline so the app never waits past its own limit.
-      let hardTimer: ReturnType<typeof setTimeout> | undefined;
-      const hardStop = new Promise<Response>((resolve) => {
-        hardTimer = setTimeout(() => {
-          if (!settled) log("fallback", ["timeout"], 0);
-          settled = true;
-          sendCtrl.abort();
-          resolve(json(pass));
-        }, Math.max(0, started + SEND_HARD_STOP_MS - Date.now()));
-      });
-      const work = runSend().then((r) => { settled = true; return r; }, () => { settled = true; return json(pass); });
-      let denied: Response | null;
+      // First answer by 3.3s: a done rewrite/pass, or a pending job. Do not abort Vertex
+      // at that point; the same work may continue in the background for up to 30s.
+      const work = runSend();
+      let sendUserId: string | null = null;
       try {
-        denied = await premiumCheck;
+        const [gate, denied] = await Promise.all([authP ?? signedInGate(req), premiumCheck]);
+        if (gate.denied) {
+          settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+          return gate.denied;
+        }
+        if (denied) {
+          // 401/402/503: stop the model calls, throw their reply away, log nothing from it.
+          settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+          return denied;
+        }
+        sendUserId = gate.userId;
       } catch (e) {
-        settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
+        settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
         throw e;
-      }
-      if (denied) {
-        // 401/402/503: stop the model calls, throw their reply away, log nothing from it.
-        settled = true; clearTimeout(hardTimer); clearTimeout(deadlineTimer); sendCtrl.abort();
-        return denied;
       }
       premiumOk = true;
       if (pendingLog) { const w = pendingLog; pendingLog = null; w(); }
-      const out = await Promise.race([work, hardStop]);
-      clearTimeout(hardTimer);
-      clearTimeout(deadlineTimer);
-      sendCtrl.abort();
-      return out;
+      if (!sendUserId) {
+        settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+        return unauthorized();
+      }
+      // Insert the pending row now, in parallel with the remaining Vertex wait, so a
+      // pending reply can go out at the 3.3s cap without waiting on the database.
+      const jobP = createJob(sendUserId);
+      const remain = Math.max(0, started + SEND_HARD_STOP_MS - Date.now());
+      const firstAnswer = await Promise.race([
+        work.then((r) => ({ tag: "done" as const, r }), (e) => ({ tag: "err" as const, e })),
+        new Promise<{ tag: "stop" }>((resolve) => setTimeout(() => resolve({ tag: "stop" }), remain)),
+      ]);
+      if (firstAnswer.tag === "err") {
+        settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+        void jobP.then((j) => discardJob(j)).catch(() => {});
+        throw firstAnswer.e;
+      }
+      if (firstAnswer.tag === "done") {
+        settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+        void jobP.then((j) => discardJob(j)).catch(() => {});
+        return firstAnswer.r;
+      }
+      log("pending", ["busy"], 0);
+      settled = true;
+      const job = await jobP;
+      const backgroundLeft = Math.max(0, started + SEND_BACKGROUND_MS - Date.now());
+      const failAtDeadline = new Promise<void>((resolve) => {
+        setTimeout(() => {
+          void (async () => {
+            if (job.status === "pending") {
+              job.status = "failed";
+              await persistJob(job, false);
+              logSend("pending_failed", ["deadline"], 0, started, timing);
+            }
+            sendCtrl.abort();
+            resolve();
+          })();
+        }, backgroundLeft);
+      });
+      waitUntil(
+        Promise.race([
+          work
+            .then(async (r) => {
+              await settleJobFromResponse(job, r);
+              if (job.status === "done") logSend("pending_done", job.needs_rewrite ? ["rewrite"] : ["pass"], 0, started, timing);
+              else if (job.status === "failed") logSend("pending_failed", ["busy"], 0, started, timing);
+            })
+            .catch(async () => {
+              if (job.status === "pending") {
+                job.status = "failed";
+                await persistJob(job, false);
+                logSend("pending_failed", ["busy"], 0, started, timing);
+              }
+            }),
+          failAtDeadline,
+        ]).finally(() => {
+          sendCtrl.abort();
+          clearTimeout(deadlineTimer);
+        }),
+      );
+      return json({ status: "pending", job_id: job.id, eta_seconds: PENDING_ETA_SECONDS });
     }
 
     const resp = await callGateway(apiKey, {
-      model: "openai/gpt-6-astra",
       reasoning_effort: "low",
       response_format: { type: "json_object" },
       messages: [

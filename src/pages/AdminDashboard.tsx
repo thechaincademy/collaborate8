@@ -151,6 +151,9 @@ const AdminDashboard = () => {
                 </Link>
               </Button>
             )}
+            <Button asChild variant="outline">
+              <Link to="/admin/monitoring">Monitoring</Link>
+            </Button>
             <Button variant="outline" onClick={signOut}>
               Sign out
             </Button>

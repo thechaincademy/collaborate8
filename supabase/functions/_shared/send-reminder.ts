@@ -1,3 +1,4 @@
+import { sendResendEmail, sanitizeEmailError } from "./resend.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 type ReminderType = "setup_bank_account" | "send_payment";
@@ -36,34 +37,20 @@ export async function sendCoparentReminder(
   const subject = template.subject;
   const text = template.body(recipientProfile?.first_name ?? "");
 
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  const resendKey = Deno.env.get("RESEND_API_KEY");
   let emailSent = false;
   let error: string | undefined;
 
-  if (email && lovableKey && resendKey) {
-    const res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": resendKey,
-      },
-      body: JSON.stringify({
-        from: "Collabor8 <onboarding@resend.dev>",
-        to: [email],
-        subject,
-        text,
-      }),
-    });
-    if (res.ok) {
-      emailSent = true;
-    } else {
-      error = await res.text();
-      console.error("Reminder email failed", res.status, error);
+  if (email) {
+    try {
+      const result = await sendResendEmail({ to: email, subject, text, idempotencyKey: `coparent-reminder/${type}/${recipientUserId}` });
+      emailSent = result.sent;
+      if (!result.sent) error = result.reason;
+    } catch (err) {
+      error = sanitizeEmailError((err as Error).message);
+      console.error("Reminder email failed", error);
     }
   } else {
-    error = "Email sender not configured (missing RESEND connector or verified domain)";
+    error = "Email sender not configured";
   }
 
   await admin.from("audit_events").insert({

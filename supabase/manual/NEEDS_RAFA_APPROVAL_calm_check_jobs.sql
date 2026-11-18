@@ -1,0 +1,4 @@
+-- Moved after Rafa's yes on 18 November 2026 (London test project collabor8-uk only).
+-- Source of truth: supabase/migrations/20261118154700_calm_check_jobs.sql
+-- Do not apply this path, and do not apply the migration to the live project
+-- (eycpkzbjylzzynkfggis) without a separate yes.
