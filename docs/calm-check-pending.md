@@ -95,8 +95,8 @@ The parent can send the original message at any time while this is on screen. Se
 ## Notes for the implementation
 
 - Do not log the draft, the rewrite, or any other message text.
-- Jobs are stored in the function isolate's memory today, so a poll usually works while the parent is still on the same wait (the background work keeps the isolate alive). If a poll returns `unknown` sooner than expected, treat it like `failed` and do not block send.
-- A durable short-lived store (no original draft text) is written as `supabase/manual/NEEDS_RAFA_APPROVAL_calm_check_jobs.sql`. It is not applied. Do not run it until Rafa says yes.
+- On the London test project, pending and done results are stored in `calm_check_jobs` for 10 minutes. The row holds only the suggested rewrite, never the original draft, and is readable only by that parent. After 10 minutes the row is deleted by an every-minute cleanup job (and also on the next write).
+- If a poll returns `unknown`, the job is missing, expired, or belongs to another user. Treat that like `failed` and do not block send.
 - Auth and Premium are checked in parallel with the Vertex call. A 401 or a Premium denial still wins, and the model reply is discarded.
 - The Vertex OAuth token is cached in the isolate until shortly before it expires.
 - Write "Collabor8". Do not use em dashes in user-facing copy.

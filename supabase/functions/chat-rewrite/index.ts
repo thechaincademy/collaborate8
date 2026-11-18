@@ -2,7 +2,7 @@
 // @ts-nocheck
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
-import { getUserFromRequest } from "../_shared/supabase.ts";
+import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts";
 import { callVertex, vertexConfigured } from "../_shared/vertex.ts";
 
 const CALM_CHECK_REQUIRES_PREMIUM = (Deno.env.get("CALM_CHECK_REQUIRES_PREMIUM") ?? "true").trim().toLowerCase() !== "false";
@@ -92,16 +92,87 @@ const remainingEta = (job: JobRecord): number => {
   return Math.max(1, Math.ceil((job.etaAt - Date.now()) / 1000));
 };
 
-const createJob = (userId: string): JobRecord => {
+const logStoreError = (outcome: string, code?: string) =>
+  console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome, code: code ?? null }));
+
+const purgeExpiredJobs = async () => {
+  const { error } = await createSupabaseAdmin().from("calm_check_jobs").delete().lte("expires_at", new Date().toISOString());
+  if (error) logStoreError("job_cleanup_error", error.code);
+};
+
+const persistJob = async (job: JobRecord, insert: boolean) => {
+  jobs.set(job.id, job);
+  const row = {
+    id: job.id,
+    user_id: job.userId,
+    status: job.status,
+    needs_rewrite: job.needs_rewrite ?? null,
+    rewrite: job.rewrite ?? null,
+    eta_seconds: Math.max(1, Math.ceil((job.etaAt - Date.now()) / 1000)),
+    created_at: new Date(job.created).toISOString(),
+    expires_at: new Date(job.expires).toISOString(),
+  };
+  const admin = createSupabaseAdmin();
+  const { error } = insert
+    ? await admin.from("calm_check_jobs").insert(row)
+    : await admin.from("calm_check_jobs").update({
+      status: row.status,
+      needs_rewrite: row.needs_rewrite,
+      rewrite: row.rewrite,
+      eta_seconds: row.eta_seconds,
+    }).eq("id", job.id).eq("user_id", job.userId);
+  if (error) logStoreError(insert ? "job_insert_error" : "job_update_error", error.code);
+};
+
+const jobFromRow = (data: { id: string; user_id: string; status: string; needs_rewrite?: boolean | null; rewrite?: string | null; eta_seconds?: number | null; created_at: string; expires_at: string }): JobRecord => {
+  const created = new Date(data.created_at).getTime();
+  const expires = new Date(data.expires_at).getTime();
+  const etaAt = data.status === "pending"
+    ? Date.now() + Math.max(1, Number(data.eta_seconds ?? PENDING_ETA_SECONDS)) * 1000
+    : created;
+  return {
+    id: data.id,
+    userId: data.user_id,
+    status: data.status as JobRecord["status"],
+    needs_rewrite: data.needs_rewrite === true,
+    rewrite: typeof data.rewrite === "string" ? data.rewrite : null,
+    created,
+    etaAt,
+    expires,
+  };
+};
+
+const loadJob = async (jobId: string, userId: string): Promise<JobRecord | null> => {
+  const mem = jobs.get(jobId);
+  if (mem && mem.userId === userId && mem.expires > Date.now()) return mem;
+  const { data, error } = await createSupabaseAdmin()
+    .from("calm_check_jobs")
+    .select("id, user_id, status, needs_rewrite, rewrite, eta_seconds, created_at, expires_at")
+    .eq("id", jobId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) {
+    logStoreError("job_read_error", error.code);
+    return null;
+  }
+  if (!data || new Date(data.expires_at).getTime() <= Date.now()) return null;
+  const job = jobFromRow(data);
+  jobs.set(job.id, job);
+  return job;
+};
+
+const createJob = async (userId: string): Promise<JobRecord> => {
+  await purgeExpiredJobs();
+  const now = Date.now();
   const job: JobRecord = {
     id: crypto.randomUUID(),
     userId,
     status: "pending",
-    created: Date.now(),
-    etaAt: Date.now() + PENDING_ETA_SECONDS * 1000,
-    expires: Date.now() + JOB_TTL_MS,
+    created: now,
+    etaAt: now + PENDING_ETA_SECONDS * 1000,
+    expires: now + JOB_TTL_MS,
   };
-  jobs.set(job.id, job);
+  await persistJob(job, true);
   return job;
 };
 
@@ -110,19 +181,20 @@ const settleJobFromResponse = async (job: JobRecord, resp: Response) => {
   try {
     if (resp.status !== 200) {
       job.status = "failed";
-      return;
+    } else {
+      const body = await resp.clone().json().catch(() => ({}));
+      if (body && body.status === "failed") {
+        job.status = "failed";
+      } else {
+        job.status = "done";
+        job.needs_rewrite = body?.needs_rewrite === true;
+        job.rewrite = typeof body?.rewrite === "string" ? body.rewrite : null;
+      }
     }
-    const body = await resp.clone().json().catch(() => ({}));
-    if (body && body.status === "failed") {
-      job.status = "failed";
-      return;
-    }
-    job.status = "done";
-    job.needs_rewrite = body?.needs_rewrite === true;
-    job.rewrite = typeof body?.rewrite === "string" ? body.rewrite : null;
   } catch {
     job.status = "failed";
   }
+  await persistJob(job, false);
 };
 
 const waitUntil = (p: Promise<unknown>) => {
@@ -234,7 +306,7 @@ const SEND_BACKGROUND_MS = 30000;
 const SEND_RETRY_MIN_LEFT_MS = 700;
 const PENDING_ETA_SECONDS = 12;
 const PENDING_ETA_EXTEND_SECONDS = 8;
-const JOB_TTL_MS = 180000;
+const JOB_TTL_MS = 600000;
 const GATE_CACHE_MS = 30000;
 const SEND_MODEL = "vertex";
 // max_completion_tokens maps to maxOutputTokens; reasoning "none" maps to the minimal thinking level.
@@ -1147,10 +1219,15 @@ Deno.serve(async (req) => {
       const gate = await signedInGate(req);
       if (gate.denied) return gate.denied;
       if (typeof job_id !== "string" || !job_id) return json({ error: "Missing job_id" }, 400);
+      if (!gate.userId) return unauthorized();
       pruneMaps();
-      const job = jobs.get(job_id);
-      if (!job || job.userId !== gate.userId) return json({ status: "unknown", error: "not_found" }, 404);
-      if (job.status === "pending") return json({ status: "pending", job_id: job.id, eta_seconds: remainingEta(job) });
+      const job = await loadJob(job_id, gate.userId);
+      if (!job) return json({ status: "unknown", error: "not_found" }, 404);
+      if (job.status === "pending") {
+        const eta = remainingEta(job);
+        await persistJob(job, false);
+        return json({ status: "pending", job_id: job.id, eta_seconds: eta });
+      }
       if (job.status === "failed") return json({ status: "failed", job_id: job.id });
       return json({ status: "done", job_id: job.id, needs_rewrite: job.needs_rewrite === true, rewrite: job.rewrite ?? null });
     }
@@ -1384,7 +1461,7 @@ Deno.serve(async (req) => {
         clearTimeout(deadlineTimer); sendCtrl.abort();
         return unauthorized();
       }
-      const job = createJob(sendUserId);
+      const job = await createJob(sendUserId);
       waitUntil(
         work
           .then(async (r) => {
@@ -1392,8 +1469,9 @@ Deno.serve(async (req) => {
             if (job.status === "done") logSend("pending_done", job.needs_rewrite ? ["rewrite"] : ["pass"], 0, started, timing);
             else logSend("pending_failed", ["busy"], 0, started, timing);
           })
-          .catch(() => {
+          .catch(async () => {
             job.status = "failed";
+            await persistJob(job, false);
             logSend("pending_failed", ["busy"], 0, started, timing);
           })
           .finally(() => {
