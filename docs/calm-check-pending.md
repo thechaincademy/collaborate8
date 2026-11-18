@@ -96,7 +96,7 @@ The parent can send the original message at any time while this is on screen. Se
 
 - Do not log the draft, the rewrite, or any other message text.
 - On the London test project, pending and done results are stored in `calm_check_jobs` for 10 minutes. The row holds only the suggested rewrite, never the original draft, and is readable only by that parent. After 10 minutes the row is deleted by an every-minute cleanup job (and also on the next write).
-- If a poll returns `unknown`, the job is missing, expired, or belongs to another user. Treat that like `failed` and do not block send.
+- If a poll returns `unknown`, the job is missing, expired, or belongs to another user. Treat that like `failed` and do not block send. If a job is still `pending` more than 35 seconds after it was created, the function marks it `failed` and returns that, so a suggestion cannot stay waiting forever.
 - Auth and Premium are checked in parallel with the Vertex call. A 401 or a Premium denial still wins, and the model reply is discarded.
 - The Vertex OAuth token is cached in the isolate until shortly before it expires.
 - Write "Collabor8". Do not use em dashes in user-facing copy.

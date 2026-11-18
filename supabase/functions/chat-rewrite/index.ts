@@ -143,8 +143,6 @@ const jobFromRow = (data: { id: string; user_id: string; status: string; needs_r
 };
 
 const loadJob = async (jobId: string, userId: string): Promise<JobRecord | null> => {
-  const mem = jobs.get(jobId);
-  if (mem && mem.userId === userId && mem.expires > Date.now()) return mem;
   const { data, error } = await createSupabaseAdmin()
     .from("calm_check_jobs")
     .select("id, user_id, status, needs_rewrite, rewrite, eta_seconds, created_at, expires_at")
@@ -153,16 +151,18 @@ const loadJob = async (jobId: string, userId: string): Promise<JobRecord | null>
     .maybeSingle();
   if (error) {
     logStoreError("job_read_error", error.code);
-    return null;
+  } else if (data && new Date(data.expires_at).getTime() > Date.now()) {
+    const job = jobFromRow(data);
+    jobs.set(job.id, job);
+    return job;
   }
-  if (!data || new Date(data.expires_at).getTime() <= Date.now()) return null;
-  const job = jobFromRow(data);
-  jobs.set(job.id, job);
-  return job;
+  const mem = jobs.get(jobId);
+  if (mem && mem.userId === userId && mem.expires > Date.now()) return mem;
+  return null;
 };
 
 const createJob = async (userId: string): Promise<JobRecord> => {
-  await purgeExpiredJobs();
+  void purgeExpiredJobs();
   const now = Date.now();
   const job: JobRecord = {
     id: crypto.randomUUID(),
@@ -174,6 +174,26 @@ const createJob = async (userId: string): Promise<JobRecord> => {
   };
   await persistJob(job, true);
   return job;
+};
+
+const discardJob = async (job: JobRecord) => {
+  jobs.delete(job.id);
+  const { error } = await createSupabaseAdmin()
+    .from("calm_check_jobs")
+    .delete()
+    .eq("id", job.id)
+    .eq("user_id", job.userId)
+    .eq("status", "pending");
+  if (error) logStoreError("job_discard_error", error.code);
+};
+
+const failStaleJob = async (job: JobRecord): Promise<boolean> => {
+  if (job.status !== "pending") return false;
+  if (Date.now() - job.created < STALE_PENDING_MS) return false;
+  job.status = "failed";
+  await persistJob(job, false);
+  console.log(JSON.stringify({ fn: "chat-rewrite", event: "calm_check", outcome: "pending_stale_failed", ms: Date.now() - job.created }));
+  return true;
 };
 
 const settleJobFromResponse = async (job: JobRecord, resp: Response) => {
@@ -307,6 +327,7 @@ const SEND_RETRY_MIN_LEFT_MS = 700;
 const PENDING_ETA_SECONDS = 12;
 const PENDING_ETA_EXTEND_SECONDS = 8;
 const JOB_TTL_MS = 600000;
+const STALE_PENDING_MS = 35000;
 const GATE_CACHE_MS = 30000;
 const SEND_MODEL = "vertex";
 // max_completion_tokens maps to maxOutputTokens; reasoning "none" maps to the minimal thinking level.
@@ -1223,6 +1244,7 @@ Deno.serve(async (req) => {
       pruneMaps();
       const job = await loadJob(job_id, gate.userId);
       if (!job) return json({ status: "unknown", error: "not_found" }, 404);
+      if (await failStaleJob(job)) return json({ status: "failed", job_id: job.id });
       if (job.status === "pending") {
         const eta = remainingEta(job);
         await persistJob(job, false);
@@ -1442,6 +1464,13 @@ Deno.serve(async (req) => {
       }
       premiumOk = true;
       if (pendingLog) { const w = pendingLog; pendingLog = null; w(); }
+      if (!sendUserId) {
+        settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+        return unauthorized();
+      }
+      // Insert the pending row now, in parallel with the remaining Vertex wait, so a
+      // pending reply can go out at the 3.3s cap without waiting on the database.
+      const jobP = createJob(sendUserId);
       const remain = Math.max(0, started + SEND_HARD_STOP_MS - Date.now());
       const firstAnswer = await Promise.race([
         work.then((r) => ({ tag: "done" as const, r }), (e) => ({ tag: "err" as const, e })),
@@ -1449,35 +1478,51 @@ Deno.serve(async (req) => {
       ]);
       if (firstAnswer.tag === "err") {
         settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+        void jobP.then((j) => discardJob(j)).catch(() => {});
         throw firstAnswer.e;
       }
       if (firstAnswer.tag === "done") {
         settled = true; clearTimeout(deadlineTimer); sendCtrl.abort();
+        void jobP.then((j) => discardJob(j)).catch(() => {});
         return firstAnswer.r;
       }
       log("pending", ["busy"], 0);
       settled = true;
-      if (!sendUserId) {
-        clearTimeout(deadlineTimer); sendCtrl.abort();
-        return unauthorized();
-      }
-      const job = await createJob(sendUserId);
-      waitUntil(
-        work
-          .then(async (r) => {
-            await settleJobFromResponse(job, r);
-            if (job.status === "done") logSend("pending_done", job.needs_rewrite ? ["rewrite"] : ["pass"], 0, started, timing);
-            else logSend("pending_failed", ["busy"], 0, started, timing);
-          })
-          .catch(async () => {
-            job.status = "failed";
-            await persistJob(job, false);
-            logSend("pending_failed", ["busy"], 0, started, timing);
-          })
-          .finally(() => {
+      const job = await jobP;
+      const backgroundLeft = Math.max(0, started + SEND_BACKGROUND_MS - Date.now());
+      const failAtDeadline = new Promise<void>((resolve) => {
+        setTimeout(() => {
+          void (async () => {
+            if (job.status === "pending") {
+              job.status = "failed";
+              await persistJob(job, false);
+              logSend("pending_failed", ["deadline"], 0, started, timing);
+            }
             sendCtrl.abort();
-            clearTimeout(deadlineTimer);
-          }),
+            resolve();
+          })();
+        }, backgroundLeft);
+      });
+      waitUntil(
+        Promise.race([
+          work
+            .then(async (r) => {
+              await settleJobFromResponse(job, r);
+              if (job.status === "done") logSend("pending_done", job.needs_rewrite ? ["rewrite"] : ["pass"], 0, started, timing);
+              else if (job.status === "failed") logSend("pending_failed", ["busy"], 0, started, timing);
+            })
+            .catch(async () => {
+              if (job.status === "pending") {
+                job.status = "failed";
+                await persistJob(job, false);
+                logSend("pending_failed", ["busy"], 0, started, timing);
+              }
+            }),
+          failAtDeadline,
+        ]).finally(() => {
+          sendCtrl.abort();
+          clearTimeout(deadlineTimer);
+        }),
       );
       return json({ status: "pending", job_id: job.id, eta_seconds: PENDING_ETA_SECONDS });
     }
