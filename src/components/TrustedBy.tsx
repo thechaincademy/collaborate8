@@ -1,5 +1,5 @@
-import lawtechukLogo from "@/assets/lawtechuk-logo.png.asset.json";
-import hackneyLogo from "@/assets/hackney-logo.png.asset.json";
+import lawtechukLogo from "@/assets/lawtechuk-logo.png";
+import hackneyLogo from "@/assets/hackney-logo.png";
 
 const TrustedBy = () => {
   const logoClass =
@@ -21,7 +21,7 @@ const TrustedBy = () => {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-20 gap-y-8">
           <div className="flex items-center">
             <img
-              src={lawtechukLogo.url}
+              src={lawtechukLogo}
               alt="LawtechUK logo"
               className={logoClass}
               loading="lazy"
@@ -29,7 +29,7 @@ const TrustedBy = () => {
           </div>
           <div className="flex flex-col items-center">
             <img
-              src={hackneyLogo.url}
+              src={hackneyLogo}
               alt="Hackney Council logo"
               className={`${logoClass} mix-blend-multiply`}
               loading="lazy"

@@ -2,6 +2,7 @@ import FooterResources from "@/components/FooterResources";
 import FooterContact from "@/components/FooterContact";
 import { WebsiteOnly } from "@/hooks/useIsInApp";
 import { Helmet } from "react-helmet-async";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Play, Youtube, MicVocal } from "lucide-react";
 import TopBanner from "@/components/TopBanner";
@@ -17,109 +18,167 @@ const fade = {
 };
 
 interface Episode {
-  number: string;
+  number: number;
   title: string;
   description: string;
-  duration: string;
-  // Drop the real YouTube video ID in here (e.g. "dQw4w9WgXcQ") when each
-  // episode is live and the embed will render automatically.
-  youtubeId: string | null;
+  publishedAt: string;
+  youtubeId: string;
+  url: string;
+  thumbnail: string;
 }
 
-const episodes: Episode[] = [
+const CHANNEL_URL = "https://www.youtube.com/@collabor8official";
+
+// Built-in list, used when the YouTube feed cannot be reached (and merged with
+// the feed so older episodes stay listed once they drop out of it).
+const fallbackEpisodes: Episode[] = [
   {
-    number: "01",
-    title: "How child maintenance works in the UK",
+    number: 1,
+    title: "Court Is the Last Resort: Co-Parenting Without the Fight | Simon Bassett, RWK Goodman",
     description:
-      "A plain-English walkthrough of the Child Maintenance Service: who it applies to, how arrangements are made, and what your options are when you agree between yourselves.",
-    duration: "Coming soon",
-    youtubeId: null,
-  },
-  {
-    number: "02",
-    title: "How contributions are calculated",
-    description:
-      "We break down how the CMS works out what a paying parent contributes, including gross income bands, shared care reductions and other children in the household.",
-    duration: "Coming soon",
-    youtubeId: null,
-  },
-  {
-    number: "03",
-    title: "Enforcement basics: what happens if payments stop",
-    description:
-      "What the CMS can do when payments are missed, the steps that usually happen first, and why a clear, documented arrangement between parents can prevent it getting that far.",
-    duration: "Coming soon",
-    youtubeId: null,
-  },
-  {
-    number: "04",
-    title: "Co-parenting money conversations without the conflict",
-    description:
-      "Practical tips for talking about money with your co-parent: separating the money conversation from everything else, putting agreements in writing, and keeping things calm.",
-    duration: "Coming soon",
-    youtubeId: null,
-  },
-  {
-    number: "05",
-    title: "Shared expenses: school costs, uniforms and holidays",
-    description:
-      "How separated parents handle costs that fall outside regular maintenance - what to split, how to agree it, and simple ways to track who has paid what.",
-    duration: "Coming soon",
-    youtubeId: null,
-  },
-  {
-    number: "06",
-    title: "Your questions answered",
-    description:
-      "We answer the questions separated parents ask us most, from changing an arrangement to what happens when one parent's circumstances change.",
-    duration: "Coming soon",
-    youtubeId: null,
+      "What does a leading family lawyer actually want separated parents to know? In our first episode, Jade sits down with Simon Bassett, Lead Partner and Head of Family Law at RWK Goodman, to talk about the money side of co-parenting, why court should be the last resort, and why you'll still be talking to your co-parent long after the lawyers have moved on.",
+    publishedAt: "2026-11-01T10:00:35+00:00",
+    youtubeId: "IhaPQQCG5Zs",
+    url: "https://www.youtube.com/watch?v=IhaPQQCG5Zs",
+    thumbnail: "https://i.ytimg.com/vi/IhaPQQCG5Zs/hqdefault.jpg",
   },
 ];
 
-const EpisodeCard = ({ ep }: { ep: Episode }) => (
-  <motion.article
-    {...fade}
-    className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
-  >
-    {/* Embed slot - renders the YouTube player when youtubeId is set */}
-    {ep.youtubeId ? (
-      <div className="aspect-video w-full bg-foreground">
-        <iframe
-          src={`https://www.youtube.com/embed/${ep.youtubeId}`}
-          title={ep.title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="h-full w-full"
-        />
-      </div>
-    ) : (
-      <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 border-b border-border bg-secondary px-6 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
-          <Play className="h-6 w-6 translate-x-0.5 text-primary" />
-        </div>
-        <p className="text-sm font-semibold text-foreground">Episode coming soon</p>
-        <p className="max-w-xs text-xs text-muted-foreground">
-          This slot is reserved for the episode video, ready for the YouTube embed.
-        </p>
-      </div>
-    )}
+const sortNewestFirst = (list: Episode[]) =>
+  [...list].sort(
+    (a, b) => (b.publishedAt || "").localeCompare(a.publishedAt || "") || b.number - a.number,
+  );
 
-    <div className="p-6">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl font-extrabold leading-none text-primary-ink">{ep.number}</span>
-        <span className="rounded-full border border-primary px-2.5 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-ink">
-          {ep.duration}
-        </span>
+const mergeEpisodes = (fromFeed: Episode[]) => {
+  const byId = new Map<string, Episode>();
+  for (const ep of fallbackEpisodes) byId.set(ep.youtubeId, ep);
+  for (const ep of fromFeed) byId.set(ep.youtubeId, ep);
+  return sortNewestFirst([...byId.values()]);
+};
+
+const usePodcastEpisodes = () => {
+  const [episodes, setEpisodes] = useState<Episode[]>(() => sortNewestFirst(fallbackEpisodes));
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/podcast-episodes", { headers: { accept: "application/json" } })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((data: { episodes?: Episode[] }) => {
+        const list = Array.isArray(data?.episodes)
+          ? data.episodes.filter((ep) => ep && /^[\w-]{11}$/.test(ep.youtubeId))
+          : [];
+        if (!cancelled && list.length) setEpisodes(mergeEpisodes(list));
+      })
+      .catch(() => {
+        // Keep the built-in list.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return episodes;
+};
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" });
+};
+
+// A new episode goes out on the 1st of every month.
+const upcomingEpisodes = (episodes: Episode[], count: number) => {
+  const latest = episodes[0];
+  const lastNumber = episodes.reduce((max, ep) => Math.max(max, ep.number || 0), 0);
+  const base = latest ? new Date(latest.publishedAt) : new Date();
+  const now = new Date();
+  const year = base.getUTCFullYear();
+  let month = base.getUTCMonth() + 1;
+  // Never show a release date that has already passed.
+  while (Date.UTC(year, month, 1) <= Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())) {
+    month += 1;
+  }
+  return Array.from({ length: count }, (_, i) => {
+    const date = new Date(Date.UTC(year, month + i, 1));
+    return {
+      number: lastNumber + i + 1,
+      date: date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }),
+    };
+  });
+};
+
+const EpisodeCard = ({ ep }: { ep: Episode }) => {
+  const [playing, setPlaying] = useState(false);
+  const date = formatDate(ep.publishedAt);
+
+  return (
+    <motion.article
+      {...fade}
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+    >
+      <div className="aspect-video w-full bg-foreground">
+        {playing ? (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${ep.youtubeId}?autoplay=1&rel=0`}
+            title={ep.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+            className="h-full w-full"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setPlaying(true)}
+            className="group relative block h-full w-full"
+            aria-label={`Play episode ${ep.number}: ${ep.title}`}
+          >
+            <img
+              src={ep.thumbnail}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+            <span className="absolute inset-0 flex items-center justify-center bg-foreground/20 transition-colors group-hover:bg-foreground/10">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-card">
+                <Play className="h-6 w-6 translate-x-0.5 text-primary-foreground" />
+              </span>
+            </span>
+          </button>
+        )}
       </div>
-      <h3 className="mt-4 text-lg font-bold leading-snug text-foreground">{ep.title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{ep.description}</p>
-    </div>
-  </motion.article>
-);
+
+      <div className="p-6">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl font-extrabold leading-none text-primary-ink">
+            {String(ep.number).padStart(2, "0")}
+          </span>
+          {date && (
+            <span className="rounded-full border border-primary px-2.5 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-ink">
+              <time dateTime={ep.publishedAt}>{date}</time>
+            </span>
+          )}
+        </div>
+        <h3 className="mt-4 text-lg font-bold leading-snug text-foreground">{ep.title}</h3>
+        <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-muted-foreground">{ep.description}</p>
+        <a
+          href={ep.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex min-h-6 items-center gap-2 text-sm font-semibold text-primary-ink hover:underline"
+        >
+          <Youtube className="h-4 w-4" />
+          Watch on YouTube
+        </a>
+      </div>
+    </motion.article>
+  );
+};
 
 const Podcast = () => {
   const ctaHref = useAppCtaHref("/splash");
+  const episodes = usePodcastEpisodes();
+  const upcoming = upcomingEpisodes(episodes, 5);
 
   return (
   <div className="min-h-screen bg-background">
@@ -175,12 +234,22 @@ const Podcast = () => {
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             {episodes.map((ep) => (
-              <EpisodeCard key={ep.number} ep={ep} />
+              <EpisodeCard key={ep.youtubeId} ep={ep} />
             ))}
           </div>
           <p className="mt-10 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
             <Youtube className="h-4 w-4" />
-            New episodes will appear here as they are released.
+            <span>
+              A new episode goes out on the 1st of every month.{" "}
+              <a
+                href={CHANNEL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-primary-ink hover:underline"
+              >
+                Subscribe on YouTube
+              </a>
+            </span>
           </p>
         </motion.div>
       </section>
@@ -195,7 +264,7 @@ const Podcast = () => {
             <div className="h-px flex-1 bg-border" />
           </div>
           <ul className="flex flex-col gap-4">
-            {[1, 2, 3, 4, 5].map((n) => (
+            {upcoming.map(({ number: n, date }) => (
               <li
                 key={n}
                 className="relative flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-card"
@@ -209,7 +278,7 @@ const Podcast = () => {
                 <span className="min-w-0">
                   <span className="block text-base font-bold text-foreground">Episode {n}</span>
                   <span className="mt-0.5 block text-sm text-muted-foreground">
-                    Details coming soon.
+                    Out {date}
                   </span>
                 </span>
               </li>
