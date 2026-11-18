@@ -15,12 +15,34 @@ const getReg = async () => {
   return existing ?? (import.meta.env.PROD && window.self === window.top ? navigator.serviceWorker.register("/sw.js") : null);
 };
 
-export async function pushState(): Promise<"on" | "off" | "denied" | "unsupported"> {
+const sameKey = (a: ArrayBuffer | null | undefined, b: Uint8Array) => {
+  if (!a) return false;
+  const x = new Uint8Array(a);
+  return x.length === b.length && x.every((v, i) => v === b[i]);
+};
+
+/** True when this device's subscription was made with an older server key. */
+const usesOldKey = (sub: PushSubscription) => !sameKey(sub.options?.applicationServerKey, toKey(VAPID_PUBLIC_KEY));
+
+/**
+ * Current push status. With a userId, a subscription made with an older server key is
+ * swapped for one with the current key (permission is already granted, so no prompt).
+ */
+export async function pushState(userId?: string): Promise<"on" | "off" | "denied" | "unsupported"> {
   if (!supported() || window.self !== window.top) return "unsupported";
   if (Notification.permission === "denied") return "denied";
   const reg = await navigator.serviceWorker.getRegistration();
   const sub = await reg?.pushManager.getSubscription();
-  return sub ? "on" : "off";
+  if (!sub) return "off";
+  if (usesOldKey(sub)) {
+    if (!userId || Notification.permission !== "granted") return "off";
+    try {
+      return await enablePush(userId);
+    } catch {
+      return "off";
+    }
+  }
+  return "on";
 }
 
 export async function enablePush(userId: string) {
@@ -30,7 +52,7 @@ export async function enablePush(userId: string) {
   const reg = await getReg();
   if (!reg) throw new Error("Push alerts work on collaborate8.com, not in this preview");
   await navigator.serviceWorker.ready;
-  // Clear any stale subscription (e.g. created with an older key) before subscribing
+  // Clear any existing subscription (e.g. created with an older key) before subscribing
   const stale = await reg.pushManager.getSubscription();
   if (stale) {
     try {

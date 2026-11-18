@@ -27,7 +27,7 @@ const NotificationSettings = () => {
   const [pushBusy, setPushBusy] = useState(false);
 
   useEffect(() => {
-    pushState().then(setPush);
+    pushState(user?.id).then(setPush);
     if (!user) return;
     supabase.from("notification_preferences" as any).select("prefs").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => setPrefs(((data as any)?.prefs ?? {}) as Prefs));

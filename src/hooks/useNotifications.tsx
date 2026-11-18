@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { pushState } from "@/lib/push";
 
 export interface AppNotification {
   id: string;
@@ -24,6 +25,11 @@ export const useNotifications = () => {
       .order("created_at", { ascending: false })
       .limit(30);
     setItems((data as AppNotification[]) || []);
+  }, [user]);
+
+  // If this device has push on with an older server key, quietly move it to the current key.
+  useEffect(() => {
+    if (user) void pushState(user.id).catch(() => {});
   }, [user]);
 
   useEffect(() => {

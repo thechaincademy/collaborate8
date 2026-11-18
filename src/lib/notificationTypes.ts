@@ -28,4 +28,5 @@ export function categoryOf(type: string): NotificationCategory {
 export const categoryMeta = (type: string) =>
   NOTIFICATION_CATEGORIES.find((c) => c.key === categoryOf(type)) ?? { key: "money", label: "Update", icon: Bell, cls: "bg-muted text-foreground", desc: "" };
 
-export const VAPID_PUBLIC_KEY = "BKY6fhKM0N_Ca_ppKBJwnLpt-JVYcdDXsPNK4zBlE9f6PZspEosZnAuWEi_axQnaGUm4_T0oEkd5UFI_qqeUEHw";
+// Must match VAPID_PUBLIC_KEY on the London server. Changing it needs a site rebuild.
+export const VAPID_PUBLIC_KEY = "BOGj4xgV_4-UycV17loVQIGZDc04Hn4r11zoijk9IM29NE3hs530L8cNKyaYoeyw6suQ_EeX4ncBD0awpeVI1Yk";
