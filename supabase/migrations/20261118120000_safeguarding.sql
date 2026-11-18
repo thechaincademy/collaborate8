@@ -889,11 +889,34 @@ CREATE TRIGGER sg_broadcast_message
   AFTER INSERT OR UPDATE ON public.messages
   FOR EACH ROW EXECUTE FUNCTION public.sg_broadcast_message();
 
+-- Current family topic for the signed-in caller. Sorted lowercase uuid text.
+-- A parent with no co-parent gets their own id twice. Clients cannot pass the pair in.
+CREATE OR REPLACE FUNCTION public.sg_caller_family_topic()
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT 'sg-family:' || least(me, other) || ':' || greatest(me, other)
+  FROM (
+    SELECT
+      lower(auth.uid()::text) AS me,
+      lower(COALESCE(public.get_coparent_id(auth.uid()), auth.uid())::text) AS other
+  ) ids
+  WHERE auth.uid() IS NOT NULL
+$$;
+
+REVOKE ALL ON FUNCTION public.sg_caller_family_topic() FROM PUBLIC, anon, service_role;
+GRANT EXECUTE ON FUNCTION public.sg_caller_family_topic() TO authenticated;
+
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'realtime') THEN
     EXECUTE 'ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY';
     EXECUTE 'DROP POLICY IF EXISTS "sg family message broadcast" ON realtime.messages';
+    -- SELECT only. There is no INSERT policy, so an authenticated client cannot send a broadcast.
+    -- realtime.send runs as the security definer trigger owner and is not a client insert.
     EXECUTE $policy$
       CREATE POLICY "sg family message broadcast"
       ON realtime.messages
@@ -901,13 +924,20 @@ BEGIN
       TO authenticated
       USING (
         realtime.messages.extension = 'broadcast'
-        AND split_part(realtime.topic(), ':', 1) = 'sg-family'
-        AND auth.uid()::text IN (
-          split_part(realtime.topic(), ':', 2),
-          split_part(realtime.topic(), ':', 3)
-        )
+        AND realtime.topic() = public.sg_caller_family_topic()
       )
     $policy$;
+    IF EXISTS (
+      SELECT 1
+      FROM pg_policy pol
+      JOIN pg_class cls ON cls.oid = pol.polrelid
+      JOIN pg_namespace nsp ON nsp.oid = cls.relnamespace
+      WHERE nsp.nspname = 'realtime'
+        AND cls.relname = 'messages'
+        AND pol.polcmd IN ('a', '*')
+    ) THEN
+      RAISE EXCEPTION 'realtime.messages has an INSERT policy; clients must not send broadcasts';
+    END IF;
   END IF;
 END $$;
 

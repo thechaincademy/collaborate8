@@ -68,4 +68,8 @@ channel.on("broadcast", { event: "message" }, (payload) => {
 await channel.subscribe();
 ```
 
-Postgres allows the select on `realtime.messages` only when `extension = 'broadcast'`, the topic starts with `sg-family`, and `auth.uid()` is one of the two ids in the topic.
+Postgres allows the select on `realtime.messages` only when `extension = 'broadcast'` and `realtime.topic()` equals the caller's current family topic.
+
+That topic is `public.sg_caller_family_topic()`. The function is `STABLE`, `SECURITY DEFINER`, and `SET search_path = public`. `EXECUTE` is granted to `authenticated` only (revoked from `PUBLIC`, `anon`, and `service_role`). It reads `auth.uid()` and `public.get_coparent_id(auth.uid())`, lowercases both ids, sorts them, and returns `sg-family:{low}:{high}`. If there is no co-parent, both sides are the caller's own id. The client does not supply the pair. A topic for a former co-parent does not match.
+
+There is no `INSERT` policy on `realtime.messages`. An authenticated client cannot send a broadcast. The migration raises if an `INSERT` or `ALL` policy is present on that table. Messages are published only by `sg_broadcast_message`, which calls `realtime.send` as a security definer trigger.

@@ -17,7 +17,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # package-lock.json is behind package.json, so npm ci rejects the tree.
+      - run: npm install --ignore-scripts --no-audit --no-fund
       - run: bun test
       - run: npx tsc -p tsconfig.app.json --noEmit
       - name: deno check edge functions

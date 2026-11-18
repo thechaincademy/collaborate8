@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   CMS_COLLECT_AND_PAY_URL,
   CMS_HOW_TO_APPLY_URL,
@@ -129,4 +131,47 @@ describe("database contract", () => {
     expect(answers.includes("safeguarding_is_staff")).toBe(true);
     expect(answers.includes("get_coparent_id")).toBe(false);
   });
+
+  it("limits broadcast reads to the caller's current family topic and does not allow client inserts", () => {
+    const fn = sql.split("FUNCTION public.sg_caller_family_topic()")[1]?.split("REVOKE ALL ON FUNCTION public.sg_caller_family_topic()")[0] ?? "";
+    expect(fn.includes("STABLE")).toBe(true);
+    expect(fn.includes("SECURITY DEFINER")).toBe(true);
+    expect(fn.includes("SET search_path = public")).toBe(true);
+    expect(fn.includes("get_coparent_id(auth.uid())")).toBe(true);
+    expect(fn.includes("least(me, other)")).toBe(true);
+    expect(sql.includes("GRANT EXECUTE ON FUNCTION public.sg_caller_family_topic() TO authenticated")).toBe(true);
+    expect(sql.includes("GRANT EXECUTE ON FUNCTION public.sg_caller_family_topic() TO anon")).toBe(false);
+    expect(sql.includes("GRANT EXECUTE ON FUNCTION public.sg_caller_family_topic() TO service_role")).toBe(false);
+    expect(sql.includes("REVOKE ALL ON FUNCTION public.sg_caller_family_topic() FROM PUBLIC, anon, service_role")).toBe(true);
+    expect(sql.includes("realtime.topic() = public.sg_caller_family_topic()")).toBe(true);
+    expect(sql.includes("auth.uid()::text IN (")).toBe(false);
+
+    const policies = policiesOnRealtimeMessages(sql);
+    expect(policies).toHaveLength(1);
+    expect(policies[0].includes("FOR SELECT")).toBe(true);
+    expect(/FOR\s+(INSERT|ALL)/i.test(policies[0])).toBe(false);
+    expect(sql.includes("realtime.messages has an INSERT policy; clients must not send broadcasts")).toBe(true);
+
+    const supabaseDir = fileURLToPath(new URL("../supabase", import.meta.url));
+    for (const file of listSql(supabaseDir)) {
+      const source = readFileSync(file, "utf8");
+      for (const policy of policiesOnRealtimeMessages(source)) {
+        expect(/FOR\s+(INSERT|ALL)/i.test(policy)).toBe(false);
+      }
+    }
+  });
 });
+
+function policiesOnRealtimeMessages(source: string): string[] {
+  return (source.match(/CREATE POLICY[\s\S]*?;/gi) ?? []).filter((statement) => /ON\s+realtime\.messages/i.test(statement));
+}
+
+function listSql(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...listSql(path));
+    else if (entry.name.endsWith(".sql")) out.push(path);
+  }
+  return out;
+}
