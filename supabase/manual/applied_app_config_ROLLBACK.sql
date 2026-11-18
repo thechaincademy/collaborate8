@@ -1,4 +1,4 @@
--- Undo NEEDS_RAFA_APPROVAL_app_config.sql. Also deletes every setting saved from the admin;
+-- Undo applied_app_config.sql. Also deletes every setting saved from the admin;
 -- functions then use the Supabase secrets only.
 DO $$
 BEGIN

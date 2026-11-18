@@ -1,8 +1,8 @@
 // Platform settings with admin overrides. Priority: value set on /admin/setup (app_config,
 // secrets kept in Supabase Vault) > Supabase secret (env). Values are loaded once when the
 // function starts and refreshed in the background at most once a minute, so a change made
-// in the admin applies within about a minute. If app_config does not exist yet
-// (supabase/manual/NEEDS_RAFA_APPROVAL_app_config.sql not applied) this simply uses env.
+// in the admin applies within about a minute. app_config comes from
+// supabase/manual/applied_app_config.sql; if it is ever missing this simply uses env.
 // Never logs values.
 
 const REFRESH_MS = 60_000;

@@ -1,6 +1,6 @@
 -- Collabor8 admin-editable platform settings (everything on /admin/setup).
--- NOT APPLIED. Needs Rafa's own yes before it runs on any project.
--- Rollback: NEEDS_RAFA_APPROVAL_app_config_ROLLBACK.sql
+-- Applied to London (byrwtxdalhsmvktuzoya) on 18 November 2026 with Rafa's yes.
+-- Rollback: applied_app_config_ROLLBACK.sql
 --
 -- Lets an admin set, change or remove a setting from the admin Setup page instead of in
 -- Supabase. Secret values (API keys, private keys, service account files) are stored
