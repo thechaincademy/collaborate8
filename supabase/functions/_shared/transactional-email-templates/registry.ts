@@ -12,6 +12,7 @@ import { template as coparentNotificationTemplate } from './coparent-notificatio
 import { template as premiumRenewalReminderTemplate } from './premium-renewal-reminder.tsx'
 import { template as founderWelcomeTemplate } from './founder-welcome.tsx'
 import { template as accountDeletionConfirmTemplate } from './account-deletion-confirm.tsx'
+import { template as safeguardingDslAlertTemplate } from './safeguarding-dsl-alert.tsx'
 
 
 export interface TemplateEntry {
@@ -33,6 +34,7 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'account_deletion_confirm': accountDeletionConfirmTemplate,
+  'safeguarding_dsl_alert': safeguardingDslAlertTemplate,
   'coparent_invite': coparentInviteTemplate,
   'conversation_tool_invite': conversationToolInviteTemplate,
   'user_welcome': userWelcomeTemplate,

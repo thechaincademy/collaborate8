@@ -62,11 +62,15 @@ export const isInternalUser = ({ email, isTestAccount }: { email?: string | null
 
 export const isAdminPath = (pathname: string) => pathname === "/admin" || pathname.startsWith("/admin/");
 
+/** Admin and DSL pages are internal and stay out of analytics. */
+export const isStaffPath = (pathname: string) =>
+  isAdminPath(pathname) || pathname === "/dsl" || pathname.startsWith("/dsl/");
+
 /** True when nothing from this page view may be tracked. */
 export const isInternalTraffic = (): boolean => {
   if (isInternalDevice()) return true;
   try {
-    return isAdminPath(window.location.pathname);
+    return isStaffPath(window.location.pathname);
   } catch {
     return false;
   }

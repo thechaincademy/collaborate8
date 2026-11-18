@@ -28,6 +28,10 @@ import ConversationQuestionnaire from "./ConversationQuestionnaire";
 import DocumentsTab from "./DocumentsTab";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 import { mergeChatMessages, pendingMessageDelivery } from "@/lib/chatMessages";
+import { hideSenderReadAt } from "@/lib/safeguarding/logic";
+import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -106,6 +110,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const { profile, loading: profileLoading } = useProfile();
   const coparentId = profile?.coparent_id ?? null;
   const premium = usePremiumGate();
+  const safety = useSafeguarding();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +133,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const attachInputRef = useRef<HTMLInputElement>(null);
 
   const handleAttach = async (file: File) => {
-    if (!user || !coparentId || attaching) return;
+    if (!user || !coparentId || attaching || safety.paused) return;
     if (!(await premium.requireAccess())) return;
     if (file.size > 10 * 1024 * 1024) {
       toast.error("Files must be under 10MB");
@@ -191,6 +196,10 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   const handleDownload = async () => {
     if (!user || !coparentId) return;
+    if (safety.enabled) {
+      await downloadRecord();
+      return;
+    }
     const [{ data: cp }, { data: exp }] = await Promise.all([
       supabase.from("profiles").select("first_name, last_name").eq("id", coparentId).maybeSingle(),
       supabase.from("expense_requests").select("description, amount, status, created_at, kind").eq("kind", "split_request").in("status", ["agreed", "rejected"]).order("created_at"),
@@ -392,7 +401,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     const fetchMessages = async () => {
       const version = ++fetchVersion;
       const { data, error } = await supabase
-        .from("messages")
+        .from("messages_caller" as "messages")
         .select("*")
         .or(
           `and(sender_id.eq.${user.id},recipient_id.eq.${coparentId}),and(sender_id.eq.${coparentId},recipient_id.eq.${user.id})`,
@@ -405,7 +414,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           setLoadState((prev) => (prev === "ok" && loadedPairRef.current === pairKey ? prev : "error"));
         } else {
           loadedPairRef.current = pairKey;
-          setMessages(prev => mergeChatMessages(prev, (data ?? []) as Message[]));
+          setMessages(prev => mergeChatMessages(prev, ((data ?? []) as Message[]).map((row) => hideSenderReadAt(row, user.id))));
           setLoadState("ok");
         }
         setLoading(false);
@@ -433,7 +442,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
             (m.sender_id === user.id && m.recipient_id === coparentId) ||
             (m.sender_id === coparentId && m.recipient_id === user.id)
           ) {
-            if (active) setMessages(prev => mergeChatMessages(prev, [m]));
+            if (active) setMessages(prev => mergeChatMessages(prev, [hideSenderReadAt(m, user.id)]));
           }
         },
       )
@@ -442,7 +451,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         { event: "UPDATE", schema: "public", table: "messages" },
         (payload) => {
           const m = payload.new as Message;
-          if (active) setMessages((prev) => prev.map((p) => (p.id === m.id ? { ...p, read_at: m.read_at } : p)));
+          if (active) setMessages((prev) => prev.map((p) => (p.id === m.id && p.sender_id !== user.id ? { ...p, read_at: m.read_at } : p)));
         },
       )
       .subscribe(status => {
@@ -566,7 +575,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   const handleSendClick = async () => {
     const text = draft.trim();
-    if (!text || sending) return;
+    if (!text || sending || safety.paused) return;
     if (rewriting) return;
     if (!premium.loading && !premium.hasAccess) {
       await insertMessage(text);
@@ -997,11 +1006,6 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
                         minute: "2-digit",
                         hour12: false,
                       })}
-                      {mine && (
-                        <span className={cn("ml-1.5 font-medium", m.read_at ? "text-primary-ink" : "")}>
-                          · {m.read_at ? "Read" : "Delivered - unread"}
-                        </span>
-                      )}
                     </p>
                   </div>
                 </motion.div>
@@ -1012,6 +1016,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         {showNoReplySuggestion && <ConversationToolSuggestionCard onOpen={openTool} />}
       </div>
 
+      {safety.enabled && safety.paused ? <SafetyToolsBanner safety={safety} /> : <>
       <div className={cn("flex shrink-0 items-end gap-2", compact ? "pb-3" : "pb-4")}>
         <input
           ref={attachInputRef}
@@ -1088,8 +1093,9 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           </div>
         </div>
       )}
-      <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
+      </>}
       </>)}
+      <PremiumPaywall open={premium.paywallOpen} onOpenChange={premium.setPaywallOpen} />
     </div>
   );
 };

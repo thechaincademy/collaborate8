@@ -1,3 +1,7 @@
+import { initEdgeSentry } from "./sentry.ts";
+
+initEdgeSentry();
+
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":

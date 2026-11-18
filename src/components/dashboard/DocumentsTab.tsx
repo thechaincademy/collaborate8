@@ -9,6 +9,8 @@ import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import { track, fileType } from "@/lib/analytics";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 
 interface SharedDocument {
   id: string;
@@ -27,6 +29,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
   const { profile, loading: profileLoading } = useProfile();
   const coparentId = profile?.coparent_id ?? null;
   const premium = usePremiumGate();
+  const safety = useSafeguarding();
 
   const [documents, setDocuments] = useState<SharedDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +70,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
   };
 
   const handleUpload = async (file: File) => {
-    if (!user || !coparentId || uploading) return;
+    if (!user || !coparentId || uploading || safety.paused) return;
     if (!(await premium.requireAccess())) return;
     setUploading(true);
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -101,6 +104,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
   return (
     <div className="flex h-full flex-col">
       {!embedded && <DashboardHeader title="Documents" />}
+      <SafetyToolsBanner safety={safety} />
       <p className="mb-4 text-sm text-muted-foreground">
         Upload and share documents with your co-parent - receipts, letters and paperwork, all in one place.
       </p>
@@ -131,7 +135,7 @@ const DocumentsTab = ({ embedded = false }: DocumentsTabProps) => {
           />
           <Button
             onClick={async () => { if (await premium.requireAccess()) fileInputRef.current?.click(); }}
-            disabled={uploading}
+            disabled={uploading || safety.paused}
             className="mb-4 w-full"
           >
             {uploading ? (

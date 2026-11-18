@@ -13,6 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments } from "@/hooks/useStripe";
 import { toast } from "sonner";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 
 type Frequency = "Weekly" | "Monthly";
 
@@ -81,6 +83,7 @@ const EditRecurringPayment = () => {
   const { isViewing, profile, loading: profileLoading } = useProfile();
   const { getActivePayment, loading, createOrUpdatePayment } = useRecurringPayments();
   const { createSubscriptionCheckout, loading: stripeLoading } = useStripePayments();
+  const safety = useSafeguarding();
 
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState("50.00");
@@ -164,6 +167,7 @@ const EditRecurringPayment = () => {
           <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
         </button>
 
+        <SafetyToolsBanner safety={safety} />
         <h1 className="mb-2 text-2xl font-bold text-foreground">Set up your arrangement</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Complete each step to schedule your child maintenance payment.

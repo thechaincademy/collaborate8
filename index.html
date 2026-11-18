@@ -17,7 +17,7 @@
         } catch (e) { /* storage unavailable */ }
         window.c8IsInternal = function () {
           var p = window.location.pathname;
-          if (p === '/admin' || p.indexOf('/admin/') === 0) return true;
+          if (p === '/admin' || p.indexOf('/admin/') === 0 || p === '/dsl' || p.indexOf('/dsl/') === 0) return true;
           try { return localStorage.getItem('c8_internal') === '1'; } catch (e) { return false; }
         };
       })();

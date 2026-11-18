@@ -15,9 +15,12 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import DeletedUserLabel from "@/components/DeletedUserLabel";
 import { isDeletedProfile } from "@/lib/profileDisplay";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 
 const MaintenanceTab = () => {
   const navigate = useNavigate();
+  const safety = useSafeguarding();
   const { getActivePayment, loading, refetch } = useRecurringPayments();
   const { isViewing, isManaging, profile, loading: profileLoading, updateProfile } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
@@ -148,6 +151,7 @@ const MaintenanceTab = () => {
     return (
       <div className="px-6 pt-12 pb-24">
         <DashboardHeader title="Child Maintenance" />
+        <SafetyToolsBanner safety={safety} />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -199,6 +203,7 @@ const MaintenanceTab = () => {
   return (
     <div className="px-6 pt-12 pb-24">
       <DashboardHeader title="Child Maintenance" />
+      <SafetyToolsBanner safety={safety} />
 
       {!profileLoading && (isManaging || isViewing) && (
         <div className="-mt-6 mb-6">
