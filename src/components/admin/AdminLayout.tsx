@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,8 @@ export const ADMIN_LINKS: { to: string; label: string; end?: boolean }[] = [
 
 /** Shared admin menu: left column on desktop, scrollable bar on top on phones. Admins only. */
 const AdminLayout = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -25,6 +26,12 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   if (!isAdmin) return <>{children}</>;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/admin/login", { replace: true });
+  };
+  const signOutClass = "whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
 
   const item = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -39,6 +46,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           {ADMIN_LINKS.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={item}>{l.label}</NavLink>
           ))}
+          <button type="button" onClick={() => void handleSignOut()} className={cn(signOutClass, "ml-auto")}>Sign out</button>
         </div>
       </nav>
       <aside className="hidden w-56 shrink-0 border-r md:block">
@@ -47,6 +55,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           {ADMIN_LINKS.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={item}>{l.label}</NavLink>
           ))}
+          <div className="mt-4 border-t pt-4">
+            <button type="button" onClick={() => void handleSignOut()} className={cn(signOutClass, "w-full")}>Sign out</button>
+          </div>
         </nav>
       </aside>
       <div className="min-w-0 flex-1">{children}</div>
