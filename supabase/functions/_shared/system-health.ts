@@ -2,6 +2,7 @@
 // Returns service names, statuses, HTTP status codes and response times only.
 // Never returns secret values, message text, emails, phone numbers or bank data.
 import { vertexConfigured, vertexToken, VERTEX_MODEL } from "./vertex.ts";
+import { cfg } from "./config.ts";
 
 export type ServiceStatus = "up" | "problem" | "down" | "not_configured";
 export interface ServiceCheck {
@@ -18,7 +19,7 @@ export interface ServiceCheck {
 
 const SLOW_MS = 8000;
 const TIMEOUT_MS = 10000;
-const has = (name: string) => Boolean((Deno.env.get(name) ?? "").trim());
+const has = (name: string) => Boolean((cfg(name) ?? "").trim());
 
 async function timed(url: string, init: RequestInit = {}): Promise<{ status: number | null; ms: number; timedOut: boolean }> {
   const started = performance.now();
@@ -72,7 +73,7 @@ async function checkFunction(slug: string, label: string, requiredSecrets: strin
 async function checkVertex(): Promise<ServiceCheck> {
   const label = "Calm check AI (Vertex, London)";
   if (!vertexConfigured()) return { key: "vertex", label, status: "not_configured", detail: "Needs GCP_VERTEX_SA_JSON", http_status: null, response_ms: null, alertable: true };
-  const location = (Deno.env.get("VERTEX_LOCATION") ?? "europe-west2").trim();
+  const location = (cfg("VERTEX_LOCATION") ?? "europe-west2").trim();
   if (!location || location === "global" || location === "us" || location === "eu") {
     return { key: "vertex", label, status: "problem", detail: "Regional London endpoint required, global endpoint blocked", http_status: null, response_ms: null, alertable: true };
   }
@@ -95,7 +96,7 @@ async function checkVertex(): Promise<ServiceCheck> {
 
 async function checkStripeApi(): Promise<ServiceCheck> {
   const label = "Stripe API";
-  const key = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+  const key = cfg("STRIPE_SECRET_KEY") ?? "";
   if (!key) {
     // Unauthenticated call: a 401 proves Stripe is reachable from the London server.
     const r = await timed("https://api.stripe.com/v1/charges?limit=1");

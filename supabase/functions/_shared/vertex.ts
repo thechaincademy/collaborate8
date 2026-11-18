@@ -1,3 +1,4 @@
+import { cfg } from "./config.ts";
 // Vertex AI (London, europe-west2) client for Collabor8 edge functions.
 // Accepts the OpenAI-style chat body the functions already build and returns a
 // Response shaped like an OpenAI chat completion ({ choices: [{ message: { content } }] }),
@@ -7,8 +8,8 @@
 // Nothing here logs prompts, drafts or model output.
 
 const PROJECT = () => Deno.env.get("VERTEX_PROJECT") ?? "collaborate8-c9e7f";
-const LOCATION = () => Deno.env.get("VERTEX_LOCATION") ?? "europe-west2";
-export const VERTEX_MODEL = () => (Deno.env.get("VERTEX_MODEL") ?? "").trim() || "gemini-3.5-flash";
+const LOCATION = () => cfg("VERTEX_LOCATION") ?? "europe-west2";
+export const VERTEX_MODEL = () => (cfg("VERTEX_MODEL") ?? "").trim() || "gemini-3.5-flash";
 
 type ServiceAccount = { client_email: string; private_key: string; token_uri?: string };
 let cached: { token: string; exp: number } | null = null;
@@ -16,7 +17,7 @@ let inflight: Promise<string> | null = null;
 
 export const vertexConfigured = () => {
   try {
-    const sa = JSON.parse(Deno.env.get("GCP_VERTEX_SA_JSON") ?? "");
+    const sa = JSON.parse(cfg("GCP_VERTEX_SA_JSON") ?? "");
     return typeof sa?.client_email === "string" && typeof sa?.private_key === "string";
   } catch {
     return false;
@@ -37,7 +38,7 @@ const importKey = (pem: string) => {
 };
 
 const mintToken = async (): Promise<string> => {
-  const sa = JSON.parse(Deno.env.get("GCP_VERTEX_SA_JSON") ?? "{}") as ServiceAccount;
+  const sa = JSON.parse(cfg("GCP_VERTEX_SA_JSON") ?? "{}") as ServiceAccount;
   if (!sa.client_email || !sa.private_key) throw new Error("vertex_not_configured");
   const aud = sa.token_uri || "https://oauth2.googleapis.com/token";
   const now = Math.floor(Date.now() / 1000);

@@ -1,6 +1,7 @@
 // Shared account deletion: used by delete-account (signed in) and request-account-deletion (email link).
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { cfg } from "./config.ts";
 
 export type DeletionResult = { status: "deleted" } | { status: "error"; error: string };
 
@@ -18,7 +19,7 @@ async function must(step: string, p: PromiseLike<{ error: unknown }>) {
 }
 
 async function cleanStripe(admin: SupabaseClient, uid: string, email: string | undefined) {
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = cfg("STRIPE_SECRET_KEY");
   if (!key) return log("stripe", "STRIPE_SECRET_KEY missing");
   const stripe = new Stripe(key, { apiVersion: "2025-08-27.basil" });
 

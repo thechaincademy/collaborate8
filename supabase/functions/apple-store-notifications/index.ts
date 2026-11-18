@@ -1,6 +1,7 @@
 // App Store Server Notifications V2. Public endpoint; authenticity comes from the Apple-signed JWS.
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
 import { findStoreRow, productAllowed, profileExists, saveStoreRow, StoreStatus, verifyAppleJws } from "../_shared/store-subscription-rule.ts";
+import { cfg } from "../_shared/config.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -9,7 +10,7 @@ const ms = (v: unknown) => (v ? new Date(Number(v)).toISOString() : null);
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  const bundleId = Deno.env.get("APPLE_BUNDLE_ID");
+  const bundleId = cfg("APPLE_BUNDLE_ID");
   if (!bundleId) { log("store not configured", { missing: ["APPLE_BUNDLE_ID"] }); return json({ error: "store_not_configured", store: "apple" }, 503); }
 
   const body = await req.json().catch(() => null);

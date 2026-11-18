@@ -1,6 +1,7 @@
 // Server-only YouTube channel stats. Uses the admin's Google sign-in (youtube.readonly) when
 // available, otherwise the YOUTUBE_API_KEY secret. Neither ever leaves the server.
 import { safeSourceError } from "./buffer-analytics.ts";
+import { cfg } from "./config.ts";
 
 const HANDLE = "@collabor8official";
 const TTL = 15 * 60 * 1000;
@@ -18,7 +19,7 @@ export async function getYouTubeAnalytics(opts: { accessToken?: string } = {}): 
   const mode = accessToken ? "oauth" : "key";
   if (cache && cache.mode === mode && Date.now() - cache.at < TTL) return cache.value;
   const base: YouTube = { ok: false, channel_id: null, title: null, handle: HANDLE, subscribers: null, total_views: null, video_count: null, recent_videos: [], fetched_at: new Date().toISOString() };
-  const key = accessToken ? "" : (Deno.env.get("YOUTUBE_API_KEY") ?? "");
+  const key = accessToken ? "" : (cfg("YOUTUBE_API_KEY") ?? "");
   if (!accessToken && !key) return { ...base, error: "YouTube not connected. Connect Google on the Setup page." };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);

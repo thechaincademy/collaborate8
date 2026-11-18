@@ -1,3 +1,4 @@
+import { cfg } from "./config.ts";
 /** Server-only Resend sender. Reads RESEND_API_KEY and EMAIL_FROM. */
 
 export const DEFAULT_FROM = "Collabor8 <alerts@notify.collaborate8.com>";
@@ -23,11 +24,11 @@ export interface SendResendEmailInput {
 }
 
 export async function sendResendEmail(input: SendResendEmailInput): Promise<SendResendResult> {
-  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const apiKey = cfg("RESEND_API_KEY");
   if (!apiKey) {
     throw new Error("RESEND_API_KEY is not configured");
   }
-  const from = Deno.env.get("EMAIL_FROM") || DEFAULT_FROM;
+  const from = cfg("EMAIL_FROM") || DEFAULT_FROM;
 
   const payload: Record<string, unknown> = {
     from,

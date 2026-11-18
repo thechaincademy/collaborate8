@@ -1,3 +1,4 @@
+import { cfg } from "./config.ts";
 // Shared Google OAuth helpers. Never log tokens, codes or state.
 export const ALLOWED_ADMIN_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 export const GOOGLE_SCOPES =
@@ -24,8 +25,8 @@ export function safeReturnUrl(origin: unknown, path: unknown): string {
 export const redirectUri = () => `${Deno.env.get("SUPABASE_URL")}/functions/v1/google-oauth-callback`;
 
 export function googleClient(): { id: string; secret: string } | null {
-  const id = Deno.env.get("GOOGLE_OAUTH_CLIENT_ID");
-  const secret = Deno.env.get("GOOGLE_OAUTH_CLIENT_SECRET");
+  const id = cfg("GOOGLE_OAUTH_CLIENT_ID");
+  const secret = cfg("GOOGLE_OAUTH_CLIENT_SECRET");
   return id && secret ? { id, secret } : null;
 }
 

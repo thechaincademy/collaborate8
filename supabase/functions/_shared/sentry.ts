@@ -5,6 +5,7 @@ import {
   type SentryEventLike,
   sentrySendDefaultPii,
 } from "./sentry-scrub.ts";
+import { cfg } from "./config.ts";
 
 let started = false;
 let client: { captureException: (error: unknown) => void } | null = null;
@@ -12,7 +13,7 @@ let client: { captureException: (error: unknown) => void } | null = null;
 /** Loads @sentry/deno only when SENTRY_DSN is set. */
 export async function initEdgeSentry() {
   if (started) return;
-  const dsn = Deno.env.get("SENTRY_DSN");
+  const dsn = cfg("SENTRY_DSN");
   if (!dsn) return;
   started = true;
   const Sentry = await import("npm:@sentry/deno@8.47.0");

@@ -6,6 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts";
 import { ALLOWED_ADMIN_EMAILS, googleClient, YOUTUBE_SCOPE } from "../_shared/google-oauth.ts";
 import { isMissingStoreError, PASTED_PROVIDERS, type PastedProvider, storedStatus } from "../_shared/analytics-connections.ts";
+import { cfg } from "../_shared/config.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -72,7 +73,7 @@ Deno.serve(async (req) => {
       const store = await storedStatus(admin);
       const pasted = Object.fromEntries(PASTED_PROVIDERS.map((p) => {
         const row = store.rows.find((r) => r.provider === p);
-        const env = !!Deno.env.get(ENV_NAME[p]);
+        const env = !!cfg(ENV_NAME[p]);
         return [p, {
           connected: !!row || env,
           source: row ? "admin" : env ? "secret" : null,
@@ -88,7 +89,7 @@ Deno.serve(async (req) => {
           account_email: g?.account_email ?? null,
           connected_at: g?.updated_at ?? null,
           youtube: String(g?.scopes ?? "").split(/\s+/).includes(YOUTUBE_SCOPE),
-          youtube_key_fallback: !!Deno.env.get("YOUTUBE_API_KEY"),
+          youtube_key_fallback: !!cfg("YOUTUBE_API_KEY"),
         },
         ...pasted,
       });
@@ -118,7 +119,7 @@ Deno.serve(async (req) => {
         console.error("admin-connections remove failed", { provider, code: error.code });
         return json({ error: "Could not disconnect. Try again later." }, 500);
       }
-      return json({ ok: true, provider, env_fallback: !!Deno.env.get(ENV_NAME[provider]) });
+      return json({ ok: true, provider, env_fallback: !!cfg(ENV_NAME[provider]) });
     }
 
     return json({ error: "Unknown action" }, 400);

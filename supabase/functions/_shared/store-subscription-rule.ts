@@ -2,6 +2,7 @@
 // Deploy target: supabase/functions/_shared/store-subscription-rule.ts
 // Never log secrets, JWS payloads, receipts or purchase tokens (use tokenRef()).
 import { X509Certificate } from "npm:@peculiar/x509@1.12.3";
+import { cfg } from "./config.ts";
 
 export type StoreStatus =
   | "active" | "grace_period" | "billing_retry" | "on_hold" | "paused"
@@ -77,7 +78,7 @@ export class StoreHttpError extends Error {
   constructor(public status: number, public code: string) { super(code); }
 }
 
-export const missingSecrets = (names: string[]) => names.filter((n) => !Deno.env.get(n));
+export const missingSecrets = (names: string[]) => names.filter((n) => !cfg(n));
 export const APPLE_SECRETS = ["APPLE_IAP_ISSUER_ID", "APPLE_IAP_KEY_ID", "APPLE_IAP_PRIVATE_KEY", "APPLE_BUNDLE_ID"];
 export const GOOGLE_SECRETS = ["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON", "GOOGLE_PLAY_PACKAGE_NAME"];
 
@@ -111,13 +112,13 @@ export async function verifyAppleJws(jws: string): Promise<any> {
 }
 
 async function appleJwt(): Promise<string> {
-  const der = pemToDer(Deno.env.get("APPLE_IAP_PRIVATE_KEY")!);
+  const der = pemToDer(cfg("APPLE_IAP_PRIVATE_KEY")!);
   const key = await crypto.subtle.importKey("pkcs8", der, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
   const iat = Math.floor(Date.now() / 1000);
-  const h = strB64url(JSON.stringify({ alg: "ES256", kid: Deno.env.get("APPLE_IAP_KEY_ID"), typ: "JWT" }));
+  const h = strB64url(JSON.stringify({ alg: "ES256", kid: cfg("APPLE_IAP_KEY_ID"), typ: "JWT" }));
   const p = strB64url(JSON.stringify({
-    iss: Deno.env.get("APPLE_IAP_ISSUER_ID"), iat, exp: iat + 1200,
-    aud: "appstoreconnect-v1", bid: Deno.env.get("APPLE_BUNDLE_ID"),
+    iss: cfg("APPLE_IAP_ISSUER_ID"), iat, exp: iat + 1200,
+    aud: "appstoreconnect-v1", bid: cfg("APPLE_BUNDLE_ID"),
   }));
   const sig = new Uint8Array(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(h + "." + p)));
   return h + "." + p + "." + bytesToB64url(sig);
@@ -194,7 +195,7 @@ export function mapAppleStatus(code: number, renewal: any, txn: any): StoreStatu
 let gToken: { token: string; exp: number } | null = null;
 
 export const googleServiceAccount = (): { client_email: string; private_key: string } =>
-  JSON.parse(Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON")!);
+  JSON.parse(cfg("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON")!);
 
 async function googleAccessToken(): Promise<string> {
   if (gToken && gToken.exp > Date.now() + 60_000) return gToken.token;

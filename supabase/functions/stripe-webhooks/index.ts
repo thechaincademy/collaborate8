@@ -8,6 +8,7 @@ import {
   periodEndIso,
   subscriptionFields,
 } from "../_shared/conversation-tool-access-rule.ts";
+import { cfg } from "../_shared/config.ts";
 
 const CT_EVENTS = new Set([
   "customer.subscription.created",
@@ -110,7 +111,7 @@ serve(async (req) => {
     return new Response(null, { status: 200 });
   }
 
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const stripeKey = cfg("STRIPE_SECRET_KEY");
   if (!stripeKey) {
     return new Response("STRIPE_SECRET_KEY not configured", { status: 500 });
   }
@@ -123,8 +124,8 @@ serve(async (req) => {
     const sig = req.headers.get("stripe-signature");
 
     // Try both webhook secrets: platform (invoices, subscriptions) and connected accounts
-    const platformSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_PLATFORM");
-    const connectSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    const platformSecret = cfg("STRIPE_WEBHOOK_SECRET_PLATFORM");
+    const connectSecret = cfg("STRIPE_WEBHOOK_SECRET");
 
     let event: Stripe.Event;
 

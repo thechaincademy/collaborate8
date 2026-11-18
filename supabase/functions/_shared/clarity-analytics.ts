@@ -1,5 +1,6 @@
 // Server-only Microsoft Clarity live insights. One API call per refresh, cached 3 hours (API allows 10 calls a day).
 import { safeSourceError } from "./buffer-analytics.ts";
+import { cfg } from "./config.ts";
 
 const TTL = 3 * 60 * 60 * 1000;
 export type Clarity = {
@@ -29,7 +30,7 @@ export function parseClarity(body: unknown): Omit<Clarity, "ok" | "days" | "fetc
 }
 
 export async function getClarityAnalytics(override?: string | null): Promise<Clarity> {
-  const token = override || Deno.env.get("CLARITY_API_TOKEN");
+  const token = override || cfg("CLARITY_API_TOKEN");
   if (cache && cache.key === (token ?? "") && Date.now() - cache.at < TTL) return cache.value;
   const empty: Clarity = { ok: false, days: 3, fetched_at: new Date().toISOString(), sessions: null, pages_per_session: null, scroll_depth_pct: null, dead_click_pct: null, rage_click_pct: null, quickback_pct: null, excessive_scroll_pct: null, top_pages: [] };
   if (!token) return { ...empty, error: "Clarity not configured" };

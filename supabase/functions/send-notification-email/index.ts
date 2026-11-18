@@ -2,6 +2,7 @@ import webpush from "npm:web-push@3.6.7";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import { cfg } from "../_shared/config.ts";
 
 const APP_URL = "https://collaborate8.com";
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -19,8 +20,8 @@ function categoryOf(type: string): string {
 }
 
 async function sendPush(supabase: ReturnType<typeof createSupabaseAdmin>, n: any) {
-  const pub = Deno.env.get("VAPID_PUBLIC_KEY");
-  const priv = Deno.env.get("VAPID_PRIVATE_KEY");
+  const pub = cfg("VAPID_PUBLIC_KEY");
+  const priv = cfg("VAPID_PRIVATE_KEY");
   if (!pub || !priv) return 0;
   webpush.setVapidDetails("mailto:hello@collaborate8.com", pub, priv);
   const { data: subs } = await supabase.from("push_subscriptions").select("*").eq("user_id", n.user_id);
@@ -120,7 +121,7 @@ function isStaleFcmToken(status: number, body: string): boolean {
 
 async function sendFcm(supabase: ReturnType<typeof createSupabaseAdmin>, n: any): Promise<number> {
   try {
-    const raw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+    const raw = cfg("FIREBASE_SERVICE_ACCOUNT");
     if (!raw) {
       console.warn("[fcm] FIREBASE_SERVICE_ACCOUNT not set; skipping");
       return 0;

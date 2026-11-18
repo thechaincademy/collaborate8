@@ -5,6 +5,7 @@ import {
   fetchGoogleSubscription, findStoreRow, GOOGLE_SECRETS, googleServiceAccount, missingSecrets,
   productAllowed, profileExists, saveStoreRow, StoreHttpError, tokenRef,
 } from "../_shared/store-subscription-rule.ts";
+import { cfg } from "../_shared/config.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
     msg = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(body.message.data), (c) => c.charCodeAt(0))));
   } catch { log("bad message"); return json({ ok: true, ignored: "bad_message" }); }
 
-  const pkg = Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME")!;
+  const pkg = cfg("GOOGLE_PLAY_PACKAGE_NAME")!;
   if (msg.packageName !== pkg) { log("package mismatch"); return json({ ok: true, ignored: "package" }); }
   if (msg.testNotification) { log("test notification"); return json({ ok: true }); }
 

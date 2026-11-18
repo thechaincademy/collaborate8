@@ -9,6 +9,7 @@ import type {
   RecurringAgreement,
   ConnectedAccountInfo,
 } from "./payment-interfaces.ts";
+import { cfg } from "./config.ts";
 
 async function tryStripe<T>(scope: string, step: string, fn: () => Promise<T>): Promise<T> {
   try {
@@ -20,7 +21,7 @@ async function tryStripe<T>(scope: string, step: string, fn: () => Promise<T>): 
 }
 
 function getStripe(): Stripe {
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = cfg("STRIPE_SECRET_KEY");
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 }
@@ -156,7 +157,7 @@ export class StripePayoutProvider implements PayoutProvider {
     const stripe = getStripe();
 
     // Check if we're in test mode (test keys start with sk_test_)
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
+    const stripeKey = cfg("STRIPE_SECRET_KEY") || "";
     const isTestMode = stripeKey.startsWith("sk_test_");
 
     const accountParams: Stripe.AccountCreateParams = {

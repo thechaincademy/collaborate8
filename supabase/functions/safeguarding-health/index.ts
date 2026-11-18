@@ -7,6 +7,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
 import { notifySafeguarding } from "../_shared/safeguarding-notify.ts";
+import { cfg } from "../_shared/config.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -25,7 +26,7 @@ Deno.serve(async (req) => {
       ok: true,
       db: "ok",
       edge: "ok",
-      alert_email_configured: Boolean(Deno.env.get("DSL_ALERT_EMAIL")),
+      alert_email_configured: Boolean(cfg("DSL_ALERT_EMAIL")),
       checked_at: new Date().toISOString(),
     }, 200);
   } catch {

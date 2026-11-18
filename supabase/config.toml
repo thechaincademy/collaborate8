@@ -91,3 +91,7 @@ verify_jwt = false
 [functions.admin-connections]
 # Admin JWT is checked inside the function.
 verify_jwt = false
+
+[functions.admin-config]
+# Admin JWT is checked inside the function.
+verify_jwt = false

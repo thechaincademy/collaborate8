@@ -8,6 +8,7 @@ import {
   StripeDynamicPricing,
   StripePayoutProvider,
 } from "../_shared/stripe-adapter.ts";
+import { cfg } from "../_shared/config.ts";
 
 const paymentMethodProvider = new StripePaymentMethodProvider();
 const recurringProvider = new StripeRecurringProvider();
@@ -22,7 +23,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 const getStripe = () => {
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = cfg("STRIPE_SECRET_KEY");
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 };

@@ -1,3 +1,4 @@
+import { cfg } from "./config.ts";
 // Server-only Buffer reporting. No credentials or raw API bodies leave this module.
 export const SERVICES = ["instagram", "linkedin", "tiktok"] as const;
 type Service = typeof SERVICES[number];
@@ -42,7 +43,7 @@ export function aggregateMetrics(groups: Metric[][]): Metrics {
   return { posts, reach, impressions, reactions: v("reactions"), comments: v("comments"), shares: v("shares"), engagement_rate: rate };
 }
 export async function getBufferAnalytics(token?: string | null): Promise<Result> {
-  const key = token || Deno.env.get("BUFFER_API_KEY");
+  const key = token || cfg("BUFFER_API_KEY");
   if (cache && cache.key === (key ?? "") && Date.now() - cache.at < 15 * 60 * 1000) return cache.result;
   const social = emptySocial();
   if (!key) return { social: { ...social, error: "Buffer not connected" }, services: [], http_status: null };

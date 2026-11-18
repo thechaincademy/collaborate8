@@ -6,6 +6,7 @@ import {
   fetchGoogleSubscription, findStoreRow, GOOGLE_SECRETS, isStoreActive, isUniqueViolation,
   missingSecrets, productAllowed, saveStoreRow, storeAccessShape, StoreHttpError, StoreRow, tokenRef,
 } from "../_shared/store-subscription-rule.ts";
+import { cfg } from "../_shared/config.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
 
     if (store === "apple") {
       const a = await fetchAppleSubscription(appleTxId!);
-      if (a.bundleId !== Deno.env.get("APPLE_BUNDLE_ID") || a.type !== "Auto-Renewable Subscription" || !productAllowed(a.row.product_id)) {
+      if (a.bundleId !== cfg("APPLE_BUNDLE_ID") || a.type !== "Auto-Renewable Subscription" || !productAllowed(a.row.product_id)) {
         log("product mismatch", { userId: user.id, originalTransactionId: a.row.original_transaction_id });
         return fail(422, "product_mismatch");
       }
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
       }
       row = a.row;
     } else {
-      const pkg = Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME")!;
+      const pkg = cfg("GOOGLE_PLAY_PACKAGE_NAME")!;
       if (body.package_name && body.package_name !== pkg) return fail(400, "invalid_request", { detail: "package_name does not match" });
       const g = await fetchGoogleSubscription(pkg, googleToken!);
       identifier = googleToken!;

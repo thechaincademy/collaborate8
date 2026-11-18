@@ -17,6 +17,7 @@ import { sendTemplateEmail } from "../_shared/transactional-email-templates/send
 import { serviceAlertSubject } from "../_shared/transactional-email-templates/service-status-alert.tsx";
 import { safeReason } from "../_shared/safeguarding-notify.ts";
 import { splitList } from "../_shared/safeguarding-rules.ts";
+import { cfg as appCfg } from "../_shared/config.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -179,8 +180,8 @@ async function cronRun(admin: Admin) {
   const cfg = await runtimeConfig(admin, ["environment", "qa_alert_email", "dsl_alert_email"]);
   const test = (cfg.environment ?? "live") !== "live";
   const recipients = test
-    ? splitList(Deno.env.get("QA_ALERT_EMAIL") || cfg.qa_alert_email)
-    : splitList(Deno.env.get("DSL_ALERT_EMAIL") || cfg.dsl_alert_email);
+    ? splitList(appCfg("QA_ALERT_EMAIL") || cfg.qa_alert_email)
+    : splitList(appCfg("DSL_ALERT_EMAIL") || cfg.dsl_alert_email);
 
   const { data: rows, error } = await admin.from("monitor_service_status").select("*");
   if (error) return { ok: false, reason: "state_table_missing", checks: checks.length };

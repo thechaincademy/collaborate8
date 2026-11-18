@@ -9,6 +9,7 @@ import {
   subscriptionFields,
 } from "../_shared/conversation-tool-access-rule.ts";
 import { activeStoreSubscription, storeAccessShape } from "../_shared/store-subscription-rule.ts";
+import { cfg } from "../_shared/config.ts";
 
 // Promotional codes that grant free access (12 months, no renewal)
 const PROMO_CODES = new Set(["4321"]);
@@ -23,7 +24,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 const getStripe = () => {
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = cfg("STRIPE_SECRET_KEY");
   if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
   return new Stripe(key, { apiVersion: "2025-08-27.basil" });
 };
