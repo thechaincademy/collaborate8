@@ -25,6 +25,8 @@ export interface SubscriptionInfo {
   nextPaymentDate: string;
 }
 
+export const PAYOUT_SETUP_FAILED = "Payout setup couldn't start. Please try again later.";
+
 export const useStripeConnect = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -37,21 +39,12 @@ export const useStripeConnect = () => {
       const { data, error } = await supabase.functions.invoke("stripe-connect", {
         body: { action: "create-account" },
       });
-      if (error) {
-        const ctx: any = (error as any).context;
-        let serverMsg: string | undefined;
-        try {
-          if (ctx?.json) serverMsg = (await ctx.json())?.error;
-          else if (ctx?.text) serverMsg = JSON.parse(await ctx.text())?.error;
-        } catch {}
-        throw new Error(serverMsg || error.message || "Failed to start onboarding");
-      }
-      if (data?.error) throw new Error(data.error);
-      if (!data?.url) throw new Error("No onboarding URL returned by Stripe");
+      if (error || data?.error || !data?.url) throw new Error("payout_setup_failed");
       return data as { url: string; accountId: string };
-    } catch (e: any) {
-      console.error("[startOnboarding]", e);
-      toast.error(e?.message || "Failed to start onboarding");
+    } catch {
+      // Stripe's own error text stays in the server log. Parents only see one plain line.
+      console.warn("[startOnboarding] payout setup failed");
+      toast.error(PAYOUT_SETUP_FAILED);
       return null;
     } finally {
       setLoading(false);

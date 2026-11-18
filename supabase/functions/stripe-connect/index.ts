@@ -156,19 +156,17 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    const { logStripeError } = await import("../_shared/stripe-errors.ts");
-    const details = logStripeError("STRIPE-CONNECT", "handler", error);
+    // Full Stripe detail stays in the server log only. Emails are masked and the raw
+    // response is not logged. The client gets a generic error with no Stripe text.
+    const { extractStripeError } = await import("../_shared/stripe-errors.ts");
+    const d = extractStripeError(error);
+    const mask = (v: unknown) => (v == null ? v : String(v).replace(/[^\s@]+@[^\s@]+/g, "[email]").slice(0, 500));
+    console.error("[STRIPE-CONNECT] ERROR at \"handler\"", JSON.stringify({
+      message: mask(d.message), type: d.type, code: d.code, param: d.param,
+      statusCode: d.statusCode, requestId: d.requestId, doc_url: d.doc_url,
+    }));
     return new Response(
-      JSON.stringify({
-        error: details.message || "Internal error",
-        stripe: {
-          type: details.type,
-          code: details.code,
-          param: details.param,
-          requestId: details.requestId,
-          doc_url: details.doc_url,
-        },
-      }),
+      JSON.stringify({ error: "Request failed. Please try again later.", code: "stripe_connect_failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

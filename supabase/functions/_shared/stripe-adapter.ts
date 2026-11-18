@@ -170,7 +170,7 @@ export class StripePayoutProvider implements PayoutProvider {
       },
       business_profile: {
         mcc: "5734",
-        url: "https://collabor8.lovable.app",
+        url: "https://collaborate8.com",
         product_description: "Receiving child maintenance payments via Collabor8",
       },
       metadata: metadata || {},
