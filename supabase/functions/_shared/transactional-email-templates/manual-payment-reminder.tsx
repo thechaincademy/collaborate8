@@ -45,13 +45,7 @@ export const ManualPaymentReminder = ({
         </Text>
         <Section style={{ margin: '0 0 20px', padding: '16px', borderRadius: '12px', backgroundColor: '#FAF8F3' }}>
           <Text style={{ margin: '0 0 6px', color: '#111111', fontSize: '14px' }}>
-            <strong>Account name:</strong> {holderName}
-          </Text>
-          <Text style={{ margin: '0 0 6px', color: '#111111', fontSize: '14px' }}>
-            <strong>Sort code:</strong> {sortCode}
-          </Text>
-          <Text style={{ margin: '0 0 6px', color: '#111111', fontSize: '14px' }}>
-            <strong>Account number:</strong> {accountNumber}
+            Payout details are collected by Stripe. Collabor8 does not store a sort code or account number.
           </Text>
           {paymentReference ? (
             <Text style={{ margin: 0, color: '#111111', fontSize: '14px' }}>
@@ -61,7 +55,7 @@ export const ManualPaymentReminder = ({
         </Section>
         <Section style={{ textAlign: 'center', margin: '0 0 24px' }}>
           <Link
-            href={`${APP_URL}/coparent-bank-account`}
+            href={`${APP_URL}/profile`}
             style={{ display: 'inline-block', backgroundColor: '#D4A017', color: '#111111', textDecoration: 'none', padding: '14px 28px', borderRadius: '999px', fontWeight: 600 }}
           >
             Record this payment

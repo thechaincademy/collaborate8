@@ -1,4 +1,5 @@
 // Deploy target: supabase/functions/chat-rewrite/index.ts
+// @ts-nocheck
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";

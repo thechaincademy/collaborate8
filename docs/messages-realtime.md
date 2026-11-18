@@ -1,0 +1,81 @@
+# Messages read view and realtime contract
+
+Current app builds may still `select` from `public.messages` and listen to the `messages` realtime publication. That path stays until the cutover file is applied by hand:
+
+`supabase/manual/APPLY_AFTER_APP_BUILD_messages_realtime_cutover.sql`
+
+Jian's build should use only the names below.
+
+## Read view
+
+Name: `public.messages_caller`
+
+The caller must be signed in. The view returns only rows where `sender_id` or `recipient_id` is `auth.uid()`.
+
+Columns:
+
+| Column | Rule |
+| --- | --- |
+| `id` | uuid |
+| `sender_id` | uuid |
+| `recipient_id` | uuid |
+| `body` | text |
+| `created_at` | timestamptz |
+| `attachment_path` | text, null if none |
+| `attachment_name` | text, null if none |
+| `used_suggestion` | boolean |
+| `pending_first_message_id` | uuid, null if none |
+| `original_body` | the sender's draft. Null for the receiver. |
+| `tone_score` | the sender's score. Null for the receiver. |
+| `read_at` | set only for the receiver. Null for the sender. |
+
+Do not select `read_at`, `original_body`, or `tone_score` from `public.messages`.
+
+## Realtime
+
+Topic: `sg-family:{parent_low}:{parent_high}`
+
+`parent_low` and `parent_high` are the two parents' user ids as lowercase uuid text, ordered so `parent_low <= parent_high`. A parent with no co-parent uses their own id for both.
+
+Event name: `message`
+
+The channel is private.
+
+Payload fields (no `read_at`, `original_body`, or `tone_score`):
+
+- `id`
+- `sender_id`
+- `recipient_id`
+- `body`
+- `created_at`
+- `attachment_path`
+- `attachment_name`
+- `used_suggestion`
+- `pending_first_message_id`
+- `op` (`INSERT` or `UPDATE`)
+
+## How the app authorises the channel
+
+```ts
+const { data } = await supabase.auth.getSession();
+await supabase.realtime.setAuth(data.session.access_token);
+const channel = supabase.channel(`sg-family:${parentLow}:${parentHigh}`, {
+  config: { private: true },
+});
+channel.on("broadcast", { event: "message" }, (payload) => {
+  // payload.payload is the object above
+});
+await channel.subscribe();
+```
+
+`authenticated` is granted `SELECT` on `realtime.messages` in the same migration block that creates the policy, so a private subscribe does not depend on a default table grant.
+
+Postgres allows the select on `realtime.messages` only when `extension = 'broadcast'` and `realtime.topic()` equals the caller's current family topic.
+
+That topic is `public.sg_caller_family_topic()`. The function is `STABLE`, `SECURITY DEFINER`, and `SET search_path = public`. `EXECUTE` is granted to `authenticated` only (revoked from `PUBLIC`, `anon`, and `service_role`). It reads `auth.uid()` and `public.get_coparent_id(auth.uid())`, lowercases both ids, sorts them, and returns `sg-family:{low}:{high}`. If there is no co-parent, both sides are the caller's own id. The client does not supply the pair. A topic for a former co-parent does not match.
+
+There is no `INSERT` policy on `realtime.messages`. An authenticated client cannot send a broadcast. The migration raises if an `INSERT` or `ALL` policy is present on that table. Messages are published only by `sg_broadcast_message`, which calls `realtime.send` as a security definer trigger.
+
+## Website
+
+The website chat calls `sg_caller_family_topic` before it subscribes. When that function and `messages_caller` exist, it reads `messages_caller` and subscribes to `sg-family:{low}:{high}` with `private: true`. It calls `supabase.realtime.setAuth` with the access token before subscribe, and again on `TOKEN_REFRESHED`. When the function or the view is not in the database yet, chat keeps selecting `messages` and listening to `postgres_changes` on that table, so the site still works before the migration. The topic string does not change.

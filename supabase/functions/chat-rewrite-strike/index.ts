@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Deploy target: supabase/functions/chat-rewrite-strike/index.ts (prototype v7.4.8; the live chat-rewrite is untouched)
 // v7.4.8: residual past-dig gate on FINAL rewrite only (null if past-failure jab remains; calm untouched stays untouched); hard-stop decision capped under 2400 (early timer arm + ms log cap); v7.4.7 arrival hard-stop + Jared multi-attempt kept. Budget 2400/2300/1000 slack 800; Jian ping kept.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";

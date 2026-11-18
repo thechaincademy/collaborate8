@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 import { track, fileType } from "@/lib/analytics";
 import RewriteComposer from "./RewriteComposer";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
@@ -37,6 +39,7 @@ export const StatusPill = ({ t }: { t: DecisionThread }) => {
 };
 
 const DecisionThreads = ({ userId, coparentId, coparentName }: Props) => {
+  const safety = useSafeguarding();
   const { threads, events, loading, reload } = useThreads(userId);
   const [params, setParams] = useSearchParams();
   const [openId, setOpenId] = useState<string | null>(params.get("thread"));
@@ -79,6 +82,7 @@ const DecisionThreads = ({ userId, coparentId, coparentName }: Props) => {
 
   return (
     <div className="flex-1 overflow-y-auto pb-6">
+      <SafetyToolsBanner safety={safety} />
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="inline-flex rounded-full border border-border bg-card p-0.5 text-xs">
           {(["active", "all"] as const).map((f) => (
@@ -88,7 +92,7 @@ const DecisionThreads = ({ userId, coparentId, coparentName }: Props) => {
             </button>
           ))}
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => setCreating(true)}>
+        <Button size="sm" className="min-h-11 gap-1.5" onClick={() => { if (!safety.paused) setCreating(true); }} disabled={safety.paused}>
           <Plus className="h-4 w-4" /> New decision
         </Button>
       </div>

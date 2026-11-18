@@ -190,6 +190,12 @@ Deno.serve(async (req) => {
     if (!n || n.email_sent_at) return json({ skipped: true });
     if (Date.now() - new Date(n.created_at).getTime() > 10 * 60 * 1000) return json({ skipped: "stale" });
 
+    const { data: account } = await supabase.from("safeguarding_accounts").select("safeguarding_enabled").eq("user_id", n.user_id).maybeSingle();
+    if (account?.safeguarding_enabled) {
+      const { data: quiet } = await supabase.from("quiet_mode").select("enabled").eq("user_id", n.user_id).maybeSingle();
+      if (quiet?.enabled) return json({ skipped: "quiet_mode" });
+    }
+
     // Claim atomically (covers both push and email so each notification is only sent once)
     const { data: claimed } = await supabase.from("notifications").update({ email_sent_at: new Date().toISOString() })
       .eq("id", n.id).is("email_sent_at", null).select("id");

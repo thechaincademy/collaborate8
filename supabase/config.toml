@@ -57,6 +57,15 @@ verify_jwt = false
 [functions.founder-welcome-email]
 verify_jwt = false
 
+[functions.safeguarding-health]
+verify_jwt = false
+
+[functions.safeguarding-alert]
+verify_jwt = false
+
+[functions.record-pdf]
+verify_jwt = true
+
 [functions.request-account-deletion]
 verify_jwt = false
 

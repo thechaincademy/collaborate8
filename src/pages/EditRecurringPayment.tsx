@@ -13,6 +13,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments } from "@/hooks/useStripe";
 import { toast } from "sonner";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
+import { CmsGuidance } from "@/components/safeguarding/CmsGuidance";
+import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
 
 type Frequency = "Weekly" | "Monthly";
 
@@ -81,6 +85,7 @@ const EditRecurringPayment = () => {
   const { isViewing, profile, loading: profileLoading } = useProfile();
   const { getActivePayment, loading, createOrUpdatePayment } = useRecurringPayments();
   const { createSubscriptionCheckout, loading: stripeLoading } = useStripePayments();
+  const safety = useSafeguarding();
 
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState("50.00");
@@ -156,6 +161,20 @@ const EditRecurringPayment = () => {
 
   const amountNum = parseFloat(amount || "0");
   const step4Ready = completed[1] && completed[2] && completed[3];
+
+  if (safety.paused) {
+    return (
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-card md:max-w-lg">
+        <div className="px-6 pb-24 pt-12">
+          <button aria-label="Go back" onClick={() => navigate(-1)} className="mb-6 min-h-11">
+            <ArrowLeft className="h-6 w-6 text-foreground" aria-hidden="true" />
+          </button>
+          <SafetyToolsBanner safety={safety} />
+          <CmsGuidance onDownload={() => void downloadRecord()} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md md:max-w-lg flex-col bg-card">

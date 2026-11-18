@@ -8,6 +8,8 @@ import { ArrowLeft, Check, Calculator, PoundSterling, Loader2, CreditCard } from
 import { useProfile } from "@/hooks/useProfile";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
 import { afterMaintenanceCard, initialMaintenanceStep, maintenancePayerAction, maintenanceReceivingAnswer, type MaintenanceOnboardingStep } from "@/lib/maintenanceOnboarding";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SuitabilityCheck } from "@/components/safeguarding/SuitabilityCheck";
 
 type OnboardingStep = MaintenanceOnboardingStep;
 
@@ -15,6 +17,8 @@ const PostSignupOnboarding = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { profile, loading: profileLoading, isViewing, isManaging } = useProfile();
+  const safety = useSafeguarding();
+  const [safetyDone, setSafetyDone] = useState(false);
   const { setupCard, cards, fetchCards, loading: stripeLoading } = useStripePayments();
   const { startOnboarding, loading: connectLoading } = useStripeConnect();
 
@@ -250,7 +254,7 @@ const PostSignupOnboarding = () => {
 
   const showBackButton = !["complete", "waiting-coparent"].includes(step);
 
-  if (profileLoading) {
+  if (profileLoading || safety.loading) {
     return (
       <div className="mx-auto flex min-h-screen max-w-md md:max-w-xl flex-col items-center justify-center bg-background px-6">
         <Helmet>
@@ -261,6 +265,10 @@ const PostSignupOnboarding = () => {
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
+  }
+
+  if (safety.enabled && safety.suitabilityCheckDue && !safetyDone) {
+    return <SuitabilityCheck onDone={() => setSafetyDone(true)} />;
   }
 
   return (

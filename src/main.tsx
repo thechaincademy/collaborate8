@@ -18,6 +18,9 @@ import "@fontsource/dm-sans/500.css";
 import "@fontsource/dm-sans/700.css";
 import "./index.css";
 import { registerServiceWorker } from "./lib/registerSW";
+import { initErrorReporting } from "./lib/errorReporting";
+
+initErrorReporting();
 
 createRoot(document.getElementById("root")!).render(<App />);
 void registerServiceWorker();

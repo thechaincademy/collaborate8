@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     if (gErr) return fail(gErr.replace(/[^a-z_]/gi, "").slice(0, 40) || "google_error");
 
     const state = await verifyState(url.searchParams.get("state"));
-    if (!state.ok) return fail(state.reason);
+    if (!state.ok) return fail("reason" in state ? state.reason : "bad_state");
 
     const code = url.searchParams.get("code");
     if (!code) return fail("missing_code");
