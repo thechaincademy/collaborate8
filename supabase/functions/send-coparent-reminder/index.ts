@@ -3,6 +3,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 initEdgeSentry();
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { sendResendEmail, sanitizeEmailError } from "../_shared/resend.ts";
 
 type ReminderType = 'setup_bank_account' | 'send_payment';
 
@@ -84,32 +85,23 @@ Deno.serve(async (req) => {
     const subject = template.subject;
     const text = template.body(recipientProfile?.first_name ?? '');
 
-    // Attempt email delivery via Resend connector if available
-    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
-    const resendKey = Deno.env.get('RESEND_API_KEY');
+    // Attempt email delivery via Resend
     let emailSent = false;
     let emailError: string | null = null;
 
-    if (recipientEmail && lovableKey && resendKey) {
-      const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${lovableKey}`,
-          'X-Connection-Api-Key': resendKey,
-        },
-        body: JSON.stringify({
-          from: 'Collabor8 <onboarding@resend.dev>',
-          to: [recipientEmail],
+    if (recipientEmail) {
+      try {
+        const result = await sendResendEmail({
+          to: recipientEmail,
           subject,
           text,
-        }),
-      });
-      if (res.ok) {
-        emailSent = true;
-      } else {
-        emailError = await res.text();
-        console.error('Resend error', res.status, emailError);
+          idempotencyKey: `coparent-reminder/${type}/${recipientId}`,
+        });
+        emailSent = result.sent;
+        if (!result.sent) emailError = result.reason;
+      } catch (err) {
+        emailError = sanitizeEmailError((err as Error).message);
+        console.error('Resend error', emailError);
       }
     } else {
       emailError = 'Email sender not configured';
