@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { track, trackBeforeRedirect } from "@/lib/analytics";
 import { PREMIUM_FEATURE_LINE, useIsInApp } from "@/hooks/useIsInApp";
+import { premiumPromptLabel } from "@/lib/premium";
 
 export const CONVERSATION_TOOL_PRICE = "£59.88";
 export const CONVERSATION_TOOL_MONTHLY = "£4.99";
@@ -336,38 +337,83 @@ export const openConversationToolPortal = async () => {
   window.location.href = data.url as string;
 };
 
+// One shared Premium entitlement for the whole app. Every screen (Premium page, chat,
+// paywalls, Settings) reads this same store, which comes from the server's
+// conversation-tool-access status, so they can never disagree.
+type AccessState = {
+  userId: string | null;
+  hasAccess: boolean;
+  expiredAt: string | null;
+  access: ConversationToolAccess | null;
+  loading: boolean;
+  fetchedAt: number;
+};
+const EMPTY_ACCESS: AccessState = { userId: null, hasAccess: false, expiredAt: null, access: null, loading: true, fetchedAt: 0 };
+const ACCESS_TTL_MS = 30_000;
+let accessState: AccessState = EMPTY_ACCESS;
+const accessListeners = new Set<() => void>();
+let accessInflight: { userId: string; promise: Promise<boolean> } | null = null;
+
+const setAccessState = (patch: Partial<AccessState>) => {
+  accessState = { ...accessState, ...patch };
+  accessListeners.forEach((l) => l());
+};
+const subscribeAccess = (l: () => void) => {
+  accessListeners.add(l);
+  return () => { accessListeners.delete(l); };
+};
+
+/** Loads Premium entitlement for a user (cached briefly). Returns whether they have Premium. */
+export const loadPremiumAccess = (userId: string | null, force = false): Promise<boolean> => {
+  if (!userId) {
+    setAccessState({ ...EMPTY_ACCESS, loading: false, fetchedAt: Date.now() });
+    return Promise.resolve(false);
+  }
+  const fresh = accessState.userId === userId && !accessState.loading && Date.now() - accessState.fetchedAt < ACCESS_TTL_MS;
+  if (!force && fresh) return Promise.resolve(accessState.hasAccess);
+  if (accessInflight && accessInflight.userId === userId) return accessInflight.promise;
+  setAccessState(accessState.userId === userId ? { loading: true } : { ...EMPTY_ACCESS, userId, loading: true });
+  const promise = (async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("conversation-tool-access", { body: { action: "status" } });
+      if (accessState.userId !== userId) return false;
+      if (error) {
+        setAccessState({ loading: false });
+        return false;
+      }
+      const granted = !!data?.hasAccess;
+      setAccessState({
+        hasAccess: granted,
+        expiredAt: typeof data?.expiredAt === "string" ? data.expiredAt : null,
+        access: (data?.access as ConversationToolAccess | undefined) ?? null,
+        loading: false,
+        fetchedAt: Date.now(),
+      });
+      return granted;
+    } finally {
+      accessInflight = null;
+    }
+  })();
+  accessInflight = { userId, promise };
+  return promise;
+};
+
+/** Re-reads entitlement for whoever is signed in, e.g. right after a payment. */
+export const refreshPremiumAccess = () => loadPremiumAccess(accessState.userId, true);
+
 export const useConversationToolAccess = () => {
   const { user } = useAuth();
-  const [hasAccess, setHasAccess] = useState(false);
-  const [expiredAt, setExpiredAt] = useState<string | null>(null);
-  const [access, setAccess] = useState<ConversationToolAccess | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = async () => {
-    if (!user) {
-      setHasAccess(false);
-      setLoading(false);
-      return false;
-    }
-    setLoading(true);
-    const { data, error } = await supabase.functions.invoke("conversation-tool-access", {
-      body: { action: "status" },
-    });
-    setLoading(false);
-    if (error) return false;
-    const granted = !!data?.hasAccess;
-    setHasAccess(granted);
-    setExpiredAt(typeof data?.expiredAt === "string" ? data.expiredAt : null);
-    setAccess((data?.access as ConversationToolAccess | undefined) ?? null);
-    return granted;
-  };
+  const uid = user?.id ?? null;
+  const state = useSyncExternalStore(subscribeAccess, () => accessState);
 
   useEffect(() => {
-    void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+    void loadPremiumAccess(uid);
+  }, [uid]);
 
-  return { hasAccess, expiredAt, access, loading, refresh, setHasAccess };
+  const mine = state.userId === uid ? state : { ...EMPTY_ACCESS, loading: !!uid };
+  const refresh = useCallback(() => loadPremiumAccess(uid, true), [uid]);
+  const setHasAccess = useCallback((v: boolean) => setAccessState({ hasAccess: v }), []);
+  return { hasAccess: mine.hasAccess, expiredAt: mine.expiredAt, access: mine.access, loading: mine.loading, refresh, setHasAccess };
 };
 
 export const ConversationToolModal = ({
@@ -424,7 +470,7 @@ export const ConversationToolModal = ({
         <div className="rounded-t-lg border-b border-border bg-background p-5 text-foreground">
           <DialogTitle asChild>
             <h2 className="text-lg font-semibold leading-snug">
-            {premiumOnly ? (inApp ? "Collabor8 Premium" : "Unlock Collabor8 Premium") : "Start the financial conversation."}
+            {premiumOnly ? (inApp || hasAccess ? "Collabor8 Premium" : "Unlock Collabor8 Premium") : "Start the financial conversation."}
           </h2>
           </DialogTitle>
         </div>
@@ -474,7 +520,7 @@ export const ConversationToolModal = ({
             </p>
           )}
 
-          {!inApp && <p className="font-semibold">
+          {!inApp && !hasAccess && !loading && <p className="font-semibold">
             {CONVERSATION_TOOL_MONTHLY} a month, billed as {CONVERSATION_TOOL_PRICE} a year. Renews automatically each year. Cancel anytime. Premium is for your account only. Your co-parent can still use Collabor8 for free.
           </p>}
 
@@ -535,11 +581,12 @@ export const ConversationToolModal = ({
 
 export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => {
   const inApp = useIsInApp();
+  const { hasAccess } = useConversationToolAccess();
   return (
   <div className="mb-3 rounded-xl border border-border border-l-4 border-l-primary bg-card p-4 text-foreground shadow-card">
     <p className="text-xs leading-relaxed">
       Sometimes the hardest part of managing finances after separation is knowing where to begin.
-      {inApp ? "The" : "Unlock the"} Self-Guided Financial Conversation Tool - both parents answer questions privately,
+      {inApp || hasAccess ? "The" : "Unlock the"} Self-Guided Financial Conversation Tool - both parents answer questions privately,
       and a shared summary shows where you agree and where further conversation is needed.
     </p>
     <Button
@@ -555,6 +602,7 @@ export const ConversationToolBanner = ({ onOpen }: { onOpen: () => void }) => {
 
 export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void }) => {
   const inApp = useIsInApp();
+  const { hasAccess, loading } = useConversationToolAccess();
   return (
   <div className="mt-4 rounded-2xl border border-border bg-card p-4 text-foreground">
     <p className="text-xs leading-relaxed">
@@ -568,9 +616,9 @@ export const ConversationToolSuggestionCard = ({ onOpen }: { onOpen: () => void 
       onClick={onOpen}
       className="mt-3 h-auto min-h-9 max-w-full whitespace-normal bg-gold py-2 text-left text-gold-foreground hover:bg-gold/90"
     >
-      {inApp ? "Find out more" : `Unlock for ${CONVERSATION_TOOL_MONTHLY} a month, paid yearly`}
+      {premiumPromptLabel({ inApp, hasAccess, loading, monthly: CONVERSATION_TOOL_MONTHLY })}
     </Button>
-    {inApp && <p className="mt-2 text-xs text-muted-foreground">{PREMIUM_FEATURE_LINE}</p>}
+    {inApp && !hasAccess && <p className="mt-2 text-xs text-muted-foreground">{PREMIUM_FEATURE_LINE}</p>}
   </div>
   );
 };

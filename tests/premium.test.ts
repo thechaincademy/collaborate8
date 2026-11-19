@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { isPremiumRequired } from "../src/lib/premium";
+import { isPremiumRequired, premiumPromptLabel } from "../src/lib/premium";
 import { isActive } from "../.lovable/pending/_shared.conversation-tool-access-rule";
 
 const now = Date.parse("2026-10-22T15:39:00Z");
@@ -17,4 +17,13 @@ describe("Existing premium entitlement gates", () => {
   test("explicit premium denial opens paywall", async () => expect(await isPremiumRequired({ error: "premium_required", feature: "rewrite" }, null)).toBe(true));
   test("HTTP 402 premium denial opens paywall", async () => expect(await isPremiumRequired(null, { context: new Response(JSON.stringify({ error: "premium_required", feature: "rewrite" }), { status: 402 }) })).toBe(true));
   test("AI credit 402 does not become subscription paywall", async () => expect(await isPremiumRequired(null, { context: new Response(JSON.stringify({ error: "AI credits have run out." }), { status: 402 }) })).toBe(false));
+});
+
+describe("Premium benefit prompts (f133)", () => {
+  const m = "£4.99";
+  test("Premium account never sees a price", () => expect(premiumPromptLabel({ inApp: false, hasAccess: true, loading: false, monthly: m })).not.toContain(m));
+  test("Premium account in the app sees no price", () => expect(premiumPromptLabel({ inApp: true, hasAccess: true, loading: false, monthly: m })).not.toContain(m));
+  test("no price while entitlement is loading", () => expect(premiumPromptLabel({ inApp: false, hasAccess: false, loading: true, monthly: m })).toBe("Find out more"));
+  test("non-Premium website account sees the price", () => expect(premiumPromptLabel({ inApp: false, hasAccess: false, loading: false, monthly: m })).toBe("Unlock for £4.99 a month, paid yearly"));
+  test("in-app hiding unchanged for non-Premium", () => expect(premiumPromptLabel({ inApp: true, hasAccess: false, loading: false, monthly: m })).toBe("Find out more"));
 });

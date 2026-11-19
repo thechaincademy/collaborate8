@@ -22,6 +22,7 @@ import {
   ConversationToolSuggestionCard,
   ConversationEmailStep,
   useConversationToolModal,
+  refreshPremiumAccess,
 } from "./ConversationToolPromo";
 
 import ConversationQuestionnaire from "./ConversationQuestionnaire";
@@ -262,6 +263,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
           toast.error("We could not confirm your payment yet. Please try again in a moment.");
           return;
         }
+        void refreshPremiumAccess();
         void track("payment_completed", { product: "conversation_tool" });
         toast.success("Payment confirmed - let's get started.");
         setEmailStepOpen(true);

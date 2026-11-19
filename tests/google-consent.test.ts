@@ -5,7 +5,7 @@ import { runInNewContext } from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const googleScript = html.split("<!-- Google Consent Mode v2:")[1]?.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 
-const setup = (choice: string | null, internal = false) => {
+const setup = (choice: string | null, internal = false, host = "collaborate8.com") => {
   const scripts: unknown[] = [];
   const storage = new Map<string, string>();
   if (choice) storage.set("medi8-cookie-consent", choice);
@@ -15,6 +15,7 @@ const setup = (choice: string | null, internal = false) => {
     c8LoadHotjar: () => {},
     addEventListener: () => {},
     c8IsInternal: () => internal,
+    location: { hostname: host },
   };
   context.window = context;
   if (!googleScript) throw new Error("Google consent script missing");
@@ -55,6 +56,11 @@ describe("Google Consent Mode v2", () => {
 
   it("does not load gtag.js on an internal device", () => {
     const { scripts } = setup("accepted", true);
+    expect(scripts).toHaveLength(0);
+  });
+
+  it("does not load gtag.js on a test site", () => {
+    const { scripts } = setup("accepted", false, "collabor8-uk-test.rafa-f1b.workers.dev");
     expect(scripts).toHaveLength(0);
   });
 });
