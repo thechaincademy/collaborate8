@@ -9,6 +9,7 @@ import {
   subscriptionFields,
 } from "../_shared/conversation-tool-access-rule.ts";
 import { cfg } from "../_shared/config.ts";
+import { onboardingStatus, payoutStatusFromAccount, type V1AccountView } from "../_shared/stripe-connect-rules.ts";
 
 const CT_EVENTS = new Set([
   "customer.subscription.created",
@@ -382,14 +383,11 @@ serve(async (req) => {
 
       // ── Account updated (Connect) ──
       case "account.updated": {
+        // Accounts v1 and v2 both send this v1 event. v2 recipient accounts never get
+        // card_payments, so "can receive" also counts an active transfers capability.
         const account = event.data.object as Stripe.Account;
-        const capabilitiesActive = account.charges_enabled || false || account.payouts_enabled || false;
-        const newStatus =
-          account.details_submitted && capabilitiesActive
-            ? "complete"
-            : account.details_submitted
-              ? "pending_capabilities"
-              : "pending";
+        const payout = payoutStatusFromAccount(account as unknown as V1AccountView);
+        const newStatus = onboardingStatus(payout);
 
         // Load prior state to detect transition to fully-ready
         const { data: prior } = await supabase
@@ -402,13 +400,13 @@ serve(async (req) => {
           .from("connected_accounts")
           .update({
             onboarding_status: newStatus,
-            payouts_enabled: account.payouts_enabled || false,
-            charges_enabled: account.charges_enabled || false,
+            payouts_enabled: payout.payoutsEnabled,
+            charges_enabled: payout.chargesEnabled,
           })
           .eq("provider_account_id", account.id);
 
         const wasReady = !!(prior?.charges_enabled && prior?.payouts_enabled);
-        const isReady = !!(account.charges_enabled && account.payouts_enabled);
+        const isReady = payout.chargesEnabled && payout.payoutsEnabled;
         if (prior && !wasReady && isReady) {
           // Receiver just became fully ready → remind linked payer to send payments
           const { data: payerProfile } = await supabase

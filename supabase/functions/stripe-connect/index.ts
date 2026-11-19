@@ -2,6 +2,15 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
 import { StripePayoutProvider } from "../_shared/stripe-adapter.ts";
+import {
+  NOT_CREATED_REPLY,
+  checkStatusReply,
+  createAccountReply,
+  existingAccountAction,
+  isLegacyV1Account,
+  onboardingStatus,
+  type V1AccountView,
+} from "../_shared/stripe-connect-rules.ts";
 
 const payoutProvider = new StripePayoutProvider();
 const DEFAULT_ORIGIN = "https://collaborate8.com";
@@ -31,8 +40,8 @@ serve(async (req) => {
     logStep("Action received", { action, userId: user.id });
 
     // ── Create connected account for receiver ──
+    // Reply contract (mobile builds 31 to 34): { url, accountId }.
     if (action === "create-account") {
-      // Check if already exists
       const { data: existing } = await supabase
         .from("connected_accounts")
         .select("*")
@@ -41,14 +50,17 @@ serve(async (req) => {
         .maybeSingle();
 
       let accountId: string;
+      let legacyV1 = false;
 
       if (existing) {
-        const existingAccount = await payoutProvider.getAccount(existing.provider_account_id);
-        const needsReplacement =
-          (!existingAccount.details_submitted && existingAccount.business_type !== "individual") ||
-          (!existingAccount.charges_enabled && !existingAccount.payouts_enabled);
+        const existingAccount = await payoutProvider.getAccountOrNull(existing.provider_account_id);
+        const decision = existingAccountAction(existingAccount as unknown as V1AccountView | null);
 
-        if (needsReplacement) {
+        if (decision === "reuse") {
+          accountId = existing.provider_account_id;
+          legacyV1 = isLegacyV1Account(existingAccount as unknown as V1AccountView);
+          logStep("Existing connected account found", { accountId, legacyV1 });
+        } else {
           accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
 
           await supabase
@@ -61,22 +73,15 @@ serve(async (req) => {
             })
             .eq("id", existing.id);
 
-          logStep("Replaced incomplete account with new individual account", {
+          logStep("Replaced account with a new Accounts v2 recipient account", {
             previousAccountId: existing.provider_account_id,
             accountId,
-            reason: {
-              detailsSubmitted: existingAccount.details_submitted,
-              chargesEnabled: existingAccount.charges_enabled,
-              payoutsEnabled: existingAccount.payouts_enabled,
-            },
+            reason: decision,
           });
-        } else {
-          accountId = existing.provider_account_id;
-          logStep("Existing connected account found", { accountId });
         }
       } else {
         accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
-        logStep("Created connected account", { accountId });
+        logStep("Created Accounts v2 recipient account", { accountId });
 
         await supabase.from("connected_accounts").insert({
           user_id: user.id,
@@ -86,22 +91,25 @@ serve(async (req) => {
         });
       }
 
-      // Generate onboarding link
+      // Stripe-hosted onboarding: Stripe collects identity and bank details, we never see them.
       const origin = allowedOrigin(req);
       const onboardingUrl = await payoutProvider.createOnboardingLink(
         accountId,
         `${origin}/profile?stripe-refresh=true`,
         `${origin}/profile?stripe-return=true`,
+        legacyV1,
       );
 
       logStep("Onboarding link created", { accountId });
 
-      return new Response(JSON.stringify({ url: onboardingUrl, accountId }), {
+      return new Response(JSON.stringify(createAccountReply(onboardingUrl, accountId)), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // ── Check account status ──
+    // Reply contract: { status: "not_created" } or
+    // { status, payoutsEnabled, chargesEnabled, accountId, detailsSubmitted }.
     if (action === "check-status") {
       const { data: connected } = await supabase
         .from("connected_accounts")
@@ -111,22 +119,16 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!connected) {
-        return new Response(JSON.stringify({ status: "not_created" }), {
+        return new Response(JSON.stringify(NOT_CREATED_REPLY), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
+      // Works for Accounts v1 and v2 (both read through /v1/accounts).
       const status = await payoutProvider.getAccountStatus(connected.provider_account_id);
       logStep("Account status checked", status);
 
-      // Only mark as "complete" when transfers capability is actually active
-      const capabilitiesActive = status.chargesEnabled || status.payoutsEnabled;
-      const newStatus =
-        status.onboardingComplete && capabilitiesActive
-          ? "complete"
-          : status.onboardingComplete
-            ? "pending_capabilities"
-            : "pending";
+      const newStatus = onboardingStatus(status);
 
       await supabase
         .from("connected_accounts")
@@ -137,18 +139,9 @@ serve(async (req) => {
         })
         .eq("id", connected.id);
 
-      return new Response(
-        JSON.stringify({
-          status: newStatus,
-          payoutsEnabled: status.payoutsEnabled,
-          chargesEnabled: status.chargesEnabled,
-          accountId: connected.provider_account_id,
-          detailsSubmitted: status.onboardingComplete,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+      return new Response(JSON.stringify(checkStatusReply(newStatus, status)), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {

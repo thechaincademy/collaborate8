@@ -60,7 +60,7 @@ export interface PayoutProvider {
   createConnectedAccount(email: string, metadata?: Record<string, string>): Promise<string>; // returns accountId
 
   /** Generate onboarding link for a connected account */
-  createOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string): Promise<string>; // returns URL
+  createOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string, legacyV1?: boolean): Promise<string>; // returns URL
 
   /** Get connected account status */
   getAccountStatus(accountId: string): Promise<ConnectedAccountInfo>;

@@ -10,6 +10,13 @@ import type {
   ConnectedAccountInfo,
 } from "./payment-interfaces.ts";
 import { cfg } from "./config.ts";
+import {
+  STRIPE_V2_API_VERSION,
+  payoutStatusFromAccount,
+  v2OnboardingLinkBody,
+  v2RecipientAccountBody,
+  type V1AccountView,
+} from "./stripe-connect-rules.ts";
 
 async function tryStripe<T>(scope: string, step: string, fn: () => Promise<T>): Promise<T> {
   try {
@@ -152,84 +159,103 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
 }
 
 // ─── Payout Provider (Connect) ──────────────────────────────
+// New receivers get an Accounts v2 account (recipient configuration, Stripe-hosted onboarding,
+// Stripe keeps the bank details). Older Accounts v1 accounts stay readable through /v1/accounts.
+
+/** Error thrown for /v2 failures, shaped like a Stripe SDK error so logStripeError keeps the detail. */
+class StripeV2Error extends Error {
+  type?: string;
+  code?: string;
+  statusCode?: number;
+  requestId?: string;
+  param?: string;
+  constructor(message: string, init: { type?: string; code?: string; statusCode?: number; requestId?: string; param?: string }) {
+    super(message);
+    this.name = "StripeV2Error";
+    Object.assign(this, init);
+  }
+}
+
+async function stripeV2<T>(path: string, body: unknown): Promise<T> {
+  const key = cfg("STRIPE_SECRET_KEY");
+  if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
+  const res = await fetch(`https://api.stripe.com${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Stripe-Version": STRIPE_V2_API_VERSION,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = (json as any)?.error ?? {};
+    const invalid = Array.isArray(err.invalid_fields) ? err.invalid_fields.map((f: any) => f?.field).join(",") : undefined;
+    throw new StripeV2Error(String(err.message ?? `Stripe ${path} failed`), {
+      type: err.type,
+      code: err.code,
+      statusCode: res.status,
+      requestId: res.headers.get("request-id") ?? undefined,
+      param: invalid,
+    });
+  }
+  return json as T;
+}
+
 export class StripePayoutProvider implements PayoutProvider {
+  /** POST /v2/core/accounts: UK individual, recipient configuration, GBP. Returns the acct_ id. */
   async createConnectedAccount(email: string, metadata?: Record<string, string>): Promise<string> {
-    const stripe = getStripe();
-
-    // Check if we're in test mode (test keys start with sk_test_)
-    const stripeKey = cfg("STRIPE_SECRET_KEY") || "";
-    const isTestMode = stripeKey.startsWith("sk_test_");
-
-    const accountParams: Stripe.AccountCreateParams = {
-      type: "express",
-      business_type: "individual",
-      email,
-      country: "GB",
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      business_profile: {
-        mcc: "5734",
-        url: "https://collaborate8.com",
-        product_description: "Receiving child maintenance payments via Collabor8",
-      },
-      metadata: metadata || {},
-    };
-
-    // In test mode, pre-fill individual details with test tokens to bypass identity verification
-    if (isTestMode) {
-      accountParams.individual = {
-        first_name: "Test",
-        last_name: "User",
-        dob: { day: 1, month: 1, year: 1901 },
-        address: {
-          line1: "address_full_match",
-          city: "London",
-          postal_code: "EC1Y 8SY",
-          country: "GB",
-        },
-        verification: {
-          document: {
-            front: "file_identity_document_success",
-          },
-        },
-      };
-    }
-
-    const account = await tryStripe<Stripe.Account>("STRIPE-ADAPTER", "accounts.create", () =>
-      stripe.accounts.create(accountParams),
+    const account = await tryStripe<{ id: string }>("STRIPE-ADAPTER", "v2.core.accounts.create", () =>
+      stripeV2("/v2/core/accounts", v2RecipientAccountBody(email, metadata || {})),
     );
     return account.id;
   }
 
-  async createOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string): Promise<string> {
-    const stripe = getStripe();
-    const link = await tryStripe<Stripe.AccountLink>("STRIPE-ADAPTER", "accountLinks.create", () =>
-      stripe.accountLinks.create({
-        account: accountId,
-        refresh_url: refreshUrl,
-        return_url: returnUrl,
-        type: "account_onboarding",
-      }),
+  /**
+   * Stripe-hosted onboarding link. v2 accounts use /v2/core/account_links; older v1
+   * accounts keep using /v1/account_links.
+   */
+  async createOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string, legacyV1 = false): Promise<string> {
+    if (legacyV1) {
+      const stripe = getStripe();
+      const link = await tryStripe<Stripe.AccountLink>("STRIPE-ADAPTER", "accountLinks.create", () =>
+        stripe.accountLinks.create({
+          account: accountId,
+          refresh_url: refreshUrl,
+          return_url: returnUrl,
+          type: "account_onboarding",
+        }),
+      );
+      return link.url;
+    }
+    const link = await tryStripe<{ url: string }>("STRIPE-ADAPTER", "v2.core.account_links.create", () =>
+      stripeV2("/v2/core/account_links", v2OnboardingLinkBody(accountId, refreshUrl, returnUrl)),
     );
     return link.url;
   }
 
+  /** Works for v1 and v2 accounts (v2 accounts read back through /v1/accounts). */
   async getAccountStatus(accountId: string): Promise<ConnectedAccountInfo> {
     const stripe = getStripe();
     const account = await stripe.accounts.retrieve(accountId);
-    return {
-      accountId: account.id,
-      onboardingComplete: account.details_submitted || false,
-      payoutsEnabled: account.payouts_enabled || false,
-      chargesEnabled: account.charges_enabled || false,
-    };
+    return payoutStatusFromAccount(account as unknown as V1AccountView);
   }
 
   async getAccount(accountId: string): Promise<Stripe.Account> {
     const stripe = getStripe();
     return await stripe.accounts.retrieve(accountId);
+  }
+
+  /** Like getAccount, but null when the id doesn't exist under this key (for example a live id on sandbox). */
+  async getAccountOrNull(accountId: string): Promise<Stripe.Account | null> {
+    try {
+      return await this.getAccount(accountId);
+    } catch (e) {
+      const err = e as any;
+      if (err?.code === "resource_missing" || err?.code === "account_invalid" || err?.statusCode === 404) return null;
+      throw e;
+    }
   }
 
   async createTransfer(params: {
