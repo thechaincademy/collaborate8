@@ -9,14 +9,17 @@ import {
   StripePayoutProvider,
 } from "../_shared/stripe-adapter.ts";
 import { cfg } from "../_shared/config.ts";
+import { stripeIdFromEnv } from "../_shared/conversation-tool-access-rule.ts";
 
 const paymentMethodProvider = new StripePaymentMethodProvider();
 const recurringProvider = new StripeRecurringProvider();
 const pricingProvider = new StripeDynamicPricing();
 const payoutProvider = new StripePayoutProvider();
 
-// Collabor8 maintenance product ID (live)
-const MAINTENANCE_PRODUCT_ID = "prod_V2EZcZyjIL8IDn";
+// Collabor8 "Child Maintenance" product. Live id by default; a sandbox project sets
+// STRIPE_MAINTENANCE_PRODUCT_ID to its own product.
+export const LIVE_MAINTENANCE_PRODUCT_ID = "prod_V2EZcZyjIL8IDn";
+const MAINTENANCE_PRODUCT_ID = stripeIdFromEnv("STRIPE_MAINTENANCE_PRODUCT_ID", LIVE_MAINTENANCE_PRODUCT_ID);
 
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-SUBSCRIPTIONS] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);

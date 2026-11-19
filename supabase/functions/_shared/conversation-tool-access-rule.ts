@@ -1,8 +1,23 @@
 // Access rule for the Chat financial conversation tool (premium).
 // Deploy target: supabase/functions/_shared/conversation-tool-access-rule.ts
 
-export const CONVERSATION_TOOL_SUBSCRIPTION_PRICE_ID = "price_1UTKxlCN8qgG26mrUCWqWllx";
-export const CONVERSATION_TOOL_PRODUCT_ID = "prod_VFe3hx29MYgCMR";
+// Live Stripe ids. A sandbox project sets STRIPE_PREMIUM_PRICE_ID and STRIPE_PREMIUM_PRODUCT_ID
+// to its own ids; when they are unset (live), these defaults apply.
+export const LIVE_PREMIUM_PRICE_ID = "price_1UTKxlCN8qgG26mrUCWqWllx";
+export const LIVE_PREMIUM_PRODUCT_ID = "prod_VFe3hx29MYgCMR";
+
+/** A Stripe id from a function secret, else the live default. Safe outside Deno (tests). */
+export const stripeIdFromEnv = (name: string, liveDefault: string): string => {
+  const v = (globalThis as any).Deno?.env?.get?.(name) ?? (globalThis as any).process?.env?.[name];
+  return typeof v === "string" && v.trim() ? v.trim() : liveDefault;
+};
+
+export const premiumPriceId = () => stripeIdFromEnv("STRIPE_PREMIUM_PRICE_ID", LIVE_PREMIUM_PRICE_ID);
+export const premiumProductId = () => stripeIdFromEnv("STRIPE_PREMIUM_PRODUCT_ID", LIVE_PREMIUM_PRODUCT_ID);
+
+/** Kept for existing imports: the ids in use for this project (env override, else live). */
+export const CONVERSATION_TOOL_SUBSCRIPTION_PRICE_ID = premiumPriceId();
+export const CONVERSATION_TOOL_PRODUCT_ID = premiumProductId();
 export const PROMO_ACCESS_MONTHS = 12;
 
 export interface AccessRow {
@@ -60,7 +75,8 @@ export const isConversationToolSubscription = (sub: any) =>
   sub?.metadata?.collabor8_type === "conversation_tool" ||
   (sub?.items?.data ?? []).some(
     (i: any) =>
-      i?.price?.id === CONVERSATION_TOOL_SUBSCRIPTION_PRICE_ID ||
-      (typeof i?.price?.product === "string" ? i.price.product : i?.price?.product?.id) ===
-        CONVERSATION_TOOL_PRODUCT_ID,
+      [premiumPriceId(), LIVE_PREMIUM_PRICE_ID].includes(i?.price?.id) ||
+      [premiumProductId(), LIVE_PREMIUM_PRODUCT_ID].includes(
+        typeof i?.price?.product === "string" ? i.price.product : i?.price?.product?.id,
+      ),
   );

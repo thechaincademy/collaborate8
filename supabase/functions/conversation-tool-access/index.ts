@@ -3,7 +3,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts";
 import {
-  CONVERSATION_TOOL_SUBSCRIPTION_PRICE_ID,
+  premiumPriceId,
   isActive,
   promoExpiry,
   subscriptionFields,
@@ -107,7 +107,7 @@ serve(async (req) => {
         mode: "subscription",
         customer: customerId,
         customer_email: customerId ? undefined : user.email!,
-        line_items: [{ price: CONVERSATION_TOOL_SUBSCRIPTION_PRICE_ID, quantity: 1 }],
+        line_items: [{ price: premiumPriceId(), quantity: 1 }],
         metadata,
         subscription_data: { metadata },
         success_url: `${origin}/dashboard?tab=chat&conversation-tool=success&session_id={CHECKOUT_SESSION_ID}`,
