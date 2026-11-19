@@ -1,8 +1,8 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:@lovable.dev/email-js@0.1.0": "0.1.0_react@18.3.1_react-dom@18.3.1",
-    "npm:@lovable.dev/mcp-js@3.0.2": "3.0.2_zod@3.25.76",
+    "jsr:@std/assert@1": "1.0.19",
+    "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:@peculiar/x509@1.12.3": "1.12.3",
     "npm:@react-email/components@0.0.22": "0.0.22_react@18.3.1_@types+react@18.3.1",
     "npm:@sentry/deno@8.47.0": "8.47.0",
@@ -15,6 +15,17 @@
     "npm:web-push@3.6.7": "3.6.7",
     "npm:zod@3.23.8": "3.23.8",
     "npm:zod@^3.25.76": "3.25.76"
+  },
+  "jsr": {
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.14": {
+      "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
+    }
   },
   "npm": {
     "@emnapi/core@2.0.0-beta.2": {
@@ -182,33 +193,6 @@
         "wrap-ansi@8.1.0",
         "wrap-ansi-cjs@npm:wrap-ansi@7.0.0"
       ]
-    },
-    "@lovable.dev/email-js@0.1.0_react@18.3.1_react-dom@18.3.1": {
-      "integrity": "sha512-AtWpcToomJu3xh5+6WQ7c7aarWfakX0sPq7KUnixsp8c2ro4w+x7pPHhm/Q5IafD4GPRyejD2ufg9e2LfTxz9Q==",
-      "dependencies": [
-        "@lovable.dev/webhooks-js",
-        "react",
-        "react-dom"
-      ],
-      "optionalPeers": [
-        "react",
-        "react-dom"
-      ]
-    },
-    "@lovable.dev/mcp-js@3.0.2_zod@3.25.76": {
-      "integrity": "sha512-v6Tx8YueC715Q7J11vVERHUpoeQnbvXadC+vhcsl++DOoqQGPY7a8gHCZuaP95reQx3AOM0QA4QtR9MC4VSuLw==",
-      "dependencies": [
-        "@modelcontextprotocol/sdk",
-        "@modelcontextprotocol/server",
-        "esbuild",
-        "jose@6.2.17",
-        "vite",
-        "zod@3.25.76"
-      ],
-      "bin": true
-    },
-    "@lovable.dev/webhooks-js@0.0.1": {
-      "integrity": "sha512-TdaXXNszX2r9VAWdHpxgpF7cb/aLvejfkVD5S6jTCmH0ArUjAMPkkTlFnG52kkOdWlD5dtW2sNWvqptqVJYVIg=="
     },
     "@modelcontextprotocol/core@2.0.0": {
       "integrity": "sha512-pJCEwGG7Lfr/+PQp9ZTwKXNeO5wzbfKL7H3MYpCorM4oFBoQrdjnBgEoqG+RjhsvS1FKrDbKux+M1HhlnGWqcA==",

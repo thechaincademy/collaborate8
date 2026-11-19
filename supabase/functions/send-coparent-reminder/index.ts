@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
           idempotencyKey: `coparent-reminder/${type}/${recipientId}`,
         });
         emailSent = result.sent;
-        if (!result.sent) emailError = result.reason;
+        if (!result.sent) emailError = (result as { reason?: string }).reason ?? "not_sent";
       } catch (err) {
         emailError = sanitizeEmailError((err as Error).message);
         console.error('Resend error', emailError);

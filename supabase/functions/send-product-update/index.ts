@@ -8,7 +8,7 @@ const ADMIN_EMAILS = ["jade@collaborate8.com", "rafa@collaborate8.com"];
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Service key or a signed-in admin (was the Lovable API key, which only Lovable could send).
+  // Service key or a signed-in admin.
   if (!(await isServiceOrAdminCaller(req))) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,

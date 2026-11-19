@@ -44,7 +44,7 @@ export async function sendCoparentReminder(
     try {
       const result = await sendResendEmail({ to: email, subject, text, idempotencyKey: `coparent-reminder/${type}/${recipientUserId}` });
       emailSent = result.sent;
-      if (!result.sent) error = result.reason;
+      if (!result.sent) error = (result as { reason?: string }).reason ?? "not_sent";
     } catch (err) {
       error = sanitizeEmailError((err as Error).message);
       console.error("Reminder email failed", error);

@@ -1,6 +1,5 @@
 // Who may call an internal edge function: the project's service key (pg_cron, scripts, the
 // Management API runbooks) or a signed-in admin (is_admin and on the admin email list).
-// Replaces the old gate on the Lovable key, which only Lovable's own backend could send.
 import { createSupabaseAdmin, getUserFromRequest } from "./supabase.ts";
 import { ALLOWED_ADMIN_EMAILS } from "./google-oauth.ts";
 

@@ -8,7 +8,7 @@ import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { isServiceOrAdminCaller } from '../_shared/caller-auth.ts'
 
 // Renders all registered templates with their previewData. Sends nothing.
-// Callable with the project's service key or by a signed-in admin (was the Lovable API key).
+// Callable with the project's service key or by a signed-in admin.
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {

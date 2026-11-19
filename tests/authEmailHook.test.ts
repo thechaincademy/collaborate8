@@ -202,7 +202,7 @@ describe("copy and Lovable removal", () => {
         if (!/\.(ts|tsx)$/.test(f)) continue;
         const text = readFileSync(join(fnRoot, d.name, f), "utf8");
         if (/@lovable\.dev\/email-js|LOVABLE_SEND_URL|x-lovable-signature/.test(text)) hits.push(`${d.name}/${f}`);
-        if (/LOVABLE_API_KEY/.test(text) && d.name !== "chat-rewrite-strike") hits.push(`${d.name}/${f}`);
+        if (/LOVABLE_API_KEY/.test(text)) hits.push(`${d.name}/${f}`);
       }
     }
     expect(hits).toEqual([]);

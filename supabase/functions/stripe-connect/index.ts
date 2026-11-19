@@ -14,7 +14,7 @@ function allowedOrigin(req: Request): string {
 }
 
 const logStep = (step: string, details?: any) => {
-  console.log(`[STRIPE-CONNECT LOVABLE] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
+  console.log(`[STRIPE-CONNECT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
 serve(async (req) => {

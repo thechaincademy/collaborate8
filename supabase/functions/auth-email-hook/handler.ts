@@ -74,8 +74,10 @@ export function createAuthEmailHandler(deps: AuthEmailDeps) {
     const nowSec = Math.floor((deps.now ? deps.now() : Date.now()) / 1000)
     const check = await verifyHookSignature(deps.env('SEND_EMAIL_HOOK_SECRET'), req.headers, body, nowSec)
     if (!check.ok) {
-      log('refused', { reason: check.reason })
-      const e = check.reason === 'missing_secret'
+      // Read via a cast: the edge functions type-check with strict off, where the union does not narrow.
+      const reason = (check as { reason?: string }).reason ?? 'bad_signature'
+      log('refused', { reason })
+      const e = reason === 'missing_secret'
         ? hookError(500, 'Auth email hook is not configured')
         : hookError(401, 'Invalid hook signature')
       return json(e.status, e.body)
@@ -109,7 +111,7 @@ export function createAuthEmailHandler(deps: AuthEmailDeps) {
           // Supabase retries a failed hook with the same webhook-id: dedupe at Resend.
           idempotencyKey: `auth-${hookId}-${email.label}`,
         })
-        if (!result.sent) log('not delivered', { type: email.label, reason: result.reason })
+        if (!result.sent) log('not delivered', { type: email.label, reason: (result as { reason?: string }).reason ?? 'not_sent' })
         else log('sent', { type: email.label })
       } catch (err) {
         // sendResendEmail already strips addresses and numbers from its error text.
