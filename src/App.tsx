@@ -81,6 +81,7 @@ import AdminSetup from "./pages/AdminSetup";
 import AdminAccessRequests from "./pages/AdminAccessRequests";
 import RequestAccess from "./pages/RequestAccess";
 import ResetPassword from "./pages/ResetPassword";
+import AuthConfirm from "./pages/AuthConfirm";
 import InAppShell from "@/components/layout/InAppShell";
 import NotFound from "./pages/NotFound";
 import QueryRedirect from "@/components/QueryRedirect";
@@ -130,6 +131,7 @@ const App = () => (
               <Route path="/delete-account" element={<DeleteAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/confirm" element={<AuthConfirm />} />
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               {["maintenance", "expenses", "chat", "benefits", "documents"].map((t) => (

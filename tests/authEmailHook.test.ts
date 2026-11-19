@@ -11,13 +11,15 @@ import {
   redirectTarget,
   siteOrigin,
   SUBJECTS,
+  confirmUrl,
+  LINK_ORIGINS,
+  linkOrigin,
+  nextPath,
   verifyHookSignature,
-  verifyUrl,
 } from "../supabase/functions/_shared/auth-email-rules";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (p: string) => readFileSync(join(root, p), "utf8");
-const PROJECT = "https://byrwtxdalhsmvktuzoya.supabase.co";
 const SECRET_B64 = Buffer.from("0123456789abcdef0123456789abcdef").toString("base64");
 const SECRET = `v1,whsec_${SECRET_B64}`;
 
@@ -72,19 +74,38 @@ describe("hook signature (Standard Webhooks)", () => {
 });
 
 describe("links", () => {
-  it("builds the token_hash verify link on the Supabase project", () => {
-    const u = new URL(verifyUrl(PROJECT, "hash-abc", "recovery", "https://collaborate8.com/reset-password"));
-    expect(u.origin).toBe(PROJECT);
-    expect(u.pathname).toBe("/auth/v1/verify");
-    expect(u.searchParams.get("token")).toBe("hash-abc");
+  it("links to our own /auth/confirm page, never to Supabase's verify endpoint", () => {
+    const u = new URL(confirmUrl("hash-abc", "recovery", "https://collaborate8.com/reset-password", "https://collaborate8.com"));
+    expect(u.origin).toBe("https://collaborate8.com");
+    expect(u.pathname).toBe("/auth/confirm");
+    expect([...u.searchParams.keys()]).toEqual(["token_hash", "type", "next"]);
+    expect(u.searchParams.get("token_hash")).toBe("hash-abc");
     expect(u.searchParams.get("type")).toBe("recovery");
-    expect(u.searchParams.get("redirect_to")).toBe("https://collaborate8.com/reset-password");
-    expect(new URL(verifyUrl(PROJECT, "h", "email", "https://collaborate8.com/dashboard")).searchParams.get("type")).toBe("magiclink");
+    expect(u.searchParams.get("next")).toBe("/reset-password");
+    expect(u.toString()).not.toContain("supabase.co");
+    expect(u.toString()).not.toContain("/auth/v1/verify");
+    expect(new URL(confirmUrl("h1234567", "email", "https://collaborate8.com/dashboard", "https://collaborate8.com")).searchParams.get("type")).toBe("magiclink");
   });
 
-  it("refuses a project URL that is not Supabase", () => {
-    expect(() => verifyUrl("https://evil.example.com", "h", "recovery", "https://collaborate8.com")).toThrow();
-    expect(() => verifyUrl("", "h", "recovery", "https://collaborate8.com")).toThrow();
+  it("opens the site the person came from only when it is an allowed site", () => {
+    for (const o of LINK_ORIGINS) expect(linkOrigin(`${o}/reset-password`, "https://collaborate8.com")).toBe(o);
+    expect(linkOrigin("https://collabor8-web.rafa-f1b.workers.dev/dashboard", "")).toBe("https://collabor8-web.rafa-f1b.workers.dev");
+    // Not allowed: falls back to site_url when that is allowed, else the live site.
+    expect(linkOrigin("https://evil.example.com/reset-password", "https://collabor8-uk-test.rafa-f1b.workers.dev")).toBe("https://collabor8-uk-test.rafa-f1b.workers.dev");
+    expect(linkOrigin("https://uk-test.collaborate8.com/reset-password", "https://collaborate8.com")).toBe("https://collaborate8.com");
+    expect(linkOrigin("https://evil.example.com/", "https://evil.example.com")).toBe("https://collaborate8.com");
+    expect(linkOrigin("collabor8://reset-password", "https://collaborate8.com")).toBe("https://collaborate8.com");
+    expect(linkOrigin("https://x.lovable.app/", "https://x.lovable.app")).toBe("https://collaborate8.com");
+    expect(linkOrigin("http://collaborate8.com/", "")).toBe("https://collaborate8.com");
+  });
+
+  it("next is a same-site path from the redirect, else the default page", () => {
+    expect(nextPath("magiclink", "https://collaborate8.com/admin/analytics?x=1", "https://collaborate8.com")).toBe("/admin/analytics?x=1");
+    expect(nextPath("signup", "https://collaborate8.com/", "https://collaborate8.com")).toBe("/dashboard");
+    expect(nextPath("recovery", "https://evil.example.com/steal", "https://collaborate8.com")).toBe("/reset-password");
+    expect(nextPath("recovery", "collabor8://reset-password", "https://collaborate8.com")).toBe("/reset-password");
+    const u = new URL(confirmUrl("hash-abc", "signup", "https://evil.example.com/x", "https://collaborate8.com"));
+    expect(u.origin + (u.searchParams.get("next") ?? "")).toBe("https://collaborate8.com/dashboard");
   });
 
   it("sends a password reset to /reset-password when Supabase gives only the site root", () => {
@@ -110,21 +131,34 @@ describe("links", () => {
 });
 
 describe("planAuthEmails", () => {
-  it.each(["signup", "invite", "magiclink", "recovery"])("%s: one email to the user with a verify link", (type) => {
-    const out = planAuthEmails(payload({ email_action_type: type }) as any, PROJECT);
+  it.each(["signup", "invite", "magiclink", "recovery"])("%s: one email to the user with an /auth/confirm link", (type) => {
+    const out = planAuthEmails(payload({ email_action_type: type }) as any);
     expect(out).toHaveLength(1);
     expect(out[0].to).toBe("parent@example.com");
     expect(out[0].template).toBe(type);
     expect(out[0].subject).toBe(SUBJECTS[type as keyof typeof SUBJECTS]);
     const link = new URL(out[0].props.confirmationUrl);
-    expect(link.origin).toBe(PROJECT);
-    expect(link.searchParams.get("token")).toBe("hash-abc");
+    expect(link.origin).toBe("https://collaborate8.com");
+    expect(link.pathname).toBe("/auth/confirm");
+    expect(link.searchParams.get("token_hash")).toBe("hash-abc");
     expect(link.searchParams.get("type")).toBe(type);
+    expect(link.searchParams.get("next")).toBe(type === "recovery" ? "/reset-password" : "/dashboard");
     expect(out[0].props.confirmationUrl).not.toContain("123456");
   });
 
+  it("a reset from the London test site links back to the test site", () => {
+    const [m] = planAuthEmails(payload({
+      email_action_type: "recovery",
+      redirect_to: "https://collabor8-uk-test.rafa-f1b.workers.dev/reset-password",
+      site_url: "https://collaborate8.com",
+    }) as any);
+    expect(m.props.confirmationUrl).toBe(
+      "https://collabor8-uk-test.rafa-f1b.workers.dev/auth/confirm?token_hash=hash-abc&type=recovery&next=%2Freset-password",
+    );
+  });
+
   it("'email' (OTP sign-in) uses the magic link template", () => {
-    const [m] = planAuthEmails(payload({ email_action_type: "email" }) as any, PROJECT);
+    const [m] = planAuthEmails(payload({ email_action_type: "email" }) as any);
     expect(m.template).toBe("magiclink");
   });
 
@@ -132,41 +166,47 @@ describe("planAuthEmails", () => {
     const out = planAuthEmails(payload(
       { email_action_type: "email_change", token_hash: "hash-for-new", token_hash_new: "hash-for-current", token_new: "654321" },
       { email: "old@example.com", new_email: "new@example.com" },
-    ) as any, PROJECT);
+    ) as any);
     expect(out.map((e) => [e.to, e.label])).toEqual([["old@example.com", "email_change:current"], ["new@example.com", "email_change:new"]]);
-    expect(new URL(out[0].props.confirmationUrl).searchParams.get("token")).toBe("hash-for-current");
-    expect(new URL(out[1].props.confirmationUrl).searchParams.get("token")).toBe("hash-for-new");
+    expect(new URL(out[0].props.confirmationUrl).searchParams.get("token_hash")).toBe("hash-for-current");
+    expect(new URL(out[1].props.confirmationUrl).searchParams.get("token_hash")).toBe("hash-for-new");
+    for (const m of out) {
+      const u = new URL(m.props.confirmationUrl);
+      expect(u.origin + u.pathname).toBe("https://collaborate8.com/auth/confirm");
+      expect(u.searchParams.get("type")).toBe("email_change");
+      expect(u.searchParams.get("next")).toBe("/dashboard");
+    }
     expect(out[0].props.oldEmail).toBe("old@example.com");
     expect(out[0].props.newEmail).toBe("new@example.com");
   });
 
   it("email change without secure change: one email to the new address", () => {
-    const out = planAuthEmails(payload({ email_action_type: "email_change", token_hash: "h1", token_hash_new: "" }, { email: "old@example.com", new_email: "new@example.com" }) as any, PROJECT);
+    const out = planAuthEmails(payload({ email_action_type: "email_change", token_hash: "h1", token_hash_new: "" }, { email: "old@example.com", new_email: "new@example.com" }) as any);
     expect(out.map((e) => e.to)).toEqual(["new@example.com"]);
   });
 
   it("reauthentication sends the code, security notices send a notice", () => {
-    const [r] = planAuthEmails(payload({ email_action_type: "reauthentication" }) as any, PROJECT);
+    const [r] = planAuthEmails(payload({ email_action_type: "reauthentication" }) as any);
     expect(r.template).toBe("reauthentication");
     expect(r.props.token).toBe("123456");
-    const [n] = planAuthEmails(payload({ email_action_type: "password_changed_notification", token: "", token_hash: "" }) as any, PROJECT);
+    const [n] = planAuthEmails(payload({ email_action_type: "password_changed_notification", token: "", token_hash: "" }) as any);
     expect(n.template).toBe("security_notice");
     expect(n.props.message).toContain("password");
   });
 
   it("test and QA addresses get the real email with no [TEST] prefix", () => {
     for (const email of ["collaborate8-qa+uk1@agentmail.to", "rafa+uk1@collaborate8.com"]) {
-      const [m] = planAuthEmails(payload({ email_action_type: "recovery" }, { email }) as any, PROJECT);
+      const [m] = planAuthEmails(payload({ email_action_type: "recovery" }, { email }) as any);
       expect(m.to).toBe(email);
       expect(m.subject).not.toContain("[TEST]");
     }
   });
 
   it("refuses malformed payloads without echoing them", () => {
-    expect(() => planAuthEmails({} as any, PROJECT)).toThrow("missing email_data");
-    expect(() => planAuthEmails(payload({ email_action_type: "recovery" }, { email: "" }) as any, PROJECT)).toThrow("missing user email");
-    expect(() => planAuthEmails(payload({ email_action_type: "recovery", token_hash: "" }) as any, PROJECT)).toThrow("missing token_hash");
-    expect(() => planAuthEmails(payload({ email_action_type: "something_new" }) as any, PROJECT)).toThrow("unsupported");
+    expect(() => planAuthEmails({} as any)).toThrow("missing email_data");
+    expect(() => planAuthEmails(payload({ email_action_type: "recovery" }, { email: "" }) as any)).toThrow("missing user email");
+    expect(() => planAuthEmails(payload({ email_action_type: "recovery", token_hash: "" }) as any)).toThrow("missing token_hash");
+    expect(() => planAuthEmails(payload({ email_action_type: "something_new" }) as any)).toThrow("unsupported");
   });
 
   it("hook errors use Supabase's error shape", () => {

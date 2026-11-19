@@ -59,7 +59,7 @@ const recovery = {
 }
 
 const leaks = (logs: string[]) =>
-  logs.filter((l) => /@|305805|th_secret_hash_value|token=|verify\?/.test(l))
+  logs.filter((l) => /@|305805|th_secret_hash_value|token=|token_hash=|verify\?|auth\/confirm/.test(l))
 
 Deno.test('recovery: verified with standardwebhooks, rendered, sent once to the QA address', async () => {
   const { handler, sent, logs } = setup()
@@ -73,8 +73,10 @@ Deno.test('recovery: verified with standardwebhooks, rendered, sent once to the 
   assert(!m.subject.includes('[TEST]'))
   assertEquals(m.from, 'Collabor8 <noreply@notify.collaborate8.com>')
   assertEquals(m.idempotencyKey, 'auth-msg_test_1-recovery')
-  const link = `${PROJECT}/auth/v1/verify?token=th_secret_hash_value&amp;type=recovery&amp;redirect_to=https%3A%2F%2Fcollaborate8.com%2Freset-password`
+  const link = `https://collaborate8.com/auth/confirm?token_hash=th_secret_hash_value&amp;type=recovery&amp;next=%2Freset-password`
   assertStringIncludes(m.html ?? '', link)
+  assert(!(m.html ?? '').includes('/auth/v1/verify'), 'no Supabase verify link')
+  assert(!(m.text ?? '').includes('/auth/v1/verify'), 'no Supabase verify link in text')
   assertStringIncludes(m.text ?? '', 'reset your password for Collabor8')
   for (const part of [m.html ?? '', m.text ?? '', m.subject]) {
     assert(!/lovable/i.test(part), 'no Lovable links')

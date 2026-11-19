@@ -165,7 +165,7 @@ const DEFAULT_PATH: Record<string, string> = {
 };
 
 /**
- * Where the verify link sends people afterwards. Supabase has already checked redirect_to
+ * Where the email link sends people afterwards (feeds confirmUrl). Supabase has already checked redirect_to
  * against the project's allow list (and falls back to site_url when it is not allowed).
  * A bare site root (or nothing, or a Lovable host) becomes the right page on the site, so a
  * password reset always lands on /reset-password.
@@ -180,19 +180,60 @@ export function redirectTarget(type: EmailActionType, redirectTo: string | undef
   return u.toString();
 }
 
-/** The verify endpoint type for each action. */
+/** The verifyOtp type for each action ("email" OTP sign-in links verify as a magic link). */
 export function verifyType(type: EmailActionType): string {
   return type === "email" ? "magiclink" : type;
 }
 
-/** Supabase verify link: {project}/auth/v1/verify?token=<token_hash>&type=..&redirect_to=.. */
-export function verifyUrl(supabaseUrl: string, tokenHash: string, type: EmailActionType, redirect: string): string {
-  const base = String(supabaseUrl || "").replace(/\/+$/, "");
-  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(base) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(base)) {
-    throw new Error("SUPABASE_URL is not a Supabase project URL");
-  }
-  const q = new URLSearchParams({ token: tokenHash, type: verifyType(type), redirect_to: redirect });
-  return `${base}/auth/v1/verify?${q.toString()}`;
+/**
+ * Sites an auth email link may open. The link goes to our own /auth/confirm page there, never
+ * straight to Supabase's /auth/v1/verify: email link scanners (Outlook Safe Links and similar)
+ * open every link, and a GET on /auth/v1/verify spends the one-time token before the parent can.
+ */
+export const LINK_ORIGINS = [
+  "https://collaborate8.com",
+  "https://www.collaborate8.com",
+  "https://collabor8-uk-test.rafa-f1b.workers.dev",
+  "https://collabor8-web.rafa-f1b.workers.dev",
+] as const;
+
+const isLinkOrigin = (o: string) => (LINK_ORIGINS as readonly string[]).includes(o);
+
+/** The site the confirm link opens: the redirect's site when allowed, else site_url when allowed, else the live site. */
+export function linkOrigin(redirect: string | undefined | null, siteUrl: string | undefined | null): string {
+  const u = cleanHttpsUrl(redirect);
+  if (u && isLinkOrigin(u.origin)) return u.origin;
+  const site = siteOrigin(siteUrl);
+  return isLinkOrigin(site) ? site : LIVE_SITE;
+}
+
+const hasControlChar = (v: string) => [...v].some((c) => c.charCodeAt(0) < 32);
+
+/** A same-site path only ("/x?y"), never "//host" or a backslash trick. */
+export function safeNextPath(value: string | undefined | null): string | null {
+  const v = String(value ?? "");
+  if (!v.startsWith("/") || v.startsWith("//") || v.includes("\\") || hasControlChar(v)) return null;
+  return v;
+}
+
+/** Where /auth/confirm sends people after verifying: the redirect's path on the same site, else the default page. */
+export function nextPath(type: EmailActionType, redirect: string | undefined | null, origin: string): string {
+  const fallback = DEFAULT_PATH[type] ?? "/dashboard";
+  const u = cleanHttpsUrl(redirect);
+  if (!u || u.origin !== origin) return fallback;
+  if (u.pathname === "/" && !u.search) return fallback;
+  return safeNextPath(u.pathname + u.search) ?? fallback;
+}
+
+/**
+ * The link put in the email: {site}/auth/confirm?token_hash=..&type=..&next=..
+ * Opening it does nothing by itself; the token is only used when the parent presses the button.
+ * `redirect` is the value from redirectTarget (Supabase already checked it against its allow list).
+ */
+export function confirmUrl(tokenHash: string, type: EmailActionType, redirect: string, siteUrl: string | undefined | null): string {
+  const origin = linkOrigin(redirect, siteUrl);
+  const q = new URLSearchParams({ token_hash: tokenHash, type: verifyType(type), next: nextPath(type, redirect, origin) });
+  return `${origin}/auth/confirm?${q.toString()}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -224,7 +265,7 @@ const LINK_TYPES = new Set(["signup", "invite", "magiclink", "recovery", "email"
 export class HookPayloadError extends Error {}
 
 /** Turns one hook call into the emails to send. Throws HookPayloadError on a malformed payload. */
-export function planAuthEmails(payload: HookPayload, supabaseUrl: string): PlannedEmail[] {
+export function planAuthEmails(payload: HookPayload): PlannedEmail[] {
   const user = payload?.user ?? {};
   const d = payload?.email_data;
   if (!d || typeof d.email_action_type !== "string") throw new HookPayloadError("missing email_data");
@@ -236,7 +277,7 @@ export function planAuthEmails(payload: HookPayload, supabaseUrl: string): Plann
     if (!email) throw new HookPayloadError("missing user email");
     if (!d.token_hash) throw new HookPayloadError("missing token_hash");
     const template: TemplateKind = type === "email" ? "magiclink" : (type as TemplateKind);
-    const url = verifyUrl(supabaseUrl, d.token_hash, type, redirectTarget(type, d.redirect_to, d.site_url));
+    const url = confirmUrl(d.token_hash, type, redirectTarget(type, d.redirect_to, d.site_url), d.site_url);
     const props: Record<string, string> = { siteName: SITE_NAME, siteUrl: origin, confirmationUrl: url };
     if (template === "signup") props.recipient = email;
     return [{ to: email, template, subject: SUBJECTS[template], label: type, props }];
@@ -254,13 +295,13 @@ export function planAuthEmails(payload: HookPayload, supabaseUrl: string): Plann
     if (d.token_hash_new && current) {
       out.push({
         to: current, template: "email_change", subject: SUBJECTS.email_change, label: "email_change:current",
-        props: { ...base, confirmationUrl: verifyUrl(supabaseUrl, d.token_hash_new, type, redirect) },
+        props: { ...base, confirmationUrl: confirmUrl(d.token_hash_new, type, redirect, d.site_url) },
       });
     }
     if (d.token_hash) {
       out.push({
         to: newEmail, template: "email_change", subject: SUBJECTS.email_change, label: "email_change:new",
-        props: { ...base, confirmationUrl: verifyUrl(supabaseUrl, d.token_hash, type, redirect) },
+        props: { ...base, confirmationUrl: confirmUrl(d.token_hash, type, redirect, d.site_url) },
       });
     }
     if (!out.length) throw new HookPayloadError("missing token_hash");

@@ -2,6 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Auth email links (/auth/confirm): move the one-time token out of the address bar before any tracker
+         loads. The page reads it back from sessionStorage and only uses it when the parent presses the button. -->
+    <script>
+      (function () {
+        try {
+          var p = window.location.pathname.replace(/\/+$/, '');
+          if (p !== '/auth/confirm') return;
+          var q = new URLSearchParams(window.location.search);
+          if (!q.get('token_hash')) return;
+          sessionStorage.setItem('c8_auth_confirm', JSON.stringify({
+            token_hash: q.get('token_hash'), type: q.get('type'), next: q.get('next'), at: Date.now()
+          }));
+          history.replaceState(history.state, '', '/auth/confirm');
+        } catch (e) { /* storage unavailable: the page reads the address bar instead */ }
+      })();
+    </script>
     <!-- Internal traffic switch: runs before any tracker. ?c8_internal=1 marks this device, ?c8_internal=0 clears it. -->
     <script>
       (function () {

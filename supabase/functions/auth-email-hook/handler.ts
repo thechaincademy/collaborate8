@@ -43,7 +43,7 @@ const TEMPLATES: Record<TemplateKind, React.ComponentType<any>> = {
 export interface AuthEmailDeps {
   /** Sends one email (sendResendEmail in production). */
   send: (input: SendResendEmailInput) => Promise<SendResendResult>
-  /** Reads a setting: SEND_EMAIL_HOOK_SECRET and SUPABASE_URL from env only; senders may use cfg. */
+  /** Reads a setting: SEND_EMAIL_HOOK_SECRET from env only; senders may use cfg. */
   env: (name: string) => string | undefined
   /** Sender lookup (AUTH_EMAIL_FROM, then EMAIL_FROM). */
   from: () => string | undefined
@@ -94,7 +94,7 @@ export function createAuthEmailHandler(deps: AuthEmailDeps) {
     try {
       const payload = JSON.parse(body) as HookPayload
       actionType = String(payload?.email_data?.email_action_type ?? 'unknown').slice(0, 40)
-      planned = planAuthEmails(payload, deps.env('SUPABASE_URL') ?? '')
+      planned = planAuthEmails(payload)
     } catch (err) {
       const reason = err instanceof HookPayloadError ? err.message : 'invalid payload'
       log('rejected request', { type: actionType, reason })
