@@ -9,9 +9,11 @@ import { cfg } from "./config.ts";
 
 const PROJECT = () => Deno.env.get("VERTEX_PROJECT") ?? "collaborate8-c9e7f";
 // Always a regional UK/EU endpoint: anything else (including "global") falls back to London.
+// Always London. The bid says AI runs in the UK, so VERTEX_LOCATION cannot move it.
 export const LOCATION = () => {
   const v = (cfg("VERTEX_LOCATION") ?? "").trim();
-  return /^europe-[a-z]+[0-9]+$/.test(v) ? v : "europe-west2";
+  if (v && v !== "europe-west2") console.warn("[vertex] ignoring VERTEX_LOCATION, London only");
+  return "europe-west2";
 };
 export const VERTEX_MODEL = () => (cfg("VERTEX_MODEL") ?? "").trim() || "gemini-3.5-flash";
 
