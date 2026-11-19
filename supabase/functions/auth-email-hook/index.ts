@@ -11,6 +11,11 @@ const handler = createAuthEmailHandler({
   // The hook secret and project URL come from Supabase secrets only, never from admin overrides.
   env: (name) => Deno.env.get(name),
   from: () => cfg('AUTH_EMAIL_FROM') || cfg('EMAIL_FROM'),
+  // Answer Supabase Auth at once and send afterwards, so a cold start can't cost the reset token.
+  background: (work) => {
+    const rt = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime
+    if (rt?.waitUntil) rt.waitUntil(work)
+  },
 })
 
 Deno.serve(handler)

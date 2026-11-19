@@ -49,6 +49,12 @@ export interface AuthEmailDeps {
   from: () => string | undefined
   log?: (msg: string, extra?: Record<string, unknown>) => void
   now?: () => number
+  /**
+   * When set, the emails are sent in the background and Supabase gets 200 straight away.
+   * Supabase Auth only keeps the reset token if the hook answers quickly; a slow cold start
+   * once left a sent email with a token that was never saved.
+   */
+  background?: (work: Promise<unknown>) => void
 }
 
 export async function renderPlanned(email: PlannedEmail): Promise<{ html: string; text: string }> {
@@ -99,28 +105,38 @@ export function createAuthEmailHandler(deps: AuthEmailDeps) {
     const from = deps.from() || AUTH_FROM_DEFAULT
     const hookId = (req.headers.get('webhook-id') ?? crypto.randomUUID()).slice(0, 80)
 
-    for (const email of planned) {
-      try {
-        const { html, text } = await renderPlanned(email)
-        const result = await deps.send({
-          to: email.to,
-          from,
-          subject: email.subject,
-          html,
-          text,
-          // Supabase retries a failed hook with the same webhook-id: dedupe at Resend.
-          idempotencyKey: `auth-${hookId}-${email.label}`,
-        })
-        if (!result.sent) log('not delivered', { type: email.label, reason: (result as { reason?: string }).reason ?? 'not_sent' })
-        else log('sent', { type: email.label })
-      } catch (err) {
-        // sendResendEmail already strips addresses and numbers from its error text.
-        const reason = err instanceof Error ? err.message : 'send failed'
-        log('send failed', { type: email.label, reason })
-        const e = hookError(500, 'Could not send the email. Please try again in a few minutes.')
-        return json(e.status, e.body)
+    const sendAll = async (): Promise<Response | null> => {
+      for (const email of planned) {
+        try {
+          const { html, text } = await renderPlanned(email)
+          const result = await deps.send({
+            to: email.to,
+            from,
+            subject: email.subject,
+            html,
+            text,
+            // Supabase retries a failed hook with the same webhook-id: dedupe at Resend.
+            idempotencyKey: `auth-${hookId}-${email.label}`,
+          })
+          if (!result.sent) log('not delivered', { type: email.label, reason: (result as { reason?: string }).reason ?? 'not_sent' })
+          else log('sent', { type: email.label })
+        } catch (err) {
+          // sendResendEmail already strips addresses and numbers from its error text.
+          const reason = err instanceof Error ? err.message : 'send failed'
+          log('send failed', { type: email.label, reason })
+          const e = hookError(500, 'Could not send the email. Please try again in a few minutes.')
+          return json(e.status, e.body)
+        }
       }
+      return null
     }
+
+    if (deps.background) {
+      deps.background(sendAll().catch((err) => log('send failed', { type: actionType, reason: err instanceof Error ? err.message : 'send failed' })))
+      return json(200, '{}')
+    }
+    const failed = await sendAll()
+    if (failed) return failed
 
     return json(200, '{}')
   }
