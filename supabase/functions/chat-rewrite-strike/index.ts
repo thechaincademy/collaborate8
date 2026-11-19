@@ -4,6 +4,8 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requirePremium } from "../_shared/premium-access.ts";
 import { getUserFromRequest } from "../_shared/supabase.ts";
+import { vertexConfigured } from "../_shared/vertex.ts";
+import { callGateway, gatewayError } from "./vertex-call.ts";
 
 const CALM_CHECK_REQUIRES_PREMIUM = (Deno.env.get("CALM_CHECK_REQUIRES_PREMIUM") ?? "true").trim().toLowerCase() !== "false";
 
@@ -95,8 +97,10 @@ const SEND_NETWORK_SLACK_MS = 800;
 if (SEND_HARD_STOP_MS + SEND_NETWORK_SLACK_MS > SEND_CLIENT_BUDGET_MS) {
   throw new Error("send budget misconfigured: hard stop + network slack exceeds client budget");
 }
-const SEND_MODEL = "openai/gpt-5.6-luna";
-// OpenAI models take max_completion_tokens; reasoning off keeps the call fast.
+// Vertex AI London (europe-west2), model from VERTEX_MODEL (see _shared/vertex.ts). The model field is
+// dropped before the call; max_completion_tokens maps to maxOutputTokens and reasoning "none" to the
+// minimal thinking level, so the request and response keep the chat-completions shape used below.
+const SEND_MODEL = "vertex";
 const sendModel = (maxTokens: number) => ({ model: SEND_MODEL, max_completion_tokens: maxTokens, reasoning_effort: "none" });
 const SEND_FIRST_CALLS = 2; // parallel first calls; the first whose strikes pass every check wins, the rest are aborted.
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
@@ -2581,21 +2585,6 @@ const capped = <T,>(p: Promise<T>, ms: number, onTimeout: T): Promise<T> => {
 const TIMED_OUT = Symbol("timed_out");
 const NON_SEND_CAP_MS = 8000;
 
-const callGateway = (apiKey: string, body: Record<string, unknown>, signal?: AbortSignal) =>
-  fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(body),
-    signal,
-  });
-
-const gatewayError = (resp: Response) => {
-  if (resp.status === 429) return json({ error: "Too many requests - please try again in a moment." }, 429);
-  if (resp.status === 402) return json({ error: "AI credits have run out." }, 402);
-  if (!resp.ok) return json({ error: "The writing aid is unavailable right now." }, resp.status >= 500 ? 502 : resp.status);
-  return null;
-};
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const started = Date.now();
@@ -2663,8 +2652,8 @@ Deno.serve(async (req) => {
       if (denied) return denied;
       return json({ error: "Missing draft" }, 400);
     }
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
+    const apiKey = "vertex";
+    if (!vertexConfigured()) {
       const denied = await premiumCapped();
       if (denied === TIMED_OUT) return json({ needs_rewrite: false, rewrite: null });
       if (denied) return denied;
@@ -2762,7 +2751,7 @@ Deno.serve(async (req) => {
         let resp: Response;
         const m0 = Date.now();
         try {
-          resp = await callGateway(apiKey, { ...sendModel(maxTokens), response_format: STRIKE_SCHEMA, messages: msgs }, signal);
+          resp = await callGateway(apiKey, { ...sendModel(maxTokens), response_format: STRIKE_SCHEMA, messages: msgs }, signal, started + SEND_HARD_STOP_MS);
           if (timing.model_ms === undefined) timing.model_ms = Date.now() - m0;
         } catch {
           return { kind: "timeout" };

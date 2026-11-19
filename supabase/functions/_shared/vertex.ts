@@ -8,7 +8,11 @@ import { cfg } from "./config.ts";
 // Nothing here logs prompts, drafts or model output.
 
 const PROJECT = () => Deno.env.get("VERTEX_PROJECT") ?? "collaborate8-c9e7f";
-const LOCATION = () => cfg("VERTEX_LOCATION") ?? "europe-west2";
+// Always a regional UK/EU endpoint: anything else (including "global") falls back to London.
+export const LOCATION = () => {
+  const v = (cfg("VERTEX_LOCATION") ?? "").trim();
+  return /^europe-[a-z]+[0-9]+$/.test(v) ? v : "europe-west2";
+};
 export const VERTEX_MODEL = () => (cfg("VERTEX_MODEL") ?? "").trim() || "gemini-3.5-flash";
 
 type ServiceAccount = { client_email: string; private_key: string; token_uri?: string };
