@@ -19,7 +19,8 @@ const MobileLayout = ({
   const inApp = useIsInApp();
   return (
     <div className="mx-auto min-h-screen max-w-md md:max-w-3xl lg:max-w-5xl bg-background">
-      <main className={showNav ? (inApp ? "pb-[calc(env(safe-area-inset-bottom)+1.5rem)]" : "pb-24") : ""}>
+      {/* The website's bottom tab bar is 5rem tall plus the safe area, so leave room for both. */}
+      <main className={showNav ? (inApp ? "pb-[calc(env(safe-area-inset-bottom)+1.5rem)]" : "pb-[calc(6rem+env(safe-area-inset-bottom))]") : ""}>
         {children}
       </main>
       {showNav && onTabChange && (

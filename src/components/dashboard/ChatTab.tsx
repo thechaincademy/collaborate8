@@ -701,7 +701,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   if (!coparentId) {
     return (
 
-      <div className="mx-auto flex w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+      <div className="mx-auto flex w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12 pb-[calc(3rem+env(safe-area-inset-bottom))]">
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         {sectionTabs}
@@ -794,7 +794,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
               Send an invitation
             </Button>
             {showUnconnectedSuggestion && (
-              <div className="w-full text-left">
+              <div data-testid="unconnected-unlock-card" className="mb-4 w-full scroll-mb-[calc(7rem+env(safe-area-inset-bottom))] text-left">
                 <ConversationToolSuggestionCard onOpen={openTool} />
               </div>
             )}
