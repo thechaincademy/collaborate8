@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { consumeConfirmLinkError } from "@/lib/confirmLinkError";
 import { readLastSignupEmail } from "@/lib/lastSignupEmail";
 import { confirmRedirect } from "@/lib/authRedirect";
+import { forgotPasswordHref, loginErrorView, SET_PASSWORD_LINK_TEXT, type LoginErrorView } from "@/lib/loginError";
 import appScreenshot1 from "@/assets/app-screenshot-1-hd.png";
 import appScreenshot2 from "@/assets/app-screenshot-2-hd.png";
 import appScreenshot3 from "@/assets/app-screenshot-3-hd.png";
@@ -24,6 +25,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<LoginErrorView | null>(null);
   const [linkError] = useState(() => consumeConfirmLinkError());
   const [resendEmail, setResendEmail] = useState(
     () => linkError?.email || searchParams.get("email") || readLastSignupEmail(),
@@ -67,20 +69,24 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
+      setLoginError({ kind: "other", text: "Please enter your email and password." });
       toast.error("Please enter email and password");
       return;
     }
+    setLoginError(null);
     setIsLoading(true);
     const { error } = await signIn(email, password);
     setIsLoading(false);
     if (error) {
-      if (/email not confirmed/i.test(error.message ?? "")) {
+      const view = loginErrorView(error as { message?: string; code?: string });
+      setLoginError(view);
+      if (view?.kind === "email_not_confirmed") {
         toast.error("Please confirm your email first. We sent you a link when you signed up.", {
           action: { label: "Resend link", onClick: () => navigate(`/check-email?email=${encodeURIComponent(email)}`, { state: { email } }) },
           duration: 10000,
         });
-      } else {
-        toast.error(error.message || "Failed to log in");
+      } else if (view?.kind !== "invalid_credentials") {
+        toast.error(view?.text || "Failed to log in");
       }
     } else {
       void track("login", { method: "password" });
@@ -169,7 +175,9 @@ const Login = () => {
                   aria-label="Email address"
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setLoginError(null); }}
+                  aria-invalid={loginError?.kind === "invalid_credentials" || undefined}
+                  aria-describedby={loginError ? "login-error" : undefined}
                   className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
                 />
               </div>
@@ -182,10 +190,26 @@ const Login = () => {
                   aria-label="Password"
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setLoginError(null); }}
+                  aria-invalid={loginError?.kind === "invalid_credentials" || undefined}
+                  aria-describedby={loginError ? "login-error" : undefined}
                   className="h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay"
                 />
               </div>
+
+              {loginError && (
+                <div id="login-error" role="alert" data-testid="login-error" className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
+                  <p className="font-semibold text-destructive">{loginError.text}</p>
+                  {loginError.kind === "invalid_credentials" && (
+                    <>
+                      <p className="mt-2 text-foreground">{loginError.upgrade}</p>
+                      <Link to={forgotPasswordHref(email)} className="mt-2 inline-flex min-h-11 items-center font-semibold text-foreground underline">
+                        {SET_PASSWORD_LINK_TEXT}
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
 
               <button
                 type="button"
