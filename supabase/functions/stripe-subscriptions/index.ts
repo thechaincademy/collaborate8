@@ -77,7 +77,7 @@ serve(async (req) => {
     // ── Setup: add card via Checkout ──
     if (action === "setup-card") {
       const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
-      const origin = req.headers.get("origin") || "https://collabor8.lovable.app";
+      const origin = req.headers.get("origin") || "https://collaborate8.com";
       const url = await paymentMethodProvider.createSetupSession(
         customerId,
         `${origin}/dashboard?${body.returnToMaintenance ? "tab=maintenance&" : ""}card-setup=success`,
@@ -218,7 +218,7 @@ serve(async (req) => {
         metadata: { payer_id: user.id, receiver_id: receiverId },
       });
 
-      const origin = req.headers.get("origin") || "https://collabor8.lovable.app";
+      const origin = req.headers.get("origin") || "https://collaborate8.com";
       const stripe = getStripe();
 
       // Hosted Checkout in subscription mode. `payment_method_types: ["card"]`

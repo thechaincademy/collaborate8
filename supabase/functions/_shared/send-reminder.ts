@@ -7,12 +7,12 @@ const TEMPLATES: Record<ReminderType, { subject: string; body: (name: string) =>
   setup_bank_account: {
     subject: "Your co-parent is ready to send payments on Collabor8",
     body: (name) =>
-      `Hi${name ? " " + name : ""},\n\nYour co-parent has set up their payment method on Collabor8 and is ready to send you money. To start receiving payments, please connect your bank account.\n\nLog in: https://collaborate8.lovable.app\n\n— Collabor8`,
+      `Hi${name ? " " + name : ""},\n\nYour co-parent has set up their payment method on Collabor8 and is ready to send you money. To start receiving payments, please connect your bank account.\n\nLog in: https://collaborate8.com\n\nCollabor8`,
   },
   send_payment: {
     subject: "Your co-parent has connected their bank account on Collabor8",
     body: (name) =>
-      `Hi${name ? " " + name : ""},\n\nYour co-parent has connected their bank account on Collabor8 and is ready to receive payments. You can now set up a recurring payment or send a one-off transfer.\n\nLog in: https://collaborate8.lovable.app\n\n— Collabor8`,
+      `Hi${name ? " " + name : ""},\n\nYour co-parent has connected their bank account on Collabor8 and is ready to receive payments. You can now set up a recurring payment or send a one-off transfer.\n\nLog in: https://collaborate8.com\n\nCollabor8`,
   },
 };
 
