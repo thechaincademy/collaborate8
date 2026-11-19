@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { maintenanceRoleGate, type MaintenanceRoleGate } from "@/lib/maintenanceOnboarding";
 import { motion } from "framer-motion";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, ArrowLeft } from "lucide-react";
@@ -31,11 +32,10 @@ const MaintenanceTab = () => {
   const [connectStatus, setConnectStatus] = useState<string>("loading");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
   const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(true);
-  const [roleConfirmed, setRoleConfirmed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return false; // set below in effect once we know user id
-  });
+  const [localRoleConfirmed, setLocalRoleConfirmed] = useState<boolean>(false);
   const [roleSaving, setRoleSaving] = useState(false);
+  // "Go back" must reopen the picker even when account data says the role is known.
+  const [goBackRequested, setGoBackRequested] = useState(false);
 
   useEffect(() => {
     const refresh = () => { void refetch(); };
@@ -45,7 +45,7 @@ const MaintenanceTab = () => {
 
   useEffect(() => {
     if (!profile?.id) return;
-    setRoleConfirmed(localStorage.getItem(`role_confirmed_${profile.id}`) === "true");
+    setLocalRoleConfirmed(localStorage.getItem(`role_confirmed_${profile.id}`) === "true");
   }, [profile?.id]);
 
   const handleChooseRole = async (chosen: "managing" | "viewing") => {
@@ -53,14 +53,16 @@ const MaintenanceTab = () => {
     setRoleSaving(true);
     await updateProfile({ role: chosen });
     localStorage.setItem(`role_confirmed_${profile.id}`, "true");
-    setRoleConfirmed(true);
+    setLocalRoleConfirmed(true);
+    setGoBackRequested(false);
     setRoleSaving(false);
   };
 
   const handleGoBack = () => {
     if (!profile?.id) return;
     localStorage.removeItem(`role_confirmed_${profile.id}`);
-    setRoleConfirmed(false);
+    setLocalRoleConfirmed(false);
+    setGoBackRequested(true);
   };
 
   useEffect(() => {
@@ -149,6 +151,35 @@ const MaintenanceTab = () => {
   );
 
   // Role selection gate - shown once, before the arrangement UI is unlocked.
+  const roleGate: MaintenanceRoleGate = goBackRequested && !localRoleConfirmed
+    ? "picker"
+    : maintenanceRoleGate({
+        localConfirmed: localRoleConfirmed,
+        role: profile?.role,
+        hasOwnArrangement: !!activePayment,
+        cardCount: cards.length,
+        connectStatus,
+        evidenceLoading: loading || cardsLoading || connectStatus === "loading",
+      });
+  const roleConfirmed = roleGate === "confirmed";
+
+  // Remember account-based confirmation in this browser too.
+  useEffect(() => {
+    if (profile?.id && roleConfirmed && !localRoleConfirmed && !goBackRequested) {
+      localStorage.setItem(`role_confirmed_${profile.id}`, "true");
+    }
+  }, [profile?.id, roleConfirmed, localRoleConfirmed, goBackRequested]);
+
+  if (!profileLoading && profile && roleGate === "loading") {
+    return (
+      <div className="px-6 pt-12 pb-24">
+        <DashboardHeader title="Child Maintenance" />
+        {renderStatusSkeleton()}
+        {renderActionsSkeleton()}
+      </div>
+    );
+  }
+
   if (!profileLoading && profile && !roleConfirmed) {
     return (
       <div className="px-6 pt-12 pb-24">
