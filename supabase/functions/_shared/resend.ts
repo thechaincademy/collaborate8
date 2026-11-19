@@ -21,6 +21,8 @@ export interface SendResendEmailInput {
   text?: string;
   replyTo?: string;
   idempotencyKey?: string;
+  /** Sender override (for example AUTH_EMAIL_FROM); defaults to EMAIL_FROM. */
+  from?: string;
 }
 
 export async function sendResendEmail(input: SendResendEmailInput): Promise<SendResendResult> {
@@ -28,7 +30,7 @@ export async function sendResendEmail(input: SendResendEmailInput): Promise<Send
   if (!apiKey) {
     throw new Error("RESEND_API_KEY is not configured");
   }
-  const from = cfg("EMAIL_FROM") || DEFAULT_FROM;
+  const from = input.from || cfg("EMAIL_FROM") || DEFAULT_FROM;
 
   const payload: Record<string, unknown> = {
     from,

@@ -1,14 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import { isServiceOrAdminCaller } from "../_shared/caller-auth.ts";
 
 const ADMIN_EMAILS = ["jade@collaborate8.com", "rafa@collaborate8.com"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const key = req.headers.get("x-admin-key");
-  if (!key || key !== Deno.env.get("LOVABLE_API_KEY")) {
+  // Service key or a signed-in admin (was the Lovable API key, which only Lovable could send).
+  if (!(await isServiceOrAdminCaller(req))) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

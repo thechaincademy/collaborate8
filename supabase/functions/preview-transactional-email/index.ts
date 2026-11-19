@@ -5,30 +5,17 @@ initEdgeSentry()
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { isServiceOrAdminCaller } from '../_shared/caller-auth.ts'
 
-// Renders all registered templates with their previewData.
-// Gated by LOVABLE_API_KEY — only the Go API calls this.
+// Renders all registered templates with their previewData. Sends nothing.
+// Callable with the project's service key or by a signed-in admin (was the Lovable API key).
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
-  const apiKey = Deno.env.get('LOVABLE_API_KEY')
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'Server configuration error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
-  // Verify the caller is authorized with LOVABLE_API_KEY
-  const authHeader = req.headers.get('Authorization')
-  const token = authHeader?.replace(/^Bearer\s+/i, '')
-  if (token !== apiKey) {
+  if (!(await isServiceOrAdminCaller(req))) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
