@@ -203,7 +203,7 @@ const MaintenanceTab = () => {
   }
 
   return (
-    <div className="px-6 pt-12 pb-24">
+    <div data-testid="maintenance-tab" className="px-6 pt-12 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <DashboardHeader title="Child Maintenance" />
       <SafetyToolsBanner safety={safety} />
 

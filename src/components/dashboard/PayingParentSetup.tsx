@@ -95,7 +95,7 @@ export default function PayingParentSetup({ connected, userId, receiverId, arran
   };
 
   return (
-    <section aria-label="Payment setup" className="py-2">
+    <section aria-label="Payment setup" className="pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <ol className="space-y-0">
         {steps.map((item, index) => {
           const unlocked = index === 0 || (index === 1 ? accountDone : detailsDone);
@@ -115,15 +115,15 @@ export default function PayingParentSetup({ connected, userId, receiverId, arran
                   <fieldset disabled={!unlocked || loading} className="mt-4 min-w-0 space-y-3">
                     <div className="space-y-1.5"><Label htmlFor="setup-amount">Amount (£)</Label><Input id="setup-amount" type="number" inputMode="decimal" min="0.50" step="0.01" value={amount} onChange={(e) => { setAmount(e.target.value); setReviewReady(false); }} /></div>
                     <div className="space-y-1.5"><Label>Frequency</Label><div role="group" aria-label="Payment frequency" className="grid grid-cols-2 gap-2">{(["week", "month"] as const).map((value) => <Button key={value} type="button" variant="outline" aria-pressed={frequency === value} onClick={() => { setFrequency(value); setReviewReady(false); }} className={cn(frequency === value && "border-teal bg-teal/10 text-teal")}>{value === "week" ? "Weekly" : "Monthly"}</Button>)}</div></div>
-                    <div className="space-y-1.5"><Label htmlFor="setup-start-date">Start date</Label><Input id="setup-start-date" type="date" min={today} value={startDate} onChange={(e) => { setStartDate(e.target.value); setReviewReady(false); }} className="block w-full min-w-0" /></div>
-                    <Button onClick={saveDetails} disabled={!unlocked || !valid || loading} className="w-full bg-teal text-teal-foreground hover:bg-teal/90">Continue</Button>
+                    <div className="space-y-1.5"><Label htmlFor="setup-start-date">Start date</Label><Input id="setup-start-date" type="date" min={today} value={startDate} onChange={(e) => { setStartDate(e.target.value); setReviewReady(false); }} className="block w-full min-w-0 scroll-mb-[calc(7rem+env(safe-area-inset-bottom))]" /></div>
+                    <Button onClick={saveDetails} disabled={!unlocked || !valid || loading} className="w-full scroll-mb-[calc(7rem+env(safe-area-inset-bottom))] bg-teal text-teal-foreground hover:bg-teal/90">Continue</Button>
                   </fieldset>
                 )}
                 {index === 2 && !live && (
                   <div className="mt-4">
                     {detailsDone && <dl className="mb-4 space-y-2 text-sm"><div className="flex justify-between gap-2"><dt className="text-muted-foreground">Amount</dt><dd className="font-medium">£{amountNumber.toFixed(2)}</dd></div><div className="flex justify-between gap-2"><dt className="text-muted-foreground">Frequency</dt><dd className="font-medium">{frequency === "week" ? "Weekly" : "Monthly"}</dd></div><div className="flex justify-between gap-2"><dt className="text-muted-foreground">Start date</dt><dd className="font-medium">{validDate ? format(parseISO(startDate), "d MMM yyyy") : "-"}</dd></div></dl>}
                     {error && <p role="alert" className="mb-3 text-sm text-destructive">{error}</p>}
-                    <Button onClick={confirm} disabled={!unlocked || !valid || loading} className="w-full gap-2 bg-teal text-teal-foreground hover:bg-teal/90">{loading && <Loader2 className="h-4 w-4 animate-spin" />}{loading ? "Confirming..." : "Confirm arrangement"}</Button>
+                    <Button data-testid="confirm-arrangement" onClick={confirm} disabled={!unlocked || !valid || loading} className="w-full gap-2 scroll-mb-[calc(7rem+env(safe-area-inset-bottom))] bg-teal text-teal-foreground hover:bg-teal/90">{loading && <Loader2 className="h-4 w-4 animate-spin" />}{loading ? "Confirming..." : "Confirm arrangement"}</Button>
                   </div>
                 )}
               </div>
