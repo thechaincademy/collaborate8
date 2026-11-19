@@ -15,7 +15,7 @@ const STEPS: Record<string, string> = {
   "Clarity fallback secret (optional, use Connect above)": "Not needed if Clarity is connected above. A token connected above is used first.",
   Stripe: "In Stripe, Developers, API keys: paste the secret key below. Then Developers, Webhooks: add an endpoint for https://byrwtxdalhsmvktuzoya.supabase.co/functions/v1/stripe-webhooks and paste its signing secret below (one for Collabor8 payments, one for payout accounts).",
   "Email (Resend, EU)": "The sending domain notify.collaborate8.com is in Resend's EU (Ireland) region. It starts working once its DNS records are added and verified.",
-  "Alert recipients": "Who gets live alerts, and the QA inbox that gets test alerts.",
+  "Alert recipients": "Who gets live alerts, who reviews requests to join from the website, and the QA inbox that gets test alerts.",
   "Calm check AI (Vertex, London)": "Uses UK or EU regions only (London by default). The global endpoint is never used.",
   "Push notifications": "Web push needs a VAPID key pair. App push needs the Firebase service account JSON from the Firebase console.",
   "App store purchases": "Only needed for in-app purchases in the iPhone and Android apps.",

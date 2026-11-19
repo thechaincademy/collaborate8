@@ -78,6 +78,8 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminMonitoring from "./pages/AdminMonitoring";
 import AdminSetup from "./pages/AdminSetup";
+import AdminAccessRequests from "./pages/AdminAccessRequests";
+import RequestAccess from "./pages/RequestAccess";
 import ResetPassword from "./pages/ResetPassword";
 import InAppShell from "@/components/layout/InAppShell";
 import NotFound from "./pages/NotFound";
@@ -122,6 +124,7 @@ const App = () => (
               <Route path="/splash" element={<Splash />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/signup/invited" element={<SignUpInvited />} />
+              <Route path="/request-access" element={<RequestAccess />} />
               <Route path="/login" element={<Login />} />
               <Route path="/check-email" element={<CheckEmail />} />
               <Route path="/delete-account" element={<DeleteAccount />} />
@@ -186,6 +189,7 @@ const App = () => (
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/monitoring" element={<AdminMonitoring />} />
               <Route path="/admin/setup" element={<AdminSetup />} />
+              <Route path="/admin/access-requests" element={<AdminAccessRequests />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <SafeguardingRecording />

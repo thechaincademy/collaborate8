@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Mail, User, Check, X, Lock, ArrowRight, ArrowDownLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import { track } from "@/lib/analytics";
 import { META, savePayerProfile } from "@/lib/profileCompletion";
 import { rememberLastSignupEmail } from "@/lib/lastSignupEmail";
 import signupFamily from "@/assets/signup-family-hd.jpg";
+import { useIsInApp } from "@/hooks/useIsInApp";
+import { ACCESS_PARAM, ACCESS_TOKEN_META_KEY, signupGate, splitName } from "@/lib/accessWall";
 
 type SignUpStep = "welcome" | "name" | "email" | "password" | "coparent" | "verify";
 type AuthMethod = "choice" | "apple" | "manual";
@@ -46,6 +48,36 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [coparentEmail, setCoparentEmail] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
+
+  // Web-only access wall: on the website, sign-up needs an invite code or an approved,
+  // single-use ?access= link. The app is never gated. The server enforces the same rule.
+  const location = useLocation();
+  const inApp = useIsInApp();
+  const [access, setAccess] = useState<{ token: string; email: string } | null>(null);
+  const [gateOpen, setGateOpen] = useState(() => signupGate({ inApp, search: location.search }) === "open");
+  useEffect(() => {
+    const gate = signupGate({ inApp, search: location.search });
+    if (gate === "open") { setGateOpen(true); return; }
+    const q = new URLSearchParams(location.search);
+    if (gate === "invite") { navigate(`/signup/invited?code=${encodeURIComponent((q.get("code") ?? "").trim())}`, { replace: true }); return; }
+    if (gate === "request") { navigate("/request-access", { replace: true }); return; }
+    const token = q.get(ACCESS_PARAM) as string;
+    let live = true;
+    supabase.functions.invoke("request-access", { body: { action: "check_token", token } }).then(({ data }) => {
+      if (!live) return;
+      if (data?.ok && typeof data.email === "string") {
+        setAccess({ token, email: data.email });
+        setEmail(data.email);
+        const n = splitName(typeof data.name === "string" ? data.name : "");
+        setFirstName((v) => v || n.first);
+        setLastName((v) => v || n.last);
+        setGateOpen(true);
+      } else {
+        navigate("/request-access?link=expired", { replace: true });
+      }
+    });
+    return () => { live = false; };
+  }, [inApp, location.search, navigate]);
 
 
   const isNameValid = firstName.trim().length > 0 && lastName.trim().length > 0;
@@ -95,6 +127,7 @@ const SignUp = () => {
     if (!accountCreated) {
       const metadata: Record<string, string> = { [META.firstName]: first, [META.lastName]: last };
       if (coparent) metadata[META.coparentEmail] = coparent;
+      if (access) metadata[ACCESS_TOKEN_META_KEY] = access.token;
       rememberLastSignupEmail(email);
       const { error, needsConfirmation } = await signUp(email, password, metadata);
       if (error) {
@@ -244,7 +277,9 @@ const SignUp = () => {
     return (
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-1 flex-col">
         <h1 className="mb-2 text-3xl font-bold text-foreground">What's your email?</h1>
-        <p className="mb-8 text-muted-foreground">We'll use this to keep you updated and to verify your account.</p>
+        <p className="mb-8 text-muted-foreground">
+          {access ? "This is the address your invitation was sent to, so it can't be changed here." : "We'll use this to keep you updated and to verify your account."}
+        </p>
         <div className="relative">
           <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -255,7 +290,8 @@ const SignUp = () => {
             aria-invalid={!!(showFormatError || emailError)}
             aria-describedby={showFormatError || emailError ? "signup-email-error" : undefined}
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
+            readOnly={!!access}
+            onChange={(e) => { if (!access) { setEmail(e.target.value); setEmailError(null); } }}
             className={`h-14 rounded-2xl border-border bg-background pl-12 text-foreground placeholder:text-muted-foreground focus:border-clay ${
               emailError ? "border-destructive" : ""
             }`}
@@ -371,6 +407,14 @@ const SignUp = () => {
       </div>
     </motion.div>
   );
+
+  if (!gateOpen) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background px-6" aria-busy="true">
+        <p className="text-muted-foreground">One moment...</p>
+      </main>
+    );
+  }
 
   return (
     <>

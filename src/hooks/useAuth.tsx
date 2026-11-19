@@ -4,6 +4,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { clearProfileCache } from "@/hooks/useProfile";
 import { confirmRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
+import { isInApp } from "@/lib/inApp";
+import { signupClientMeta } from "@/lib/accessWall";
 
 interface AuthContextType {
   user: User | null;
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
       options: {
         emailRedirectTo: confirmRedirect(),
-        data: { ...getAttribution(), ...metadata },
+        data: { ...getAttribution(), ...signupClientMeta(isInApp()), ...metadata },
       },
     });
     return { error, needsConfirmation: !error && !!data.user && !data.session };

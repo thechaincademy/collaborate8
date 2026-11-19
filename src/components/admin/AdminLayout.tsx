@@ -8,6 +8,7 @@ export const ADMIN_LINKS: { to: string; label: string; end?: boolean; dsl?: bool
   { to: "/admin", label: "Dashboard", end: true },
   { to: "/admin/analytics", label: "Analytics" },
   { to: "/admin/monitoring", label: "Monitoring" },
+  { to: "/admin/access-requests", label: "Requests to join" },
   { to: "/admin/setup", label: "Setup" },
   { to: "/dsl", label: "Safeguarding review", dsl: true },
 ];

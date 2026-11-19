@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,10 @@ const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [params] = useSearchParams();
+  // Only admin pages on this site, so the link can't be pointed anywhere else.
+  const nextRaw = params.get("next") ?? "";
+  const next = /^\/admin(\/[A-Za-z0-9/_-]*)?(\?[A-Za-z0-9=&%_.-]*)?$/.test(nextRaw) ? nextRaw : "/admin";
 
   const handleSend = async () => {
     const clean = email.trim().toLowerCase();
@@ -23,7 +28,7 @@ const AdminLogin = () => {
     setSending(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: clean,
-      options: { emailRedirectTo: `${window.location.origin}/admin` },
+      options: { emailRedirectTo: `${window.location.origin}${next}`, shouldCreateUser: false },
     });
     setSending(false);
     if (error) {

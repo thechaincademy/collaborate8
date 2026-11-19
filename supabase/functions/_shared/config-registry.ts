@@ -56,6 +56,7 @@ export const SETTINGS: Setting[] = [
   { name: "RESEND_API_KEY", label: "Resend API key", group: G.email, secret: true, check: re(/^re_[0-9A-Za-z_]{10,}$/, "A Resend API key starts with re_.") },
   { name: "EMAIL_FROM", label: "Sender", group: G.email, secret: false, check: (v) => (/^([^<>]{1,60}<[^\s@<>]+@[^\s@<>]+>|[^\s@<>]+@[^\s@<>]+)$/.test(v) ? null : "Use an address, or a name and address like Collabor8 <hello@notify.collaborate8.com>.") },
   { name: "DSL_ALERT_EMAIL", label: "Live alert recipients", group: G.alerts, secret: false, check: emailList() },
+  { name: "ACCESS_REQUEST_EMAILS", label: "Who reviews requests to join (website)", group: G.alerts, secret: false, check: emailList(), note: "Not set: Rafa and Jade. Test requests only go to the test alert inbox." },
   { name: "QA_ALERT_EMAIL", label: "Test alert recipients", group: G.alerts, secret: false, check: emailList(/@agentmail\.to$/i, "Test alerts only go to the QA inbox (an @agentmail.to address)."), note: "Test alerts only go to the QA inbox." },
   { name: "GCP_VERTEX_SA_JSON", label: "Service account JSON", group: G.vertex, secret: true, multiline: true, check: serviceAccount },
   { name: "VERTEX_LOCATION", label: "Region", group: G.vertex, secret: false, check: re(/^europe-[a-z]+[0-9]+$/, "Use a UK or EU region such as europe-west2 (London). The global endpoint is not allowed.") },
