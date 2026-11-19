@@ -8,7 +8,6 @@ import { cfg } from "./config.ts";
 // Nothing here logs prompts, drafts or model output.
 
 const PROJECT = () => Deno.env.get("VERTEX_PROJECT") ?? "collaborate8-c9e7f";
-// Always a regional UK/EU endpoint: anything else (including "global") falls back to London.
 // Always London. The bid says AI runs in the UK, so VERTEX_LOCATION cannot move it.
 export const LOCATION = () => {
   const v = (cfg("VERTEX_LOCATION") ?? "").trim();

@@ -56,7 +56,8 @@ describe("no Lovable left in the product code", () => {
     expect(call).toContain('import { callVertex } from "../_shared/vertex.ts"');
     const vertex = read("supabase/functions/_shared/vertex.ts");
     expect(vertex).toContain('"europe-west2"');
-    expect(vertex).toMatch(/\^europe-\[a-z\]\+\[0-9\]\+\$/);
+    expect(vertex).toMatch(/return "europe-west2";/);
+    expect(vertex).not.toMatch(/\^europe-/);
     expect(vertex).not.toMatch(/locations\/global|https:\/\/aiplatform\.googleapis\.com/);
     expect(vertex).toContain("https://${LOCATION()}-aiplatform.googleapis.com/v1/projects/${PROJECT()}/locations/${LOCATION()}/");
   });

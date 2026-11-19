@@ -75,7 +75,7 @@ Deno.test('VERTEX_LOCATION=global is refused and London is used', () => {
   Deno.env.set('VERTEX_LOCATION', 'global')
   try { assertEquals(LOCATION(), 'europe-west2') } finally { Deno.env.delete('VERTEX_LOCATION') }
   Deno.env.set('VERTEX_LOCATION', 'europe-west4')
-  try { assertEquals(LOCATION(), 'europe-west4') } finally { Deno.env.delete('VERTEX_LOCATION') }
+  try { assertEquals(LOCATION(), 'europe-west2') } finally { Deno.env.delete('VERTEX_LOCATION') }
 })
 
 Deno.test('callGateway drops the model field and retries a 429 while time allows', async () => {
