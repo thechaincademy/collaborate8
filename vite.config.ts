@@ -1,8 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
-import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import routeMeta from "./src/seo/routeMeta";
 import { routeHeadPlugin } from "./scripts/routeHeadPlugin";
@@ -15,7 +13,6 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mcpPlugin(),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,
@@ -48,7 +45,6 @@ export default defineConfig(({ mode }) => ({
       },
     }),
     routeHeadPlugin(routeMeta),
-    mode === "development" && componentTagger(),
   ].filter(Boolean),
   define: {
     // Buffer / global polyfill required by the Solana libraries
