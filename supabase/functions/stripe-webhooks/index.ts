@@ -107,6 +107,106 @@ function extractChargeId(invoice: any): string | null {
   return (invoice.charge as string) || null;
 }
 
+/**
+ * Record a paid maintenance invoice for an arrangement: payments ledger row (idempotent on
+ * inv_<invoice id>), next due date, expenses settled on the invoice, and an audit event.
+ * Called from invoice.payment_succeeded and from checkout.session.completed (whichever
+ * runs after the arrangement exists).
+ */
+async function recordMaintenanceInvoicePayment(
+  stripe: Stripe,
+  supabase: any,
+  invoice: any,
+  arrangement: any,
+  subscriptionId: string,
+): Promise<void> {
+  const chargeId = extractChargeId(invoice);
+  const amountPaid = (invoice.amount_paid || 0) / 100;
+
+  // A scheduled arrangement's zero-value trial invoice is not a payment.
+  if (amountPaid <= 0) return;
+
+  // Record payment in ledger (idempotent)
+  const idempotencyKey = `inv_${invoice.id}`;
+  const { data: existingPayment } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("idempotency_key", idempotencyKey)
+    .maybeSingle();
+
+  let recorded = false;
+  if (!existingPayment) {
+    const { error: insertError } = await supabase.from("payments").insert({
+      idempotency_key: idempotencyKey,
+      payer_id: arrangement.user_id,
+      payee_id: arrangement.receiver_id || arrangement.user_id,
+      amount: amountPaid,
+      currency: invoice.currency?.toUpperCase() || "GBP",
+      type: "maintenance",
+      status: "completed",
+      provider: "stripe",
+      provider_charge_id: chargeId,
+      related_arrangement_id: arrangement.id,
+    });
+
+    if (insertError) {
+      logStep("Error inserting payment", { error: insertError.message });
+    } else {
+      recorded = true;
+      logStep("Payment recorded", { amount: amountPaid, arrangementId: arrangement.id });
+    }
+  } else {
+    logStep("Payment already exists, skipping", { idempotencyKey });
+  }
+
+  // Update next due date
+  try {
+    const sub = await stripe.subscriptions.retrieve(subscriptionId);
+    await supabase
+      .from("recurring_payments")
+      .update({
+        next_due_date: periodEndIso(sub),
+      })
+      .eq("id", arrangement.id);
+  } catch (e) {
+    logStep("Error updating next due date", { error: String(e) });
+  }
+
+  // Settle any approved expenses that were added to this invoice as one-off
+  // line items. Once paid they stop affecting future payments (Stripe invoice
+  // items apply to a single invoice), so the arrangement returns to its
+  // original amount automatically.
+  try {
+    const lineItemIds: string[] = (invoice.lines?.data || [])
+      .map((line: any) => line.invoice_item || line.parent?.invoice_item_details?.invoice_item)
+      .filter(Boolean);
+
+    if (lineItemIds.length > 0) {
+      const { error: settleError } = await supabase
+        .from("expense_requests")
+        .update({ status: "paid", paid_at: new Date().toISOString() })
+        .in("provider_invoice_item_id", lineItemIds)
+        .eq("status", "approved");
+
+      if (settleError) {
+        logStep("Error settling expenses", { error: settleError.message });
+      } else {
+        logStep("Expenses settled with invoice", { count: lineItemIds.length });
+      }
+    }
+  } catch (e) {
+    logStep("Error processing invoice expense items", { error: String(e) });
+  }
+
+  // Audit (once per recorded payment)
+  if (recorded) await supabase.from("audit_events").insert({
+    user_id: arrangement.user_id,
+    event_type: "payment_completed",
+    entity_type: "payment",
+    metadata: { invoiceId: invoice.id, amount: amountPaid, subscriptionId },
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200 });
@@ -185,106 +285,40 @@ serve(async (req) => {
           break;
         }
 
-        // Find our arrangement
-        const { data: arrangement, error: arrError } = await supabase
-          .from("recurring_payments")
-          .select("*")
-          .eq("provider_subscription_id", subscriptionId)
-          .maybeSingle();
-
-        if (arrError) {
-          logStep("Error fetching arrangement", { error: arrError.message });
-          break;
+        // Find our arrangement. With hosted Checkout, Stripe sends this event in the same
+        // second as checkout.session.completed, which is what creates the arrangement, so
+        // wait briefly for it. checkout.session.completed also records the first invoice.
+        let arrangement: any = null;
+        for (let attempt = 0; attempt < 4; attempt++) {
+          const { data, error: arrError } = await supabase
+            .from("recurring_payments")
+            .select("*")
+            .eq("provider_subscription_id", subscriptionId)
+            .maybeSingle();
+          if (arrError) {
+            logStep("Error fetching arrangement", { error: arrError.message });
+            break;
+          }
+          arrangement = data;
+          if (arrangement) break;
+          await new Promise((r) => setTimeout(r, 1500));
         }
 
         if (!arrangement) {
+          const subMeta = invoice.parent?.subscription_details?.metadata ?? {};
+          if (subMeta.collabor8_type === "maintenance") {
+            // Ask Stripe to retry later rather than losing the payment.
+            logStep("Arrangement not created yet, asking Stripe to retry", { subscriptionId, invoiceId: invoice.id });
+            return new Response(JSON.stringify({ retry: true }), {
+              status: 503,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
           logStep("No arrangement found for subscription", { subscriptionId });
           break;
         }
 
-        const amountPaid = (invoice.amount_paid || 0) / 100;
-
-        // A scheduled arrangement's zero-value trial invoice is not a payment.
-        if (amountPaid <= 0) break;
-
-        // Record payment in ledger (idempotent)
-        const idempotencyKey = `inv_${invoice.id}`;
-        const { data: existingPayment } = await supabase
-          .from("payments")
-          .select("id")
-          .eq("idempotency_key", idempotencyKey)
-          .maybeSingle();
-
-        if (!existingPayment) {
-          const { error: insertError } = await supabase.from("payments").insert({
-            idempotency_key: idempotencyKey,
-            payer_id: arrangement.user_id,
-            payee_id: arrangement.receiver_id || arrangement.user_id,
-            amount: amountPaid,
-            currency: invoice.currency?.toUpperCase() || "GBP",
-            type: "maintenance",
-            status: "completed",
-            provider: "stripe",
-            provider_charge_id: chargeId,
-            related_arrangement_id: arrangement.id,
-          });
-
-          if (insertError) {
-            logStep("Error inserting payment", { error: insertError.message });
-          } else {
-            logStep("Payment recorded", { amount: amountPaid, arrangementId: arrangement.id });
-          }
-        } else {
-          logStep("Payment already exists, skipping", { idempotencyKey });
-        }
-
-        // Update next due date
-        try {
-          const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          await supabase
-            .from("recurring_payments")
-            .update({
-              next_due_date: periodEndIso(sub),
-            })
-            .eq("id", arrangement.id);
-        } catch (e) {
-          logStep("Error updating next due date", { error: String(e) });
-        }
-
-        // Settle any approved expenses that were added to this invoice as one-off
-        // line items. Once paid they stop affecting future payments (Stripe invoice
-        // items apply to a single invoice), so the arrangement returns to its
-        // original amount automatically.
-        try {
-          const lineItemIds: string[] = (invoice.lines?.data || [])
-            .map((line: any) => line.invoice_item || line.parent?.invoice_item_details?.invoice_item)
-            .filter(Boolean);
-
-          if (lineItemIds.length > 0) {
-            const { error: settleError } = await supabase
-              .from("expense_requests")
-              .update({ status: "paid", paid_at: new Date().toISOString() })
-              .in("provider_invoice_item_id", lineItemIds)
-              .eq("status", "approved");
-
-            if (settleError) {
-              logStep("Error settling expenses", { error: settleError.message });
-            } else {
-              logStep("Expenses settled with invoice", { count: lineItemIds.length });
-            }
-          }
-        } catch (e) {
-          logStep("Error processing invoice expense items", { error: String(e) });
-        }
-
-        // Audit
-        await supabase.from("audit_events").insert({
-          user_id: arrangement.user_id,
-          event_type: "payment_completed",
-          entity_type: "payment",
-          metadata: { invoiceId: invoice.id, amount: amountPaid, subscriptionId },
-        });
-
+        await recordMaintenanceInvoicePayment(stripe, supabase, invoice, arrangement, subscriptionId);
         break;
       }
 
@@ -612,6 +646,22 @@ serve(async (req) => {
           arrangementId: arrangement.id,
           subscriptionId,
         });
+
+        // The first invoice is usually paid before this arrangement exists (Stripe sends
+        // invoice.payment_succeeded in the same second), so record it here as well.
+        // Idempotent with the invoice handler (same inv_<id> key, unique in payments).
+        try {
+          const latestInvoiceId =
+            typeof subscription.latest_invoice === "string" ? subscription.latest_invoice : subscription.latest_invoice?.id;
+          if (latestInvoiceId) {
+            const latestInvoice = await stripe.invoices.retrieve(latestInvoiceId);
+            if (latestInvoice.status === "paid") {
+              await recordMaintenanceInvoicePayment(stripe, supabase, latestInvoice, arrangement, subscriptionId);
+            }
+          }
+        } catch (e) {
+          logStep("Error recording first invoice from checkout", { error: String(e) });
+        }
 
         break;
       }
