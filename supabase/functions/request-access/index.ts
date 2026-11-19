@@ -12,6 +12,10 @@
 //           reject: optionally sends a polite no.
 //   resend  { id }   a fresh sign-up link for an approved request that hasn't been used.
 //
+// Kill switch: ACCESS_REQUEST_EMAILS_ENABLED (admin setting or secret), off by default. While it
+// is off no email of any kind is sent from here. Requests are still stored, and approve/resend
+// return the single-use sign-up link to the admin (only) so they can copy it and send it themselves.
+//
 // Never logs names, emails, notes or tokens; only ids, actions and error codes.
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin, getUserFromRequest } from "../_shared/supabase.ts";
@@ -19,7 +23,9 @@ import { ALLOWED_ADMIN_EMAILS } from "../_shared/google-oauth.ts";
 import { cfg } from "../_shared/config.ts";
 import { sendResendEmail } from "../_shared/resend.ts";
 import {
+  accessEmailsEnabled,
   approvalEmail,
+  EMAILS_ENABLED_SETTING,
   isTestEmail,
   linkBase,
   looksLikeToken,
@@ -47,6 +53,8 @@ function clientIp(req: Request): string {
 }
 
 async function sendAll(to: string[], email: { subject: string; html: string; text: string }, key: string) {
+  // Second guard: nothing leaves here while the kill switch is off, whoever calls this.
+  if (!accessEmailsEnabled(cfg(EMAILS_ENABLED_SETTING))) return 0;
   let sent = 0;
   for (const addr of to) {
     try {
@@ -87,6 +95,7 @@ Deno.serve(async (req) => {
   const action = String(body?.action ?? "submit");
   const admin = createSupabaseAdmin();
   const base = linkBase(req.headers.get("origin"));
+  const emailsOn = accessEmailsEnabled(cfg(EMAILS_ENABLED_SETTING));
 
   try {
     if (action === "submit") {
@@ -105,7 +114,9 @@ Deno.serve(async (req) => {
       if (row.result === "rate_limited") return json({ error: "You've sent a few requests already. Please try again later.", code: "rate_limited" }, 429);
       // Same answer whether the address is new, already waiting or already approved, so the
       // form never reveals who has asked before.
-      if (row.result === "created" && row.id) {
+      if (row.result === "created" && row.id && !emailsOn) {
+        console.log("request-access created", { id: row.id, reviewers_emailed: 0, emails: "off" });
+      } else if (row.result === "created" && row.id) {
         const r = reviewerRecipients(email, { reviewers: cfg("ACCESS_REQUEST_EMAILS"), qa: cfg("QA_ALERT_EMAIL") });
         const mail = reviewerEmail({ id: row.id, name, email, note, base, test: r.test });
         const sent = await sendAll(r.to, mail, `access_request:${row.id}`);
@@ -155,6 +166,7 @@ Deno.serve(async (req) => {
       }
       return json({
         ready: true,
+        emailsEnabled: emailsOn,
         requests: (data ?? []).map((r) => ({ ...r, decided_by_name: r.decided_by ? names[r.decided_by] || "An admin" : null })),
       });
     }
@@ -180,9 +192,13 @@ Deno.serve(async (req) => {
           .eq("status", "pending")
           .select("id");
         if (error || !upd?.length) return json({ error: "Could not approve. It may have just been decided by someone else." }, 409);
+        if (!emailsOn) {
+          console.log("request-access approved", { id, by: caller.id, emailed: false, emails: "off" });
+          return json({ ok: true, status: "approved", emailed: false, emailsEnabled: false, link: l.link });
+        }
         const sent = await sendAll([row.email], approvalEmail({ name: row.name, link: l.link, test }), `access_approved:${id}:${l.hash.slice(0, 12)}`);
         console.log("request-access approved", { id, by: caller.id, emailed: sent > 0 });
-        return json({ ok: true, status: "approved", emailed: sent > 0 });
+        return json({ ok: true, status: "approved", emailed: sent > 0, emailsEnabled: true });
       }
 
       const { data: upd, error } = await admin
@@ -193,9 +209,9 @@ Deno.serve(async (req) => {
         .select("id");
       if (error || !upd?.length) return json({ error: "Could not reject. It may have just been decided by someone else." }, 409);
       let emailed = false;
-      if (body?.notify === true) emailed = (await sendAll([row.email], rejectionEmail({ name: row.name, test }), `access_rejected:${id}`)) > 0;
+      if (emailsOn && body?.notify === true) emailed = (await sendAll([row.email], rejectionEmail({ name: row.name, test }), `access_rejected:${id}`)) > 0;
       console.log("request-access rejected", { id, by: caller.id, emailed });
-      return json({ ok: true, status: "rejected", emailed });
+      return json({ ok: true, status: "rejected", emailed, emailsEnabled: emailsOn });
     }
 
     if (action === "resend") {
@@ -210,9 +226,13 @@ Deno.serve(async (req) => {
         .eq("status", "approved")
         .is("token_used_at", null);
       if (error) return json({ error: "Could not create a new link." }, 500);
+      if (!emailsOn) {
+        console.log("request-access link renewed", { id, by: caller.id, emailed: false, emails: "off" });
+        return json({ ok: true, emailed: false, emailsEnabled: false, link: l.link });
+      }
       const sent = await sendAll([row.email], approvalEmail({ name: row.name, link: l.link, test: isTestEmail(row.email) }), `access_approved:${id}:${l.hash.slice(0, 12)}`);
       console.log("request-access link resent", { id, by: caller.id, emailed: sent > 0 });
-      return json({ ok: true, emailed: sent > 0 });
+      return json({ ok: true, emailed: sent > 0, emailsEnabled: true });
     }
 
     return json({ error: "Unknown action" }, 400);

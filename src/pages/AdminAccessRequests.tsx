@@ -15,6 +15,8 @@ import {
 // Requests to join from the website. Rafa and Jade only: the request-access edge function
 // runs the same admin check as the Setup page and returns 403 for anyone else.
 // Approve emails the person a single-use sign-up link; Reject can send a polite no.
+// While request-access emails are switched off (ACCESS_REQUEST_EMAILS_ENABLED), nothing is
+// emailed: Approve and "New link" show the link here for the admin to copy and send themselves.
 
 type Req = {
   id: string; email: string; name: string; note: string | null;
@@ -49,7 +51,9 @@ const AdminAccessRequests = () => {
   const [confirm, setConfirm] = useState<Pending>(null);
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ id: string; ok: boolean; text: string } | null>(null);
+  const [message, setMessage] = useState<{ id: string; ok: boolean; text: string; link?: string } | null>(null);
+  const [emailsOn, setEmailsOn] = useState(false);
+  const [copied, setCopied] = useState(false);
   const handledLink = useRef(false);
 
   const load = useCallback(async () => {
@@ -62,6 +66,7 @@ const AdminAccessRequests = () => {
     }
     setLoadError(null);
     setReady(data?.ready !== false);
+    setEmailsOn(data?.emailsEnabled === true);
     setRows((data?.requests ?? []) as Req[]);
   }, []);
 
@@ -102,6 +107,9 @@ const AdminAccessRequests = () => {
     clearLink();
     if (error || !data?.ok) {
       setMessage({ id: req.id, ok: false, text: await errorText(error, "That didn't work. Please try again.") });
+    } else if (action === "approve" && typeof data.link === "string") {
+      setCopied(false);
+      setMessage({ id: req.id, ok: true, text: `Approved. Emails are switched off, so copy this sign-up link and send it to ${req.name} yourself. It works once and lasts 14 days.`, link: data.link });
     } else if (action === "approve") {
       setMessage({ id: req.id, ok: true, text: data.emailed ? `Approved. ${req.name} has been emailed a sign-up link.` : "Approved, but the email didn't send. Use Send a new link to try again." });
     } else {
@@ -114,8 +122,11 @@ const AdminAccessRequests = () => {
     setBusy(req.id);
     const { data, error } = await supabase.functions.invoke("request-access", { body: { action: "resend", id: req.id } });
     setBusy(null);
+    setCopied(false);
     setMessage(error || !data?.ok
       ? { id: req.id, ok: false, text: await errorText(error, "Could not send a new link.") }
+      : typeof data.link === "string"
+      ? { id: req.id, ok: true, text: "A new sign-up link was made. Emails are switched off, so copy it and send it yourself. The old one no longer works.", link: data.link }
       : { id: req.id, ok: true, text: data.emailed ? "A new sign-up link has been emailed. The old one no longer works." : "A new link was made, but the email didn't send." });
     await load();
   };
@@ -197,7 +208,15 @@ const AdminAccessRequests = () => {
                       {r.status === "approved" ? (linkUsed ? ` · Account created ${ukDate(r.token_used_at)}` : linkExpired ? " · Link expired" : " · Link not used yet") : ""}
                     </p>
                     {message?.id === r.id && (
-                      <p role="status" className={`text-sm ${message.ok ? "text-foreground" : "text-destructive"}`}>{message.text}</p>
+                      <div className="space-y-2">
+                        <p role="status" className={`text-sm ${message.ok ? "text-foreground" : "text-destructive"}`}>{message.text}</p>
+                        {message.link && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input readOnly aria-label="Sign-up link" value={message.link} onFocus={(e) => e.currentTarget.select()} className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-sm" />
+                            <Button className="min-h-11" variant="outline" onClick={() => { void navigator.clipboard?.writeText(message.link!).then(() => setCopied(true), () => setCopied(false)); }}>{copied ? "Copied" : "Copy link"}</Button>
+                          </div>
+                        )}
+                      </div>
                     )}
                     {r.status === "pending" && (
                       <div className="flex flex-wrap gap-2 pt-1">
@@ -206,7 +225,7 @@ const AdminAccessRequests = () => {
                       </div>
                     )}
                     {r.status === "approved" && !linkUsed && (
-                      <Button className="min-h-11" variant="outline" disabled={busy === r.id} onClick={() => void resend(r)}>Send a new link</Button>
+                      <Button className="min-h-11" variant="outline" disabled={busy === r.id} onClick={() => void resend(r)}>{emailsOn ? "Send a new link" : "Make a new link"}</Button>
                     )}
                   </CardContent>
                 </Card>
@@ -222,11 +241,13 @@ const AdminAccessRequests = () => {
             <AlertDialogTitle>{confirm?.action === "approve" ? `Approve ${confirm?.req.name}?` : `Turn down ${confirm?.req.name}?`}</AlertDialogTitle>
             <AlertDialogDescription>
               {confirm?.action === "approve"
-                ? `We'll email ${confirm?.req.email} a link to create their account. It works once and lasts 14 days.`
+                ? (emailsOn
+                  ? `We'll email ${confirm?.req.email} a link to create their account. It works once and lasts 14 days.`
+                  : `Emails are switched off, so nothing is sent. You'll get a link to copy and send to ${confirm?.req.email} yourself. It works once and lasts 14 days.`)
                 : `${confirm?.req.email} won't be able to create an account on the website. They can still join through a co-parent's invite.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {confirm?.action === "reject" && (
+          {confirm?.action === "reject" && emailsOn && (
             <label className="flex min-h-11 items-center gap-3 text-sm">
               <Checkbox checked={notify} onCheckedChange={(v) => setNotify(v === true)} />
               Send them a short, polite email to let them know
@@ -234,7 +255,7 @@ const AdminAccessRequests = () => {
           )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void decide()}>{confirm?.action === "approve" ? "Approve and email link" : "Turn down"}</AlertDialogAction>
+            <AlertDialogAction onClick={() => void decide()}>{confirm?.action === "approve" ? (emailsOn ? "Approve and email link" : "Approve and get link") : "Turn down"}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -19,6 +19,14 @@ export const EMAIL_MAX = 254;
 /** How long an approval sign-up link works. */
 export const TOKEN_DAYS = 14;
 
+/** Kill switch for every request-access email (reviewer, approval, rejection). Off unless the
+ * ACCESS_REQUEST_EMAILS_ENABLED setting is exactly on/true/yes/1. While off, requests are still
+ * stored and admins get the sign-up link on the admin page to copy instead. */
+export const EMAILS_ENABLED_SETTING = "ACCESS_REQUEST_EMAILS_ENABLED";
+export function accessEmailsEnabled(value: string | null | undefined): boolean {
+  return /^(on|true|yes|1)$/i.test((value ?? "").trim());
+}
+
 const EMAIL_RE = /^[^\s@,<>()]+@[^\s@,<>()]+\.[^\s@,<>()]{2,}$/;
 
 export function normaliseEmail(raw: unknown): string {

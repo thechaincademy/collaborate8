@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
+  accessEmailsEnabled,
   approvalEmail,
   DEFAULT_REVIEWER_EMAILS,
   escapeHtml,
@@ -164,6 +165,30 @@ describe("web sign-up gate", () => {
   it("splits a name", () => {
     expect(splitName(" Sam  Parent Jones ")).toEqual({ first: "Sam", last: "Parent Jones" });
     expect(splitName("")).toEqual({ first: "", last: "" });
+  });
+});
+
+describe("email kill switch", () => {
+  it("is off unless explicitly switched on", () => {
+    for (const v of [undefined, null, "", "off", "false", "no", "0", "maybe", "enabled"]) expect(accessEmailsEnabled(v as string | undefined)).toBe(false);
+    for (const v of ["on", "ON", "true", "yes", "1", " on "]) expect(accessEmailsEnabled(v)).toBe(true);
+  });
+  it("the edge function checks the switch before any email and hands admins the link instead", () => {
+    const src = read("supabase/functions/request-access/index.ts");
+    const body = src.slice(src.indexOf("async function sendAll"));
+    const guard = body.indexOf("if (!accessEmailsEnabled(cfg(EMAILS_ENABLED_SETTING))) return 0;");
+    expect(guard).toBeGreaterThan(0);
+    expect(guard).toBeLessThan(body.indexOf("sendResendEmail("));
+    expect(src).toContain("const emailsOn = accessEmailsEnabled(cfg(EMAILS_ENABLED_SETTING));");
+    expect(src).toContain('row.result === "created" && row.id && !emailsOn');
+    expect(src.match(/link: l\.link \}\);/g)?.length).toBe(2); // approve and new link return it while off
+    expect(src).toContain("emailsOn && body?.notify === true");
+  });
+  it("the setting is on the admin Setup list and the admin page shows a copyable link", () => {
+    expect(read("supabase/functions/_shared/config-registry.ts")).toContain('name: "ACCESS_REQUEST_EMAILS_ENABLED"');
+    const page = read("src/pages/AdminAccessRequests.tsx");
+    expect(page).toContain("Copy link");
+    expect(page).toContain("Approve and get link");
   });
 });
 
