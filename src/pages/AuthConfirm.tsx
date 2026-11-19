@@ -104,9 +104,8 @@ const AuthConfirm = () => {
           )}
         </div>
 
-        <div className="flex-1" />
-
-        <div className="space-y-3 pb-8 pt-6">
+        {/* Right under the text, not pinned to the bottom, so the cookie banner never covers it on phones. */}
+        <div className="space-y-3 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-8">
           {showConfirm ? (
             <Button
               onClick={handleConfirm}
