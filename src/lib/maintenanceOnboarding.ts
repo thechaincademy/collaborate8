@@ -39,10 +39,18 @@ export interface MaintenanceRoleEvidence {
 
 const STARTED_PAYOUTS = new Set(["pending", "pending_capabilities", "complete"]);
 
+// Account evidence that the role is settled, not just this browser's flag.
+// A paying parent with an arrangement or a saved card, or a receiving parent
+// who has started Stripe payouts. Used to hide the "switch role" link too.
+export const maintenanceRoleSettled = (e: Pick<MaintenanceRoleEvidence, "role" | "hasOwnArrangement" | "cardCount" | "connectStatus">): boolean => {
+  if (e.role === "managing" && (e.hasOwnArrangement || e.cardCount > 0)) return true;
+  if (e.role === "viewing" && STARTED_PAYOUTS.has(e.connectStatus)) return true;
+  return false;
+};
+
 export const maintenanceRoleGate = (e: MaintenanceRoleEvidence): MaintenanceRoleGate => {
   if (e.localConfirmed) return "confirmed";
-  if (e.role === "managing" && (e.hasOwnArrangement || e.cardCount > 0)) return "confirmed";
-  if (e.role === "viewing" && STARTED_PAYOUTS.has(e.connectStatus)) return "confirmed";
+  if (maintenanceRoleSettled(e)) return "confirmed";
   if (e.evidenceLoading) return "loading";
   return "picker";
 };

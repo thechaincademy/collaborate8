@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import DeletedUserLabel from "@/components/DeletedUserLabel";
 import { DELETED_USER_NAME, isDeletedProfile, profileDisplayName, type DisplayProfile } from "@/lib/profileDisplay";
+import { sumCompletedPayments, sumPendingPayments } from "@/lib/paymentTotals";
 
 type Period = "3" | "6" | "12" | "all";
 type StatementType = "maintenance" | "expenses";
@@ -89,7 +90,10 @@ const Statement = () => {
     return rows.filter((r) => new Date(r.date) >= cutoff);
   }, [rows, period]);
 
-  const total = filtered.reduce((sum, r) => sum + r.amount, 0);
+  const total = isMaintenance
+    ? sumCompletedPayments(filtered)
+    : filtered.reduce((sum, r) => sum + r.amount, 0);
+  const pendingTotal = isMaintenance ? sumPendingPayments(filtered) : 0;
 
   const downloadCsv = () => {
     const header = ["Date", "Description", "Amount", "Status", "Person"].join(",");
@@ -135,7 +139,10 @@ const Statement = () => {
         <div className="mt-6 rounded-2xl border border-primary/40 bg-primary/10 p-5">
           <p className="text-sm text-foreground/70">Total in period</p>
           <p className="mt-1 text-3xl font-bold text-foreground">£{total.toFixed(2)}</p>
-          <p className="mt-1 text-xs text-foreground/60">{filtered.length} entries</p>
+          <p className="mt-1 text-xs text-foreground/60">
+            {filtered.length} {filtered.length === 1 ? "entry" : "entries"}
+            {pendingTotal > 0 ? `, £${pendingTotal.toFixed(2)} pending not included` : ""}
+          </p>
         </div>
 
         <div className="mt-5 flex items-center gap-3">

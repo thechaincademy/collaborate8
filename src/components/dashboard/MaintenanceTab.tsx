@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { maintenanceRoleGate, type MaintenanceRoleGate } from "@/lib/maintenanceOnboarding";
+import { maintenanceRoleGate, maintenanceRoleSettled, type MaintenanceRoleGate } from "@/lib/maintenanceOnboarding";
 import { motion } from "framer-motion";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, ArrowLeft } from "lucide-react";
@@ -162,6 +162,13 @@ const MaintenanceTab = () => {
         evidenceLoading: loading || cardsLoading || connectStatus === "loading",
       });
   const roleConfirmed = roleGate === "confirmed";
+  const roleSettled = maintenanceRoleSettled({
+    role: profile?.role,
+    hasOwnArrangement: !!activePayment,
+    cardCount: cards.length,
+    connectStatus,
+  });
+  const showSwitchRoleLink = isManaging && !roleSettled && connectStatus !== "loading" && !loading && !cardsLoading;
 
   // Remember account-based confirmation in this browser too.
   useEffect(() => {
@@ -460,8 +467,8 @@ const MaintenanceTab = () => {
         </div>
       </motion.div>
 
-      {/* Go back option for parents who chose the wrong role */}
-      {isManaging && (
+      {/* Go back option only while the paying role is not yet settled. */}
+      {showSwitchRoleLink && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
-import { maintenanceRoleGate } from "../src/lib/maintenanceOnboarding";
+import { maintenanceRoleGate, maintenanceRoleSettled } from "../src/lib/maintenanceOnboarding";
 
 const base = { localConfirmed: false, role: "managing", hasOwnArrangement: false, cardCount: 0, connectStatus: "not_created", evidenceLoading: false };
 
@@ -28,5 +28,28 @@ describe("Maintenance role picker comes back only when the role is really unknow
     expect(src).toContain("maintenanceRoleGate({");
     expect(src).toContain('goBackRequested && !localRoleConfirmed');
     expect(src).not.toContain("setRoleConfirmed(");
+  });
+
+  it("a paying parent with an arrangement or a saved card has a settled role (uk1)", () => {
+    expect(maintenanceRoleSettled({ ...base, hasOwnArrangement: true })).toBe(true);
+    expect(maintenanceRoleSettled({ ...base, cardCount: 1 })).toBe(true);
+    expect(maintenanceRoleSettled(base)).toBe(false);
+  });
+
+  it("a receiving parent who has started payouts has a settled role (uk2)", () => {
+    expect(maintenanceRoleSettled({ ...base, role: "viewing", connectStatus: "complete" })).toBe(true);
+    expect(maintenanceRoleSettled({ ...base, role: "viewing", connectStatus: "not_created" })).toBe(false);
+  });
+
+  it("the leftover receiving-parent link is hidden once the paying role is settled", () => {
+    const src = readFileSync(new URL("../src/components/dashboard/MaintenanceTab.tsx", import.meta.url), "utf8");
+    expect(src).toContain("maintenanceRoleSettled({");
+    expect(src).toContain("showSwitchRoleLink");
+    expect(src).toContain("Are you the receiving parent instead?");
+    expect(src).toContain("{showSwitchRoleLink && (");
+    const linkIdx = src.indexOf("Are you the receiving parent instead?");
+    const gateIdx = src.lastIndexOf("{showSwitchRoleLink && (", linkIdx);
+    expect(gateIdx).toBeGreaterThan(-1);
+    expect(gateIdx).toBeLessThan(linkIdx);
   });
 });

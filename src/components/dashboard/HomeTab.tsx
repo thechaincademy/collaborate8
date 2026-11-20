@@ -41,6 +41,7 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { DashboardTab } from "@/pages/Dashboard";
 import familyImage from "@/assets/home-family-wide.jpg";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
+import { sumCompletedPayments, sumPendingPayments } from "@/lib/paymentTotals";
 import CoparentStatus from "./CoparentStatus";
 import ResendInviteLink, { INVITE_EVENT } from "./ResendInviteLink";
 import NeedsResponse from "./NeedsResponse";
@@ -110,10 +111,11 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
 
   const oneMonthAgo = useMemo(() => subMonths(new Date(), 1), []);
   const monthlyPaymentsTotal = useMemo(
-    () =>
-      payments
-        .filter((p) => new Date(p.created_at) >= oneMonthAgo)
-        .reduce((sum, p) => sum + Number(p.amount), 0),
+    () => sumCompletedPayments(payments, oneMonthAgo),
+    [payments, oneMonthAgo]
+  );
+  const monthlyPaymentsPending = useMemo(
+    () => sumPendingPayments(payments, oneMonthAgo),
     [payments, oneMonthAgo]
   );
   const monthlyExpensesTotal = useMemo(
@@ -238,7 +240,12 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
           {historyLoading ? (
             <Skeleton className="mt-2 h-6 w-20" />
           ) : (
-            <p className="mt-1 text-xl font-bold text-foreground">£{monthlyPaymentsTotal.toFixed(2)}</p>
+            <>
+              <p className="mt-1 text-xl font-bold text-foreground">£{monthlyPaymentsTotal.toFixed(2)}</p>
+              {monthlyPaymentsPending > 0 && (
+                <p className="mt-0.5 text-xs text-muted-foreground">£{monthlyPaymentsPending.toFixed(2)} pending</p>
+              )}
+            </>
           )}
         </button>
         <button
