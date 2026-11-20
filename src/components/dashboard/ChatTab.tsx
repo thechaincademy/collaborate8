@@ -103,8 +103,8 @@ const useCompactChat = () => {
 
 const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "documents" } = {}) => {
   const inApp = useIsInApp();
-  // Browser: leave room for the bottom menu. App: only the bottom safe area.
-  const chatHeight = inApp ? "h-[calc(100vh-env(safe-area-inset-bottom)-1.5rem)] supports-[height:100dvh]:h-[calc(100dvh-env(safe-area-inset-bottom)-1.5rem)]" : "h-[calc(100vh-6rem-env(safe-area-inset-bottom))] supports-[height:100dvh]:h-[calc(100dvh-6rem-env(safe-area-inset-bottom))]";
+  // The dashboard scrollport already ends above the tab bar (or the in-app safe area).
+  const chatHeight = "h-full min-h-0";
   // Small screens (short or very narrow): header scrolls away, list keeps a readable height.
   const compact = useCompactChat();
   const [aiInfoOpen, setAiInfoOpen] = useState(false);

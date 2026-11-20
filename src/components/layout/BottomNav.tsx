@@ -27,7 +27,7 @@ const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   // Inside the mobile app the app provides its own navigation.
   if (inApp) return null;
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card pb-safe shadow-[0_-2px_12px_hsl(var(--foreground)/0.06)]">
+    <nav className="w-full shrink-0 bg-card pb-safe shadow-[0_-2px_12px_hsl(var(--foreground)/0.06)]">
       <div className="mx-auto flex h-20 max-w-md md:max-w-3xl lg:max-w-5xl items-center justify-around px-2">
         {navItems.map((item) => {
           const isActive = activeTab === item.tab;

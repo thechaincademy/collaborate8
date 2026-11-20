@@ -322,7 +322,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="pb-24"
+        className="pb-8"
       >
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Where to next

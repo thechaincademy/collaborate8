@@ -11,9 +11,9 @@ const MARGIN = "scroll-mb-[calc(7rem+env(safe-area-inset-bottom))]";
 // without a home bar) the start date and Confirm arrangement must not end up under it, including
 // when the browser scrolls a focused control into view.
 describe("arrangement form clears the bottom tab bar", () => {
-  it("the tab bar is 5rem plus the safe area", () => {
+  it("the tab bar is 5rem plus the safe area and is not fixed over the page", () => {
     const nav = read("src/components/layout/BottomNav.tsx");
-    expect(nav).toContain("fixed bottom-0");
+    expect(nav).not.toContain("fixed bottom-0");
     expect(nav).toContain("h-20");
     expect(nav).toContain("pb-safe");
   });

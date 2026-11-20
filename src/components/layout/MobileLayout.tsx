@@ -17,12 +17,23 @@ const MobileLayout = ({
   onTabChange 
 }: MobileLayoutProps) => {
   const inApp = useIsInApp();
+  // Website tab bar sits in the layout (not over the content). The main area scrolls above it.
+  const websiteNav = Boolean(showNav && onTabChange && !inApp);
   return (
-    <div className="mx-auto min-h-screen max-w-md md:max-w-3xl lg:max-w-5xl bg-background">
-      {/* The website's bottom tab bar is 5rem tall plus the safe area, so leave room for both. */}
-      <main className={showNav ? (inApp ? "pb-[calc(env(safe-area-inset-bottom)+1.5rem)]" : "pb-[calc(6rem+env(safe-area-inset-bottom))]") : ""}>
-        {children}
-      </main>
+    <div className="flex h-dvh flex-col bg-background">
+      <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col overflow-hidden md:max-w-3xl lg:max-w-5xl">
+        <main
+          className={
+            websiteNav
+              ? "min-h-0 flex-1 overflow-y-auto"
+              : showNav
+                ? "min-h-0 flex-1 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
+                : "min-h-0 flex-1 overflow-y-auto"
+          }
+        >
+          {children}
+        </main>
+      </div>
       {showNav && onTabChange && (
         <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
       )}
