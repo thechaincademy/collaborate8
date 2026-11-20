@@ -14,22 +14,22 @@ import ResourcesTab from "@/components/dashboard/ResourcesTab";
 import ComingSoonOverlay from "@/components/dashboard/ComingSoonOverlay";
 import { useStripePayments } from "@/hooks/useStripe";
 import { trackTab, track } from "@/lib/analytics";
+import {
+  type DashboardTab,
+  activeDashboardTab,
+  isComingSoonTab,
+  isValidDashboardTabParam,
+} from "@/lib/dashboardTab";
 
-export type DashboardTab = "home" | "maintenance" | "expenses" | "benefits" | "chat" | "resources";
-
-const VALID_TABS: DashboardTab[] = ["home", "maintenance", "expenses", "benefits", "chat", "resources"];
-const COMING_SOON_TABS: DashboardTab[] = ["benefits"];
+export type { DashboardTab };
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   // URL is the single source of truth for the active tab.
   const rawTab = searchParams.get("tab");
-  const isValidRaw = rawTab === "documents" || (rawTab !== null && (VALID_TABS as string[]).includes(rawTab));
+  const isValidRaw = isValidDashboardTabParam(rawTab);
   const inApp = useIsInApp();
-  const requestedTab: DashboardTab =
-    rawTab === "documents" ? "chat" : isValidRaw ? (rawTab as DashboardTab) : "home";
-  // Inside the mobile app the Benefits area is not available, so it falls back to home.
-  const activeTab: DashboardTab = inApp && requestedTab === "benefits" ? "home" : requestedTab;
+  const activeTab: DashboardTab = activeDashboardTab(rawTab, inApp);
 
   useEffect(() => {
     if (!inApp || rawTab !== "benefits") return;
@@ -42,7 +42,7 @@ const Dashboard = () => {
 
   // User tab clicks push a history entry, only when the tab actually changes.
   const setActiveTab = (requested: DashboardTab) => {
-    const tab: DashboardTab = inApp && requested === "benefits" ? "home" : requested;
+    const tab: DashboardTab = activeDashboardTab(requested, inApp);
     if (tab === activeTab && rawTab !== "documents") return;
     if (tab === "chat" && rawTab === "documents") return;
     setSearchParams((prev) => {
@@ -125,7 +125,7 @@ const Dashboard = () => {
     }
   };
 
-  const isComingSoon = !inApp && COMING_SOON_TABS.includes(activeTab);
+  const isComingSoon = isComingSoonTab(activeTab, inApp);
 
   return (
     <>
