@@ -17,7 +17,7 @@ interface Props {
 }
 
 const SafetyEmail = ({
-  text = 'Collabor8: a safety flag needs review. Please check your email or the console.',
+  text = 'Collabor8: a safety flag needs review. Please open the safeguarding review page to see it: https://collaborate8.com/dsl',
 }: Props) => (
   <Html>
     <Head />
@@ -40,6 +40,6 @@ export const template = {
   displayName: 'Safeguarding alert (DSL)',
   previewData: {
     subject: 'A safety flag needs review on Collabor8',
-    text: 'Collabor8: a safety flag needs review. Please check your email or the console.',
+    text: 'Collabor8: a safety flag needs review. Please open the safeguarding review page to see it: https://collaborate8.com/dsl',
   },
 } satisfies TemplateEntry

@@ -20,9 +20,13 @@ import {
   sharedPauseNotice,
 } from "../src/lib/safeguarding/logic";
 import {
-  alertEmailRecipients,
   alertSubject,
   alertText,
+  isTestLead,
+  QA_ALERT_EMAIL_DEFAULT,
+  reviewUrl,
+  routeAlert,
+  SMS_ON_HOLD,
   smsDecision,
 } from "../supabase/functions/_shared/safeguarding-rules.ts";
 
@@ -79,17 +83,49 @@ describe("draft copy", () => {
 });
 
 describe("alert routing", () => {
-  it("sends real alerts to the DSL list and test alerts only to QA", () => {
-    expect(alertEmailRecipients(false, { dsl: "rafa@collaborate8.com, jade@collaborate8.com" }).to).toEqual([
-      "rafa@collaborate8.com",
-      "jade@collaborate8.com",
-    ]);
-    expect(alertEmailRecipients(true, { qa: "collaborate8-qa@agentmail.to" }).to).toEqual([
-      "collaborate8-qa@agentmail.to",
-    ]);
-    expect(alertEmailRecipients(true, { qa: "" }).dropped).toBe(true);
-    expect(alertSubject("safety_flag", true).startsWith("[TEST] ")).toBe(true);
-    expect(alertSubject("safety_flag", false).startsWith("[TEST]")).toBe(false);
+  const leads = ["jade@collaborate8.com", "Rafa@collaborate8.com", "collaborate8-qa+uk3@agentmail.to"];
+
+  it("sends real alerts to every safeguarding lead and never to the QA test lead", () => {
+    const route = routeAlert(false, leads);
+    expect(route).toEqual({ to: ["jade@collaborate8.com", "rafa@collaborate8.com"], role: "dsl", dropped: false });
+    expect(routeAlert(false, ["jade@collaborate8.com", "JADE@collaborate8.com "]).to).toEqual(["jade@collaborate8.com"]);
+  });
+
+  it("drops a real alert when nobody holds the role, and logs why", () => {
+    expect(routeAlert(false, [])).toEqual({ to: [], role: "none", dropped: true, reason: "no_lead" });
+    expect(routeAlert(false, ["collaborate8-qa+uk3@agentmail.to"]).reason).toBe("no_lead");
+  });
+
+  it("sends test alerts only to the QA inbox, and only when a QA test lead holds the role", () => {
+    expect(routeAlert(true, leads)).toEqual({ to: [QA_ALERT_EMAIL_DEFAULT], role: "qa", dropped: false });
+    expect(QA_ALERT_EMAIL_DEFAULT).toBe("collaborate8-qa@agentmail.to");
+    const realOnly = routeAlert(true, ["jade@collaborate8.com", "rafa@collaborate8.com"]);
+    expect(realOnly).toEqual({ to: [], role: "none", dropped: true, reason: "no_test_lead" });
+    expect(isTestLead("collaborate8-qa+uk3@agentmail.to")).toBe(true);
+    expect(isTestLead("rafa@collaborate8.com")).toBe(false);
+  });
+
+  it("marks test subjects [TEST] and names concern reports and safety flags", () => {
+    expect(alertSubject("safety_flag", true)).toBe("[TEST] A safety flag needs review on Collabor8");
+    expect(alertSubject("concern", true)).toBe("[TEST] A concern report needs review on Collabor8");
+    expect(alertSubject("concern", false).startsWith("[TEST]")).toBe(false);
+  });
+
+  it("alert text is only a pointer to the review page", () => {
+    expect(alertText("concern")).toBe(
+      "Collabor8: a concern report needs review. Please open the safeguarding review page to see it: https://collaborate8.com/dsl",
+    );
+    expect(alertText("safety_flag", "https://collabor8-uk-test.rafa-f1b.workers.dev/")).toBe(
+      "Collabor8: a safety flag needs review. Please open the safeguarding review page to see it: https://collabor8-uk-test.rafa-f1b.workers.dev/dsl",
+    );
+    expect(reviewUrl("javascript:alert(1)")).toBe("https://collaborate8.com/dsl");
+    for (const kind of ["concern", "safety_flag", "monitoring"] as const) {
+      for (const text of [alertText(kind), alertSubject(kind, true)]) {
+        expect(/\d{6,}|@|sort code|account number|\u2014/i.test(text)).toBe(false);
+        expect(/police|victim/i.test(text)).toBe(false);
+        expect(text.includes("Collabor8")).toBe(true);
+      }
+    }
   });
 
   it("never texts a test account and skips SMS when it is not configured", () => {
@@ -98,11 +134,98 @@ describe("alert routing", () => {
     expect(smsDecision({ kind: "safety_flag", testAccount: false, outOfHours: false, configured: true })).toBe("send");
     expect(smsDecision({ kind: "monitoring", testAccount: false, outOfHours: false, configured: true })).toBe("skip_hours");
     expect(smsDecision({ kind: "monitoring", testAccount: false, outOfHours: true, configured: true })).toBe("send");
-    expect(alertText("safety_flag")).toBe("Collabor8: a safety flag needs review. Please check your email or the console.");
     const notify = readFileSync(new URL("../supabase/functions/_shared/safeguarding-notify.ts", import.meta.url), "utf8");
     expect(notify.includes("WHATSAPP")).toBe(false);
     expect(notify.includes("SMS_PROVIDER")).toBe(true);
     expect(notify.includes("console.log")).toBe(false);
+  });
+
+  it("keeps SMS on hold and sends nothing while the switch is off", () => {
+    expect(SMS_ON_HOLD).toBe(true);
+    const notify = readFileSync(new URL("../supabase/functions/_shared/safeguarding-notify.ts", import.meta.url), "utf8");
+    const main = notify.split("export async function notifySafeguarding")[1] ?? "";
+    expect(main.indexOf("safeguardingSwitchOn()")).toBeGreaterThan(-1);
+    expect(main.indexOf("safeguardingSwitchOn()")).toBeLessThan(main.indexOf("sendEmailChannel("));
+    expect(notify.includes('reason: "switch_off"')).toBe(true);
+    const sms = notify.split("async function sendSmsChannel")[1] ?? "";
+    expect(sms.indexOf("SMS_ON_HOLD")).toBeLessThan(sms.indexOf("sendSms("));
+    const alert = readFileSync(new URL("../supabase/functions/safeguarding-alert/index.ts", import.meta.url), "utf8");
+    expect(alert.indexOf("safeguardingSwitchOn()")).toBeLessThan(alert.indexOf("notifySafeguarding({"));
+  });
+
+  it("routes by role, with no hardcoded lead addresses or old env lists", () => {
+    const files = [
+      "../supabase/functions/_shared/safeguarding-notify.ts",
+      "../supabase/functions/_shared/safeguarding-rules.ts",
+      "../supabase/functions/safeguarding-alert/index.ts",
+      "../supabase/functions/safeguarding-health/index.ts",
+    ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
+    for (const source of files) {
+      expect(source.includes("@collaborate8.com")).toBe(false);
+      expect(source.includes("DSL_ALERT_EMAIL")).toBe(false);
+      expect(source.includes("DEFAULT_DSL_EMAILS")).toBe(false);
+    }
+    expect(files[0].includes('rpc("sg_alert_recipients")')).toBe(true);
+    expect(files[0].includes("routeAlert(")).toBe(true);
+  });
+});
+
+describe("server-side alert migration", () => {
+  const path = "../supabase/migrations/20261120120000_safeguarding_server_alerts.sql";
+  const sql = readFileSync(new URL(path, import.meta.url), "utf8");
+  const dispatch = sql.split("FUNCTION public.dispatch_safeguarding_alert(")[1]?.split("REVOKE ALL ON FUNCTION public.dispatch_safeguarding_alert")[0] ?? "";
+
+  it("creates the switch off and never overwrites an existing value", () => {
+    expect(sql.includes("VALUES ('safeguarding_enabled', 'false')\nON CONFLICT (key) DO NOTHING;")).toBe(true);
+    expect(/UPDATE\s+public\.app_settings/i.test(sql)).toBe(false);
+    expect(/DO UPDATE/i.test(sql)).toBe(false);
+  });
+
+  it("is idempotent and grants no roles", () => {
+    expect(/CREATE (TABLE|FUNCTION|POLICY|TRIGGER) (?!IF NOT EXISTS)/.test(sql)).toBe(false);
+    expect(/INSERT INTO public\.user_roles/i.test(sql)).toBe(false);
+    expect(/@[a-z0-9.-]+\.[a-z]+/i.test(sql)).toBe(false);
+    expect(/DROP TABLE|TRUNCATE|DELETE FROM/i.test(sql)).toBe(false);
+  });
+
+  it("dispatch checks the switch first and has no hardcoded project", () => {
+    expect(dispatch.indexOf("NOT public.sg_global_enabled()")).toBeGreaterThan(-1);
+    expect(dispatch.indexOf("NOT public.sg_global_enabled()")).toBeLessThan(dispatch.indexOf("net.http_post"));
+    expect(dispatch.includes("'switch_off'")).toBe(true);
+    expect(/https:\/\/[a-z0-9]+\.supabase\.co/.test(dispatch)).toBe(false);
+    expect(dispatch.includes("'project_url'")).toBe(true);
+  });
+
+  it("dispatch body carries ids and the kind only", () => {
+    const body = dispatch.split("body := jsonb_build_object(")[1]?.split(")\n  );")[0] ?? "";
+    const keys = [...body.matchAll(/'([a-z_]+)',/g)].map((match) => match[1]);
+    expect(keys).toEqual(["kind", "parent_low", "parent_high", "event_id"]);
+    expect(/note|body|text|phone|bank|sort_code|account/i.test(keys.join(" "))).toBe(false);
+  });
+
+  it("lets only the server read lead addresses", () => {
+    expect(sql.includes("REVOKE ALL ON FUNCTION public.sg_alert_recipients() FROM PUBLIC, anon, authenticated;")).toBe(true);
+    expect(sql.includes("GRANT EXECUTE ON FUNCTION public.sg_alert_recipients() TO service_role;")).toBe(true);
+    expect(/GRANT EXECUTE ON FUNCTION public\.sg_alert_recipients\(\) TO [^;]*authenticated/.test(sql)).toBe(false);
+    expect(sql.includes("WHERE r.role = 'dsl'")).toBe(true);
+  });
+});
+
+describe("safeguarding lead role script", () => {
+  const sql = readFileSync(new URL("../supabase/manual/NEEDS_RAFA_APPROVAL_safeguarding_lead_roles.sql", import.meta.url), "utf8");
+  const migrations = readdirSync(fileURLToPath(new URL("../supabase/migrations", import.meta.url)));
+
+  it("is not a migration and keeps three separate, placeholder-guarded blocks", () => {
+    expect(migrations.some((name) => name.includes("lead_roles"))).toBe(false);
+    expect(sql.includes("NOT A MIGRATION")).toBe(true);
+    for (const placeholder of ["<JADE_USER_ID>", "<RAFA_USER_ID>", "<UK3_QA_USER_ID>"]) {
+      expect(sql.includes(`:= '${placeholder}'`)).toBe(true);
+    }
+    expect((sql.match(/^DO \$\$/gm) ?? []).length).toBe(3);
+    expect((sql.match(/RAISE EXCEPTION/g) ?? []).length).toBe(3);
+    expect((sql.match(/ON CONFLICT \(user_id, role\) DO NOTHING/g) ?? []).length).toBe(3);
+    expect(sql.includes("p.is_test_account")).toBe(true);
+    expect(/^\s*DELETE/m.test(sql)).toBe(false);
   });
 });
 

@@ -1,10 +1,11 @@
 import { sendTemplateEmail } from "./transactional-email-templates/send-email.ts";
 import { createSupabaseAdmin } from "./supabase.ts";
 import {
-  alertEmailRecipients,
   alertSubject,
   alertText,
   isOutOfHours,
+  routeAlert,
+  SMS_ON_HOLD,
   smsConfigured,
   smsDecision,
   splitList,
@@ -59,7 +60,7 @@ async function loadRuntimeConfig(): Promise<RuntimeConfig> {
     const { data } = await createSupabaseAdmin()
       .from("sg_runtime_config")
       .select("key, value")
-      .in("key", ["qa_alert_email", "dsl_alert_email", "force_test_alerts"]);
+      .in("key", ["force_test_alerts", "review_site_url"]);
     return Object.fromEntries((data ?? []).map((row) => [row.key as string, row.value as string]));
   } catch {
     return {};
@@ -104,21 +105,45 @@ function domainOf(address: string): string | null {
   return at > 0 ? address.slice(at + 1).toLowerCase() : null;
 }
 
+/** Server-side switch (app_settings.safeguarding_enabled). Anything but a clear "on" counts as off. */
+export async function safeguardingSwitchOn(): Promise<boolean> {
+  try {
+    const { data, error } = await createSupabaseAdmin().rpc("sg_global_enabled");
+    return !error && data === true;
+  } catch {
+    return false;
+  }
+}
+
+/** Sign-in emails of every dsl (safeguarding lead) role holder. Never logged. */
+async function loadLeadEmails(): Promise<string[] | null> {
+  try {
+    const { data, error } = await createSupabaseAdmin().rpc("sg_alert_recipients");
+    if (error) return null;
+    return (data ?? []).map((row: { email?: string | null }) => String(row.email ?? "")).filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
 async function sendEmailChannel(input: NotifyInput, cfg: RuntimeConfig): Promise<{ sent: number; dropped: boolean }> {
-  const recipients = alertEmailRecipients(input.testAccount, {
-    dsl: configValue("DSL_ALERT_EMAIL", "dsl_alert_email", cfg),
-    qa: configValue("QA_ALERT_EMAIL", "qa_alert_email", cfg),
-  });
-  const role = input.testAccount ? "qa" : "dsl";
-  if (recipients.dropped || recipients.to.length === 0) {
-    console.warn("[safeguarding-notify] email dropped: missing QA_ALERT_EMAIL");
-    await recordDelivery({ kind: input.kind, test_account: input.testAccount, channel: "email", recipient_role: "none", status: "dropped", reason: "missing_qa_email" });
+  const leads = await loadLeadEmails();
+  if (leads === null) {
+    console.warn("[safeguarding-notify] email dropped: lead lookup failed");
+    await recordDelivery({ kind: input.kind, test_account: input.testAccount, channel: "email", recipient_role: "none", status: "dropped", reason: "lead_lookup_failed" });
     return { sent: 0, dropped: true };
   }
+  const route = routeAlert(input.testAccount, leads);
+  if (route.dropped || route.to.length === 0) {
+    console.warn(`[safeguarding-notify] email dropped: ${route.reason ?? "no_recipient"}`);
+    await recordDelivery({ kind: input.kind, test_account: input.testAccount, channel: "email", recipient_role: "none", status: "dropped", reason: route.reason ?? "no_recipient" });
+    return { sent: 0, dropped: true };
+  }
+  const role = route.role === "qa" ? "qa" : "dsl";
   const subject = alertSubject(input.kind, input.testAccount);
-  const text = alertText(input.kind);
+  const text = alertText(input.kind, configValue("SAFEGUARDING_REVIEW_SITE", "review_site_url", cfg));
   let sent = 0;
-  for (const to of recipients.to) {
+  for (const to of route.to) {
     let status: "sent" | "failed" = "failed";
     let reason: string | null = null;
     try {
@@ -151,6 +176,10 @@ async function sendEmailChannel(input: NotifyInput, cfg: RuntimeConfig): Promise
 }
 
 async function sendSmsChannel(input: NotifyInput, now: Date): Promise<{ sent: number; decision: string }> {
+  if (SMS_ON_HOLD) {
+    await recordDelivery({ kind: input.kind, test_account: input.testAccount, channel: "sms", recipient_role: "none", status: "skipped", reason: "sms_on_hold" });
+    return { sent: 0, decision: "skip_hold" };
+  }
   const env = {
     provider: Deno.env.get("SMS_PROVIDER"),
     apiKey: Deno.env.get("SMS_API_KEY"),
@@ -185,6 +214,11 @@ async function sendSmsChannel(input: NotifyInput, now: Date): Promise<{ sent: nu
 
 export async function notifySafeguarding(rawInput: NotifyInput) {
   const now = rawInput.now ?? new Date();
+  // While the server-side switch is off, nothing is sent on any channel.
+  if (!(await safeguardingSwitchOn())) {
+    await recordDelivery({ kind: rawInput.kind, test_account: rawInput.testAccount, channel: "email", recipient_role: "none", status: "skipped", reason: "switch_off" });
+    return { email: { sent: 0, dropped: false }, sms: { sent: 0, decision: "skip_switch" } };
+  }
   const cfg = await loadRuntimeConfig();
   // A test environment sets force_test_alerts so every alert, including monitoring, goes to QA with [TEST].
   const forceTest = configValue("SAFEGUARDING_FORCE_TEST_ALERTS", "force_test_alerts", cfg) === "true";

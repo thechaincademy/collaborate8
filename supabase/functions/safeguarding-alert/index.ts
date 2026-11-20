@@ -1,6 +1,6 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdmin } from "../_shared/supabase.ts";
-import { notifySafeguarding } from "../_shared/safeguarding-notify.ts";
+import { notifySafeguarding, safeguardingSwitchOn } from "../_shared/safeguarding-notify.ts";
 import type { AlertKind } from "../_shared/safeguarding-rules.ts";
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -20,8 +20,12 @@ Deno.serve(async (req) => {
     const kind = body.kind as string;
     const parentLow = body.parent_low as string | undefined;
     const parentHigh = body.parent_high as string | undefined;
+    const eventId = typeof body.event_id === "string" && UUID.test(body.event_id) ? body.event_id : crypto.randomUUID();
     if (!KINDS.has(kind)) return json({ error: "Invalid kind" }, 400);
     if (kind !== "monitoring" && (!parentLow || !UUID.test(parentLow))) return json({ error: "Invalid pair" }, 400);
+
+    // Server-side switch. While it is off, nothing is sent (notifySafeguarding checks it too).
+    if (!(await safeguardingSwitchOn())) return json({ ok: true, skipped: "switch_off" });
 
     const supabase = createSupabaseAdmin();
     let testAccount = false;
@@ -34,7 +38,8 @@ Deno.serve(async (req) => {
     const result = await notifySafeguarding({
       kind: kind as AlertKind,
       testAccount,
-      idempotencyKey: `sg-${kind}-${parentLow ?? "monitor"}-${parentHigh ?? "monitor"}`,
+      // One key per alert event, so a second concern from the same family is not deduped away.
+      idempotencyKey: `sg-${kind}-${eventId}`,
     });
     return json({ ok: true, email: result.email.sent, sms: result.sms.decision });
   } catch {
