@@ -138,6 +138,8 @@ const App = () => (
                 <Route key={t} path={`/${t}`} element={<QueryRedirect to={`/dashboard?tab=${t}`} />} />
               ))}
               <Route path="/dashboard/:tab" element={<DashboardTabRedirect />} />
+              {/* There is no calendar page. Reminders already go to chat or maintenance; this old path opens Home. */}
+              <Route path="/calendar" element={<QueryRedirect to="/dashboard" />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/cost-of-conflict" element={<ProtectedRoute><InAppShell><CostOfConflict /></InAppShell></ProtectedRoute>} />
               <Route path="/tax-and-benefits" element={<QueryRedirect to="/resources/child-maintenance-guide-app" />} />
