@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.request-access]
 verify_jwt = false
+
+[functions.submit-pledge]
+verify_jwt = false
