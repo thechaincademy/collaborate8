@@ -341,7 +341,20 @@ const routeMeta = [
     "twitterCard": "summary_large_image",
     "twitterTitle": "Delete your Collabor8 account",
     "twitterDescription": "How to delete your Collabor8 account and data, what is deleted and what stays with your co-parent."
-  }
+  },
+  {
+    "route": "/families-change",
+    "title": "Families Change Pledge | Collabor8",
+    "description": "Make a Families Change pledge with Collabor8 and National Family Mediation. Help families navigate separation with better information, understanding and support.",
+    "canonical": "https://collaborate8.com/families-change",
+    "ogTitle": "Families Change Pledge | Collabor8",
+    "ogDescription": "Make a Families Change pledge with Collabor8 and National Family Mediation. Help families navigate separation with better information, understanding and support.",
+    "ogUrl": "https://collaborate8.com/families-change",
+    "ogType": "website",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Families Change Pledge | Collabor8",
+    "twitterDescription": "Make a Families Change pledge with Collabor8 and National Family Mediation."
+  },
 ] satisfies readonly RouteMeta[];
 
 export default routeMeta;
