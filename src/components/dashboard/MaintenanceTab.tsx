@@ -346,8 +346,8 @@ const MaintenanceTab = () => {
             </div>
           )}
 
-          {/* VIEWING (receiver): explanation + payout account */}
-          {isViewing && (
+          {/* VIEWING (receiver): confirm-account note only while setup is still actionable. */}
+          {showReceiverPayoutSetup(!!isViewing, connectStatus) && (
             <div className="rounded-2xl border border-border bg-card p-4">
               <div className="mb-3 flex items-start gap-3">
                 <Info className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
@@ -355,12 +355,10 @@ const MaintenanceTab = () => {
                   Only the paying parent can set this up. When it's been completed, you'll receive a notification. In the meantime, please confirm the account you'd like to receive the funds into.
                 </p>
               </div>
-              {showReceiverPayoutSetup(!!isViewing, connectStatus) && (
-                <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
-                  <CreditCard className="h-5 w-5" />
-                  Confirm receiving account
-                </Button>
-              )}
+              <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
+                <CreditCard className="h-5 w-5" />
+                Confirm receiving account
+              </Button>
             </div>
           )}
 

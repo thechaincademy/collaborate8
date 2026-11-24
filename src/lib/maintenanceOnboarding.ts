@@ -81,9 +81,10 @@ export const resolveConnectStatus = (
 export const showPayingParentSetup = (isManaging: boolean, hasActiveArrangement: boolean): boolean =>
   isManaging && !hasActiveArrangement;
 
-// Payout setup (Connect) only shows to the receiving parent who has not finished
-// payout setup. A failed Stripe lookup must not reopen setup when the stored
-// status already says setup started or finished.
+// Payout setup (Connect) and its confirm-account note only show to the receiving
+// parent who has not finished payout setup. Once status is complete or under
+// review, only the matching status message is shown. A failed Stripe lookup
+// must not reopen setup when the stored status already says setup started or finished.
 export const showReceiverPayoutSetup = (isViewing: boolean, connectStatus: string): boolean =>
   isViewing && (connectStatus === "not_created" || connectStatus === "pending");
 
