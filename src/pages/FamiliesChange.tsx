@@ -503,7 +503,7 @@ const FamiliesChange = () => {
             </div>
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground sm:text-left">
-            Families Change — a campaign in partnership with National Family
+            Families Change, a campaign in partnership with National Family
             Mediation (Registered Charity No. 1074796) and Collabor8.
           </p>
           <FooterResources />
