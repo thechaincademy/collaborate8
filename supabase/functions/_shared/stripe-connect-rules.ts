@@ -141,3 +141,29 @@ export function checkStatusReply(status: OnboardingStatus, s: PayoutStatus) {
 }
 
 export const NOT_CREATED_REPLY = { status: "not_created" } as const;
+
+/** Stored connected_accounts fields used when a live Stripe lookup fails. */
+export interface StoredConnectedAccount {
+  provider_account_id: string;
+  onboarding_status?: string | null;
+  payouts_enabled?: boolean | null;
+  charges_enabled?: boolean | null;
+}
+
+/**
+ * check-status reply from the database row, used when Stripe cannot find the
+ * stored account (for example a sandbox id after a switch to live keys). The
+ * reply shape stays the same so existing web and app clients keep working.
+ * The row itself is not changed.
+ */
+export function storedCheckStatusReply(row: StoredConnectedAccount) {
+  const raw = row.onboarding_status;
+  const status: OnboardingStatus =
+    raw === "complete" || raw === "pending_capabilities" || raw === "pending" ? raw : "pending";
+  return checkStatusReply(status, {
+    accountId: row.provider_account_id,
+    onboardingComplete: status === "complete" || status === "pending_capabilities",
+    payoutsEnabled: !!row.payouts_enabled,
+    chargesEnabled: !!row.charges_enabled,
+  });
+}

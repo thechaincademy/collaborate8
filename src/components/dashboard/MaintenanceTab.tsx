@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { maintenanceRoleGate, maintenanceRoleSettled, type MaintenanceRoleGate } from "@/lib/maintenanceOnboarding";
+import { maintenanceRoleGate, maintenanceRoleSettled, resolveConnectStatus, showPayingParentSetup, showPayerArrangementActions, showReceiverPayoutSetup, type MaintenanceRoleGate } from "@/lib/maintenanceOnboarding";
 import { motion } from "framer-motion";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
 import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, ArrowLeft } from "lucide-react";
@@ -69,9 +69,21 @@ const MaintenanceTab = () => {
     fetchPayments();
     fetchCards();
 
-    // Everyone needs to check their Connect status now (bilateral)
-    checkAccountStatus().then((s) => {
-      setConnectStatus(s?.status ?? "not_created");
+    // Live Stripe may fail after a test-to-live key switch (sandbox ids are
+    // unknown to live). Fall back to the stored connected_accounts row.
+    const storedStatus = profile?.id
+      ? supabase
+          .from("connected_accounts")
+          .select("onboarding_status, payouts_enabled, charges_enabled")
+          .eq("user_id", profile.id)
+          .eq("provider", "stripe")
+          .maybeSingle()
+          .then(({ data }) => data, () => null)
+      : Promise.resolve(null);
+    Promise.all([checkAccountStatus(), storedStatus]).then(([live, stored]) => {
+      setConnectStatus(resolveConnectStatus(live, stored));
+    }, () => {
+      setConnectStatus("not_created");
     });
 
     if (!profile?.coparent_id) {
@@ -157,17 +169,20 @@ const MaintenanceTab = () => {
         localConfirmed: localRoleConfirmed,
         role: profile?.role,
         hasOwnArrangement: !!activePayment,
+        hasCoparentArrangement: !!coparentArrangement,
         cardCount: cards.length,
         connectStatus,
-        evidenceLoading: loading || cardsLoading || connectStatus === "loading",
+        evidenceLoading: loading || cardsLoading || coparentArrangementLoading || connectStatus === "loading",
       });
   const roleConfirmed = roleGate === "confirmed";
   const roleSettled = maintenanceRoleSettled({
     role: profile?.role,
     hasOwnArrangement: !!activePayment,
+    hasCoparentArrangement: !!coparentArrangement,
     cardCount: cards.length,
     connectStatus,
   });
+  const hasActiveArrangement = !!displayArrangement;
   const showSwitchRoleLink = isManaging && !roleSettled && connectStatus !== "loading" && !loading && !cardsLoading;
 
   // Remember account-based confirmation in this browser too.
@@ -312,7 +327,7 @@ const MaintenanceTab = () => {
           transition={{ delay: 0.2 }}
           className="mb-6 space-y-3"
         >
-          {isManaging && profile && (
+          {showPayingParentSetup(!!isManaging, hasActiveArrangement) && profile && (
             <PayingParentSetup
               connected={cards.length > 0}
               userId={profile.id}
@@ -340,7 +355,7 @@ const MaintenanceTab = () => {
                   Only the paying parent can set this up. When it's been completed, you'll receive a notification. In the meantime, please confirm the account you'd like to receive the funds into.
                 </p>
               </div>
-              {(connectStatus === "not_created" || connectStatus === "pending") && (
+              {showReceiverPayoutSetup(!!isViewing, connectStatus) && (
                 <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
                   <CreditCard className="h-5 w-5" />
                   Confirm receiving account
@@ -371,7 +386,7 @@ const MaintenanceTab = () => {
           {/* Arrangement actions for managing parent (payer) */}
           {safety.paused ? (
             <CmsGuidance onDownload={() => void downloadRecord()} />
-          ) : isManaging && cards.length > 0 && displayArrangement ? (
+          ) : showPayerArrangementActions(!!isManaging, hasActiveArrangement) ? (
             <div className="grid grid-cols-2 gap-3">
               <Button className="h-auto min-h-11 flex-col gap-2 py-4" variant="outline" onClick={() => navigate("/payment-history")}>
                 <span className="font-medium">Payment History</span>

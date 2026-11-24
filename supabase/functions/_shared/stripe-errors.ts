@@ -42,3 +42,15 @@ export function logStripeError(scope: string, step: string, error: unknown) {
   );
   return details;
 }
+
+/** True when Stripe cannot find or access the stored connected account under this key. */
+export function isMissingStripeAccountError(error: unknown): boolean {
+  const d = extractStripeError(error);
+  const code = d.code ?? "";
+  const message = (d.message ?? "").toLowerCase();
+  if (code === "resource_missing" || code === "account_invalid") return true;
+  if (message.includes("no such account")) return true;
+  if (message.includes("does not have access to account")) return true;
+  if (message.includes("account does not exist")) return true;
+  return false;
+}

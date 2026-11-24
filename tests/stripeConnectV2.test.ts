@@ -10,8 +10,10 @@ import {
   onboardingStatus,
   payoutStatusFromAccount,
   v2OnboardingLinkBody,
+  storedCheckStatusReply,
   v2RecipientAccountBody,
 } from "../supabase/functions/_shared/stripe-connect-rules";
+import { isMissingStripeAccountError } from "../supabase/functions/_shared/stripe-errors";
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
@@ -129,5 +131,53 @@ describe("pressing Set up payouts again", () => {
   test("legacy detection", () => {
     expect(isLegacyV1Account({ id: "a", type: "express" })).toBe(true);
     expect(isLegacyV1Account({ id: "a", type: "none" })).toBe(false);
+  });
+});
+
+
+describe("check-status falls back to the stored payout row when Stripe cannot find the account", () => {
+  test("stored complete row (uk2) replies with the same contract as a live lookup", () => {
+    const r = storedCheckStatusReply({
+      provider_account_id: "acct_stored",
+      onboarding_status: "complete",
+      payouts_enabled: true,
+      charges_enabled: true,
+    });
+    expect(Object.keys(r).sort()).toEqual(["accountId", "chargesEnabled", "detailsSubmitted", "payoutsEnabled", "status"]);
+    expect(r).toEqual({
+      status: "complete",
+      payoutsEnabled: true,
+      chargesEnabled: true,
+      accountId: "acct_stored",
+      detailsSubmitted: true,
+    });
+  });
+
+  test("an unknown stored status is treated as pending, not as not_created", () => {
+    const r = storedCheckStatusReply({ provider_account_id: "acct_x", onboarding_status: "unknown" });
+    expect(r.status).toBe("pending");
+    expect(r.detailsSubmitted).toBe(false);
+    expect(r.payoutsEnabled).toBe(false);
+  });
+
+  test("missing-account errors include No such account and account_invalid", () => {
+    expect(isMissingStripeAccountError({ code: "resource_missing", message: "No such account: 'acct_x'" })).toBe(true);
+    expect(isMissingStripeAccountError({ code: "account_invalid", message: "The provided key does not have access to account 'acct_x' (or that account does not exist)." })).toBe(true);
+    expect(isMissingStripeAccountError({ message: "No such account" })).toBe(true);
+    expect(isMissingStripeAccountError({ code: "card_declined", message: "Your card was declined." })).toBe(false);
+  });
+
+  test("the function uses the stored reply on a missing-account error and does not update the row", () => {
+    const src = read("supabase/functions/stripe-connect/index.ts");
+    expect(src).toContain("storedCheckStatusReply(connected)");
+    expect(src).toContain("isMissingStripeAccountError(statusError)");
+    expect(src).toContain("JSON.stringify(checkStatusReply(newStatus, status))");
+    const start = src.indexOf("if (isMissingStripeAccountError(statusError))");
+    const end = src.indexOf("throw statusError");
+    const block = src.slice(start, end);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    expect(block).toContain("storedCheckStatusReply(connected)");
+    expect(block).not.toContain(".update(");
   });
 });

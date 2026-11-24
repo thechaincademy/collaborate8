@@ -36,6 +36,7 @@ describe("Payment summaries count completed payments only", () => {
     expect(statement).toContain("sumCompletedPayments(filtered)");
     expect(statement).toContain("sumPendingPayments(filtered)");
     expect(statement).toContain("pending not included");
+    expect(statement).toContain('{filtered.length} {filtered.length === 1 ? "entry" : "entries"}');
     expect(statement).not.toMatch(/const total = filtered\.reduce/);
   });
 });

@@ -9,8 +9,10 @@ import {
   existingAccountAction,
   isLegacyV1Account,
   onboardingStatus,
+  storedCheckStatusReply,
   type V1AccountView,
 } from "../_shared/stripe-connect-rules.ts";
+import { isMissingStripeAccountError } from "../_shared/stripe-errors.ts";
 
 const payoutProvider = new StripePayoutProvider();
 const DEFAULT_ORIGIN = "https://collaborate8.com";
@@ -125,23 +127,37 @@ serve(async (req) => {
       }
 
       // Works for Accounts v1 and v2 (both read through /v1/accounts).
-      const status = await payoutProvider.getAccountStatus(connected.provider_account_id);
-      logStep("Account status checked", status);
+      try {
+        const status = await payoutProvider.getAccountStatus(connected.provider_account_id);
+        logStep("Account status checked", { payoutsEnabled: status.payoutsEnabled, chargesEnabled: status.chargesEnabled, onboardingComplete: status.onboardingComplete });
 
-      const newStatus = onboardingStatus(status);
+        const newStatus = onboardingStatus(status);
 
-      await supabase
-        .from("connected_accounts")
-        .update({
-          onboarding_status: newStatus,
-          payouts_enabled: status.payoutsEnabled,
-          charges_enabled: status.chargesEnabled,
-        })
-        .eq("id", connected.id);
+        await supabase
+          .from("connected_accounts")
+          .update({
+            onboarding_status: newStatus,
+            payouts_enabled: status.payoutsEnabled,
+            charges_enabled: status.chargesEnabled,
+          })
+          .eq("id", connected.id);
 
-      return new Response(JSON.stringify(checkStatusReply(newStatus, status)), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        return new Response(JSON.stringify(checkStatusReply(newStatus, status)), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (statusError) {
+        if (isMissingStripeAccountError(statusError)) {
+          // Do not rewrite the stored row. The live key cannot see this account
+          // (sandbox id after a live switch, or a deleted account).
+          logStep("Account status lookup failed, using stored status", {
+            onboarding_status: connected.onboarding_status,
+          });
+          return new Response(JSON.stringify(storedCheckStatusReply(connected)), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw statusError;
+      }
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {
