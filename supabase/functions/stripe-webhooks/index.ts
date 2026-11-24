@@ -10,6 +10,7 @@ import {
 } from "../_shared/conversation-tool-access-rule.ts";
 import { cfg } from "../_shared/config.ts";
 import { onboardingStatus, payoutStatusFromAccount, type V1AccountView } from "../_shared/stripe-connect-rules.ts";
+import { resolveInvoiceChargeId } from "../_shared/stripe-charge.ts";
 
 const CT_EVENTS = new Set([
   "customer.subscription.created",
@@ -102,11 +103,6 @@ function extractSubscriptionId(invoice: any): string | null {
   return null;
 }
 
-/** Extract charge ID from invoice - handles both old and new API formats */
-function extractChargeId(invoice: any): string | null {
-  return (invoice.charge as string) || null;
-}
-
 /**
  * Record a paid maintenance invoice for an arrangement: payments ledger row (idempotent on
  * inv_<invoice id>), next due date, expenses settled on the invoice, and an audit event.
@@ -120,17 +116,19 @@ async function recordMaintenanceInvoicePayment(
   arrangement: any,
   subscriptionId: string,
 ): Promise<void> {
-  const chargeId = extractChargeId(invoice);
   const amountPaid = (invoice.amount_paid || 0) / 100;
 
   // A scheduled arrangement's zero-value trial invoice is not a payment.
   if (amountPaid <= 0) return;
 
+  // basil invoices have no top-level charge; read it from invoice.payments / the PaymentIntent.
+  const chargeId = await resolveInvoiceChargeId(stripe as any, invoice, logStep);
+
   // Record payment in ledger (idempotent)
   const idempotencyKey = `inv_${invoice.id}`;
   const { data: existingPayment } = await supabase
     .from("payments")
-    .select("id")
+    .select("id, provider_charge_id")
     .eq("idempotency_key", idempotencyKey)
     .maybeSingle();
 
@@ -153,8 +151,17 @@ async function recordMaintenanceInvoicePayment(
       logStep("Error inserting payment", { error: insertError.message });
     } else {
       recorded = true;
-      logStep("Payment recorded", { amount: amountPaid, arrangementId: arrangement.id });
+      logStep("Payment recorded", { amount: amountPaid, arrangementId: arrangement.id, chargeFound: !!chargeId });
     }
+  } else if (!existingPayment.provider_charge_id && chargeId) {
+    // Row written before the charge id could be read (older code or verify-payment): fill it in once.
+    const { error: fillError } = await supabase
+      .from("payments")
+      .update({ provider_charge_id: chargeId })
+      .eq("id", existingPayment.id)
+      .is("provider_charge_id", null);
+    if (fillError) logStep("Error filling charge id", { error: fillError.message });
+    else logStep("Payment already exists, charge id filled in", { idempotencyKey });
   } else {
     logStep("Payment already exists, skipping", { idempotencyKey });
   }
@@ -271,12 +278,10 @@ serve(async (req) => {
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as any;
         const subscriptionId = extractSubscriptionId(invoice);
-        const chargeId = extractChargeId(invoice);
 
         logStep("Invoice details", {
           invoiceId: invoice.id,
           subscriptionId,
-          chargeId,
           amountPaid: invoice.amount_paid,
         });
 
