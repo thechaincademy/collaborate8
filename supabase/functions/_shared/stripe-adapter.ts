@@ -105,7 +105,8 @@ export class StripeRecurringProvider implements RecurringPaymentProvider {
       payment_settings: {
         save_default_payment_method: "on_subscription",
       },
-      expand: ["latest_invoice.payment_intent"],
+      // basil removed invoice.payment_intent, so expanding it errors; the payment is on invoice.payments.
+      expand: ["latest_invoice"],
     };
 
     if (paymentMethods.data[0]?.id) {
