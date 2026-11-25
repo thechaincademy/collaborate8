@@ -102,6 +102,30 @@ const useCompactChat = () => {
   return compact;
 };
 
+/**
+ * Always-reachable way back to Home from the chat. With the keyboard open on a phone the tab bar (website)
+ * or the app's own bar is covered, and the header can scroll out of view, so this bar sticks to the top of
+ * the scrolling area. `offset` pulls it up into the container's top padding.
+ */
+const BackToHomeBar = ({ onBack, offset }: { onBack: () => void; offset: "pt4" | "pt12" }) => (
+  <div
+    data-testid="chat-back-home"
+    className={cn("sticky top-0 z-10 -mx-6 mb-2 shrink-0 bg-background px-4 py-1", offset === "pt12" ? "-mt-12 pt-3" : "-mt-4")}
+  >
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onBack}
+      aria-label="Back to Home"
+      className="h-11 gap-1.5 px-2 text-sm font-medium text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      Home
+    </Button>
+  </div>
+);
+
 const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "documents" } = {}) => {
   const inApp = useIsInApp();
   // The dashboard scrollport already ends above the tab bar (or the in-app safe area).
@@ -110,6 +134,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const compact = useCompactChat();
   const [aiInfoOpen, setAiInfoOpen] = useState(false);
   const navigate = useNavigate();
+  const goHome = useCallback(() => navigate("/dashboard"), [navigate]);
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const coparentId = profile?.coparent_id ?? null;
@@ -730,6 +755,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   if (activeSection === "documents") {
     return (
       <div className="mx-auto flex w-full max-w-md flex-col px-6 pt-12 pb-[calc(2rem+env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-5xl">
+        <BackToHomeBar onBack={goHome} offset="pt12" />
         <DashboardHeader title="Financial Chat" />
         <p className="-mt-6 mb-4 text-sm text-muted-foreground">{SUBHEADING}</p>
         {sectionTabs}
@@ -863,6 +889,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   if (intercept) {
     return (
       <div className={cn("mx-auto flex", chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6 pt-12")}>
+        <BackToHomeBar onBack={goHome} offset="pt12" />
         <DashboardHeader title="Financial Chat" />
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -942,6 +969,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
 
   return (
     <div className={cn("mx-auto flex", compact ? "" : chatHeight, "w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-6", compact ? "pt-4" : "pt-12")}>
+      <BackToHomeBar onBack={goHome} offset={compact ? "pt4" : "pt12"} />
       {compact ? (
         <div className="-mb-6">
           <DashboardHeader title="Financial Chat" />
