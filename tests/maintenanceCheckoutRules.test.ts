@@ -82,6 +82,12 @@ describe("function wiring", () => {
     expect(src).not.toContain('payment_method_types: ["card"],\n        line_items');
   });
 
+  test("a future start date is sent as trial_end only: Stripe rejects proration_behavior without a billing cycle anchor", () => {
+    const src = read("supabase/functions/stripe-subscriptions/index.ts");
+    expect(src).toContain("...(trialEnd ? { trial_end: trialEnd } : {})");
+    expect(src).not.toMatch(/proration_behavior\s*:/);
+  });
+
   test("stripe-connect adds coparent-status and the web return addresses, reply contract untouched", () => {
     const src = read("supabase/functions/stripe-connect/index.ts");
     expect(src).toContain('action === "coparent-status"');

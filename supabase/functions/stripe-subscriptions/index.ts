@@ -244,7 +244,9 @@ serve(async (req) => {
           payment_method_types: checkoutPaymentMethodTypes(paymentChoice),
           line_items: [{ price: priceId, quantity: 1 }],
           subscription_data: {
-            ...(trialEnd ? { trial_end: trialEnd, proration_behavior: "none" as const } : {}),
+            // A future start date is a trial that ends on that date: nothing is charged until then.
+            // Stripe rejects proration_behavior here unless a billing cycle anchor is set, so it is not sent.
+            ...(trialEnd ? { trial_end: trialEnd } : {}),
             transfer_data: {
               destination: connectedAccount.provider_account_id,
             },
