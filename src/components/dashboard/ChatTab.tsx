@@ -29,6 +29,7 @@ import ConversationQuestionnaire from "./ConversationQuestionnaire";
 import DocumentsTab from "./DocumentsTab";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 import { mergeChatMessages, pendingMessageDelivery } from "@/lib/chatMessages";
+import { CALM_CHECK_GAVE_UP_COPY, calmCheckBusyCopy, displayBusyCountdown, runCalmCheck, startOrKeepBusyDeadline, type CalmBusyDeadline, type CalmBusyDisplay } from "@/lib/calmCheck";
 import { applyFamilyBroadcast, familyMessageTopic, isMissingMessageFeed, type FamilyBroadcast } from "@/lib/familyMessageChannel";
 import { hideSenderReadAt } from "@/lib/safeguarding/logic";
 import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
@@ -126,6 +127,9 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const [draft, setDraft] = useState("");
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
+  const [calmDeadline, setCalmDeadline] = useState<CalmBusyDeadline>(null);
+  const [calmDisplay, setCalmDisplay] = useState<CalmBusyDisplay | null>(null);
+  const calmAbortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const interceptHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusTextareaRef = useRef(false);
@@ -607,36 +611,72 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     setIntercept(null);
   };
 
+  useEffect(() => {
+    if (calmDeadline === null) {
+      setCalmDisplay(null);
+      return;
+    }
+    const tick = () => setCalmDisplay(displayBusyCountdown(calmDeadline, Date.now()));
+    tick();
+    const t = window.setInterval(tick, 250);
+    return () => window.clearInterval(t);
+  }, [calmDeadline]);
+
+  useEffect(() => () => {
+    calmAbortRef.current?.abort();
+  }, []);
+
   const handleSendClick = async () => {
     const text = draft.trim();
     if (!text || sending || safety.paused) return;
-    if (rewriting) return;
+    // A second tap while the check is running sends the original and cancels the wait.
+    if (calmAbortRef.current) {
+      calmAbortRef.current.abort();
+      calmAbortRef.current = null;
+      setCalmDeadline(null);
+      setRewriting(false);
+      await insertMessage(text);
+      return;
+    }
     if (!premium.loading && !premium.hasAccess) {
       await insertMessage(text);
       return;
     }
+    const ac = new AbortController();
+    calmAbortRef.current = ac;
     setRewriting(true);
-    let suggestion = "";
     try {
-      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
-      const result = await Promise.race([
-        supabase.functions.invoke("chat-rewrite", { body: { draft: text, mode: "send" } }),
-        timeout,
-      ]);
-      if (result && !result.error) {
-        const d = result.data as { needs_rewrite?: boolean; rewrite?: string | null } | null;
-        const rw = d?.rewrite?.trim() || "";
-        if (d?.needs_rewrite === true && rw && rw !== text) suggestion = rw;
+      const result = await runCalmCheck({
+        invoke: (body) => supabase.functions.invoke("chat-rewrite", { body }),
+        draft: text,
+        signal: ac.signal,
+        onWaiting: (eta) => setCalmDeadline((prev) => startOrKeepBusyDeadline(prev, eta, Date.now())),
+      });
+      if (ac.signal.aborted || calmAbortRef.current !== ac) return;
+      setCalmDeadline(null);
+      if (result.kind === "suggestion") {
+        if (draft.trim() === text) setIntercept({ draft: text, suggestion: result.rewrite });
+        return;
+      }
+      if (result.kind === "pass") {
+        await insertMessage(text);
+        return;
+      }
+      if (result.kind === "premium_required") {
+        premium.setPaywallOpen(true);
+        return;
+      }
+      if (result.kind === "gave_up") {
+        toast.message(CALM_CHECK_GAVE_UP_COPY);
       }
     } catch {
-      suggestion = "";
+      if (!ac.signal.aborted) toast.message(CALM_CHECK_GAVE_UP_COPY);
     } finally {
-      setRewriting(false);
-    }
-    if (suggestion) {
-      setIntercept({ draft: text, suggestion });
-    } else {
-      await insertMessage(text);
+      if (calmAbortRef.current === ac) {
+        calmAbortRef.current = null;
+        setRewriting(false);
+        setCalmDeadline(null);
+      }
     }
   };
 
@@ -1051,6 +1091,11 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       </div>
 
       {safety.enabled && safety.paused ? <SafetyToolsBanner safety={safety} /> : <>
+      {calmDisplay ? (
+        <p className="pb-2 text-sm text-muted-foreground" role="status" aria-live="polite">
+          {calmCheckBusyCopy(calmDisplay)} You can still send your original message.
+        </p>
+      ) : null}
       <div className={cn("flex shrink-0 items-end gap-2", compact ? "pb-3" : "pb-4")}>
         <input
           ref={attachInputRef}
@@ -1095,13 +1140,13 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         />
         <Button
           onClick={handleSendClick}
-          disabled={!draft.trim() || sending || rewriting}
+          disabled={!draft.trim() || sending}
           size="icon"
-          aria-label={rewriting ? "Checking your message" : "Send message"}
+          aria-label={rewriting ? "Send original message" : "Send message"}
           aria-busy={rewriting}
           className="h-12 w-12 shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          {rewriting || sending ? (
+          {sending ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
             <Send className="h-5 w-5" />
