@@ -811,7 +811,7 @@ const fxRuleKept = (rewrite: string, rule: FxRule) => {
 };
 const FX_AGREE = /^(?:agree|agreed|agreement|acordamos|acordámos|acordado|acordada|acuerdo|combinámos|combinamos|combinado|combinada|falámos|falamos|hablamos|hablado|decidimos|decided|norma)$/;
 const FX_SAID = /^(?:said|says|told|tells|tell|disse|diz|contou|dijo|dice|contó|avisou|avisaste|avisó)$/;
-const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
+const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean, modelFacts: unknown[] = []) => {
   const codes = new Set<string>();
   const notes: string[] = [];
   const kept: string[] = [];
@@ -900,6 +900,20 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
   });
   const blameStems = new Set<string>(), factStems = new Set<string>();
   for (const ds of dSents) for (const t of ds.st) (ds.blame ? blameStems : factStems).add(t);
+  // A draft clause can hold a fact and an absolute ("You are always late picking up the kids and it is ridiculous").
+  // The whole clause is then read as blame, so its fact words ("late", "pick", "kid") would be flagged as blame.
+  // The model lists such facts without the blame; their words, when they are in the draft, are facts.
+  // Absolutes and other reproach words are never made facts, and FX_REPROACH still runs on the whole rewrite below.
+  const draftStems = new Set<string>(dSents.flatMap((ds) => [...ds.st]));
+  const modelFactSets: Set<string>[] = [];
+  for (const f of modelFacts as { fact?: unknown }[]) {
+    if (typeof f?.fact !== "string") continue;
+    const st = new Set(fxToks(f.fact).filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t) && !FX_ALLOWED_NEW.has(t) && !FX_REPROACH.test(t))
+      .map(fxStem).filter((t) => draftStems.has(t)));
+    if (!st.size) continue;
+    modelFactSets.push(st);
+    for (const t of st) factStems.add(t);
+  }
   for (const rs of fxClauses(rewrite)) {
     const rt = fxToks(rs).filter((t) => !FX_STOP.has(t) && !FX_NEG.has(t) && !FX_ALLOWED_NEW.has(t)).map(fxStem);
     if (!rt.length) continue;
@@ -908,6 +922,8 @@ const codeFactCheck = (draft: string, rewrite: string, asksPlain: boolean) => {
       codes.add("reproach_kept"); notes.push(`Leave out "${rs}": it uses words only found in the draft's blame.`);
       continue;
     }
+    // A clause made only of one listed fact's words is that fact, said calmly.
+    if (modelFactSets.some((fs) => rt.every((t) => fs.has(t)))) continue;
     const covering = dSents.filter((ds) => rt.every((t) => ds.st.has(t)));
     if (covering.length && covering.every((ds) => ds.blame || (!fxAnchored(ds.x) && !textHasAsk(ds.x) && fxToks(ds.x).some((t) => FX_NEG.has(t))))) {
       codes.add("reproach_kept"); notes.push(`Leave out "${rs}": it only repeats blame from the draft.`);
@@ -1171,7 +1187,7 @@ const checkRewrite = (draft: string, rewrite: string, c: SendCheck) => {
     codes.add("decision_as_question");
     notes.push("The sender's decision must stay a statement, not a question.");
   }
-  const fx = codeFactCheck(draft, rewrite, plainDraftAsk);
+  const fx = codeFactCheck(draft, rewrite, plainDraftAsk, c.facts ?? []);
   for (const x of fx.codes) codes.add(x);
   notes.push(...fx.notes);
   return { codes: [...codes], notes };
@@ -1303,7 +1319,10 @@ Deno.serve(async (req) => {
       // Nothing from a send is logged until Premium is confirmed; on a denial the model reply is thrown away unlogged.
       let premiumOk = false;
       let pendingLog: (() => void) | null = null;
+      // Reason codes (no text) of the last internal outcome, so a pending job that ends as a pass still says why.
+      let lastReasons: string[] = [];
       const log = (outcome: string, reasons: string[], attempts: number) => {
+        if (outcome !== "pending") lastReasons = [outcome, ...reasons];
         if (settled) return;
         const write = () => logSend(outcome, reasons, attempts, started, timing);
         if (premiumOk) write(); else pendingLog = write;
@@ -1520,7 +1539,7 @@ Deno.serve(async (req) => {
           work
             .then(async (r) => {
               await settleJobFromResponse(job, r);
-              if (job.status === "done") logSend("pending_done", job.needs_rewrite ? ["rewrite"] : ["pass"], 0, started, timing);
+              if (job.status === "done") logSend("pending_done", job.needs_rewrite ? ["rewrite"] : ["pass", ...lastReasons], 0, started, timing);
               else if (job.status === "failed") logSend("pending_failed", ["busy"], 0, started, timing);
             })
             .catch(async () => {
