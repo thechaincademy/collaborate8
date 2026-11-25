@@ -12,6 +12,10 @@ import { useAuth } from "@/hooks/useAuth";
 import CoparentLinkSettings from "@/components/settings/CoparentLinkSettings";
 import { PREMIUM_FEATURE_LINE, useIsInApp } from "@/hooks/useIsInApp";
 import { openConversationToolPortal, useConversationToolAccess } from "@/components/dashboard/ConversationToolPromo";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { QuietAndSecurity } from "@/components/safeguarding/QuietAndSecurity";
+import { settingsCopy } from "@/content/safeguarding";
+import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
 
 
 const Section = ({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) => (
@@ -30,6 +34,7 @@ const Settings = () => {
   const [deleting, setDeleting] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const { hasAccess: premiumAccess, access: premiumInfo } = useConversationToolAccess();
+  const safety = useSafeguarding();
   const isSubscription = premiumAccess && premiumInfo?.source === "subscription" && !!premiumInfo?.stripe_customer_id;
   const [premiumPortalLoading, setPremiumPortalLoading] = useState(false);
   const managePremium = async () => {
@@ -97,6 +102,24 @@ const Settings = () => {
         <Section title="Co-parent and payments" id="coparent">
           <CoparentLinkSettings />
         </Section>
+
+        {safety.enabled && (
+          <Section title={settingsCopy.section}>
+            <QuietAndSecurity quiet={safety.quietMode} />
+            <button onClick={() => navigate("/safeguarding/check")} className="flex min-h-11 w-full items-center justify-between border-t border-border p-4 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <span className="text-foreground">{settingsCopy.check}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <button onClick={() => navigate("/safeguarding/report")} aria-label="Raise a concern" className="flex min-h-11 w-full items-center justify-between border-t border-border p-4 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <span className="text-foreground">{settingsCopy.report}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <button onClick={() => void downloadRecord()} className="flex min-h-11 w-full items-center justify-between border-t border-border p-4 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <span className="text-foreground">{settingsCopy.record}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </Section>
+        )}
 
         <Section title="Notifications">
           <button onClick={() => navigate("/notifications")} className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50">

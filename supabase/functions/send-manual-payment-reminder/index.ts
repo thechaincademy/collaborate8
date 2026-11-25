@@ -57,8 +57,6 @@ serve(async (req) => {
             firstName: profile?.first_name || "there",
             amountLabel,
             holderName: account.holder_name,
-            sortCode: account.sort_code,
-            accountNumber: account.account_number,
             paymentReference: account.payment_reference ?? "",
           },
           idempotencyKey: `manual_payment_reminder:${account.id}:${today}`,

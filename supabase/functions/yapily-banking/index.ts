@@ -96,8 +96,6 @@ serve(async (req) => {
           account_id: primaryAccount?.id || null,
           account_type: primaryAccount?.type || null,
           account_name: primaryAccount?.name || null,
-          sort_code: primaryAccount?.sortCode || null,
-          account_number_masked: primaryAccount?.accountNumberMasked || null,
           expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days
         })
         .eq("user_id", user.id)

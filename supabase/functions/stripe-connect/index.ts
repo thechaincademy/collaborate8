@@ -4,6 +4,14 @@ import { getUserFromRequest, createSupabaseAdmin } from "../_shared/supabase.ts"
 import { StripePayoutProvider } from "../_shared/stripe-adapter.ts";
 
 const payoutProvider = new StripePayoutProvider();
+const DEFAULT_ORIGIN = "https://collaborate8.com";
+
+function allowedOrigin(req: Request): string {
+  const origin = req.headers.get("origin") ?? "";
+  if (origin === "https://collaborate8.com" || origin === "https://www.collaborate8.com") return origin;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
+  return DEFAULT_ORIGIN;
+}
 
 const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-CONNECT LOVABLE] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -79,7 +87,7 @@ serve(async (req) => {
       }
 
       // Generate onboarding link
-      const origin = req.headers.get("origin") || "https://collabor8.lovable.app";
+      const origin = allowedOrigin(req);
       const onboardingUrl = await payoutProvider.createOnboardingLink(
         accountId,
         `${origin}/profile?stripe-refresh=true`,

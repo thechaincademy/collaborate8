@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from "react";
+import { ComponentType, ReactNode, useMemo } from "react";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
@@ -12,6 +12,8 @@ import "./wallet-adapter.css";
  * Non-custodial: all signing happens inside the user's own wallet.
  * The app never creates, stores or transmits private keys.
  */
+const SolanaConnection = ConnectionProvider as unknown as ComponentType<{ endpoint: string; children: ReactNode }>;
+
 const SolanaProvider = ({ children }: { children: ReactNode }) => {
   const wallets = useMemo(
     () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
@@ -19,11 +21,11 @@ const SolanaProvider = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <ConnectionProvider endpoint={SOLANA_RPC_URL}>
+    <SolanaConnection endpoint={SOLANA_RPC_URL}>
       <WalletProvider wallets={wallets} autoConnect={false}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
-    </ConnectionProvider>
+    </SolanaConnection>
   );
 };
 

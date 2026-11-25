@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # package-lock.json is behind package.json, so npm ci rejects the tree.
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: bun test
+      - run: npx tsc -p tsconfig.app.json --noEmit
+      - name: deno check edge functions
+        working-directory: supabase/functions
+        run: find . -name index.ts -print0 | xargs -0 -n1 deno check --config deno.json

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { notifyIfPaused } from "@/lib/safeguarding/pausedError";
 import { track, amountBucket } from "@/lib/analytics";
 import type { DisplayProfile } from "@/lib/profileDisplay";
 
@@ -105,7 +106,7 @@ export const useExpenses = () => {
       .single();
 
     if (error) {
-      toast.error("Failed to create expense");
+      if (!notifyIfPaused(error)) toast.error("Failed to create expense");
       return { error };
     }
 
@@ -164,7 +165,7 @@ export const useExpenses = () => {
       .select()
       .single();
     if (error) {
-      toast.error("Could not send the request");
+      if (!notifyIfPaused(error)) toast.error("Could not send the request");
       return { error };
     }
     setExpenses((prev) => [data as unknown as ExpenseRequest, ...prev]);

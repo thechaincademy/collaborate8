@@ -21,6 +21,8 @@ import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 import DeletedUserLabel from "@/components/DeletedUserLabel";
 import { isDeletedProfile } from "@/lib/profileDisplay";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 
 const statusLabel = (e: ExpenseRequest) => {
   switch (e.status) {
@@ -70,6 +72,7 @@ const ExpensesTab = () => {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const safety = useSafeguarding();
   const isLoading = loading || profileLoading;
   const hasCoparent = Boolean(profile?.coparent_id);
 
@@ -177,6 +180,7 @@ const ExpensesTab = () => {
   return (
     <div className="px-6 pt-12 pb-24">
       <DashboardHeader title="Expenses" />
+      <SafetyToolsBanner safety={safety} />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -228,7 +232,7 @@ const ExpensesTab = () => {
             Link your co-parent first. Expenses need both parents so one can approve what the other adds.
           </div>
         ) : !showForm ? (
-          <Button className="w-full" onClick={() => setShowForm(true)}>
+          <Button className="w-full" onClick={() => setShowForm(true)} disabled={safety.paused}>
             <Plus className="mr-2 h-4 w-4" />
             Add an expense
           </Button>

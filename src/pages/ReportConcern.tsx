@@ -1,0 +1,15 @@
+import { Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { ReportConcernForm } from "@/components/safeguarding/ReportConcernForm";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+
+const ReportConcern = () => {
+  const safety = useSafeguarding();
+  if (safety.loading) {
+    return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+  if (!safety.enabled) return <Navigate to="/dashboard" replace />;
+  return <ReportConcernForm />;
+};
+
+export default ReportConcern;

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isInternalTraffic } from "@/lib/internalTraffic";
+import { isSafeguardingPath, safeguardingSurfaceActive } from "@/lib/safeguarding/recordingPrivacy";
 
 /**
  * Product usage analytics (Product Tracker row 7).
@@ -148,6 +149,7 @@ const sendToClarity = (name: UsageEvent) => {
  */
 export const track = async (name: UsageEvent, props?: UsageProps): Promise<void> => {
   if (!hasAnalyticsConsent() || isInternalTraffic()) return;
+  if (isSafeguardingPath(window.location.pathname) || safeguardingSurfaceActive()) return;
   try {
     sendToClarity(name);
     const { data } = await supabase.auth.getSession();

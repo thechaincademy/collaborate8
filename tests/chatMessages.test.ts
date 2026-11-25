@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { mergeChatMessages, pendingMessageDelivery } from "../src/lib/chatMessages";
+import { applyFamilyBroadcast, familyMessageTopic, isMissingMessageFeed } from "../src/lib/familyMessageChannel";
 
 describe("Invite message chronology and synchronization", () => {
   it("keeps 12:03 original send time rather than 12:12 join time", () => {
@@ -168,5 +169,41 @@ describe("Only chat message notifications are read in visible Chat", () => {
     expect(chat.updates).toHaveLength(1);
     chat.cleanup();
     expect(chat.removed()).toBe(true);
+  });
+});
+
+describe("private family message channel", () => {
+  it("keeps the sg-family topic, sorted lowercase, and repeats a solo parent", () => {
+    const low = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    const high = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+    expect(familyMessageTopic(high, low)).toBe(`sg-family:${low}:${high}`);
+    expect(familyMessageTopic(high.toUpperCase(), null)).toBe(`sg-family:${high}:${high}`);
+  });
+
+  it("falls back only when the topic helper or view is missing", () => {
+    expect(isMissingMessageFeed({ code: "PGRST202", message: "Could not find the function public.sg_caller_family_topic" })).toBe(true);
+    expect(isMissingMessageFeed({ code: "PGRST205", message: "Could not find the table public.messages_caller in the schema cache" })).toBe(true);
+    expect(isMissingMessageFeed({ code: "42501", message: "permission denied" })).toBe(false);
+    expect(isMissingMessageFeed(null)).toBe(false);
+  });
+
+  it("subscribes website chat to the private topic and keeps the table listener as a fallback", () => {
+    const source = readFileSync(new URL("../src/components/dashboard/ChatTab.tsx", import.meta.url), "utf8");
+    expect(source.includes("familyMessageTopic")).toBe(true);
+    expect(source.includes("config: { private: true }")).toBe(true);
+    expect(source.includes("realtime.setAuth")).toBe(true);
+    expect(source.includes("TOKEN_REFRESHED")).toBe(true);
+    expect(source.includes("messages_caller")).toBe(true);
+    expect(source.includes('table: "messages"')).toBe(true);
+    expect(source.includes("isMissingMessageFeed")).toBe(true);
+  });
+
+  it("applies a broadcast without putting read_at on an update", () => {
+    const current = [{ id: "m", sender_id: "them", recipient_id: "me", body: "Hi", created_at: "2026-10-23T12:03:00Z", read_at: "2026-10-23T12:04:00Z" }];
+    const next = applyFamilyBroadcast(current, {
+      id: "m", sender_id: "them", recipient_id: "me", body: "Hi there", created_at: "2026-10-23T12:03:00Z", op: "UPDATE",
+    }, "me");
+    expect(next[0]?.body).toBe("Hi there");
+    expect(next[0]?.read_at).toBe("2026-10-23T12:04:00Z");
   });
 });

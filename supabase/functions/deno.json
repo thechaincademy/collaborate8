@@ -1,0 +1,7 @@
+{
+  "nodeModulesDir": "none",
+  "compilerOptions": {
+    "strict": false,
+    "noImplicitAny": false
+  }
+}

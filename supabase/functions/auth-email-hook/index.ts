@@ -1,4 +1,7 @@
+import { initEdgeSentry } from '../_shared/sentry.ts'
 import * as React from 'npm:react@18.3.1'
+
+initEdgeSentry()
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createAuthEmailHandler } from 'npm:@lovable.dev/email-js@0.1.0'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'

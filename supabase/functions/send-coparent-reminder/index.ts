@@ -1,4 +1,7 @@
+import { initEdgeSentry } from '../_shared/sentry.ts';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+
+initEdgeSentry();
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 type ReminderType = 'setup_bank_account' | 'send_payment';

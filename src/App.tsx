@@ -10,16 +10,30 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieConsent from "@/components/CookieConsent";
 import { sendGa4PageView } from "@/lib/ga4";
-import { isAdminPath, optOutLoadedTrackers } from "@/lib/internalTraffic";
+import { isStaffPath, optOutLoadedTrackers } from "@/lib/internalTraffic";
+import { isSafeguardingPath, useSafeguardingRecording } from "@/lib/safeguarding/recordingPrivacy";
 import { useEffect } from "react";
 import { MotionConfig } from "framer-motion";
 
+const SafeguardingPathMask = () => {
+  useSafeguardingRecording();
+  return null;
+};
+
+/** Masks the viewport on safeguarding routes. The hook only runs while this is mounted. */
+const SafeguardingRecording = () => {
+  const location = useLocation();
+  if (!isSafeguardingPath(location.pathname)) return null;
+  return <SafeguardingPathMask />;
+};
+
 /** Sends one GA4 page_view per route change (deduped inside sendGa4PageView). */
+
 const Ga4PageTracker = () => {
   const location = useLocation();
   useEffect(() => {
     // Admin pages are internal: opt out any tracker already on the page.
-    if (isAdminPath(location.pathname)) optOutLoadedTrackers();
+    if (isStaffPath(location.pathname)) optOutLoadedTrackers();
     return sendGa4PageView();
   }, [location.pathname, location.search]);
   return null;
@@ -76,6 +90,10 @@ import FinancesAfterSeparation from "./pages/resources/FinancesAfterSeparation";
 import IsMyChildMaintenanceFair from "./pages/resources/IsMyChildMaintenanceFair";
 import ParentalConflictAndChildren from "./pages/resources/ParentalConflictAndChildren";
 import TalkingToYourExAboutMoney from "./pages/resources/TalkingToYourExAboutMoney";
+import SafeguardingCheck from "./pages/SafeguardingCheck";
+import ReportConcern from "./pages/ReportConcern";
+import DslReview from "./pages/DslReview";
+import SafeguardingPreview from "./pages/SafeguardingPreview";
 
 const DashboardTabRedirect = () => {
   const { tab } = useParams();
@@ -160,12 +178,17 @@ const App = () => (
               <Route path="/resources/lets-chat-tool" element={<ProtectedRoute><InAppShell><LetsChatTool /></InAppShell></ProtectedRoute>} />
               <Route path="/internal/solana-audit" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
               <Route path="/internal/solana-audit/:arrangementId" element={<ProtectedRoute><SolanaPaymentAudit /></ProtectedRoute>} />
+              <Route path="/safeguarding/check" element={<ProtectedRoute><SafeguardingCheck /></ProtectedRoute>} />
+              <Route path="/safeguarding/report" element={<ProtectedRoute><ReportConcern /></ProtectedRoute>} />
+              <Route path="/dsl" element={<ProtectedRoute><DslReview /></ProtectedRoute>} />
+              {import.meta.env.DEV ? <Route path="/internal/safeguarding-preview" element={<SafeguardingPreview />} /> : null}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <SafeguardingRecording />
             <Ga4PageTracker />
           </BrowserRouter>
          </TooltipProvider>

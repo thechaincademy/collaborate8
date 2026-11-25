@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { format, subMonths } from "date-fns";
 import DashboardHeader from "./DashboardHeader";
+import { useSafeguarding } from "@/hooks/useSafeguarding";
+import { SafetyToolsBanner } from "@/components/safeguarding/SafetyToolsBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +65,7 @@ const quickLinks: Array<{
 ];
 
 const HomeTab = ({ onNavigate }: HomeTabProps) => {
+  const safety = useSafeguarding();
   const inApp = useIsInApp();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -171,6 +174,7 @@ const HomeTab = ({ onNavigate }: HomeTabProps) => {
   return (
     <div className="px-6 pt-12">
       <DashboardHeader title="Home" />
+      <SafetyToolsBanner safety={safety} />
 
       <HomeTutorial
         userId={user?.id}

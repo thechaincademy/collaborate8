@@ -1484,6 +1484,18 @@ export type Database = {
       }
       create_thread_deadline_notifications: { Args: never; Returns: number }
       get_coparent_id: { Args: { _user_id: string }; Returns: string }
+      sg_family_status: { Args: never; Returns: Json }
+      sg_submit_suitability: { Args: { p_answers: Json }; Returns: Json }
+      sg_report_concern: {
+        Args: { p_kind: string; p_note?: string | null; p_target_id?: string | null }
+        Returns: Json
+      }
+      sg_set_quiet_mode: { Args: { p_on: boolean }; Returns: Json }
+      sg_dsl_overview: { Args: never; Returns: Json }
+      sg_dsl_set_pause: {
+        Args: { p_parent_high: string | null; p_parent_low: string | null; p_paused: boolean }
+        Returns: Json
+      }
       get_coparent_last_active: { Args: never; Returns: string }
       get_invitation_by_code: {
         Args: { _invite_code: string }
