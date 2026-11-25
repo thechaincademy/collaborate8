@@ -321,7 +321,13 @@ const RETRY_SCHEMA = {
 // mode:send time budget. The app waits about 4s for a first answer, so the server
 // replies by about 3.3s with either a rewrite or a pending job. Vertex work then
 // continues in the background for up to about 30s from the start of the request.
-const SEND_HARD_STOP_MS = 3300;
+// Time the send request waits for the model before it answers "pending". Vertex takes 3-6 s for this call whatever
+// the prompt size (measured: 105 and 2200 input tokens, 11 and 150 output tokens, same latency), so the old 3.3 s cap
+// turned most sends into a job plus a poll cycle (about 1.5 s more). Answering inline up to this cap saves that cycle.
+// The client shows the busy countdown itself once it has waited 3.3 s, so the countdown still starts at the same moment.
+const SEND_HARD_STOP_MS = Math.max(3300, Number(Deno.env.get("CHAT_REWRITE_INLINE_MS") ?? "6500") || 6500);
+// 429 retries stay quick (150-300 ms) during this first window.
+const SEND_FAST_RETRY_MS = 3300;
 const SEND_BACKGROUND_MS = 30000;
 const SEND_RETRY_MIN_LEFT_MS = 700;
 const PENDING_ETA_SECONDS = 12;
@@ -332,10 +338,12 @@ const GATE_CACHE_MS = 30000;
 const SEND_MODEL = "vertex";
 // max_completion_tokens maps to maxOutputTokens; reasoning "none" maps to the minimal thinking level.
 const sendModel = (maxTokens: number) => ({ model: SEND_MODEL, max_completion_tokens: maxTokens, reasoning_effort: "none" });
-// Parallel first calls; the first that passes the checks wins, the rest are aborted.
-// Default 1 on Vertex: a new project's Gemini quota refuses concurrent calls with 429, so 2 doubled the failures.
-// Set CHAT_REWRITE_SEND_PARALLEL=2 once the Vertex quota is raised.
-const SEND_FIRST_CALLS = Math.min(3, Math.max(1, Number(Deno.env.get("CHAT_REWRITE_SEND_PARALLEL") ?? "1") || 1));
+// Parallel first calls; the first answer that passes the checks wins, the rest are aborted.
+// Vertex's answer time for this call varies from 3 s to 30 s (shared capacity), and one slow call no longer holds the
+// reply: measured over 16 pairs, two calls at once cut the 90th percentile from 18.8 s to 6.6 s and the median by about
+// 20%. The check is never skipped; the second call only races the first for the same answer. Set
+// CHAT_REWRITE_SEND_PARALLEL=1 to go back to one call.
+const SEND_FIRST_CALLS = Math.min(3, Math.max(1, Number(Deno.env.get("CHAT_REWRITE_SEND_PARALLEL") ?? "2") || 1));
 
 type SendFact = { fact?: unknown; actor?: unknown; action?: unknown; keep?: unknown };
 type SendCheck = { facts: SendFact[]; has_ask: boolean; states_decision: boolean; languages: string[] };
@@ -1210,7 +1218,7 @@ const abortableSleep = (ms: number, signal?: AbortSignal) => new Promise<void>((
   signal?.addEventListener("abort", onAbort, { once: true });
 });
 const retryWaitMs = (i: number, startedAt: number) => {
-  if (Date.now() - startedAt < SEND_HARD_STOP_MS) return 150 + Math.floor(Math.random() * 151);
+  if (Date.now() - startedAt < SEND_FAST_RETRY_MS) return 150 + Math.floor(Math.random() * 151);
   return Math.min(8000, 400 * Math.pow(2, Math.max(0, i - 2))) + Math.floor(Math.random() * 250);
 };
 const callGateway = async (_apiKey: string, body: Record<string, unknown>, signal?: AbortSignal, deadline?: number, startedAt: number = Date.now()) => {
@@ -1262,8 +1270,10 @@ Deno.serve(async (req) => {
       if (!job) return json({ status: "unknown", error: "not_found" }, 404);
       if (await failStaleJob(job)) return json({ status: "failed", job_id: job.id });
       if (job.status === "pending") {
+        const etaBefore = job.etaAt;
         const eta = remainingEta(job);
-        await persistJob(job, false);
+        // Write only when the ETA was extended; an unchanged pending poll needs no database write.
+        if (job.etaAt !== etaBefore) await persistJob(job, false);
         return json({ status: "pending", job_id: job.id, eta_seconds: eta });
       }
       if (job.status === "failed") return json({ status: "failed", job_id: job.id });
@@ -1373,16 +1383,16 @@ Deno.serve(async (req) => {
           if (removesNothing(draft, rewrite)) return { kind: "pass", reasons: ["near_identical"] };
           return { kind: "cand", raw, rewrite, checkInput, result: checkRewrite(draft, rewrite, checkInput) };
         };
-        // Parallel first calls: a rewrite that passes every check wins at once and the others are aborted.
-        // A "no change" result does not win at once: the other call may still bring a passing rewrite within the budget.
-        // If none brings one, "no change" is used, then the first failed rewrite (for the retry).
+        // Parallel first calls: a rewrite that passes every check, or a "no change" result, wins at once and the others are aborted.
+        // If neither comes, "no change" is used, then the first failed rewrite (for the retry).
         let wave = 0;
         while (!sendCtrl.signal.aborted && deadline - Date.now() >= SEND_RETRY_MIN_LEFT_MS) {
           wave += 1;
           const ctrls = Array.from({ length: SEND_FIRST_CALLS }, () => new AbortController());
           const onAbort = () => ctrls.forEach((c) => c.abort());
           sendCtrl.signal.addEventListener("abort", onAbort);
-          const isWin = (f: First) => f.kind === "cand" && !f.result.codes.length;
+          // A rewrite that passes every check, or a model "no rewrite needed", is the answer; parse failures and errors wait for the other call.
+          const isWin = (f: First) => (f.kind === "cand" && !f.result.codes.length) || f.kind === "pass";
           const all: First[] = [];
           const first: First = await new Promise<First>((resolve) => {
             let done = 0;

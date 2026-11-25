@@ -1,7 +1,9 @@
 /** Client contract for the Collabor8 calm check on Send (chat-rewrite, mode "send"). */
 
 export const CALM_CHECK_MAX_MS = 30_000;
-export const CALM_CHECK_POLL_MS = 1_000;
+export const CALM_CHECK_POLL_MS = 500;
+/** The server now answers inline for up to about 6.5 s; show the busy countdown once the first answer is this late. */
+export const CALM_CHECK_FIRST_ANSWER_MS = 3_300;
 export const CALM_CHECK_FIRST_ETA_SECONDS = 12;
 export const CALM_CHECK_EXTEND_ETA_SECONDS = 8;
 
@@ -149,6 +151,7 @@ export async function runCalmCheck(opts: {
   wait?: (ms: number, signal: AbortSignal) => Promise<void>;
   maxMs?: number;
   pollMs?: number;
+  firstAnswerMs?: number;
 }): Promise<CalmCheckOutcome> {
   const now = opts.now ?? Date.now;
   const wait = opts.wait ?? sleep;
@@ -159,7 +162,18 @@ export async function runCalmCheck(opts: {
 
   const aborted = (): CalmCheckOutcome | null => (opts.signal.aborted ? { kind: "aborted" } : null);
 
-  const invokeSend = () => opts.invoke({ mode: "send", draft: opts.draft });
+  // The first send call can take several seconds (the model is slow). Show the busy countdown once it is late,
+  // as the server's "pending" reply used to; a later pending reply keeps the same deadline.
+  const invokeSend = async () => {
+    const lateTimer = setTimeout(() => {
+      if (!opts.signal.aborted) opts.onWaiting(CALM_CHECK_FIRST_ETA_SECONDS);
+    }, opts.firstAnswerMs ?? CALM_CHECK_FIRST_ANSWER_MS);
+    try {
+      return await opts.invoke({ mode: "send", draft: opts.draft });
+    } finally {
+      clearTimeout(lateTimer);
+    }
+  };
   const invokeResult = (job_id: string) => opts.invoke({ mode: "result", job_id });
 
   const handleData = async (data: unknown, error: unknown): Promise<CalmCheckOutcome | "retry"> => {

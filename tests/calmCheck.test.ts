@@ -279,3 +279,58 @@ describe("constants", () => {
     expect(CALM_CHECK_EXTEND_ETA_SECONDS).toBe(8);
   });
 });
+
+describe("calm check first answer is slow", () => {
+  test("shows the busy countdown once the first send call is late, then returns the inline answer", async () => {
+    const waits: number[] = [];
+    const invoke: CalmCheckInvoke = async () => {
+      await new Promise((r) => setTimeout(r, 60));
+      return { data: { status: "done", needs_rewrite: true, rewrite }, error: null };
+    };
+    const out = await runCalmCheck({
+      invoke,
+      draft,
+      signal: new AbortController().signal,
+      onWaiting: (eta) => waits.push(eta),
+      firstAnswerMs: 20,
+    });
+    expect(out).toEqual({ kind: "suggestion", rewrite });
+    expect(waits).toEqual([12]);
+  });
+
+  test("no countdown when the first send call answers in time", async () => {
+    const waits: number[] = [];
+    const out = await runCalmCheck({
+      invoke: async () => ({ data: { status: "done", needs_rewrite: false, rewrite: null }, error: null }),
+      draft,
+      signal: new AbortController().signal,
+      onWaiting: (eta) => waits.push(eta),
+      firstAnswerMs: 20,
+    });
+    expect(out).toEqual({ kind: "pass" });
+    expect(waits).toEqual([]);
+  });
+
+  test("an aborted check shows no late countdown", async () => {
+    const waits: number[] = [];
+    const ac = new AbortController();
+    const out = runCalmCheck({
+      invoke: async () => {
+        await new Promise((r) => setTimeout(r, 60));
+        return { data: { status: "done", needs_rewrite: false, rewrite: null }, error: null };
+      },
+      draft,
+      signal: ac.signal,
+      onWaiting: (eta) => waits.push(eta),
+      firstAnswerMs: 30,
+    });
+    ac.abort();
+    expect((await out).kind).toBe("aborted");
+    expect(waits).toEqual([]);
+  });
+
+  test("polls twice a second", async () => {
+    const { CALM_CHECK_POLL_MS } = await import("../src/lib/calmCheck");
+    expect(CALM_CHECK_POLL_MS).toBe(500);
+  });
+});
