@@ -2,10 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import {
   BANK_PAYMENT_UNAVAILABLE_REPLY,
+  START_DATE_WINDOW,
   checkoutPaymentMethodTypes,
   checkoutReturnUrls,
   coparentReadyReply,
+  delayedStartSubscriptionData,
   isBankPaymentUnavailableError,
+  maintenanceStartSchedule,
+  nextNaturalBillingDate,
   normalizePaymentChoice,
   onboardingReturnUrls,
 } from "../supabase/functions/_shared/maintenance-checkout-rules";
@@ -73,6 +77,50 @@ describe("receiver payout setup returns to Manage payments", () => {
   });
 });
 
+
+describe("child maintenance start date is never a trial", () => {
+  const now = new Date("2026-11-25T23:40:00.000Z"); // London is on UTC in November
+
+  test("no start date, or a start date of today, bills at once", () => {
+    expect(maintenanceStartSchedule(now, undefined, "month")).toEqual({ kind: "immediate" });
+    expect(maintenanceStartSchedule(now, "2026-11-25T00:00:00.000Z", "month")).toEqual({ kind: "immediate" });
+    expect(maintenanceStartSchedule(now, "2026-11-25T23:59:59.000Z", "month")).toEqual({ kind: "immediate" });
+  });
+
+  test("a date in the first payment period becomes a billing cycle anchor, not a trial_end", () => {
+    const start = "2026-12-02T00:00:00.000Z";
+    const got = maintenanceStartSchedule(now, start, "month");
+    expect(got).toEqual({ kind: "delayed", billing_cycle_anchor: Math.floor(Date.parse(start) / 1000) });
+    expect(JSON.stringify(got)).not.toContain("trial");
+  });
+
+  test("weekly also allows a start at the next natural billing date (7 days)", () => {
+    const start = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const got = maintenanceStartSchedule(now, start, "week");
+    expect(got.kind).toBe("delayed");
+    if (got.kind === "delayed") expect(got.billing_cycle_anchor).toBe(Math.floor(Date.parse(start) / 1000));
+  });
+
+  test("too soon (under 48 hours) or after the first payment period is rejected, with no two-year trial window", () => {
+    expect(maintenanceStartSchedule(now, "2026-11-27T00:00:00.000Z", "month")).toEqual({ kind: "error", error: START_DATE_WINDOW });
+    // 40 days is after the next monthly billing date of 25 Dec 23:40
+    expect(maintenanceStartSchedule(now, "2027-01-04T00:00:00.000Z", "month")).toEqual({ kind: "error", error: START_DATE_WINDOW });
+    expect(maintenanceStartSchedule(now, "2026-12-04T00:00:00.000Z", "week")).toEqual({ kind: "error", error: START_DATE_WINDOW });
+    expect(START_DATE_WINDOW).not.toMatch(/two years|trial|free|—|–|police|victim/i);
+  });
+
+  test("exactly the next natural billing date is still accepted", () => {
+    const edge = nextNaturalBillingDate(now, "month");
+    expect(edge.toISOString()).toBe("2026-12-25T23:40:00.000Z");
+    expect(maintenanceStartSchedule(now, edge, "month")).toEqual({ kind: "delayed", billing_cycle_anchor: Math.floor(edge.getTime() / 1000) });
+    expect(maintenanceStartSchedule(now, new Date(edge.getTime() + 1000), "month").kind).toBe("error");
+  });
+
+  test("an unreadable date is rejected", () => {
+    expect(maintenanceStartSchedule(now, "not-a-date", "month")).toEqual({ kind: "error", error: "Invalid start date" });
+  });
+});
+
 describe("function wiring", () => {
   test("stripe-subscriptions passes the choice to Checkout and keeps destination transfers", () => {
     const src = read("supabase/functions/stripe-subscriptions/index.ts");
@@ -82,10 +130,31 @@ describe("function wiring", () => {
     expect(src).not.toContain('payment_method_types: ["card"],\n        line_items');
   });
 
-  test("a future start date is sent as trial_end only: Stripe rejects proration_behavior without a billing cycle anchor", () => {
+  test("a later start date delays the first charge with billing_cycle_anchor and proration_behavior none, never a trial", () => {
     const src = read("supabase/functions/stripe-subscriptions/index.ts");
-    expect(src).toContain("...(trialEnd ? { trial_end: trialEnd } : {})");
-    expect(src).not.toMatch(/proration_behavior\s*:/);
+    expect(src).toContain("delayedStartSubscriptionData(startSchedule.billing_cycle_anchor)");
+    expect(src).toContain("maintenanceStartSchedule(new Date(), startDate, normalizedInterval)");
+    expect(src).not.toContain("trial_end");
+    expect(src).not.toContain("trial_period_days");
+    const fields = delayedStartSubscriptionData(1_798_000_000);
+    expect(fields).toEqual({ billing_cycle_anchor: 1_798_000_000, proration_behavior: "none" });
+    expect(fields).not.toHaveProperty("trial_end");
+  });
+
+  test("Premium checkout is unchanged and can keep its own trial", () => {
+    const src = read("supabase/functions/conversation-tool-access/index.ts");
+    expect(src).toContain('collabor8_type: "conversation_tool"');
+    expect(src).toContain("subscription_data: { metadata }");
+    // This function does not set a maintenance start date or a trial itself.
+    expect(src).not.toContain("billing_cycle_anchor");
+    expect(src).not.toContain("maintenanceStartSchedule");
+  });
+
+  test("webhook and status still treat a trialing subscription as confirmed, and also accept active", () => {
+    const hooks = read("supabase/functions/stripe-webhooks/index.ts");
+    const subs = read("supabase/functions/stripe-subscriptions/index.ts");
+    expect(hooks).toContain('["active", "trialing"].includes(subscription.status)');
+    expect(subs).toContain('["active", "trialing"].includes(subscription.status)');
   });
 
   test("stripe-connect adds coparent-status and the web return addresses, reply contract untouched", () => {

@@ -14,7 +14,9 @@ import {
   BANK_PAYMENT_UNAVAILABLE_REPLY,
   checkoutPaymentMethodTypes,
   checkoutReturnUrls,
+  delayedStartSubscriptionData,
   isBankPaymentUnavailableError,
+  maintenanceStartSchedule,
   normalizePaymentChoice,
 } from "../_shared/maintenance-checkout-rules.ts";
 
@@ -134,21 +136,11 @@ serve(async (req) => {
 
       // Optional scheduling is scoped to the new payer setup. Existing callers
       // retain immediate billing and their existing return destinations.
-      let trialEnd: number | undefined;
-      if (startDate !== undefined) {
-        const requested = new Date(startDate);
-        if (!Number.isFinite(requested.getTime())) {
-          return new Response(JSON.stringify({ error: "Invalid start date" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        const londonDate = (date: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
-        const now = new Date();
-        if (londonDate(requested) !== londonDate(now)) {
-          trialEnd = Math.floor(requested.getTime() / 1000);
-          const delay = trialEnd - Math.floor(now.getTime() / 1000);
-          if (delay < 48 * 60 * 60 || delay > 730 * 24 * 60 * 60) {
-            return new Response(JSON.stringify({ error: "Choose today or a start date at least three days from today and within two years." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          }
-        }
+      // A later start is a billing cycle anchor, never a trial: Checkout must not
+      // say "X days free" on child maintenance (Premium keeps its own trial).
+      const startSchedule = maintenanceStartSchedule(new Date(), startDate, normalizedInterval);
+      if (startSchedule.kind === "error") {
+        return new Response(JSON.stringify({ error: startSchedule.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       if (returnToMaintenance) {
@@ -244,9 +236,9 @@ serve(async (req) => {
           payment_method_types: checkoutPaymentMethodTypes(paymentChoice),
           line_items: [{ price: priceId, quantity: 1 }],
           subscription_data: {
-            // A future start date is a trial that ends on that date: nothing is charged until then.
-            // Stripe rejects proration_behavior here unless a billing cycle anchor is set, so it is not sent.
-            ...(trialEnd ? { trial_end: trialEnd } : {}),
+            // Delay the first charge to the start date. Stripe Checkout then shows
+            // "Then £X starting on <date>", not "X days free".
+            ...(startSchedule.kind === "delayed" ? delayedStartSubscriptionData(startSchedule.billing_cycle_anchor) : {}),
             transfer_data: {
               destination: connectedAccount.provider_account_id,
             },

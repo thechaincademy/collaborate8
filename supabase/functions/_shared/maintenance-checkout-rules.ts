@@ -64,3 +64,66 @@ export function coparentReadyReply(linked: boolean, row: { onboarding_status?: s
   if (!linked) return { linked: false, ready: false };
   return { linked: true, ready: !!row && (!!row.charges_enabled || row.onboarding_status === "complete") };
 }
+
+
+export type BillingInterval = "day" | "week" | "month" | "year";
+
+export const START_DATE_INVALID = "Invalid start date";
+export const START_DATE_WINDOW = "Choose today or a start date at least three days from today, and no later than your first payment period (one week for weekly payments, one month for monthly).";
+
+export type MaintenanceStartSchedule =
+  | { kind: "immediate" }
+  | { kind: "delayed"; billing_cycle_anchor: number }
+  | { kind: "error"; error: string };
+
+const londonDate = (date: Date) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+
+/**
+ * Latest moment Stripe Checkout will accept as billing_cycle_anchor: the next natural
+ * billing date (one interval from now). Later than that is rejected with
+ * "cannot be later than next natural billing date".
+ */
+export function nextNaturalBillingDate(now: Date, interval: BillingInterval): Date {
+  const d = new Date(now.getTime());
+  switch (interval) {
+    case "day":
+      d.setUTCDate(d.getUTCDate() + 1);
+      break;
+    case "week":
+      d.setUTCDate(d.getUTCDate() + 7);
+      break;
+    case "month":
+      d.setUTCMonth(d.getUTCMonth() + 1);
+      break;
+    case "year":
+      d.setUTCFullYear(d.getUTCFullYear() + 1);
+      break;
+  }
+  return d;
+}
+
+/**
+ * How to start a child maintenance subscription. Today (London) or a missing start date
+ * bills at once. A later date delays the first charge with billing_cycle_anchor and
+ * proration_behavior none, never a trial, so Stripe Checkout shows the first payment
+ * date instead of "X days free". Premium checkout is unchanged and can keep its own trial.
+ */
+export function maintenanceStartSchedule(now: Date, startDate: unknown, interval: BillingInterval): MaintenanceStartSchedule {
+  if (startDate === undefined) return { kind: "immediate" };
+  const requested = new Date(startDate as string | number | Date);
+  if (!Number.isFinite(requested.getTime())) return { kind: "error", error: START_DATE_INVALID };
+  if (londonDate(requested) === londonDate(now)) return { kind: "immediate" };
+  const billing_cycle_anchor = Math.floor(requested.getTime() / 1000);
+  const delay = billing_cycle_anchor - Math.floor(now.getTime() / 1000);
+  const latest = Math.floor(nextNaturalBillingDate(now, interval).getTime() / 1000);
+  if (delay < 48 * 60 * 60 || billing_cycle_anchor > latest) {
+    return { kind: "error", error: START_DATE_WINDOW };
+  }
+  return { kind: "delayed", billing_cycle_anchor };
+}
+
+/** Fields for subscription_data when the first charge is delayed. Never includes trial_end. */
+export function delayedStartSubscriptionData(anchor: number) {
+  return { billing_cycle_anchor: anchor, proration_behavior: "none" as const };
+}
