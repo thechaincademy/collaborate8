@@ -31,13 +31,13 @@ export const useStripeConnect = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  /** Start Stripe Connect onboarding for receiver */
+  /** Start Stripe Connect onboarding for receiver. Stripe sends them back to Manage payments. */
   const startOnboarding = async () => {
     if (!user) return null;
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-connect", {
-        body: { action: "create-account" },
+        body: { action: "create-account", returnTo: "manage-payments" },
       });
       if (error || data?.error || !data?.url) throw new Error("payout_setup_failed");
       return data as { url: string; accountId: string };
@@ -65,7 +65,24 @@ export const useStripeConnect = () => {
     }
   };
 
-  return { loading, startOnboarding, checkAccountStatus };
+  /**
+   * Can the linked co-parent be paid yet? { linked, ready }, or null when the function is older than this
+   * screen or the call fails. null means unknown, so the payer is never blocked by a missing answer.
+   */
+  const checkCoparentReady = async (): Promise<{ linked: boolean; ready: boolean } | null> => {
+    if (!user) return null;
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-connect", {
+        body: { action: "coparent-status" },
+      });
+      if (error || typeof data?.ready !== "boolean" || typeof data?.linked !== "boolean") return null;
+      return { linked: data.linked, ready: data.ready };
+    } catch {
+      return null;
+    }
+  };
+
+  return { loading, startOnboarding, checkAccountStatus, checkCoparentReady };
 };
 
 export const useStripePayments = () => {
@@ -73,6 +90,8 @@ export const useStripePayments = () => {
   const [loading, setLoading] = useState(false);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [cards, setCards] = useState<CardInfo[]>([]);
+  /** Error code from the last failed checkout start, for example BANK_PAYMENTS_UNAVAILABLE. */
+  const [checkoutErrorCode, setCheckoutErrorCode] = useState<string | null>(null);
 
   /** Redirect to Stripe Checkout to add a card */
   const setupCard = async (returnToMaintenance = false) => {
@@ -122,9 +141,14 @@ export const useStripePayments = () => {
     receiverId: string;
     startDate?: string;
     returnToMaintenance?: boolean;
+    /** card (default) or bank (Direct Debit). Older functions ignore it and use card. */
+    paymentMethod?: "card" | "bank";
+    /** "manage-payments" sends a cancelled Checkout back to Manage payments. */
+    returnTo?: "manage-payments";
   }) => {
     if (!user) return null;
     setLoading(true);
+    setCheckoutErrorCode(null);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-subscriptions", {
         body: {
@@ -135,10 +159,13 @@ export const useStripePayments = () => {
       if (error) {
         const ctx: any = (error as any).context;
         let serverMsg: string | undefined;
+        let serverCode: string | undefined;
         try {
-          if (ctx?.json) serverMsg = (await ctx.json())?.error;
-          else if (ctx?.text) serverMsg = JSON.parse(await ctx.text())?.error;
+          const body = ctx?.json ? await ctx.json() : ctx?.text ? JSON.parse(await ctx.text()) : null;
+          serverMsg = body?.error;
+          serverCode = body?.code;
         } catch {}
+        setCheckoutErrorCode(serverCode ?? null);
         throw new Error(serverMsg || error.message || "Failed to start checkout");
       }
       if (data?.error) throw new Error(data.error);
@@ -248,6 +275,7 @@ export const useStripePayments = () => {
     loading,
     cardsLoading,
     cards,
+    checkoutErrorCode,
     setupCard,
     fetchCards,
     createSubscription,

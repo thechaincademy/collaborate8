@@ -23,13 +23,14 @@ describe("arrangement form clears the bottom tab bar", () => {
     expect(tab).toContain('data-testid="maintenance-tab" className="px-6 pt-12 pb-[calc(6rem+env(safe-area-inset-bottom))]"');
   });
 
-  it("start date, Continue and Confirm arrangement keep a scroll margin above the tab bar", () => {
+  it("start date, both Continue buttons and Continue to Stripe keep a scroll margin above the tab bar", () => {
     const form = read("src/components/dashboard/PayingParentSetup.tsx");
     const line = (needle: string) => form.split("\n").find((l) => l.includes(needle)) ?? "";
     expect(line('id="setup-start-date"')).toContain(MARGIN);
     expect(line("onClick={saveDetails}")).toContain(MARGIN);
+    expect(line("onClick={saveMethod}")).toContain(MARGIN);
     const confirm = line('data-testid="confirm-arrangement"');
-    expect(confirm).toContain("Confirm arrangement");
+    expect(confirm).toContain("Continue to Stripe");
     expect(confirm).toContain(MARGIN);
     expect(form).toContain('aria-label="Payment setup" className="pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))]"');
   });

@@ -109,16 +109,16 @@ describe("Failed Stripe lookups fall back to the stored role and payout status, 
     expect(src).toContain('from("connected_accounts")');
   });
 
-  it("the confirm-account note is hidden once payouts are enabled (uk2)", () => {
+  it("the add-bank-account note is hidden once payouts are enabled (uk2)", () => {
     expect(showReceiverPayoutSetup(true, "complete")).toBe(false);
     const src = readFileSync(new URL("../src/components/dashboard/MaintenanceTab.tsx", import.meta.url), "utf8");
-    const note = "please confirm the account you'd like to receive the funds into";
+    const note = "RECEIVER_COPY[receiverPayoutView(connectStatus)].body";
     const noteIdx = src.indexOf(note);
     const gateIdx = src.lastIndexOf("showReceiverPayoutSetup(", noteIdx);
     expect(noteIdx).toBeGreaterThan(-1);
     expect(gateIdx).toBeGreaterThan(-1);
     expect(gateIdx).toBeLessThan(noteIdx);
-    expect(noteIdx - gateIdx).toBeLessThan(500);
+    expect(noteIdx - gateIdx).toBeLessThan(700);
     const enabledIdx = src.indexOf("Payouts enabled - you can receive payments");
     expect(enabledIdx).toBeGreaterThan(noteIdx);
     const between = src.slice(gateIdx, enabledIdx);

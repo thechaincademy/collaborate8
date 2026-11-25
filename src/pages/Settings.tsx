@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, PoundSterling, Sparkles } from "lucide-react";
+import { ArrowLeft, Bell, HelpCircle, FileText, Shield, ChevronRight, Download, Loader2, Lock, Users, Trash2, Sparkles } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -32,7 +32,6 @@ const Settings = () => {
   const [exporting, setExporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
   const { hasAccess: premiumAccess, access: premiumInfo } = useConversationToolAccess();
   const safety = useSafeguarding();
   const isSubscription = premiumAccess && premiumInfo?.source === "subscription" && !!premiumInfo?.stripe_customer_id;
@@ -46,15 +45,6 @@ const Settings = () => {
   useEffect(() => {
     if (window.location.hash) document.querySelector(window.location.hash)?.scrollIntoView();
   }, []);
-
-  const openPortal = async () => {
-    setPortalLoading(true);
-    const { data, error } = await supabase.functions.invoke("stripe-subscriptions", { body: { action: "customer-portal" } });
-    setPortalLoading(false);
-    if (error || !data?.url) return toast.error("Could not open Stripe - please try again");
-    window.location.href = data.url;
-  };
-
 
   const exportData = async () => {
     if (!user) return;
@@ -167,12 +157,6 @@ const Settings = () => {
             <span className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Collabor8 Premium</span></span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
-          )}
-          {!inApp && (
-            <button onClick={openPortal} disabled={portalLoading} className="flex w-full items-center justify-between border-b border-border p-4 text-left hover:bg-muted/50">
-              <span className="flex items-center gap-3"><PoundSterling className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Stop a recurring payment</span></span>
-              {portalLoading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-            </button>
           )}
           <button onClick={() => setConfirmDelete(true)} className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50">
             <span className="flex items-center gap-3"><Trash2 className="h-5 w-5 text-destructive" /><span className="text-destructive">Delete my account</span></span>

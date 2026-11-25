@@ -10,6 +10,8 @@ import DashboardHeader from "./DashboardHeader";
 import PayingParentSetup from "./PayingParentSetup";
 import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { RECEIVER_COPY, payerBlockMessage, receiverPayoutView, stripeHeadsUp, type CoparentReady } from "@/lib/managePayments";
 import { usePayments } from "@/hooks/usePayments";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
 import { format } from "date-fns";
@@ -27,8 +29,10 @@ const MaintenanceTab = () => {
   const { getActivePayment, loading, refetch } = useRecurringPayments();
   const { isViewing, isManaging, profile, loading: profileLoading, updateProfile } = useProfile();
   const { payments: paymentHistory, fetchPayments } = usePayments();
-  const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
-  const { checkAccountStatus, startOnboarding } = useStripeConnect();
+  const { cards, cardsLoading, fetchCards } = useStripePayments();
+  const { user } = useAuth();
+  const { checkAccountStatus, startOnboarding, checkCoparentReady } = useStripeConnect();
+  const [coparentReady, setCoparentReady] = useState<CoparentReady>(null);
   const [connectStatus, setConnectStatus] = useState<string>("loading");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
   const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(true);
@@ -86,6 +90,8 @@ const MaintenanceTab = () => {
       setConnectStatus("not_created");
     });
 
+    if (profile?.coparent_id && profile.role === "managing") void checkCoparentReady().then(setCoparentReady);
+
     if (!profile?.coparent_id) {
       setCoparentArrangement(null);
       setCoparentArrangementLoading(false);
@@ -119,11 +125,6 @@ const MaintenanceTab = () => {
   const isStripe = displayArrangement?.provider === "stripe";
   const subscriptionStatus = isStripe ? "active" : displayArrangement?.is_active ? "active" : "inactive";
   const isContentLoading = loading || profileLoading || cardsLoading || coparentArrangementLoading || connectStatus === "loading";
-
-  const handleSetupCard = async () => {
-    const result = await setupCard(true);
-    if (result?.url) window.location.href = result.url;
-  };
 
   const handleConnectOnboarding = async () => {
     const result = await startOnboarding();
@@ -329,12 +330,11 @@ const MaintenanceTab = () => {
         >
           {showPayingParentSetup(!!isManaging, hasActiveArrangement) && profile && (
             <PayingParentSetup
-              connected={cards.length > 0}
               userId={profile.id}
               receiverId={profile.coparent_id}
               arrangement={activePayment}
-              onConnect={handleSetupCard}
-              connecting={stripeLoading}
+              email={user?.email ?? null}
+              blockedMessage={payerBlockMessage(!!profile.coparent_id, coparentReady)}
             />
           )}
 
@@ -346,18 +346,20 @@ const MaintenanceTab = () => {
             </div>
           )}
 
-          {/* VIEWING (receiver): confirm-account note only while setup is still actionable. */}
+          {/* VIEWING (receiver): add the bank account, only while setup is still actionable. */}
           {showReceiverPayoutSetup(!!isViewing, connectStatus) && (
             <div className="rounded-2xl border border-border bg-card p-4">
               <div className="mb-3 flex items-start gap-3">
                 <Info className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Only the paying parent can set this up. When it's been completed, you'll receive a notification. In the meantime, please confirm the account you'd like to receive the funds into.
-                </p>
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">{RECEIVER_COPY[receiverPayoutView(connectStatus)].title}</p>
+                  <p className="mt-1">{RECEIVER_COPY[receiverPayoutView(connectStatus)].body}</p>
+                  <p className="mt-2 text-xs">{stripeHeadsUp(user?.email)}</p>
+                </div>
               </div>
               <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
                 <CreditCard className="h-5 w-5" />
-                Confirm receiving account
+                {RECEIVER_COPY[receiverPayoutView(connectStatus)].button}
               </Button>
             </div>
           )}
@@ -392,12 +394,18 @@ const MaintenanceTab = () => {
               <Button
                 className="h-auto min-h-11 flex-col gap-2 py-4"
                 variant="outline"
-                onClick={() => navigate("/edit-payment")}
+                onClick={() => navigate("/manage-payments")}
               >
-                <span className="font-medium">Manage Arrangement</span>
+                <span className="font-medium">Manage payments</span>
               </Button>
             </div>
           ) : null}
+
+          {isViewing && !safety.paused && (
+            <Button className="min-h-11 w-full" variant="outline" onClick={() => navigate("/manage-payments")}>
+              Manage payments
+            </Button>
+          )}
 
         </motion.div>
       )}

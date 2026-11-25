@@ -50,6 +50,7 @@ import PostSignupOnboarding from "./pages/PostSignupOnboarding";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import ManagePayments from "./pages/ManagePayments";
 import NotificationSettings from "./pages/NotificationSettings";
 
 import EditRecurringPayment from "./pages/EditRecurringPayment";
@@ -71,7 +72,6 @@ import FinancialCoparentingTips from "./pages/FinancialCoparentingTips";
 import SignUpInvited from "./pages/SignUpInvited";
 import PaymentHistory from "./pages/PaymentHistory";
 import Statement from "./pages/Statement";
-import CoparentBankAccount from "./pages/CoparentBankAccount";
 import LetsChatTool from "./pages/LetsChatTool";
 import SolanaProvider from "@/components/solana/SolanaProvider";
 import SolanaPaymentAudit from "./pages/SolanaPaymentAudit";
@@ -150,7 +150,9 @@ const App = () => (
 
               <Route path="/edit-payment" element={<ProtectedRoute><EditRecurringPayment /></ProtectedRoute>} />
               <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
-              <Route path="/coparent-bank-account" element={<ProtectedRoute><CoparentBankAccount /></ProtectedRoute>} />
+              <Route path="/manage-payments" element={<ProtectedRoute><ManagePayments /></ProtectedRoute>} />
+              {/* Old payout page, kept so saved links and the mobile apps still land somewhere useful. */}
+              <Route path="/coparent-bank-account" element={<Navigate to="/manage-payments" replace />} />
               <Route path="/statement/:type" element={<ProtectedRoute><Statement /></ProtectedRoute>} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />

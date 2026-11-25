@@ -112,8 +112,8 @@ const CoparentLinkSettings = () => {
           <p className="mt-2 text-xs text-muted-foreground">This is the email address your co-parent invitation is sent to.</p>
         </div>
       )}
-      <button onClick={() => navigate("/coparent-bank-account")} className={row.replace("border-b border-border ", "")}>
-        <span className="flex items-center gap-3"><Landmark className="h-5 w-5 text-muted-foreground" /><span className="text-foreground">Payout details with Stripe</span></span>
+      <button onClick={() => navigate("/manage-payments")} className={row.replace("border-b border-border ", "")}>
+        <span className="flex items-center gap-3"><Landmark className="h-5 w-5 text-muted-foreground" /><span className="min-w-0 text-left"><span className="block text-foreground">Manage payments</span><span className="block text-xs text-muted-foreground">Amount, how you pay or get paid</span></span></span>
         <ChevronRight className="h-4 w-4 text-muted-foreground" />
       </button>
     </>
