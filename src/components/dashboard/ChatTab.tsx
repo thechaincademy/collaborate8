@@ -29,7 +29,7 @@ import ConversationQuestionnaire from "./ConversationQuestionnaire";
 import DocumentsTab from "./DocumentsTab";
 import { PremiumPaywall, usePremiumGate } from "./PremiumGate";
 import { mergeChatMessages, pendingMessageDelivery } from "@/lib/chatMessages";
-import { CALM_CHECK_GAVE_UP_COPY, calmCheckBusyCopy, runCalmCheck } from "@/lib/calmCheck";
+import { CALM_CHECK_GAVE_UP_COPY, calmCheckBusyCopy, displayBusyCountdown, runCalmCheck, startOrKeepBusyDeadline, type CalmBusyDeadline, type CalmBusyDisplay } from "@/lib/calmCheck";
 import { applyFamilyBroadcast, familyMessageTopic, isMissingMessageFeed, type FamilyBroadcast } from "@/lib/familyMessageChannel";
 import { hideSenderReadAt } from "@/lib/safeguarding/logic";
 import { downloadRecord } from "@/lib/safeguarding/downloadRecord";
@@ -127,8 +127,8 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   const [draft, setDraft] = useState("");
   const [intercept, setIntercept] = useState<{ draft: string; suggestion: string } | null>(null);
   const [rewriting, setRewriting] = useState(false);
-  const [calmEta, setCalmEta] = useState<number | null>(null);
-  const [calmEtaLeft, setCalmEtaLeft] = useState(0);
+  const [calmDeadline, setCalmDeadline] = useState<CalmBusyDeadline>(null);
+  const [calmDisplay, setCalmDisplay] = useState<CalmBusyDisplay | null>(null);
   const calmAbortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const interceptHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -612,16 +612,15 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
   };
 
   useEffect(() => {
-    if (calmEta === null) {
-      setCalmEtaLeft(0);
+    if (calmDeadline === null) {
+      setCalmDisplay(null);
       return;
     }
-    setCalmEtaLeft(calmEta);
-    const t = window.setInterval(() => {
-      setCalmEtaLeft((n) => (n <= 1 ? 1 : n - 1));
-    }, 1000);
+    const tick = () => setCalmDisplay(displayBusyCountdown(calmDeadline, Date.now()));
+    tick();
+    const t = window.setInterval(tick, 250);
     return () => window.clearInterval(t);
-  }, [calmEta]);
+  }, [calmDeadline]);
 
   useEffect(() => () => {
     calmAbortRef.current?.abort();
@@ -634,7 +633,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
     if (calmAbortRef.current) {
       calmAbortRef.current.abort();
       calmAbortRef.current = null;
-      setCalmEta(null);
+      setCalmDeadline(null);
       setRewriting(false);
       await insertMessage(text);
       return;
@@ -651,10 +650,10 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
         invoke: (body) => supabase.functions.invoke("chat-rewrite", { body }),
         draft: text,
         signal: ac.signal,
-        onWaiting: (eta) => setCalmEta(eta),
+        onWaiting: (eta) => setCalmDeadline((prev) => startOrKeepBusyDeadline(prev, eta, Date.now())),
       });
       if (ac.signal.aborted || calmAbortRef.current !== ac) return;
-      setCalmEta(null);
+      setCalmDeadline(null);
       if (result.kind === "suggestion") {
         if (draft.trim() === text) setIntercept({ draft: text, suggestion: result.rewrite });
         return;
@@ -676,7 +675,7 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       if (calmAbortRef.current === ac) {
         calmAbortRef.current = null;
         setRewriting(false);
-        setCalmEta(null);
+        setCalmDeadline(null);
       }
     }
   };
@@ -1092,9 +1091,9 @@ const ChatTab = ({ initialSection = "chat" }: { initialSection?: "chat" | "docum
       </div>
 
       {safety.enabled && safety.paused ? <SafetyToolsBanner safety={safety} /> : <>
-      {calmEta !== null ? (
+      {calmDisplay ? (
         <p className="pb-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-          {calmCheckBusyCopy(calmEtaLeft)} You can still send your original message.
+          {calmCheckBusyCopy(calmDisplay)} You can still send your original message.
         </p>
       ) : null}
       <div className={cn("flex shrink-0 items-end gap-2", compact ? "pb-3" : "pb-4")}>

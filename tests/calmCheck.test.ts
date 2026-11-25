@@ -3,8 +3,11 @@ import {
   CALM_CHECK_GAVE_UP_COPY,
   CALM_CHECK_EXTEND_ETA_SECONDS,
   calmCheckBusyCopy,
+  displayBusyCountdown,
   isPremiumRequiredResponse,
   runCalmCheck,
+  startOrKeepBusyDeadline,
+  type CalmBusyDeadline,
   type CalmCheckInvoke,
 } from "../src/lib/calmCheck";
 
@@ -25,11 +28,80 @@ describe("calm check copy", () => {
     expect(s).toBe("Our servers are busy. Your suggestion will be ready in about 12 seconds.");
     busyCopyHasNoForbidden(s);
     busyCopyHasNoForbidden(calmCheckBusyCopy(1));
+    busyCopyHasNoForbidden(calmCheckBusyCopy({ kind: "few" }));
+  });
+
+  test("uses singular second when one second remains", () => {
+    expect(calmCheckBusyCopy(1)).toBe(
+      "Our servers are busy. Your suggestion will be ready in about 1 second.",
+    );
+    expect(calmCheckBusyCopy({ kind: "seconds", seconds: 1 })).toBe(
+      "Our servers are busy. Your suggestion will be ready in about 1 second.",
+    );
+  });
+
+  test("uses a few seconds after the countdown runs out", () => {
+    expect(calmCheckBusyCopy(0)).toBe(
+      "Our servers are busy. Your suggestion will be ready in a few seconds.",
+    );
+    expect(calmCheckBusyCopy({ kind: "few" })).toBe(
+      "Our servers are busy. Your suggestion will be ready in a few seconds.",
+    );
   });
 
   test("gave-up copy has no em dash and no forbidden words", () => {
     expect(CALM_CHECK_GAVE_UP_COPY).toContain("send your message as written");
     busyCopyHasNoForbidden(CALM_CHECK_GAVE_UP_COPY);
+  });
+});
+
+describe("busy countdown is smooth and monotonic", () => {
+  test("first suggested ETA starts a deadline and later ones never raise it", () => {
+    const start = startOrKeepBusyDeadline(null, 12, 0);
+    expect(start).toBe(12_000);
+    expect(startOrKeepBusyDeadline(start, 12, 1_000)).toBe(12_000);
+    expect(startOrKeepBusyDeadline(start, 20, 1_000)).toBe(12_000);
+    expect(startOrKeepBusyDeadline(start, 10, 5_000)).toBe(12_000);
+  });
+
+  test("display counts down each second then stays on a few seconds", () => {
+    const deadline = startOrKeepBusyDeadline(null, 12, 0);
+    expect(displayBusyCountdown(deadline, 0)).toEqual({ kind: "seconds", seconds: 12 });
+    expect(displayBusyCountdown(deadline, 1_000)).toEqual({ kind: "seconds", seconds: 11 });
+    expect(displayBusyCountdown(deadline, 11_000)).toEqual({ kind: "seconds", seconds: 1 });
+    expect(displayBusyCountdown(deadline, 12_000)).toEqual({ kind: "few" });
+    expect(displayBusyCountdown(deadline, 19_000)).toEqual({ kind: "few" });
+    expect(displayBusyCountdown("few", 19_000)).toEqual({ kind: "few" });
+    expect(displayBusyCountdown(null, 0)).toBeNull();
+  });
+
+  test("failed retries that suggest a fresh ETA do not jump the copy back up", () => {
+    let deadline: CalmBusyDeadline = null;
+    const shown: string[] = [];
+    // Matches the test-site bug: failed replies call onWaiting about once a
+    // second with min(12, remaining budget). The first ETA is 12s, then at
+    // about 19s the leftover budget is 11 and used to reset the display to 10.
+    for (let t = 0; t <= 20_000; t += 1_000) {
+      const suggested = Math.min(12, Math.max(1, Math.ceil((30_000 - t) / 1_000)));
+      deadline = startOrKeepBusyDeadline(deadline, suggested, t);
+      const display = displayBusyCountdown(deadline, t);
+      expect(display).not.toBeNull();
+      shown.push(calmCheckBusyCopy(display!));
+    }
+    expect(shown[0]).toBe("Our servers are busy. Your suggestion will be ready in about 12 seconds.");
+    expect(shown[11]).toBe("Our servers are busy. Your suggestion will be ready in about 1 second.");
+    expect(shown[12]).toBe("Our servers are busy. Your suggestion will be ready in a few seconds.");
+    expect(shown[19]).toBe("Our servers are busy. Your suggestion will be ready in a few seconds.");
+    const numbers: number[] = [];
+    for (const line of shown) {
+      const m = line.match(/about (\d+) seconds?/);
+      if (m) numbers.push(Number(m[1]));
+    }
+    for (let i = 1; i < numbers.length; i++) {
+      expect(numbers[i]).toBeLessThanOrEqual(numbers[i - 1]);
+    }
+    expect(numbers.at(-1)).toBe(1);
+    expect(shown.filter((s) => s.includes("about 10 seconds")).length).toBe(1);
   });
 });
 

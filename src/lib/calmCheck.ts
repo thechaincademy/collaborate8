@@ -5,8 +5,53 @@ export const CALM_CHECK_POLL_MS = 1_000;
 export const CALM_CHECK_FIRST_ETA_SECONDS = 12;
 export const CALM_CHECK_EXTEND_ETA_SECONDS = 8;
 
-export const calmCheckBusyCopy = (seconds: number) =>
-  `Our servers are busy. Your suggestion will be ready in about ${Math.max(1, Math.ceil(seconds))} seconds.`;
+export type CalmBusyDisplay = { kind: "seconds"; seconds: number } | { kind: "few" };
+
+/** Deadline ms, "few" once the first ETA has run out, or null when not waiting. */
+export type CalmBusyDeadline = number | "few" | null;
+
+export const calmCheckBusyCopy = (display: number | CalmBusyDisplay) => {
+  const state: CalmBusyDisplay =
+    typeof display === "number"
+      ? display <= 0
+        ? { kind: "few" }
+        : { kind: "seconds", seconds: Math.max(1, Math.ceil(display)) }
+      : display;
+  if (state.kind === "few") {
+    return "Our servers are busy. Your suggestion will be ready in a few seconds.";
+  }
+  const n = Math.max(1, Math.ceil(state.seconds));
+  const unit = n === 1 ? "second" : "seconds";
+  return `Our servers are busy. Your suggestion will be ready in about ${n} ${unit}.`;
+};
+
+/**
+ * Keep a single countdown deadline. A later suggested ETA never moves the
+ * deadline later, so the number never jumps back up. After it expires, stay
+ * on "a few seconds" until the check ends.
+ */
+export function startOrKeepBusyDeadline(
+  current: CalmBusyDeadline,
+  suggestedEtaSeconds: number,
+  nowMs: number,
+): Exclude<CalmBusyDeadline, null> {
+  if (current === "few") return "few";
+  if (typeof current === "number") {
+    if (current <= nowMs) return "few";
+    return current;
+  }
+  const eta = Math.ceil(suggestedEtaSeconds);
+  if (eta <= 0) return "few";
+  return nowMs + eta * 1000;
+}
+
+export function displayBusyCountdown(deadline: CalmBusyDeadline, nowMs: number): CalmBusyDisplay | null {
+  if (deadline === null) return null;
+  if (deadline === "few") return { kind: "few" };
+  const left = Math.ceil((deadline - nowMs) / 1000);
+  if (left <= 0) return { kind: "few" };
+  return { kind: "seconds", seconds: left };
+}
 
 export const CALM_CHECK_GAVE_UP_COPY =
   "We could not get a suggestion this time. You can send your message as written.";
