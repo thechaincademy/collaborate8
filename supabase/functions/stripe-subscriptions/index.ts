@@ -10,6 +10,13 @@ import {
 } from "../_shared/stripe-adapter.ts";
 import { cfg } from "../_shared/config.ts";
 import { stripeIdFromEnv } from "../_shared/conversation-tool-access-rule.ts";
+import {
+  BANK_PAYMENT_UNAVAILABLE_REPLY,
+  checkoutPaymentMethodTypes,
+  checkoutReturnUrls,
+  isBankPaymentUnavailableError,
+  normalizePaymentChoice,
+} from "../_shared/maintenance-checkout-rules.ts";
 
 const paymentMethodProvider = new StripePaymentMethodProvider();
 const recurringProvider = new StripeRecurringProvider();
@@ -120,7 +127,8 @@ serve(async (req) => {
 
     // ── Create subscription via hosted Checkout (Apple Pay / Google Pay / card) ──
     if (action === "create-subscription-checkout") {
-      const { amount, currency = "gbp", interval = "month", receiverId, startDate, returnToMaintenance } = body;
+      const { amount, currency = "gbp", interval = "month", receiverId, startDate, returnToMaintenance, returnTo } = body;
+      const paymentChoice = normalizePaymentChoice(body.paymentMethod);
       const normalizedInterval = normalizeInterval(interval);
       const dbFrequency = toDbFrequency(normalizedInterval);
 
@@ -224,31 +232,43 @@ serve(async (req) => {
       const origin = req.headers.get("origin") || "https://collaborate8.com";
       const stripe = getStripe();
 
-      // Hosted Checkout in subscription mode. `payment_method_types: ["card"]`
-      // includes Apple Pay + Google Pay automatically (wallets ride on card).
-      const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
-        customer: customerId,
-        payment_method_types: ["card"],
-        line_items: [{ price: priceId, quantity: 1 }],
-        subscription_data: {
-          ...(trialEnd ? { trial_end: trialEnd, proration_behavior: "none" as const } : {}),
-          transfer_data: {
-            destination: connectedAccount.provider_account_id,
+      // Hosted Checkout in subscription mode. The payer chose card (includes Apple Pay and
+      // Google Pay, wallets ride on card) or bank (Bacs Direct Debit) in Collabor8 first.
+      // The Stripe customer already holds the payer's email, so Checkout does not ask for it.
+      const returns = checkoutReturnUrls(origin, { returnToMaintenance, returnTo });
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({
+          mode: "subscription",
+          customer: customerId,
+          payment_method_types: checkoutPaymentMethodTypes(paymentChoice),
+          line_items: [{ price: priceId, quantity: 1 }],
+          subscription_data: {
+            ...(trialEnd ? { trial_end: trialEnd, proration_behavior: "none" as const } : {}),
+            transfer_data: {
+              destination: connectedAccount.provider_account_id,
+            },
+            metadata: {
+              collabor8_payer_id: user.id,
+              collabor8_receiver_id: receiverId,
+              collabor8_type: "maintenance",
+              collabor8_db_frequency: dbFrequency,
+              collabor8_amount: String(amount),
+              collabor8_payment_choice: paymentChoice,
+              ...(startDate ? { collabor8_start_date: startDate } : {}),
+              ...(returnToMaintenance ? { collabor8_setup_flow: "payer_stepper" } : {}),
+            },
           },
-          metadata: {
-            collabor8_payer_id: user.id,
-            collabor8_receiver_id: receiverId,
-            collabor8_type: "maintenance",
-            collabor8_db_frequency: dbFrequency,
-            collabor8_amount: String(amount),
-            ...(startDate ? { collabor8_start_date: startDate } : {}),
-            ...(returnToMaintenance ? { collabor8_setup_flow: "payer_stepper" } : {}),
-          },
-        },
-        success_url: `${origin}/dashboard?${returnToMaintenance ? "tab=maintenance&" : ""}subscription-checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: returnToMaintenance ? `${origin}/dashboard?tab=maintenance` : `${origin}/edit-payment?subscription-checkout=cancelled`,
-      });
+          success_url: returns.success_url,
+          cancel_url: returns.cancel_url,
+        });
+      } catch (checkoutError) {
+        if (paymentChoice === "bank" && isBankPaymentUnavailableError(checkoutError)) {
+          logStep("Bank payments not enabled on the Stripe account");
+          return new Response(JSON.stringify(BANK_PAYMENT_UNAVAILABLE_REPLY), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        throw checkoutError;
+      }
 
       logStep("Checkout session created", { sessionId: session.id, priceId });
 

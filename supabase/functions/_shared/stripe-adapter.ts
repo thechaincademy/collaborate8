@@ -15,6 +15,7 @@ import {
   payoutStatusFromAccount,
   v2OnboardingLinkBody,
   v2RecipientAccountBody,
+  type RecipientPerson,
   type V1AccountView,
 } from "./stripe-connect-rules.ts";
 
@@ -206,9 +207,9 @@ async function stripeV2<T>(path: string, body: unknown): Promise<T> {
 
 export class StripePayoutProvider implements PayoutProvider {
   /** POST /v2/core/accounts: UK individual, recipient configuration, GBP. Returns the acct_ id. */
-  async createConnectedAccount(email: string, metadata?: Record<string, string>): Promise<string> {
+  async createConnectedAccount(email: string, metadata?: Record<string, string>, person?: RecipientPerson): Promise<string> {
     const account = await tryStripe<{ id: string }>("STRIPE-ADAPTER", "v2.core.accounts.create", () =>
-      stripeV2("/v2/core/accounts", v2RecipientAccountBody(email, metadata || {})),
+      stripeV2("/v2/core/accounts", v2RecipientAccountBody(email, metadata || {}, person)),
     );
     return account.id;
   }

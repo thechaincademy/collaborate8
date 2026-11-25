@@ -13,6 +13,7 @@ import {
   type V1AccountView,
 } from "../_shared/stripe-connect-rules.ts";
 import { isMissingStripeAccountError } from "../_shared/stripe-errors.ts";
+import { coparentReadyReply, onboardingReturnUrls } from "../_shared/maintenance-checkout-rules.ts";
 
 const payoutProvider = new StripePayoutProvider();
 const DEFAULT_ORIGIN = "https://collaborate8.com";
@@ -44,6 +45,9 @@ serve(async (req) => {
     // ── Create connected account for receiver ──
     // Reply contract (mobile builds 31 to 34): { url, accountId }.
     if (action === "create-account") {
+      // First and last name go to Stripe so its page does not ask for them again. Never logged.
+      const { data: nameRow } = await supabase.from("profiles").select("first_name, last_name").eq("id", user.id).maybeSingle();
+      const person = { givenName: nameRow?.first_name ?? null, surname: nameRow?.last_name ?? null };
       const { data: existing } = await supabase
         .from("connected_accounts")
         .select("*")
@@ -63,7 +67,7 @@ serve(async (req) => {
           legacyV1 = isLegacyV1Account(existingAccount as unknown as V1AccountView);
           logStep("Existing connected account found", { accountId, legacyV1 });
         } else {
-          accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
+          accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id }, person);
 
           await supabase
             .from("connected_accounts")
@@ -82,7 +86,7 @@ serve(async (req) => {
           });
         }
       } else {
-        accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
+        accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id }, person);
         logStep("Created Accounts v2 recipient account", { accountId });
 
         await supabase.from("connected_accounts").insert({
@@ -94,19 +98,33 @@ serve(async (req) => {
       }
 
       // Stripe-hosted onboarding: Stripe collects identity and bank details, we never see them.
+      // The website sends returnTo "manage-payments" so Stripe returns to a screen that shows the result.
+      // The mobile apps send nothing and keep the old return addresses.
       const origin = allowedOrigin(req);
-      const onboardingUrl = await payoutProvider.createOnboardingLink(
-        accountId,
-        `${origin}/profile?stripe-refresh=true`,
-        `${origin}/profile?stripe-return=true`,
-        legacyV1,
-      );
+      const back = onboardingReturnUrls(origin, body.returnTo);
+      const onboardingUrl = await payoutProvider.createOnboardingLink(accountId, back.refresh, back.return, legacyV1);
 
       logStep("Onboarding link created", { accountId });
 
       return new Response(JSON.stringify(createAccountReply(onboardingUrl, accountId)), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ── Is the linked co-parent ready to be paid? ──
+    // Reply: { linked, ready }. Read from the stored row only: no Stripe call, no account detail.
+    if (action === "coparent-status") {
+      const { data: me } = await supabase.from("profiles").select("coparent_id").eq("id", user.id).maybeSingle();
+      if (!me?.coparent_id) {
+        return new Response(JSON.stringify(coparentReadyReply(false, null)), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: theirs } = await supabase
+        .from("connected_accounts")
+        .select("onboarding_status, charges_enabled")
+        .eq("user_id", me.coparent_id)
+        .eq("provider", "stripe")
+        .maybeSingle();
+      return new Response(JSON.stringify(coparentReadyReply(true, theirs)), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── Check account status ──

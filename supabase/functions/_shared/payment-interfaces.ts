@@ -57,7 +57,7 @@ export interface ConnectedAccountInfo {
 
 export interface PayoutProvider {
   /** Create a connected account for a receiver */
-  createConnectedAccount(email: string, metadata?: Record<string, string>): Promise<string>; // returns accountId
+  createConnectedAccount(email: string, metadata?: Record<string, string>, person?: { givenName?: string | null; surname?: string | null }): Promise<string>; // returns accountId
 
   /** Generate onboarding link for a connected account */
   createOnboardingLink(accountId: string, refreshUrl: string, returnUrl: string, legacyV1?: boolean): Promise<string>; // returns URL

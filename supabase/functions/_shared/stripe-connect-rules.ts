@@ -15,12 +15,27 @@ export const STRIPE_V2_API_VERSION = "2026-10-28.endive";
 
 export const SITE_URL = "https://collaborate8.com";
 
-/** Body for POST /v2/core/accounts: a UK individual who receives transfers and payouts in GBP. */
-export function v2RecipientAccountBody(email: string, metadata: Record<string, string> = {}) {
+export interface RecipientPerson {
+  givenName?: string | null;
+  surname?: string | null;
+}
+
+/**
+ * Body for POST /v2/core/accounts: a UK individual who receives transfers and payouts in GBP.
+ * The parent's email and, when we have them, first and last name are passed in so Stripe's page
+ * does not ask for them again. Phone numbers and bank details are never passed.
+ */
+export function v2RecipientAccountBody(email: string, metadata: Record<string, string> = {}, person?: RecipientPerson) {
+  const given = person?.givenName?.trim();
+  const sur = person?.surname?.trim();
   return {
     contact_email: email,
     dashboard: "express",
-    identity: { country: "gb", entity_type: "individual" },
+    identity: {
+      country: "gb",
+      entity_type: "individual" as const,
+      ...(person ? { individual: { email, ...(given ? { given_name: given } : {}), ...(sur ? { surname: sur } : {}) } } : {}),
+    },
     configuration: {
       recipient: {
         capabilities: {

@@ -51,8 +51,12 @@ describe("stripe-connect reply contract (mobile builds 31 to 34)", () => {
     expect(src).toContain("JSON.stringify(createAccountReply(onboardingUrl, accountId))");
     expect(src).toContain("JSON.stringify(checkStatusReply(newStatus, status))");
     expect(src).toContain("JSON.stringify(NOT_CREATED_REPLY)");
-    expect(src).toContain("stripe-return=true");
-    expect(src).toContain("stripe-refresh=true");
+    // The mobile builds still get /profile?stripe-return=true: the addresses moved into the shared rules
+    // and are only different when the website sends returnTo "manage-payments".
+    const rules = read("supabase/functions/_shared/maintenance-checkout-rules.ts");
+    expect(src).toContain("onboardingReturnUrls(origin, body.returnTo)");
+    expect(rules).toContain("stripe-return=true");
+    expect(rules).toContain("stripe-refresh=true");
   });
 });
 
