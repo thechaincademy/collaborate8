@@ -9,6 +9,7 @@ import {
   StripePayoutProvider,
 } from "../_shared/stripe-adapter.ts";
 import { cfg } from "../_shared/config.ts";
+import { startTimer } from "../_shared/timing.ts";
 import { stripeIdFromEnv } from "../_shared/conversation-tool-access-rule.ts";
 
 const paymentMethodProvider = new StripePaymentMethodProvider();
@@ -70,7 +71,8 @@ serve(async (req) => {
   }
 
   try {
-    const user = await getUserFromRequest(req);
+    const tm = startTimer("STRIPE-SUBSCRIPTIONS");
+    const user = await tm.time("auth_get_user", () => getUserFromRequest(req));
     const body = await req.json();
     const { action } = body;
     const supabase = createSupabaseAdmin();
@@ -143,8 +145,24 @@ serve(async (req) => {
         }
       }
 
+      // The two database reads below are independent, so they start together and are read
+      // where they were checked before. The payer checks still run first.
+      const payerQuery = returnToMaintenance
+        ? tm.time("db_profile", async () => await supabase.from("profiles").select("coparent_id, role").eq("id", user.id).maybeSingle())
+        : Promise.resolve(null);
+      const connectedQuery = receiverId
+        ? tm.time("db_connected_account", async () => await supabase
+            .from("connected_accounts")
+            .select("*")
+            .eq("user_id", receiverId)
+            .eq("provider", "stripe")
+            .maybeSingle())
+        : Promise.resolve({ data: null });
+      payerQuery.catch(() => {});
+      connectedQuery.catch(() => {});
+
       if (returnToMaintenance) {
-        const { data: payer } = await supabase.from("profiles").select("coparent_id, role").eq("id", user.id).maybeSingle();
+        const { data: payer } = (await payerQuery) ?? { data: null };
         if (payer?.role !== "managing" || payer.coparent_id !== receiverId) {
           return new Response(JSON.stringify({ error: "Link your receiving co-parent before confirming your arrangement." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
@@ -170,15 +188,8 @@ serve(async (req) => {
 
       logStep("Creating subscription checkout", { amount, currency, normalizedInterval, receiverId });
 
-      const customerId = await paymentMethodProvider.getOrCreateCustomer(user.id, user.email!);
-
       // Verify receiver Connect account is ready
-      const { data: connectedAccount } = await supabase
-        .from("connected_accounts")
-        .select("*")
-        .eq("user_id", receiverId)
-        .eq("provider", "stripe")
-        .maybeSingle();
+      const { data: connectedAccount } = await connectedQuery;
 
       if (!connectedAccount) {
         return new Response(
@@ -190,8 +201,27 @@ serve(async (req) => {
         );
       }
 
+      // The Stripe lookups below do not depend on each other, so they run together:
+      // the payer's customer lookup, the dynamic price, and (only when our stored row
+      // does not yet say charges are enabled) the receiver's live account status.
+      const amountInPence = Math.round(amount * 100);
+      const customerLookup = tm.time("stripe_customer_lookup", () => paymentMethodProvider.findCustomerId(user.email!));
+      const pricePromise = tm.time("stripe_price", () => pricingProvider.createPrice({
+        amount: amountInPence,
+        currency,
+        interval: normalizedInterval,
+        productId: MAINTENANCE_PRODUCT_ID,
+        metadata: { payer_id: user.id, receiver_id: receiverId },
+      }));
+      const statusPromise = connectedAccount.charges_enabled
+        ? Promise.resolve(null)
+        : tm.time("stripe_account_status", () => payoutProvider.getAccountStatus(connectedAccount.provider_account_id));
+      customerLookup.catch(() => {});
+      pricePromise.catch(() => {});
+      statusPromise.catch(() => {});
+
       if (!connectedAccount.charges_enabled) {
-        const liveStatus = await payoutProvider.getAccountStatus(connectedAccount.provider_account_id);
+        const liveStatus = (await statusPromise)!;
         if (!liveStatus.chargesEnabled) {
           return new Response(
             JSON.stringify({
@@ -211,22 +241,17 @@ serve(async (req) => {
           .eq("id", connectedAccount.id);
       }
 
-      // Create dynamic price
-      const amountInPence = Math.round(amount * 100);
-      const priceId = await pricingProvider.createPrice({
-        amount: amountInPence,
-        currency,
-        interval: normalizedInterval,
-        productId: MAINTENANCE_PRODUCT_ID,
-        metadata: { payer_id: user.id, receiver_id: receiverId },
-      });
+      const priceId = await pricePromise;
+      // Only a payer who passed every check above gets a new Stripe customer.
+      const customerId = (await customerLookup)
+        ?? await tm.time("stripe_customer_create", () => paymentMethodProvider.createCustomer(user.id, user.email!));
 
       const origin = req.headers.get("origin") || "https://collaborate8.com";
       const stripe = getStripe();
 
       // Hosted Checkout in subscription mode. `payment_method_types: ["card"]`
       // includes Apple Pay + Google Pay automatically (wallets ride on card).
-      const session = await stripe.checkout.sessions.create({
+      const session = await tm.time<Stripe.Checkout.Session>("stripe_checkout_session", () => stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customerId,
         payment_method_types: ["card"],
@@ -248,9 +273,10 @@ serve(async (req) => {
         },
         success_url: `${origin}/dashboard?${returnToMaintenance ? "tab=maintenance&" : ""}subscription-checkout=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: returnToMaintenance ? `${origin}/dashboard?tab=maintenance` : `${origin}/edit-payment?subscription-checkout=cancelled`,
-      });
+      }));
 
       logStep("Checkout session created", { sessionId: session.id, priceId });
+      tm.done("create-subscription-checkout", "ok");
 
       return new Response(JSON.stringify({ url: session.url, sessionId: session.id, priceId }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

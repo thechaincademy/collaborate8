@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { trackBeforeRedirect, amountBucket } from "@/lib/analytics";
 import { useStripePayments } from "@/hooks/useStripe";
+import { useConfirmProgress } from "@/hooks/useConfirmProgress";
+import { CONFIRM_COPY, confirmBusy } from "@/lib/confirmProgress";
+import ConfirmProgress from "./ConfirmProgress";
 import type { RecurringPayment } from "@/hooks/useRecurringPayments";
 
 const steps = [
@@ -26,6 +29,8 @@ interface Props {
 
 export default function PayingParentSetup({ connected, userId, receiverId, arrangement, onConnect, connecting }: Props) {
   const { createSubscriptionCheckout, getSubscriptionStatus, loading } = useStripePayments();
+  const { phase, run } = useConfirmProgress();
+  const busy = confirmBusy(phase);
   const [amount, setAmount] = useState("50.00");
   const [frequency, setFrequency] = useState<"week" | "month">("month");
   const [startDate, setStartDate] = useState(format(addDays(new Date(), 7), "yyyy-MM-dd"));
@@ -78,7 +83,7 @@ export default function PayingParentSetup({ connected, userId, receiverId, arran
   };
 
   const confirm = async () => {
-    if (!valid || !detailsDone || live) return;
+    if (!valid || !detailsDone || live || busy) return;
     if (!receiverId) { setError("Link your co-parent before confirming your arrangement."); return; }
     const selectedDate = startOfDay(parseISO(startDate));
     const delayed = startDate !== today;
@@ -87,11 +92,15 @@ export default function PayingParentSetup({ connected, userId, receiverId, arran
       return;
     }
     setError("");
-    const result = await createSubscriptionCheckout({ amount: amountNumber, currency: "gbp", interval: frequency, receiverId, startDate: selectedDate.toISOString(), returnToMaintenance: true });
-    if (result?.url) {
+    // The progress state stays on until the browser leaves for Stripe, so the button
+    // cannot be pressed again while the next page loads.
+    await run(async () => {
+      const result = await createSubscriptionCheckout({ amount: amountNumber, currency: "gbp", interval: frequency, receiverId, startDate: selectedDate.toISOString(), returnToMaintenance: true });
+      if (!result?.url) return false;
       await trackBeforeRedirect("payment_started", { product: "maintenance_subscription", interval: frequency, amount_bucket: amountBucket(amountNumber) });
       window.location.assign(result.url);
-    }
+      return true;
+    });
   };
 
   return (
@@ -112,18 +121,19 @@ export default function PayingParentSetup({ connected, userId, receiverId, arran
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
                 {index === 0 && !accountDone && <Button onClick={onConnect} disabled={connecting} className="mt-4 w-full gap-2 bg-teal text-teal-foreground hover:bg-teal/90"><CreditCard className="h-4 w-4" />{connecting ? "Connecting..." : "Connect your account"}</Button>}
                 {index === 1 && !live && (
-                  <fieldset disabled={!unlocked || loading} className="mt-4 min-w-0 space-y-3">
+                  <fieldset disabled={!unlocked || loading || busy} className="mt-4 min-w-0 space-y-3">
                     <div className="space-y-1.5"><Label htmlFor="setup-amount">Amount (£)</Label><Input id="setup-amount" type="number" inputMode="decimal" min="0.50" step="0.01" value={amount} onChange={(e) => { setAmount(e.target.value); setReviewReady(false); }} /></div>
                     <div className="space-y-1.5"><Label>Frequency</Label><div role="group" aria-label="Payment frequency" className="grid grid-cols-2 gap-2">{(["week", "month"] as const).map((value) => <Button key={value} type="button" variant="outline" aria-pressed={frequency === value} onClick={() => { setFrequency(value); setReviewReady(false); }} className={cn(frequency === value && "border-teal bg-teal/10 text-teal")}>{value === "week" ? "Weekly" : "Monthly"}</Button>)}</div></div>
                     <div className="space-y-1.5"><Label htmlFor="setup-start-date">Start date</Label><Input id="setup-start-date" type="date" min={today} value={startDate} onChange={(e) => { setStartDate(e.target.value); setReviewReady(false); }} className="block w-full min-w-0 scroll-mb-[calc(7rem+env(safe-area-inset-bottom))]" /></div>
-                    <Button onClick={saveDetails} disabled={!unlocked || !valid || loading} className="w-full scroll-mb-[calc(7rem+env(safe-area-inset-bottom))] bg-teal text-teal-foreground hover:bg-teal/90">Continue</Button>
+                    <Button onClick={saveDetails} disabled={!unlocked || !valid || loading || busy} className="w-full scroll-mb-[calc(7rem+env(safe-area-inset-bottom))] bg-teal text-teal-foreground hover:bg-teal/90">Continue</Button>
                   </fieldset>
                 )}
                 {index === 2 && !live && (
                   <div className="mt-4">
                     {detailsDone && <dl className="mb-4 space-y-2 text-sm"><div className="flex justify-between gap-2"><dt className="text-muted-foreground">Amount</dt><dd className="font-medium">£{amountNumber.toFixed(2)}</dd></div><div className="flex justify-between gap-2"><dt className="text-muted-foreground">Frequency</dt><dd className="font-medium">{frequency === "week" ? "Weekly" : "Monthly"}</dd></div><div className="flex justify-between gap-2"><dt className="text-muted-foreground">Start date</dt><dd className="font-medium">{validDate ? format(parseISO(startDate), "d MMM yyyy") : "-"}</dd></div></dl>}
                     {error && <p role="alert" className="mb-3 text-sm text-destructive">{error}</p>}
-                    <Button data-testid="confirm-arrangement" onClick={confirm} disabled={!unlocked || !valid || loading} className="w-full gap-2 scroll-mb-[calc(7rem+env(safe-area-inset-bottom))] bg-teal text-teal-foreground hover:bg-teal/90">{loading && <Loader2 className="h-4 w-4 animate-spin" />}{loading ? "Confirming..." : "Confirm arrangement"}</Button>
+                    <Button data-testid="confirm-arrangement" onClick={confirm} disabled={!unlocked || !valid || loading || busy} aria-busy={busy} className="w-full gap-2 scroll-mb-[calc(7rem+env(safe-area-inset-bottom))] bg-teal text-teal-foreground hover:bg-teal/90 disabled:opacity-60">{(loading || busy) && <Loader2 className="h-4 w-4 animate-spin" />}{loading || busy ? CONFIRM_COPY.working : "Confirm arrangement"}</Button>
+                    <ConfirmProgress phase={phase} />
                   </div>
                 )}
               </div>

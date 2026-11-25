@@ -43,15 +43,24 @@ function toIsoFromUnixTimestamp(primary?: number | null, fallback?: number | nul
 
 // ─── Payment Method Provider ────────────────────────────────
 export class StripePaymentMethodProvider implements PaymentMethodProvider {
-  async getOrCreateCustomer(userId: string, email: string): Promise<string> {
+  /** Existing Stripe customer id for this email, or null. Read only. */
+  async findCustomerId(email: string): Promise<string | null> {
     const stripe = getStripe();
     const existing = await stripe.customers.list({ email, limit: 1 });
-    if (existing.data.length > 0) return existing.data[0].id;
+    return existing.data.length > 0 ? existing.data[0].id : null;
+  }
+
+  async createCustomer(userId: string, email: string): Promise<string> {
+    const stripe = getStripe();
     const customer = await stripe.customers.create({
       email,
       metadata: { collabor8_user_id: userId },
     });
     return customer.id;
+  }
+
+  async getOrCreateCustomer(userId: string, email: string): Promise<string> {
+    return (await this.findCustomerId(email)) ?? (await this.createCustomer(userId, email));
   }
 
   async createSetupSession(customerId: string, successUrl: string, cancelUrl: string): Promise<string> {

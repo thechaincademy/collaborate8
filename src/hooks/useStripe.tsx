@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
@@ -25,21 +25,37 @@ export interface SubscriptionInfo {
   nextPaymentDate: string;
 }
 
+/**
+ * A button that sends the parent to Stripe stays "loading" once it has a link, so it cannot be
+ * pressed again while Stripe's page loads. Returning with the Back button restores the page
+ * from memory, so loading is cleared then.
+ */
+const useClearLoadingOnBack = (setLoading: (v: boolean) => void) => {
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) setLoading(false); };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, [setLoading]);
+};
+
 export const PAYOUT_SETUP_FAILED = "Payout setup couldn't start. Please try again later.";
 
 export const useStripeConnect = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  useClearLoadingOnBack(setLoading);
 
   /** Start Stripe Connect onboarding for receiver */
   const startOnboarding = async () => {
     if (!user) return null;
     setLoading(true);
+    let leavingForStripe = false;
     try {
       const { data, error } = await supabase.functions.invoke("stripe-connect", {
         body: { action: "create-account" },
       });
       if (error || data?.error || !data?.url) throw new Error("payout_setup_failed");
+      leavingForStripe = true;
       return data as { url: string; accountId: string };
     } catch {
       // Stripe's own error text stays in the server log. Parents only see one plain line.
@@ -47,7 +63,7 @@ export const useStripeConnect = () => {
       toast.error(PAYOUT_SETUP_FAILED);
       return null;
     } finally {
-      setLoading(false);
+      if (!leavingForStripe) setLoading(false);
     }
   };
 
@@ -73,6 +89,7 @@ export const useStripePayments = () => {
   const [loading, setLoading] = useState(false);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [cards, setCards] = useState<CardInfo[]>([]);
+  useClearLoadingOnBack(setLoading);
 
   /** Redirect to Stripe Checkout to add a card */
   const setupCard = async (returnToMaintenance = false) => {
@@ -125,6 +142,7 @@ export const useStripePayments = () => {
   }) => {
     if (!user) return null;
     setLoading(true);
+    let leavingForStripe = false;
     try {
       const { data, error } = await supabase.functions.invoke("stripe-subscriptions", {
         body: {
@@ -143,13 +161,14 @@ export const useStripePayments = () => {
       }
       if (data?.error) throw new Error(data.error);
       if (!data?.url) throw new Error("No checkout URL returned by Stripe");
+      leavingForStripe = true;
       return data as { url: string; sessionId: string; priceId: string };
     } catch (e: any) {
       console.error("[createSubscriptionCheckout]", e);
       toast.error(e?.message || "Failed to start checkout");
       return null;
     } finally {
-      setLoading(false);
+      if (!leavingForStripe) setLoading(false);
     }
   };
 

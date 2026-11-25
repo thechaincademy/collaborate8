@@ -13,6 +13,7 @@ import {
   type V1AccountView,
 } from "../_shared/stripe-connect-rules.ts";
 import { isMissingStripeAccountError } from "../_shared/stripe-errors.ts";
+import { startTimer } from "../_shared/timing.ts";
 
 const payoutProvider = new StripePayoutProvider();
 const DEFAULT_ORIGIN = "https://collaborate8.com";
@@ -34,7 +35,8 @@ serve(async (req) => {
   }
 
   try {
-    const user = await getUserFromRequest(req);
+    const tm = startTimer("STRIPE-CONNECT");
+    const user = await tm.time("auth_get_user", () => getUserFromRequest(req));
     const body = await req.json();
     const { action } = body;
     const supabase = createSupabaseAdmin();
@@ -44,18 +46,29 @@ serve(async (req) => {
     // ── Create connected account for receiver ──
     // Reply contract (mobile builds 31 to 34): { url, accountId }.
     if (action === "create-account") {
-      const { data: existing } = await supabase
+      const { data: existing } = await tm.time("db_connected_account", async () => await supabase
         .from("connected_accounts")
         .select("*")
         .eq("user_id", user.id)
         .eq("provider", "stripe")
-        .maybeSingle();
+        .maybeSingle());
 
       let accountId: string;
       let legacyV1 = false;
+      // A database write that can run while the onboarding link is created.
+      let pendingWrite: Promise<unknown> = Promise.resolve();
+      const origin = allowedOrigin(req);
+      const refreshUrl = `${origin}/profile?stripe-refresh=true`;
+      const returnUrl = `${origin}/profile?stripe-return=true`;
+      // Most returning parents have a current Accounts v2 account: ask for its link while
+      // the account lookup runs. The link is used only if the lookup says "reuse" and the
+      // account is not a legacy v1 one. Any other outcome ignores it (links are not charged
+      // or stored), so the decision rules are unchanged.
+      let speculativeLink: Promise<string | null> | null = null;
 
       if (existing) {
-        const existingAccount = await payoutProvider.getAccountOrNull(existing.provider_account_id);
+        speculativeLink = tm.time("stripe_onboarding_link_early", () => payoutProvider.createOnboardingLink(existing.provider_account_id, refreshUrl, returnUrl, false)).catch(() => null);
+        const existingAccount = await tm.time("stripe_account_retrieve", () => payoutProvider.getAccountOrNull(existing.provider_account_id));
         const decision = existingAccountAction(existingAccount as unknown as V1AccountView | null);
 
         if (decision === "reuse") {
@@ -63,17 +76,21 @@ serve(async (req) => {
           legacyV1 = isLegacyV1Account(existingAccount as unknown as V1AccountView);
           logStep("Existing connected account found", { accountId, legacyV1 });
         } else {
-          accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
+          accountId = await tm.time("stripe_account_create", () => payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id }));
 
-          await supabase
-            .from("connected_accounts")
-            .update({
-              provider_account_id: accountId,
-              onboarding_status: "pending",
-              payouts_enabled: false,
-              charges_enabled: false,
-            })
-            .eq("id", existing.id);
+          speculativeLink = null;
+          pendingWrite = tm.time("db_account_replace", async () => {
+            const { error } = await supabase
+              .from("connected_accounts")
+              .update({
+                provider_account_id: accountId,
+                onboarding_status: "pending",
+                payouts_enabled: false,
+                charges_enabled: false,
+              })
+              .eq("id", existing.id);
+            void error; // as before, a failed write does not stop the parent reaching Stripe
+          });
 
           logStep("Replaced account with a new Accounts v2 recipient account", {
             previousAccountId: existing.provider_account_id,
@@ -82,27 +99,30 @@ serve(async (req) => {
           });
         }
       } else {
-        accountId = await payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id });
+        accountId = await tm.time("stripe_account_create", () => payoutProvider.createConnectedAccount(user.email!, { collabor8_user_id: user.id }));
         logStep("Created Accounts v2 recipient account", { accountId });
 
-        await supabase.from("connected_accounts").insert({
-          user_id: user.id,
-          provider: "stripe",
-          provider_account_id: accountId,
-          onboarding_status: "pending",
+        pendingWrite = tm.time("db_account_insert", async () => {
+          const { error } = await supabase.from("connected_accounts").insert({
+            user_id: user.id,
+            provider: "stripe",
+            provider_account_id: accountId,
+            onboarding_status: "pending",
+          });
+          void error; // as before, a failed write does not stop the parent reaching Stripe
         });
       }
 
       // Stripe-hosted onboarding: Stripe collects identity and bank details, we never see them.
-      const origin = allowedOrigin(req);
-      const onboardingUrl = await payoutProvider.createOnboardingLink(
-        accountId,
-        `${origin}/profile?stripe-refresh=true`,
-        `${origin}/profile?stripe-return=true`,
-        legacyV1,
-      );
+      // The row write and the link do not depend on each other, so they run together.
+      const earlyLink = !legacyV1 && speculativeLink ? await speculativeLink : null;
+      const [onboardingUrl] = await Promise.all([
+        earlyLink ?? tm.time("stripe_onboarding_link", () => payoutProvider.createOnboardingLink(accountId, refreshUrl, returnUrl, legacyV1)),
+        pendingWrite,
+      ]);
 
       logStep("Onboarding link created", { accountId });
+      tm.done("create-account", "ok");
 
       return new Response(JSON.stringify(createAccountReply(onboardingUrl, accountId)), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

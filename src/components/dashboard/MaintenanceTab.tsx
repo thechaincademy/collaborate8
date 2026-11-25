@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { maintenanceRoleGate, maintenanceRoleSettled, resolveConnectStatus, showPayingParentSetup, showPayerArrangementActions, showReceiverPayoutSetup, type MaintenanceRoleGate } from "@/lib/maintenanceOnboarding";
 import { motion } from "framer-motion";
 import { getUpcomingDueDate } from "@/lib/nextDueDate";
-import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, ArrowLeft } from "lucide-react";
+import { Check, Clock, Info, CreditCard, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownLeft, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,9 @@ import { useRecurringPayments } from "@/hooks/useRecurringPayments";
 import { useProfile } from "@/hooks/useProfile";
 import { usePayments } from "@/hooks/usePayments";
 import { useStripePayments, useStripeConnect } from "@/hooks/useStripe";
+import { useConfirmProgress } from "@/hooks/useConfirmProgress";
+import { CONFIRM_COPY, confirmBusy } from "@/lib/confirmProgress";
+import ConfirmProgress from "./ConfirmProgress";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import DeletedUserLabel from "@/components/DeletedUserLabel";
@@ -29,6 +32,8 @@ const MaintenanceTab = () => {
   const { payments: paymentHistory, fetchPayments } = usePayments();
   const { cards, cardsLoading, fetchCards, setupCard, loading: stripeLoading } = useStripePayments();
   const { checkAccountStatus, startOnboarding } = useStripeConnect();
+  const connectProgress = useConfirmProgress();
+  const connectBusy = confirmBusy(connectProgress.phase);
   const [connectStatus, setConnectStatus] = useState<string>("loading");
   const [coparentArrangement, setCoparentArrangement] = useState<any>(null);
   const [coparentArrangementLoading, setCoparentArrangementLoading] = useState(true);
@@ -126,8 +131,15 @@ const MaintenanceTab = () => {
   };
 
   const handleConnectOnboarding = async () => {
-    const result = await startOnboarding();
-    if (result?.url) window.location.href = result.url;
+    if (connectBusy) return;
+    // Stripe can take several seconds to set up the account. Keep showing progress until
+    // the browser leaves for Stripe, and never allow a second press in the meantime.
+    await connectProgress.run(async () => {
+      const result = await startOnboarding();
+      if (!result?.url) return false;
+      window.location.href = result.url;
+      return true;
+    });
   };
 
   const statusLabel = {
@@ -355,10 +367,11 @@ const MaintenanceTab = () => {
                   Only the paying parent can set this up. When it's been completed, you'll receive a notification. In the meantime, please confirm the account you'd like to receive the funds into.
                 </p>
               </div>
-              <Button onClick={handleConnectOnboarding} className="w-full gap-2" size="lg">
-                <CreditCard className="h-5 w-5" />
-                Confirm receiving account
+              <Button onClick={handleConnectOnboarding} disabled={connectBusy} aria-busy={connectBusy} data-testid="confirm-receiving-account" className="w-full gap-2 disabled:opacity-60" size="lg">
+                {connectBusy ? <Loader2 className="h-5 w-5 animate-spin" /> : <CreditCard className="h-5 w-5" />}
+                {connectBusy ? CONFIRM_COPY.working : "Confirm receiving account"}
               </Button>
+              <ConfirmProgress phase={connectProgress.phase} successText={CONFIRM_COPY.successReceiver} redirectText="Opening Stripe…" />
             </div>
           )}
 
