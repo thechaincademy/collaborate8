@@ -1320,7 +1320,7 @@ Deno.serve(async (req) => {
         const clean = (s: string) => s.replace(/\s*—\s*/g, " - ").trim();
         type First =
           | { kind: "timeout" | "parse" }
-          | { kind: "error"; resp: Response }
+          | { kind: "error"; resp: Response; status?: number }
           | { kind: "pass"; reasons: string[] }
           | { kind: "cand"; raw: string; rewrite: string; checkInput: SendCheck; result: ReturnType<typeof checkRewrite> };
         const firstOnce = async (signal: AbortSignal): Promise<First> => {
@@ -1333,7 +1333,7 @@ Deno.serve(async (req) => {
             return { kind: "timeout" };
           }
           const err = gatewayError(resp);
-          if (err) return { kind: "error", resp: err };
+          if (err) return { kind: "error", resp: err, status: resp.status };
           let parsed: Record<string, unknown>;
           let raw = "";
           try {
@@ -1357,90 +1357,102 @@ Deno.serve(async (req) => {
         // Parallel first calls: a rewrite that passes every check wins at once and the others are aborted.
         // A "no change" result does not win at once: the other call may still bring a passing rewrite within the budget.
         // If none brings one, "no change" is used, then the first failed rewrite (for the retry).
-        const ctrls = Array.from({ length: SEND_FIRST_CALLS }, () => new AbortController());
-        const onAbort = () => ctrls.forEach((c) => c.abort());
-        sendCtrl.signal.addEventListener("abort", onAbort);
-        const isWin = (f: First) => f.kind === "cand" && !f.result.codes.length;
-        const all: First[] = [];
-        const first: First = await new Promise<First>((resolve) => {
-          let done = 0;
-          ctrls.forEach((c) => {
-            firstOnce(c.signal).then((f) => {
-              all.push(f);
-              done++;
-              if (isWin(f)) {
-                ctrls.forEach((o) => { if (o !== c) o.abort(); });
-                resolve(f);
-              } else if (done === ctrls.length) {
-                resolve(all.find((x) => x.kind === "pass") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
-              }
+        let wave = 0;
+        while (!sendCtrl.signal.aborted && deadline - Date.now() >= SEND_RETRY_MIN_LEFT_MS) {
+          wave += 1;
+          const ctrls = Array.from({ length: SEND_FIRST_CALLS }, () => new AbortController());
+          const onAbort = () => ctrls.forEach((c) => c.abort());
+          sendCtrl.signal.addEventListener("abort", onAbort);
+          const isWin = (f: First) => f.kind === "cand" && !f.result.codes.length;
+          const all: First[] = [];
+          const first: First = await new Promise<First>((resolve) => {
+            let done = 0;
+            ctrls.forEach((c) => {
+              firstOnce(c.signal).then((f) => {
+                all.push(f);
+                done++;
+                if (isWin(f)) {
+                  ctrls.forEach((o) => { if (o !== c) o.abort(); });
+                  resolve(f);
+                } else if (done === ctrls.length) {
+                  resolve(all.find((x) => x.kind === "pass") ?? all.find((x) => x.kind === "cand") ?? all.find((x) => x.kind === "parse") ?? all.find((x) => x.kind === "error") ?? all[0]);
+                }
+              });
             });
           });
-        });
-        sendCtrl.signal.removeEventListener("abort", onAbort);
-        if (first.kind === "timeout") {
-          log("fallback", ["timeout"], 1);
-          return json({ status: "failed" });
-        }
-        if (first.kind === "error") {
-          log("fallback", ["busy"], 1);
-          return json({ status: "failed" });
-        }
-        if (first.kind === "parse") {
-          log("fallback", ["parse"], 1);
-          return json(pass);
-        }
-        if (first.kind === "pass") {
-          log("pass", first.reasons, 1);
-          return json(pass);
-        }
-        const { raw, checkInput } = first;
-        let rewrite = first.rewrite;
-        let result = first.result;
-        let attempts = 1;
-        if (result.codes.length) {
-          if (deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) {
-            log("fallback", ["no_time_for_retry", ...result.codes], attempts);
+          sendCtrl.signal.removeEventListener("abort", onAbort);
+          if (first.kind === "timeout" || first.kind === "error") {
+            const reason = first.kind === "timeout"
+              ? "timeout"
+              : (typeof first.status === "number" ? `busy_http_${first.status}` : "busy");
+            log("busy_retry", [reason], wave);
+            if (sendCtrl.signal.aborted || deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) break;
+            try { await abortableSleep(retryWaitMs(wave, started), sendCtrl.signal); } catch { break; }
+            continue;
+          }
+          if (first.kind === "parse") {
+            log("fallback", ["parse"], wave);
             return json(pass);
           }
-          attempts = 2;
-          try {
-            const retry = await timed({
-              ...sendModel(300),
-              response_format: RETRY_SCHEMA,
-              messages: [
-                ...firstMessages,
-                { role: "assistant", content: raw },
-                {
-                  role: "user",
-                  content: `Your rewrite failed these checks:\n- ${result.notes.join("\n- ")}\nWrite it again from the draft: keep every fact and the exact words named above, keep the draft's language or languages, keep who did what, remove only the blame, and follow all the rules. Return only JSON {"rewrite":"..."}.`,
-                },
-              ],
-            });
-            if (!retry.ok) throw new Error("retry_http");
-            const rdata = await retry.json();
-            const rraw: string = rdata.choices?.[0]?.message?.content ?? "";
-            const rparsed = JSON.parse(rraw.replace(/^```(?:json)?|```$/g, "").trim());
-            if (typeof rparsed?.rewrite !== "string") throw new Error("retry_parse");
-            rewrite = clean(rparsed.rewrite);
-            result = checkRewrite(draft, rewrite, checkInput);
-          } catch (e) {
-            const reason = e instanceof Error && e.message.startsWith("retry_") ? e.message : "retry_timeout";
-            log("fallback", [reason, ...result.codes], attempts);
-            if (reason === "retry_timeout" || reason === "retry_http") return json({ status: "failed" });
+          if (first.kind === "pass") {
+            log("pass", first.reasons, wave);
             return json(pass);
           }
+          const { raw, checkInput } = first;
+          let rewrite = first.rewrite;
+          let result = first.result;
+          let attempts = wave;
           if (result.codes.length) {
-            log("fallback", ["retry_failed", ...result.codes], attempts);
+            if (deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) {
+              log("fallback", ["no_time_for_retry", ...result.codes], attempts);
+              return json(pass);
+            }
+            attempts += 1;
+            try {
+              const retry = await timed({
+                ...sendModel(300),
+                response_format: RETRY_SCHEMA,
+                messages: [
+                  ...firstMessages,
+                  { role: "assistant", content: raw },
+                  {
+                    role: "user",
+                    content: `Your rewrite failed these checks:\n- ${result.notes.join("\n- ")}\nWrite it again from the draft: keep every fact and the exact words named above, keep the draft's language or languages, keep who did what, remove only the blame, and follow all the rules. Return only JSON {"rewrite":"..."}.`,
+                  },
+                ],
+              });
+              if (!retry.ok) throw new Error("retry_http");
+              const rdata = await retry.json();
+              const rraw: string = rdata.choices?.[0]?.message?.content ?? "";
+              const rparsed = JSON.parse(rraw.replace(/^```(?:json)?|```$/g, "").trim());
+              if (typeof rparsed?.rewrite !== "string") throw new Error("retry_parse");
+              rewrite = clean(rparsed.rewrite);
+              result = checkRewrite(draft, rewrite, checkInput);
+            } catch (e) {
+              const reason = e instanceof Error && e.message.startsWith("retry_") ? e.message : "retry_timeout";
+              if (reason === "retry_timeout" || reason === "retry_http") {
+                log("busy_retry", [reason, ...result.codes], attempts);
+                if (sendCtrl.signal.aborted || deadline - Date.now() < SEND_RETRY_MIN_LEFT_MS) break;
+                try { await abortableSleep(retryWaitMs(wave, started), sendCtrl.signal); } catch { break; }
+                continue;
+              }
+              log("fallback", [reason, ...result.codes], attempts);
+              return json(pass);
+            }
+            if (result.codes.length) {
+              log("fallback", ["retry_failed", ...result.codes], attempts);
+              return json(pass);
+            }
+          }
+          if (!rewrite || rewrite === draft.trim()) {
+            log("pass", ["same_as_draft"], attempts);
             return json(pass);
           }
+          log("rewrite", [], attempts);
+          return json({ status: "done", needs_rewrite: true, rewrite });
         }
-        if (!rewrite || rewrite === draft.trim()) {
-          log("pass", ["same_as_draft"], attempts);
-          return json(pass);
-        }
-        log("rewrite", [], attempts);
-        return json({ status: "done", needs_rewrite: true, rewrite });
+        log("fallback", ["busy"], Math.max(1, wave));
+        return json({ status: "failed" });
       };
       // First answer by 3.3s: a done rewrite/pass, or a pending job. Do not abort Vertex
       // at that point; the same work may continue in the background for up to 30s.
