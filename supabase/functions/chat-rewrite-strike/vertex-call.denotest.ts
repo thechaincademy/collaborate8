@@ -58,13 +58,16 @@ Deno.test('strike call goes to Vertex europe-west2 with the default model, never
     assert(gen.url.includes('/locations/europe-west2/publishers/google/models/gemini-3.5-flash:generateContent'))
     for (const c of m.calls) assertFalse(/lovable|global/i.test(c.url))
     const body = gen.body as Record<string, any>
-    assertEquals(body.systemInstruction.parts[0].text, 'SYSTEM PROMPT')
+    // Native structured output is off by default (it 429s on gemini-3.5-flash in London); the schema goes in as text.
+    assert(body.systemInstruction.parts[0].text.startsWith('SYSTEM PROMPT\n\nReply with exactly one JSON object'))
+    assert(body.systemInstruction.parts[0].text.includes('"strikes"'))
+    assertFalse('additionalProperties' in JSON.parse(body.systemInstruction.parts[0].text.split('\n').pop()!))
     assertEquals(body.contents, [{ role: 'user', parts: [{ text: 'DRAFT' }] }])
     assertEquals(body.generationConfig.maxOutputTokens, 400)
     assertEquals(body.generationConfig.responseMimeType, 'application/json')
     assertEquals(body.generationConfig.thinkingConfig, { thinkingLevel: 'MINIMAL' })
-    assertEquals(body.generationConfig.responseJsonSchema.properties.strikes.type, 'array')
-    assertFalse('additionalProperties' in body.generationConfig.responseJsonSchema)
+    assertFalse('responseJsonSchema' in body.generationConfig)
+    assertFalse('responseSchema' in body.generationConfig)
     assertFalse('model' in body)
   } finally {
     m.restore()
@@ -117,4 +120,26 @@ Deno.test('callVertex error keeps the status for the caller', async () => {
   } finally {
     m.restore()
   }
+})
+
+Deno.test('VERTEX_STRUCTURED_OUTPUT=on sends the native schema again and leaves the system prompt alone', async () => {
+  Deno.env.set('VERTEX_STRUCTURED_OUTPUT', 'on')
+  try {
+    const { toGeminiRequest } = await import('../_shared/vertex.ts')
+    const req = toGeminiRequest(STRIKE_BODY) as Record<string, any>
+    assertEquals(req.systemInstruction.parts[0].text, 'SYSTEM PROMPT')
+    assertEquals(req.generationConfig.responseJsonSchema.properties.strikes.type, 'array')
+    assertFalse('additionalProperties' in req.generationConfig.responseJsonSchema)
+  } finally {
+    Deno.env.delete('VERTEX_STRUCTURED_OUTPUT')
+  }
+})
+
+Deno.test('json_object bodies and bodies without a schema get no schema text', async () => {
+  const { toGeminiRequest } = await import('../_shared/vertex.ts')
+  const a = toGeminiRequest({ response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'S' }, { role: 'user', content: 'D' }] }) as Record<string, any>
+  assertEquals(a.systemInstruction.parts[0].text, 'S')
+  assertEquals(a.generationConfig.responseMimeType, 'application/json')
+  const b = toGeminiRequest({ messages: [{ role: 'user', content: 'D' }] }) as Record<string, any>
+  assertFalse('systemInstruction' in b)
 })

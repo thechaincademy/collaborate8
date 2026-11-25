@@ -95,7 +95,7 @@ type ChatMessage = { role: string; content: string };
 
 export const toGeminiRequest = (body: Record<string, unknown>) => {
   const messages = (body.messages ?? []) as ChatMessage[];
-  const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
+  const baseSystem = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
   const contents = messages
     .filter((m) => m.role !== "system")
     .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content ?? "") }] }));
@@ -105,14 +105,23 @@ export const toGeminiRequest = (body: Record<string, unknown>) => {
   if (typeof body.temperature === "number") generationConfig.temperature = body.temperature;
   const rf = body.response_format as { type?: string; json_schema?: { schema?: unknown } } | undefined;
   if (rf?.type === "json_object" || rf?.type === "json_schema") generationConfig.responseMimeType = "application/json";
-  // responseJsonSchema takes standard JSON Schema. The older OpenAPI-style responseSchema field returns
-  // RESOURCE_EXHAUSTED (429) for the send schema on gemini-3.5-flash, so it is not used.
-  if (rf?.type === "json_schema" && rf.json_schema?.schema) generationConfig.responseJsonSchema = toGeminiSchema(rf.json_schema.schema);
+  // Structured output (responseJsonSchema / responseSchema) is not sent by default. On gemini-3.5-flash in
+  // europe-west2 (25 Nov 2026) every schema call returned 429 RESOURCE_EXHAUSTED or stalled for 20 to 40 s,
+  // while plain, JSON-mime and low-thinking calls returned 200 in 1 to 3 s. responseMimeType keeps the reply
+  // JSON; the schema is given to the model as text instead, and callers already parse and validate the reply.
+  // VERTEX_STRUCTURED_OUTPUT=on turns the native schema back on.
+  let schemaText = "";
+  if (rf?.type === "json_schema" && rf.json_schema?.schema) {
+    const schema = toGeminiSchema(rf.json_schema.schema);
+    if ((cfg("VERTEX_STRUCTURED_OUTPUT") ?? "").trim().toLowerCase() === "on") generationConfig.responseJsonSchema = schema;
+    else schemaText = `Reply with exactly one JSON object and nothing else (no markdown, no code fence). It must match this JSON Schema, with every required key present:\n${JSON.stringify(schema)}`;
+  }
   // Low-latency paths ask for no or low reasoning; map to the smallest thinking level.
   const effort = body.reasoning_effort;
   if (effort === "none" || effort === "minimal") generationConfig.thinkingConfig = { thinkingLevel: "MINIMAL" };
   else if (effort === "low") generationConfig.thinkingConfig = { thinkingLevel: "LOW" };
   const req: Record<string, unknown> = { contents, generationConfig };
+  const system = [baseSystem, schemaText].filter(Boolean).join("\n\n");
   if (system) req.systemInstruction = { parts: [{ text: system }] };
   return req;
 };
