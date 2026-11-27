@@ -4,6 +4,8 @@ import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { KeyRound, MailCheck, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin } from "@/integrations/supabase/adminClient";
+import { confirmAuthKind } from "@/lib/adminAuth";
 import {
   afterVerify,
   clearConfirmParams,
@@ -38,7 +40,8 @@ const AuthConfirm = () => {
   const handleConfirm = async () => {
     if (!params || status === "working") return;
     setStatus("working");
-    const { data, error } = await supabase.auth.verifyOtp({ token_hash: params.tokenHash, type: otpType(params.type) });
+    const auth = confirmAuthKind(params.next) === "admin" ? supabaseAdmin : supabase;
+    const { data, error } = await auth.auth.verifyOtp({ token_hash: params.tokenHash, type: otpType(params.type) });
     if (error) {
       if (isExpiredOrUsed(error)) {
         clearConfirmParams(session());

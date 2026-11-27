@@ -1,0 +1,28 @@
+// Helpers for the Collabor8 admin area. The admin session is stored separately
+// from the parent/app session, so a parent login (for example a test account)
+// never counts as an admin login.
+
+export { ADMIN_STORAGE_KEY } from "@/lib/authStorage";
+
+export function isAdminPath(pathname: string): boolean {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+/** Safe next path for /admin/login?next=... */
+export function safeAdminNext(nextRaw: string | null | undefined): string {
+  const v = String(nextRaw ?? "");
+  if (!v.startsWith("/") || v.startsWith("//") || v.includes("\\") || [...v].some((c) => c.charCodeAt(0) < 32)) {
+    return "/admin";
+  }
+  const path = v.split("?")[0];
+  return isAdminPath(path) ? v : "/admin";
+}
+
+export function adminLoginHref(next = "/admin"): string {
+  return `/admin/login?next=${encodeURIComponent(safeAdminNext(next))}`;
+}
+
+/** Which Supabase client /auth/confirm should use when verifying a magic link. */
+export function confirmAuthKind(next: string): "admin" | "app" {
+  return isAdminPath((next.split("?")[0] || "")) ? "admin" : "app";
+}

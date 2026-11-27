@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
 
 export type ServiceStatus = "up" | "problem" | "down" | "not_configured";
 export interface ServiceCheck { key: string; label: string; status: ServiceStatus; http_status: number | null; response_ms: number | null; detail: string | null; alertable: boolean }

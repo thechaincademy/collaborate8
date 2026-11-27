@@ -7,6 +7,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AdminAuthProvider } from "@/hooks/useAdminAuth";
+import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
+import RequireAdminAuth from "@/components/admin/RequireAdminAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieConsent from "@/components/CookieConsent";
 import { sendGa4PageView } from "@/lib/ga4";
@@ -114,6 +117,7 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+      <AdminAuthProvider>
         <SolanaProvider>
         <TooltipProvider>
           <Toaster />
@@ -190,12 +194,16 @@ const App = () => (
               <Route path="/safeguarding/report" element={<ProtectedRoute><ReportConcern /></ProtectedRoute>} />
               <Route path="/dsl" element={<ProtectedRoute><DslReview /></ProtectedRoute>} />
               {import.meta.env.DEV ? <Route path="/internal/safeguarding-preview" element={<SafeguardingPreview />} /> : null}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/analytics" element={<AdminAnalytics />} />
-              <Route path="/admin/monitoring" element={<AdminMonitoring />} />
-              <Route path="/admin/setup" element={<AdminSetup />} />
-              <Route path="/admin/access-requests" element={<AdminAccessRequests />} />
+              <Route element={<AdminErrorBoundary />}>
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route element={<RequireAdminAuth />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/monitoring" element={<AdminMonitoring />} />
+                  <Route path="/admin/setup" element={<AdminSetup />} />
+                  <Route path="/admin/access-requests" element={<AdminAccessRequests />} />
+                </Route>
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
             <SafeguardingRecording />
@@ -203,6 +211,7 @@ const App = () => (
           </BrowserRouter>
          </TooltipProvider>
         </SolanaProvider>
+      </AdminAuthProvider>
       </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>

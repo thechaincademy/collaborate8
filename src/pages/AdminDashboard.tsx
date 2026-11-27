@@ -13,8 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
+import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 interface TabRow {
@@ -108,8 +108,8 @@ const AdminDashboard = () => {
         <p className="text-sm text-muted-foreground">
           This dashboard is restricted to the Collabor8 founders.
         </p>
-        <Button variant="outline" onClick={signOut}>
-          Sign out
+        <Button variant="outline" onClick={async () => { await signOut(); window.location.assign("/admin/login"); }}>
+          Sign in with founder email
         </Button>
       </div>
     );

@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet-async";
 import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
+import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
 import SystemHealthSection from "@/components/admin/SystemHealthSection";
 
@@ -84,7 +84,8 @@ const AdminMonitoring = () => {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
         <h1 className="text-xl font-semibold">No access</h1>
-        <p className="text-sm text-muted-foreground">Monitoring is restricted to Collabor8 admins.</p>
+        <p className="text-sm text-muted-foreground">Monitoring is restricted to Collabor8 admins. Sign in with your founder email.</p>
+        <a href="/admin/login?next=/admin/monitoring" className="rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground">Sign in to admin</a>
       </div>
     );
   }

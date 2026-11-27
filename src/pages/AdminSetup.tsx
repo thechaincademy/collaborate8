@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useSystemHealth } from "@/components/admin/useSystemHealth";
 import AnalyticsConnections from "@/components/admin/AnalyticsConnections";
@@ -32,7 +32,8 @@ const AdminSetup = () => {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
         <h1 className="text-xl font-semibold">No access</h1>
-        <p className="text-sm text-muted-foreground">Setup is restricted to Collabor8 admins.</p>
+        <p className="text-sm text-muted-foreground">Setup is restricted to Collabor8 admins. Sign in with your founder email.</p>
+        <a href="/admin/login?next=/admin/setup" className="rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground">Sign in to admin</a>
       </div>
     );
   }

@@ -13,5 +13,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
+    // Admin magic links and tokens must land in the separate admin client, not here.
+    detectSessionInUrl: typeof window === "undefined" ? false : !(window.location.pathname === "/admin" || window.location.pathname.startsWith("/admin/")),
   }
 });

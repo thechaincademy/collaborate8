@@ -1,23 +1,24 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin } from "@/integrations/supabase/adminClient";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { safeAdminNext } from "@/lib/adminAuth";
 
 const ADMIN_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 
 const AdminLogin = () => {
+  const { user, loading } = useAdminAuth();
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [params] = useSearchParams();
-  // Only admin pages on this site, so the link can't be pointed anywhere else.
-  const nextRaw = params.get("next") ?? "";
-  const next = /^\/admin(\/[A-Za-z0-9/_-]*)?(\?[A-Za-z0-9=&%_.-]*)?$/.test(nextRaw) ? nextRaw : "/admin";
+  const next = safeAdminNext(params.get("next"));
 
   const handleSend = async () => {
     const clean = email.trim().toLowerCase();
@@ -26,7 +27,7 @@ const AdminLogin = () => {
       return;
     }
     setSending(true);
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabaseAdmin.auth.signInWithOtp({
       email: clean,
       options: { emailRedirectTo: `${window.location.origin}${next}`, shouldCreateUser: false },
     });
@@ -39,6 +40,11 @@ const AdminLogin = () => {
     toast.success("Magic link sent - check your inbox.");
   };
 
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+  }
+  if (user) return <Navigate to={next} replace />;
+
   return (
     <>
       <Helmet>
@@ -48,7 +54,7 @@ const AdminLogin = () => {
       <div className="mx-auto flex min-h-screen max-w-md md:max-w-lg flex-col justify-center px-6">
         <h1 className="mb-2 text-2xl font-semibold">Admin access</h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          Enter your founder email and we'll send you a secure sign-in link.
+          Enter your founder email and we'll send you a secure sign-in link. This is separate from the Collabor8 app, so a parent account cannot sign you in here.
         </p>
         <Card>
           <CardContent className="space-y-4 pt-6">

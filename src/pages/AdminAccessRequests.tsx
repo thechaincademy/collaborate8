@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
+import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -157,7 +157,7 @@ const AdminAccessRequests = () => {
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
         <h1 className="text-xl font-semibold">Sign in as an admin</h1>
         <p className="text-sm text-muted-foreground">
-          You're signed in to Collabor8, but requests to join are only visible to admins. Sign in with your founder email to review them.
+          This account does not have admin access. Sign in with your founder email to review requests to join.
         </p>
         <Button onClick={() => void signInAsAdmin()}>Sign in with founder email</Button>
       </div>

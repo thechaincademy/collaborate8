@@ -4,6 +4,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { clearProfileCache } from "@/hooks/useProfile";
 import { confirmRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
+import { appStorageKey, signOutAndClear } from "@/lib/authStorage";
 import { isInApp } from "@/lib/inApp";
 import { signupClientMeta } from "@/lib/accessWall";
 
@@ -74,7 +75,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await signOutAndClear(supabase, appStorageKey(import.meta.env.VITE_SUPABASE_URL));
+    setSession(null);
+    setUser(null);
     clearProfileCache();
   };
 

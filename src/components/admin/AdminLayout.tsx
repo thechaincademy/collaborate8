@@ -1,7 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin } from "@/integrations/supabase/adminClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { adminLoginHref, isAdminPath } from "@/lib/adminAuth";
 import { cn } from "@/lib/utils";
 
 export const ADMIN_LINKS: { to: string; label: string; end?: boolean; dsl?: boolean }[] = [
@@ -18,29 +21,39 @@ export const ADMIN_LINKS: { to: string; label: string; end?: boolean; dsl?: bool
  * Admins see every admin page. A safeguarding lead who is not an admin sees only
  * Safeguarding review and Sign out. Everyone else sees the page with no menu.
  * This only controls the menu; each page keeps its own access checks.
+ * /admin/* uses the admin session. /dsl uses the app session.
  */
 const AdminLayout = ({ children }: { children: ReactNode }) => {
-  const { user, signOut } = useAuth();
+  const location = useLocation();
+  const adminArea = isAdminPath(location.pathname);
+  const appAuth = useAuth();
+  const adminAuth = useAdminAuth();
+  const { user, signOut } = adminArea ? adminAuth : appAuth;
+  const client = adminArea ? supabaseAdmin : supabase;
   const navigate = useNavigate();
   const [access, setAccess] = useState<"none" | "dsl" | "admin">("none");
 
   useEffect(() => {
     if (!user) { setAccess("none"); return; }
     let live = true;
-    const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
+    const rpc = client.rpc as unknown as (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
     Promise.all([rpc("is_admin", { _user_id: user.id }), rpc("sg_is_dsl", { _user_id: user.id })]).then(([a, d]) => {
       if (!live) return;
       setAccess(a.data === true ? "admin" : !d.error && d.data === true ? "dsl" : "none");
     });
     return () => { live = false; };
-  }, [user]);
+  }, [user, client]);
 
   if (access === "none") return <>{children}</>;
 
   const links = access === "admin" ? ADMIN_LINKS : ADMIN_LINKS.filter((l) => l.dsl);
   const handleSignOut = async () => {
     await signOut();
-    navigate(access === "admin" ? "/admin/login" : "/login", { replace: true });
+    if (adminArea) {
+      window.location.assign(adminLoginHref("/admin"));
+      return;
+    }
+    navigate("/login", { replace: true });
   };
   const signOutClass = "whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
 
