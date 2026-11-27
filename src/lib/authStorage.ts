@@ -34,6 +34,9 @@ type AuthLike = { auth: { signOut: (opts?: { scope?: "local" | "global" | "other
 
 /** Sign out locally, then always clear the storage key, even if signOut throws. */
 export async function signOutAndClear(client: AuthLike, storageKey: string): Promise<void> {
+  // Clear storage first so a React re-render or redirect cannot bounce back into a
+  // protected /admin page while the network revoke is still in flight.
+  clearAuthStorage(storageKey);
   try {
     await client.auth.signOut({ scope: "local" });
   } catch {

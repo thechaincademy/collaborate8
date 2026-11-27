@@ -106,7 +106,7 @@ const AdminDashboard = () => {
         <p className="text-sm text-muted-foreground">
           This dashboard is restricted to the Collabor8 founders.
         </p>
-        <Button variant="outline" onClick={async () => { await signOut(); redirectToAdminLogin(); }}>
+        <Button variant="outline" onClick={() => { void signOut(); redirectToAdminLogin(); }}>
           Sign in with founder email
         </Button>
       </div>
@@ -153,7 +153,7 @@ const AdminDashboard = () => {
             <Button asChild variant="outline">
               <Link to="/admin/monitoring">Monitoring</Link>
             </Button>
-            <Button variant="outline" onClick={async () => { await signOut(); redirectToAdminLogin(); }}>
+            <Button variant="outline" onClick={() => { void signOut(); redirectToAdminLogin(); }}>
               Sign out
             </Button>
           </div>

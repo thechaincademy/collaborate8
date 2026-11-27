@@ -50,13 +50,13 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   if (access === "none") return <>{children}</>;
 
   const links = access === "admin" ? ADMIN_LINKS : ADMIN_LINKS.filter((l) => l.dsl);
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
     if (adminArea) {
+      void signOut();
       redirectToAdminLogin();
       return;
     }
-    navigate("/login", { replace: true });
+    void signOut().then(() => navigate("/login", { replace: true }));
   };
   const signOutClass = "whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
 

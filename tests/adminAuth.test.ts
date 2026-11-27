@@ -90,6 +90,14 @@ describe("session storage and sign-out", () => {
     await signOutAndClear(ok, "c8-admin-auth");
     expect(scope).toBe("local");
     expect(store).toEqual({});
+
+    store["c8-admin-auth"] = "session";
+    let started = false;
+    const hanging = { auth: { signOut: () => { started = true; return new Promise(() => {}); } } };
+    const pending = signOutAndClear(hanging, "c8-admin-auth");
+    expect(started).toBe(true);
+    expect(store).toEqual({});
+    void pending;
     delete (globalThis as { window?: unknown }).window;
   });
 });
