@@ -41,7 +41,7 @@ const errorText = async (error: unknown, fallback: string) => {
 const statusLabel: Record<Req["status"], string> = { pending: "Waiting", approved: "Approved", rejected: "Not approved" };
 
 const AdminAccessRequests = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const [params, setParams] = useSearchParams();
   const [rows, setRows] = useState<Req[] | null>(null);
   const [ready, setReady] = useState(true);
@@ -64,13 +64,19 @@ const AdminAccessRequests = () => {
       setLoadError(await errorText(error, "Could not load requests."));
       return;
     }
+    setDenied(false);
     setLoadError(null);
     setReady(data?.ready !== false);
     setEmailsOn(data?.emailsEnabled === true);
     setRows((data?.requests ?? []) as Req[]);
   }, []);
 
-  useEffect(() => { if (user) void load(); }, [user, load]);
+  useEffect(() => {
+    setDenied(false);
+    setLoadError(null);
+    setRows(null);
+    if (user) void load();
+  }, [user?.id, load]);
 
   // Links from the reviewer email (?id=...&action=approve|reject) open the confirm step only.
   useEffect(() => {
@@ -140,11 +146,20 @@ const AdminAccessRequests = () => {
 
   if (authLoading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to={`/admin/login?next=${encodeURIComponent(`/admin/access-requests${window.location.search}`)}`} replace />;
+  const signInAsAdmin = async () => {
+    await signOut();
+    const next = `/admin/access-requests${window.location.search}`;
+    window.location.assign(`/admin/login?next=${encodeURIComponent(next)}`);
+  };
+
   if (denied) {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="text-xl font-semibold">No access</h1>
-        <p className="text-sm text-muted-foreground">Requests to join are only visible to Collabor8 admins.</p>
+        <h1 className="text-xl font-semibold">Sign in as an admin</h1>
+        <p className="text-sm text-muted-foreground">
+          You're signed in to Collabor8, but requests to join are only visible to admins. Sign in with your founder email to review them.
+        </p>
+        <Button onClick={() => void signInAsAdmin()}>Sign in with founder email</Button>
       </div>
     );
   }

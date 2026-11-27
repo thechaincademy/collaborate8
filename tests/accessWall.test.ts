@@ -207,6 +207,8 @@ describe("email kill switch", () => {
     const page = read("src/pages/AdminAccessRequests.tsx");
     expect(page).toContain("Copy link");
     expect(page).toContain("Approve and get link");
+    expect(page).toContain("Sign in with founder email");
+    expect(page).toContain("setDenied(false)");
   });
 });
 
