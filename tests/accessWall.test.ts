@@ -8,6 +8,7 @@ import {
   approvalEmail,
   DEFAULT_REVIEWER_EMAILS,
   escapeHtml,
+  formatUkDateTime,
   isTestEmail,
   linkBase,
   looksLikeToken,
@@ -76,7 +77,8 @@ describe("who gets the reviewer email", () => {
 });
 
 describe("emails", () => {
-  const rev = reviewerEmail({ id: "11111111-2222-3333-4444-555555555555", name: "Sam <b>", email: "sam@example.com", note: "Line 1\n<script>", base: "https://collaborate8.com", test: false });
+  const requestedAt = new Date("2026-11-26T20:36:59.637Z");
+  const rev = reviewerEmail({ id: "11111111-2222-3333-4444-555555555555", name: "Sam <b>", email: "sam@example.com", note: "Line 1\n<script>", base: "https://collaborate8.com", test: false, requestedAt });
   it("reviewer email opens the admin page, never a one-click change", () => {
     expect(rev.html).toContain("https://collaborate8.com/admin/access-requests?id=11111111-2222-3333-4444-555555555555&amp;action=approve");
     expect(rev.html).toContain("action=reject");
@@ -102,6 +104,12 @@ describe("emails", () => {
     const all = [rev, approvalEmail({ name: "S", link: "https://collaborate8.com/x", test: false }), rejectionEmail({ name: "S", test: false })];
     for (const e of all) expect(copyProblems(e.subject + e.html + e.text)).toEqual([]);
     for (const e of all) expect(e.text).toContain("Collabor8");
+  });
+  it("includes the request time in UK", () => {
+    expect(formatUkDateTime(requestedAt)).toBe("Thursday 26 November 2026, 8:36 pm (UK)");
+    expect(formatUkDateTime(new Date("2026-07-01T12:00:00Z"))).toBe("Wednesday 1 July 2026, 1:00 pm (UK)");
+    expect(rev.html).toContain("They asked at Thursday 26 November 2026, 8:36 pm (UK).");
+    expect(rev.text).toContain("They asked at Thursday 26 November 2026, 8:36 pm (UK).");
   });
 });
 
@@ -183,6 +191,16 @@ describe("email kill switch", () => {
     expect(src).toContain('row.result === "created" && row.id && !emailsOn');
     expect(src.match(/link: l\.link \}\);/g)?.length).toBe(2); // approve and new link return it while off
     expect(src).toContain("emailsOn && body?.notify === true");
+  });
+  it("sends one email to every reviewer, with one idempotency key per request", () => {
+    const src = read("supabase/functions/request-access/index.ts");
+    const body = src.slice(src.indexOf("async function sendAll"), src.indexOf("async function requireAdmin"));
+    expect(body).toContain("sendResendEmail({ to,");
+    expect(body).toContain("idempotencyKey: key");
+    expect(body).not.toContain("for (const addr of to)");
+    expect(body).not.toContain("${key}:${addr}");
+    expect(src).toContain("sendAll(r.to, mail, `access_request:${row.id}`)");
+    expect(read("supabase/functions/_shared/resend.ts")).toContain("to: string | string[]");
   });
   it("the setting is on the admin Setup list and the admin page shows a copyable link", () => {
     expect(read("supabase/functions/_shared/config-registry.ts")).toContain('name: "ACCESS_REQUEST_EMAILS_ENABLED"');

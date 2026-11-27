@@ -116,6 +116,23 @@ export async function sha256Hex(text: string): Promise<string> {
 
 // ---------- Emails ----------
 
+/** Calendar date and time in Europe/London, e.g. "Thursday 26 November 2026, 8:36 pm (UK)". */
+export function formatUkDateTime(at: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hourCycle: "h12",
+  }).formatToParts(at);
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+  const period = (get("dayPeriod") || "").toLowerCase();
+  return `${get("weekday")} ${get("day")} ${get("month")} ${get("year")}, ${get("hour")}:${get("minute")} ${period} (UK)`;
+}
+
 const wrap = (inner: string) =>
   `<!doctype html><html><body style="margin:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111111;padding:24px">` +
   `<div style="max-width:520px;margin:0 auto">${inner}` +
@@ -126,7 +143,8 @@ const button = (href: string, label: string, bg: string) =>
 
 export type Email = { subject: string; html: string; text: string };
 
-export function reviewerEmail(input: { id: string; name: string; email: string; note: string | null; base: string; test: boolean }): Email {
+export function reviewerEmail(input: { id: string; name: string; email: string; note: string | null; base: string; test: boolean; requestedAt?: Date }): Email {
+  const when = formatUkDateTime(input.requestedAt ?? new Date());
   const page = `${input.base}/admin/access-requests`;
   const approve = `${page}?id=${encodeURIComponent(input.id)}&action=approve`;
   const reject = `${page}?id=${encodeURIComponent(input.id)}&action=reject`;
@@ -134,6 +152,7 @@ export function reviewerEmail(input: { id: string; name: string; email: string; 
   const note = input.note ? p(`<strong>Their note:</strong><br>${escapeHtml(input.note).replace(/\n/g, "<br>")}`) : p("They didn't add a note.");
   const html = wrap(
     p(`<strong>${escapeHtml(input.name)}</strong> (${escapeHtml(input.email)}) has asked to join Collabor8 on the website.`) +
+      p(`They asked at ${escapeHtml(when)}.`) +
       note +
       p("Both buttons open the admin page, where you confirm your choice. Nothing changes until you do.") +
       `<div style="margin:0 0 16px">${button(approve, "Approve", "#2F6B4F")}${button(reject, "Reject", "#8A4B3A")}</div>` +
@@ -141,6 +160,7 @@ export function reviewerEmail(input: { id: string; name: string; email: string; 
   );
   const text =
     `${input.name} (${input.email}) has asked to join Collabor8 on the website.\n\n` +
+    `They asked at ${when}.\n\n` +
     (input.note ? `Their note:\n${input.note}\n\n` : "They didn't add a note.\n\n") +
     `Approve: ${approve}\nReject: ${reject}\n\nBoth links open the admin page, where you confirm your choice.\n\nCollabor8`;
   return { subject, html, text };

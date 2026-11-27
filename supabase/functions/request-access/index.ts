@@ -2,8 +2,8 @@
 //
 // Public actions (no sign-in):
 //   submit       { name, email, note? }  stores a request (rate limited in the database) and
-//                emails the reviewers (ACCESS_REQUEST_EMAILS, else Rafa and Jade). A test or QA
-//                address only ever emails QA_ALERT_EMAIL, with a [TEST] subject.
+//                emails the reviewers (ACCESS_REQUEST_EMAILS, else Rafa and Jade) as one email
+//                to every reviewer. A test or QA address only ever emails QA_ALERT_EMAIL, with a [TEST] subject.
 //   check_token  { token }  says whether a sign-up link is still valid, and for which email.
 // Admin actions (Rafa and Jade, the same is_admin + allow-list check as admin-config for Setup):
 //   list                          the latest requests
@@ -55,16 +55,15 @@ function clientIp(req: Request): string {
 async function sendAll(to: string[], email: { subject: string; html: string; text: string }, key: string) {
   // Second guard: nothing leaves here while the kill switch is off, whoever calls this.
   if (!accessEmailsEnabled(cfg(EMAILS_ENABLED_SETTING))) return 0;
-  let sent = 0;
-  for (const addr of to) {
-    try {
-      const r = await sendResendEmail({ to: addr, subject: email.subject, html: email.html, text: email.text, idempotencyKey: `${key}:${addr}` });
-      if (r.sent) sent++;
-    } catch (e) {
-      console.error("request-access email failed", { key, error: (e as Error).name });
-    }
+  if (!to.length) return 0;
+  try {
+    // One email, every reviewer in To, one idempotency key per request so retries do not resend.
+    const r = await sendResendEmail({ to, subject: email.subject, html: email.html, text: email.text, idempotencyKey: key });
+    return r.sent ? to.length : 0;
+  } catch (e) {
+    console.error("request-access email failed", { key, error: (e as Error).name });
+    return 0;
   }
-  return sent;
 }
 
 async function requireAdmin(req: Request, admin: Admin) {
@@ -118,7 +117,7 @@ Deno.serve(async (req) => {
         console.log("request-access created", { id: row.id, reviewers_emailed: 0, emails: "off" });
       } else if (row.result === "created" && row.id) {
         const r = reviewerRecipients(email, { reviewers: cfg("ACCESS_REQUEST_EMAILS"), qa: cfg("QA_ALERT_EMAIL") });
-        const mail = reviewerEmail({ id: row.id, name, email, note, base, test: r.test });
+        const mail = reviewerEmail({ id: row.id, name, email, note, base, test: r.test, requestedAt: new Date() });
         const sent = await sendAll(r.to, mail, `access_request:${row.id}`);
         console.log("request-access created", { id: row.id, test: r.test, reviewers_emailed: sent });
       } else {

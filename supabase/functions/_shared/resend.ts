@@ -15,7 +15,7 @@ export type SendResendResult =
   | { sent: false; reason: "recipient_suppressed" };
 
 export interface SendResendEmailInput {
-  to: string;
+  to: string | string[];
   subject: string;
   html?: string;
   text?: string;
@@ -32,9 +32,14 @@ export async function sendResendEmail(input: SendResendEmailInput): Promise<Send
   }
   const from = input.from || cfg("EMAIL_FROM") || DEFAULT_FROM;
 
+  const to = (Array.isArray(input.to) ? input.to : [input.to]).map((addr) => addr.trim()).filter(Boolean);
+  if (!to.length) {
+    throw new Error("Resend request failed: no recipient");
+  }
+
   const payload: Record<string, unknown> = {
     from,
-    to: [input.to],
+    to,
     subject: input.subject,
   };
   if (input.html) payload.html = input.html;
