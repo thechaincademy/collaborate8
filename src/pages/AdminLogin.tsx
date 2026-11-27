@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabaseAdmin } from "@/integrations/supabase/adminClient";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { safeAdminNext } from "@/lib/adminAuth";
+import { ADMIN_AUTH_WAIT_MS, safeAdminNext } from "@/lib/adminAuth";
+import AdminLoading from "@/components/admin/AdminLoading";
 
 const ADMIN_EMAILS = ["rafa@collaborate8.com", "jade@collaborate8.com"];
 
@@ -19,6 +20,12 @@ const AdminLogin = () => {
   const [sent, setSent] = useState(false);
   const [params] = useSearchParams();
   const next = safeAdminNext(params.get("next"));
+  const [waited, setWaited] = useState(false);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setWaited(true), ADMIN_AUTH_WAIT_MS);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const handleSend = async () => {
     const clean = email.trim().toLowerCase();
@@ -40,10 +47,10 @@ const AdminLogin = () => {
     toast.success("Magic link sent - check your inbox.");
   };
 
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
-  }
-  if (user) return <Navigate to={next} replace />;
+  // After a wait, always show the form so sign-out never ends on an empty loading page.
+  // If a session arrives later, redirect then.
+  if (user && !loading) return <Navigate to={next} replace />;
+  if (loading && !waited) return <AdminLoading />;
 
   return (
     <>

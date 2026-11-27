@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
 import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLoading from "@/components/admin/AdminLoading";
 import SystemHealthSection from "@/components/admin/SystemHealthSection";
 
 interface Delivery {
@@ -78,7 +79,7 @@ const AdminMonitoring = () => {
     return () => window.clearInterval(timer);
   }, [user, load]);
 
-  if (authLoading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
+  if (authLoading) return <AdminLoading />;
   if (!user) return <Navigate to="/admin/login" replace />;
   if (denied) {
     return (

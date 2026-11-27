@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { adminLoginHref, confirmAuthKind, isAdminPath, safeAdminNext } from "../src/lib/adminAuth";
+import { ADMIN_AUTH_WAIT_MS, ADMIN_LOGIN_PATH, adminLoginHref, confirmAuthKind, isAdminPath, redirectToAdminLogin, safeAdminNext } from "../src/lib/adminAuth";
 import { ADMIN_STORAGE_KEY, appStorageKey, clearAuthStorage, signOutAndClear } from "../src/lib/authStorage";
 
 const root = join(import.meta.dirname, "..");
@@ -33,6 +33,16 @@ describe("admin path helpers", () => {
     expect(confirmAuthKind("/admin")).toBe("admin");
     expect(confirmAuthKind("/dashboard")).toBe("app");
     expect(confirmAuthKind("/auth/confirm")).toBe("app");
+  });
+
+  it("sends sign-out to /admin/login with no next, so the form cannot bounce back into /admin", () => {
+    expect(ADMIN_LOGIN_PATH).toBe("/admin/login");
+    expect(ADMIN_AUTH_WAIT_MS).toBe(5000);
+    const hrefs: string[] = [];
+    (globalThis as { window?: unknown }).window = { location: { assign: (h: string) => hrefs.push(h) } };
+    redirectToAdminLogin();
+    expect(hrefs).toEqual(["/admin/login"]);
+    delete (globalThis as { window?: unknown }).window;
   });
 });
 
@@ -153,15 +163,50 @@ describe("wiring", () => {
   it("admin sign-out is local, clears the admin storage key, and redirects to founder login", () => {
     const hook = read("src/hooks/useAdminAuth.tsx");
     expect(hook).toContain("signOutAndClear(supabaseAdmin, ADMIN_STORAGE_KEY)");
+    expect(hook).toContain("ADMIN_AUTH_WAIT_MS");
+    expect(hook).toContain("setLoading(false)");
     expect(read("src/lib/authStorage.ts")).toContain('scope: "local"');
     const layout = read("src/components/admin/AdminLayout.tsx");
-    expect(layout).toContain("window.location.assign(adminLoginHref(\"/admin\"))");
+    expect(layout).toContain("redirectToAdminLogin()");
+    expect(layout).not.toContain("adminLoginHref(\"/admin\")");
     expect(layout).toContain("isAdminPath");
+    expect(layout).toContain(".call(client,");
+    expect(layout).not.toMatch(/const rpc = client\.rpc/);
+
     // Safeguarding stays on the app session.
     expect(layout).toContain("useAuth");
     const appAuth = read("src/hooks/useAuth.tsx");
     expect(appAuth).toContain("signOutAndClear");
     expect(appAuth).toContain("appStorageKey");
+    const dashboard = read("src/pages/AdminDashboard.tsx");
+    expect(dashboard).toContain("redirectToAdminLogin()");
+    expect(dashboard).toContain("Sign out");
+    expect(dashboard).not.toMatch(/onClick=\{signOut\}/);
+  });
+
+  it("admin auth loading times out after 5 seconds and falls back to a sign-in link", () => {
+    const loading = read("src/components/admin/AdminLoading.tsx");
+    expect(loading).toContain("ADMIN_AUTH_WAIT_MS");
+    expect(loading).toContain("Sign in to admin");
+    expect(loading).toContain("ADMIN_LOGIN_PATH");
+    const login = read("src/pages/AdminLogin.tsx");
+    expect(login).toContain("ADMIN_AUTH_WAIT_MS");
+    expect(login).toContain("if (user && !loading)");
+    expect(login).toContain("if (loading && !waited)");
+    expect(login).toContain("AdminLoading");
+    const gate = read("src/components/admin/RequireAdminAuth.tsx");
+    expect(gate).toContain("AdminLoading");
+    for (const f of [
+      "src/pages/AdminAccessRequests.tsx",
+      "src/pages/AdminDashboard.tsx",
+      "src/pages/AdminAnalytics.tsx",
+      "src/pages/AdminMonitoring.tsx",
+      "src/pages/AdminSetup.tsx",
+    ]) {
+      const src = read(f);
+      expect(src, f).toContain("AdminLoading");
+    }
+    expect(existsSync(join(root, "src/components/admin/AdminLoading.tsx"))).toBe(true);
   });
 
   it("the default app client does not pick up sessions on /admin URLs", () => {
@@ -178,6 +223,7 @@ describe("wiring", () => {
       "src/lib/authStorage.ts",
       "src/components/admin/RequireAdminAuth.tsx",
       "src/components/admin/AdminErrorBoundary.tsx",
+      "src/components/admin/AdminLoading.tsx",
     ]) expect(existsSync(join(root, f)), f).toBe(true);
   });
 });

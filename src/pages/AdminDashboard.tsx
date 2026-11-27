@@ -16,6 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
 import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLoading from "@/components/admin/AdminLoading";
+import { redirectToAdminLogin } from "@/lib/adminAuth";
 
 interface TabRow {
   name: string;
@@ -92,11 +94,7 @@ const AdminDashboard = () => {
   };
 
   if (authLoading || (user && isAdmin === null)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <AdminLoading />;
   }
 
   if (!user) return <Navigate to="/admin/login" replace />;
@@ -108,7 +106,7 @@ const AdminDashboard = () => {
         <p className="text-sm text-muted-foreground">
           This dashboard is restricted to the Collabor8 founders.
         </p>
-        <Button variant="outline" onClick={async () => { await signOut(); window.location.assign("/admin/login"); }}>
+        <Button variant="outline" onClick={async () => { await signOut(); redirectToAdminLogin(); }}>
           Sign in with founder email
         </Button>
       </div>
@@ -155,7 +153,7 @@ const AdminDashboard = () => {
             <Button asChild variant="outline">
               <Link to="/admin/monitoring">Monitoring</Link>
             </Button>
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="outline" onClick={async () => { await signOut(); redirectToAdminLogin(); }}>
               Sign out
             </Button>
           </div>

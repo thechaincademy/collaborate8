@@ -22,6 +22,16 @@ export function adminLoginHref(next = "/admin"): string {
   return `/admin/login?next=${encodeURIComponent(safeAdminNext(next))}`;
 }
 
+/** Where admin sign-out always lands. No ?next=, so the login form cannot bounce back into a loading /admin page. */
+export const ADMIN_LOGIN_PATH = "/admin/login";
+
+/** How long an admin auth "Loading..." state may last before the sign-in fallback appears. */
+export const ADMIN_AUTH_WAIT_MS = 5000;
+
+export function redirectToAdminLogin(): void {
+  if (typeof window !== "undefined") window.location.assign(ADMIN_LOGIN_PATH);
+}
+
 /** Which Supabase client /auth/confirm should use when verifying a magic link. */
 export function confirmAuthKind(next: string): "admin" | "app" {
   return isAdminPath((next.split("?")[0] || "")) ? "admin" : "app";

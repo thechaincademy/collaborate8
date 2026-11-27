@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLoading from "@/components/admin/AdminLoading";
 import { useSystemHealth } from "@/components/admin/useSystemHealth";
 import AnalyticsConnections from "@/components/admin/AnalyticsConnections";
 import SettingsEditor from "@/components/admin/SettingsEditor";
@@ -26,7 +27,7 @@ const AdminSetup = () => {
   const { user, loading: authLoading } = useAuth();
   const { data, error, loading, load } = useSystemHealth(Boolean(user));
 
-  if (authLoading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+  if (authLoading) return <AdminLoading />;
   if (!user) return <Navigate to="/admin/login" replace />;
   if (error && !data) {
     return (

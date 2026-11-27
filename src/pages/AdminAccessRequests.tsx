@@ -4,6 +4,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLoading from "@/components/admin/AdminLoading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -144,7 +145,7 @@ const AdminAccessRequests = () => {
   }, [rows]);
   const shown = (rows ?? []).filter((r) => filter === "all" || r.status === filter);
 
-  if (authLoading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+  if (authLoading) return <AdminLoading />;
   if (!user) return <Navigate to={`/admin/login?next=${encodeURIComponent(`/admin/access-requests${window.location.search}`)}`} replace />;
   const signInAsAdmin = async () => {
     await signOut();

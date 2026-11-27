@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabaseAdmin as supabase } from "@/integrations/supabase/adminClient";
 import { useAdminAuth as useAuth } from "@/hooks/useAdminAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLoading from "@/components/admin/AdminLoading";
 import AnalyticsConnections from "@/components/admin/AnalyticsConnections";
 
 const ALLOWED = ["rafa@collaborate8.com", "jade@collaborate8.com"];
@@ -339,7 +340,7 @@ const AdminAnalytics = () => {
   }, [isAdmin, loadAnalytics]);
 
   if (authLoading || (user && isAdmin === null)) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+    return <AdminLoading />;
   }
   if (!user) return <Navigate to="/admin/login?next=/admin/analytics" replace />;
   if (!isAdmin) {

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { supabaseAdmin } from "@/integrations/supabase/adminClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { adminLoginHref, isAdminPath } from "@/lib/adminAuth";
+import { isAdminPath, redirectToAdminLogin } from "@/lib/adminAuth";
 import { cn } from "@/lib/utils";
 
 export const ADMIN_LINKS: { to: string; label: string; end?: boolean; dsl?: boolean }[] = [
@@ -36,8 +36,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user) { setAccess("none"); return; }
     let live = true;
-    const rpc = client.rpc as unknown as (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
-    Promise.all([rpc("is_admin", { _user_id: user.id }), rpc("sg_is_dsl", { _user_id: user.id })]).then(([a, d]) => {
+    // Call rpc on the client object so `this` stays bound. A detached rpc() throws
+    // "Cannot read properties of undefined (reading 'rest')" and the admin nav never appears.
+    const call = (fn: "is_admin" | "sg_is_dsl") =>
+      (client.rpc as unknown as (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>).call(client, fn, { _user_id: user.id });
+    Promise.all([call("is_admin"), call("sg_is_dsl")]).then(([a, d]) => {
       if (!live) return;
       setAccess(a.data === true ? "admin" : !d.error && d.data === true ? "dsl" : "none");
     });
@@ -50,7 +53,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const handleSignOut = async () => {
     await signOut();
     if (adminArea) {
-      window.location.assign(adminLoginHref("/admin"));
+      redirectToAdminLogin();
       return;
     }
     navigate("/login", { replace: true });
