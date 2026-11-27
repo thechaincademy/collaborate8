@@ -12,6 +12,8 @@ import {
   siteOrigin,
   SUBJECTS,
   confirmUrl,
+  ADMIN_MAGICLINK_SUBJECT,
+  confirmPagePath,
   LINK_ORIGINS,
   linkOrigin,
   nextPath,
@@ -155,6 +157,31 @@ describe("planAuthEmails", () => {
     expect(m.props.confirmationUrl).toBe(
       "https://collabor8-uk-test.rafa-f1b.workers.dev/auth/confirm?token_hash=hash-abc&type=recovery&next=%2Freset-password",
     );
+  });
+
+  it("an admin magic link opens /admin/confirm on the same site, with admin copy", () => {
+    expect(confirmPagePath("/admin/access-requests")).toBe("/admin/confirm");
+    expect(confirmPagePath("/dashboard")).toBe("/auth/confirm");
+    const [m] = planAuthEmails(payload({
+      email_action_type: "magiclink",
+      redirect_to: "https://collabor8-uk-test.rafa-f1b.workers.dev/admin/access-requests",
+      site_url: "https://collaborate8.com",
+    }) as any);
+    expect(m.subject).toBe(ADMIN_MAGICLINK_SUBJECT);
+    expect(m.props.heading).toBe("Your admin sign-in link");
+    expect(m.props.buttonLabel).toBe("Sign in to admin");
+    const u = new URL(m.props.confirmationUrl);
+    expect(u.origin).toBe("https://collabor8-uk-test.rafa-f1b.workers.dev");
+    expect(u.pathname).toBe("/admin/confirm");
+    expect(u.searchParams.get("next")).toBe("/admin/access-requests");
+    expect(u.searchParams.get("type")).toBe("magiclink");
+    expect(u.toString()).not.toContain("/auth/confirm");
+    const [prod] = planAuthEmails(payload({
+      email_action_type: "magiclink",
+      redirect_to: "https://collaborate8.com/admin",
+      site_url: "https://collaborate8.com",
+    }) as any);
+    expect(new URL(prod.props.confirmationUrl).origin + new URL(prod.props.confirmationUrl).pathname).toBe("https://collaborate8.com/admin/confirm");
   });
 
   it("'email' (OTP sign-in) uses the magic link template", () => {

@@ -6,6 +6,7 @@ import {
   afterVerify,
   CONFIRM_STORAGE_KEY,
   confirmCopy,
+  isAdminConfirmNext,
   isExpiredOrUsed,
   otpType,
   parseConfirmParams,
@@ -58,6 +59,14 @@ describe("/auth/confirm button and result", () => {
     for (const t of ["signup", "email_change", "invite"] as const) expect(confirmCopy(t).button).toBe("Confirm email");
     expect(confirmCopy("magiclink").button).toBe("Sign in");
     expect(confirmCopy("email").button).toBe("Sign in");
+    expect(confirmCopy("magiclink", "/admin/access-requests")).toEqual({
+      title: "Sign in to Collabor8 admin",
+      body: "Press the button below to sign in to the Collabor8 admin area with your founder email.",
+      button: "Sign in to admin",
+      busy: "Signing you in...",
+    });
+    expect(isAdminConfirmNext("/admin/access-requests")).toBe(true);
+    expect(isAdminConfirmNext("/dashboard")).toBe(false);
     expect(otpType("email")).toBe("magiclink");
   });
 
@@ -65,6 +74,10 @@ describe("/auth/confirm button and result", () => {
     expect(afterVerify({ tokenHash: HASH, type: "recovery", next: "/dashboard" }, true)).toEqual({ kind: "navigate", to: "/reset-password" });
     expect(afterVerify({ tokenHash: HASH, type: "signup", next: "/dashboard" }, true)).toEqual({ kind: "navigate", to: "/dashboard" });
     expect(afterVerify({ tokenHash: HASH, type: "magiclink", next: "/admin/analytics" }, true)).toEqual({ kind: "navigate", to: "/admin/analytics" });
+    expect(afterVerify({ tokenHash: HASH, type: "magiclink", next: "/admin/access-requests" }, false)).toEqual({
+      kind: "navigate",
+      to: "/admin/login?next=%2Fadmin%2Faccess-requests",
+    });
   });
 
   it("secure email change: the first of the two links confirms without a session", () => {
@@ -94,6 +107,8 @@ describe("/auth/confirm page wiring", () => {
 
   it("is routed, and index.html moves the token out of the address bar before any tracker", () => {
     expect(read("src/App.tsx")).toContain('<Route path="/auth/confirm" element={<AuthConfirm />} />');
+    expect(read("src/App.tsx")).toContain('<Route path="/admin/confirm" element={<AuthConfirm />} />');
+    expect(read("index.html")).toContain("/admin/confirm");
     const html = read("index.html");
     const strip = html.indexOf("c8_auth_confirm");
     expect(strip).toBeGreaterThan(0);

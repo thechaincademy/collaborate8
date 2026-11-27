@@ -230,15 +230,29 @@ export function nextPath(type: EmailActionType, redirect: string | undefined | n
  * Opening it does nothing by itself; the token is only used when the parent presses the button.
  * `redirect` is the value from redirectTarget (Supabase already checked it against its allow list).
  */
+/** True when the person should return to the admin area, not the parent app. */
+export function isAdminNextPath(next: string): boolean {
+  const path = (next.split("?")[0] || "");
+  return path === "/admin" || path.startsWith("/admin/");
+}
+
+/** Admin magic links use /admin/confirm so they never open the parent app confirm page. */
+export function confirmPagePath(next: string): string {
+  return isAdminNextPath(next) ? "/admin/confirm" : "/auth/confirm";
+}
+
 export function confirmUrl(tokenHash: string, type: EmailActionType, redirect: string, siteUrl: string | undefined | null): string {
   const origin = linkOrigin(redirect, siteUrl);
-  const q = new URLSearchParams({ token_hash: tokenHash, type: verifyType(type), next: nextPath(type, redirect, origin) });
-  return `${origin}/auth/confirm?${q.toString()}`;
+  const next = nextPath(type, redirect, origin);
+  const q = new URLSearchParams({ token_hash: tokenHash, type: verifyType(type), next });
+  return `${origin}${confirmPagePath(next)}?${q.toString()}`;
 }
 
 // ---------------------------------------------------------------------------
 // Subjects and planning
 // ---------------------------------------------------------------------------
+
+export const ADMIN_MAGICLINK_SUBJECT = "Your Collabor8 admin sign-in link";
 
 export const SUBJECTS: Record<TemplateKind, string> = {
   signup: "Confirm your email for Collabor8",
@@ -278,9 +292,17 @@ export function planAuthEmails(payload: HookPayload): PlannedEmail[] {
     if (!d.token_hash) throw new HookPayloadError("missing token_hash");
     const template: TemplateKind = type === "email" ? "magiclink" : (type as TemplateKind);
     const url = confirmUrl(d.token_hash, type, redirectTarget(type, d.redirect_to, d.site_url), d.site_url);
+    const adminLink = new URL(url).pathname === "/admin/confirm";
     const props: Record<string, string> = { siteName: SITE_NAME, siteUrl: origin, confirmationUrl: url };
     if (template === "signup") props.recipient = email;
-    return [{ to: email, template, subject: SUBJECTS[template], label: type, props }];
+    if (adminLink && template === "magiclink") {
+      props.heading = "Your admin sign-in link";
+      props.intro = "Click the button below to sign in to the Collabor8 admin area with your founder email. This link will expire shortly.";
+      props.buttonLabel = "Sign in to admin";
+      props.preview = "Your admin sign-in link for Collabor8";
+    }
+    const subject = adminLink && template === "magiclink" ? ADMIN_MAGICLINK_SUBJECT : SUBJECTS[template];
+    return [{ to: email, template, subject, label: type, props }];
   }
 
   if (type === "email_change") {

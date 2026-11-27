@@ -61,7 +61,7 @@ const AuthConfirm = () => {
   };
 
   const isRecovery = params?.type === "recovery";
-  const copy = params ? confirmCopy(params.type) : null;
+  const copy = params ? confirmCopy(params.type, params.next) : null;
   const Icon = isRecovery ? KeyRound : params?.type === "magiclink" || params?.type === "email" ? ShieldCheck : MailCheck;
 
   let title = copy?.title ?? "Open your link";

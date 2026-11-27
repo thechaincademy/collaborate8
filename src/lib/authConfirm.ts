@@ -23,6 +23,12 @@ const TOKEN_RE = /^[A-Za-z0-9_-]{6,256}$/;
 
 const hasControlChar = (v: string) => [...v].some((c) => c.charCodeAt(0) < 32);
 
+export function isAdminConfirmNext(next: string): boolean {
+  const path = (next.split("?")[0] || "");
+  return path === "/admin" || path.startsWith("/admin/");
+}
+
+
 /** A same-site path only ("/x?y"), never "//host", a backslash trick or control characters. */
 export function safeNextPath(value: string | null | undefined): string | null {
   const v = String(value ?? "");
@@ -86,7 +92,15 @@ export interface ConfirmCopy {
   busy: string;
 }
 
-export function confirmCopy(type: ConfirmType): ConfirmCopy {
+export function confirmCopy(type: ConfirmType, next = ""): ConfirmCopy {
+  if (isAdminConfirmNext(next) && (type === "magiclink" || type === "email")) {
+    return {
+      title: "Sign in to Collabor8 admin",
+      body: "Press the button below to sign in to the Collabor8 admin area with your founder email.",
+      button: "Sign in to admin",
+      busy: "Signing you in...",
+    };
+  }
   switch (type) {
     case "recovery":
       return {
@@ -137,6 +151,9 @@ export function afterVerify(params: ConfirmParams, hasSession: boolean): AfterVe
   if (params.type === "recovery") return hasSession ? { kind: "navigate", to: "/reset-password" } : { kind: "navigate", to: "/forgot-password" };
   if (!hasSession) {
     if (params.type === "email_change") return { kind: "email_change_pending" };
+    if (isAdminConfirmNext(params.next)) {
+      return { kind: "navigate", to: `/admin/login?next=${encodeURIComponent(params.next)}` };
+    }
     return { kind: "navigate", to: "/login" };
   }
   return { kind: "navigate", to: params.next };

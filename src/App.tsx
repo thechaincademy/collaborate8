@@ -137,6 +137,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth/confirm" element={<AuthConfirm />} />
+              <Route path="/admin/confirm" element={<AuthConfirm />} />
               <Route path="/post-signup" element={<PostSignupOnboarding />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               {["maintenance", "expenses", "chat", "benefits", "documents"].map((t) => (
